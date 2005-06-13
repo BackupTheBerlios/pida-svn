@@ -22,6 +22,7 @@
 
 #system imports
 import os
+import cgi
 import profile
 import cPickle as pickle
 
@@ -41,7 +42,18 @@ def script_directory():
 
 SCRIPT_DIR = script_directory()
 
-
+class PstatsTree(tree.Tree):
+    COLUMNS = [('display', gobject.TYPE_STRING, gtk.CellRendererText, True,
+                'markup'),
+               ('filename', gobject.TYPE_STRING, None, False, None),
+               ('lineno', gobject.TYPE_INT, None, False, None),
+               ('function', gobject.TYPE_STRING, None, False, None),
+               ('number of calls', gobject.TYPE_INT, None, False, None),
+               ('total time', gobject.TYPE_FLOAT, None, False, None),
+               ('total per call', gobject.TYPE_FLOAT, None, False, None),
+               ('cumulative time', gobject.TYPE_FLOAT, None, False, None),
+               ('cumulative per call', gobject.TYPE_FLOAT, None, False, None)]
+                
 
 class Plugin(plugin.Plugin):
     NAME = 'Profiler'
@@ -51,36 +63,64 @@ class Plugin(plugin.Plugin):
     def populate_widgets(self):
 
         sb = gtk.HBox()
-        self.add(sb)
+        self.add(sb, expand=False)
 
         self.sortbox = gtk.combo_box_new_text()
+        self.sortbox.connect('changed', self.cb_sort_changed)
         sb.pack_start(self.sortbox)
 
-        self.sortascending = gtk.CheckButton()
+        self.sortascending = gtk.CheckButton(label="asc")
+        self.sortascending.set_active(True)
+        self.sortascending.connect('toggled', self.cb_sort_changed)
+        
         sb.pack_start(self.sortascending)
+
+        self.pstats = PstatsTree(self.cb)
+        self.add(self.pstats.win)
+
+        for col in self.pstats.COLUMNS[1:]:
+            self.sortbox.append_text(col[0])
+        self.sortbox.set_active(2)
 
         self.profiler = Profiler(self.cb)
         self.fn = None
         self.readbuf = ''
 
+    def cb_sort_changed(self, *args):
+        order = self.sortbox.get_active() + 1
+        direction = gtk.SORT_DESCENDING
+        if self.sortascending.get_active():
+            direction = gtk.SORT_ASCENDING
+        self.pstats.model.set_sort_column_id(order, direction)
+
     def cb_alternative(self, *args):
         #if self.fn and self.fn.endswith('.py'):
-        self.profiler.run(self.fn, self.cb_read, self.cb_hup)
+        self.profiler.run(self.fn, self.cb_stats)
             
-    def cb_read(self, fd, cond):
-        s = os.read(fd, 1024)
-        self.readbuf = ''.join([self.readbuf, s])
-        return True
+    def cb_stats(self, statsdict):
+        self.pstats.clear()
+        for k in statsdict:
+            fn, line, func = k
+            ncalls, pcalls, tottime, cumtime, callers = statsdict[k]
+            d, f = os.path.split(fn)
+            totper = cumper = 0
+            if ncalls > 0:
+                totper = tottime / ncalls
+                cumper = cumtime / ncalls
+            
+            mu = self.markup(f, d, line, func,
+                                ncalls, tottime, totper, cumtime, cumper)
+            self.pstats.add_item([mu, fn, line, func,
+                                ncalls, tottime, totper, cumtime, cumper])
 
-    def cb_hup(self, fd, cond):
-        print hup
-        os.close(fd)
-        t = self.readbuf
-        self.readbuf = ''
-        self.reaceived_profile(t)
-        return False
-    
-    
+    def markup(self, fn, dn, line, func, ncalls, tott, totper, cumt, cumper):
+        MU = ('<span size="small"><b>%s()</b> %s ('
+              '<span foreground="#0000c0">%s</span>) %s\n'
+              'N:<b>%s</b> T:<b>%s</b>/<b>%s</b>) '
+              'C:<b>%s</b>/<b>%s</b></span>')
+        return MU % (cgi.escape(func), cgi.escape(fn),
+                     line, dn, ncalls, tott, totper, cumt, cumper)
+
 
     def evt_bufferchange(self, nr, name):
         self.fn = name
@@ -91,8 +131,10 @@ class Profiler(object):
     def __init__(self, cb):
         self.cb = cb
         self.ipc = gtkipc.IPWindow(self)
+        self.r_cb_stats = None
 
-    def run(self, filename, ioreadcb, iohupcb):
+    def run(self, filename, statscb):
+        self.r_cb_stats = statscb
         profilerfn = os.path.join(SCRIPT_DIR, 'profiler.py')
         xid = '%s' % self.ipc.get_lid()
         py = self.cb.opts.get('commands', 'python')
@@ -108,7 +150,8 @@ class Profiler(object):
         stats = pickle.load(f)
         f.close()
         os.remove(outf)
-        print 'stats', stats
+        if self.r_cb_stats:
+            self.r_cb_stats(stats)
 
 
 
