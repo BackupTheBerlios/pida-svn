@@ -11,6 +11,7 @@ import tempfile
 import gtkipc
 import linecache
 import marshal
+import cStringIO
 
 def script_directory():
     def f(): pass
@@ -25,12 +26,14 @@ class StackTree(tree.Tree):
                ('frame', gobject.TYPE_PYOBJECT, None, False, None)]
 
     def init(self):
-        pass
-        #self.fv = FrameViewer()
-        #self.toolbar.pack_start(self.fv)
-        
+        self.title = gtk.Label()
+        self.toolbar.pack_start(self.title)
+        self.refresh_label()
     #def l_cb_selected(self, tv):
         #self.fv.refresh_label(self.selected(1))
+    def refresh_label(self):
+        self.title.set_markup('Stack')
+
 
     def populate(self, stack, curindex):
         self.clear()
@@ -143,7 +146,7 @@ class DebugTerminal(vte.Terminal):
         self.cb = cb
         self.pid = None
         vte.Terminal.__init__(self)
-        self.set_size_request(-1, 50)
+        self.set_size_request(-1, 16)
 
     def kill(self):
         if self.pid:
@@ -165,6 +168,25 @@ class DebugTerminal(vte.Terminal):
         self.grab_focus()
         return self.pid
 
+class DumpWindow(plugin.Transient):
+
+    def populate_widgets(self):
+        sw = gtk.ScrolledWindow()
+        sw.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
+        self.dumpbuf = gtk.TextBuffer()
+        self.dumptag = self.dumpbuf.create_tag(scale=0.8)
+        self.dumptext = gtk.TextView(self.dumpbuf)
+        self.dumptext.set_wrap_mode(gtk.WRAP_CHAR)
+        self.dumptext.set_size_request(-1, 75)
+        sw.add(self.dumptext)
+        self.frame.pack_start(sw)
+
+    def set_text(self, s):
+        self.dumpbuf.set_text(s)
+        start = self.dumpbuf.get_start_iter()
+        end = self.dumpbuf.get_end_iter()
+        self.dumpbuf.apply_tag(self.dumptag, start, end)
+        
 
 class Plugin(plugin.Plugin):
     NAME = 'Debugger'
@@ -187,8 +209,6 @@ class Plugin(plugin.Plugin):
         tb = gtk.VBox()
         vp.pack1(tb)
 
-        self.term = DebugTerminal(self.cb)
-        tb.pack_start(self.term, expand=False)
 
         self.stack = StackTree(self.cb)
         tb.pack_start(self.stack.win)
@@ -206,12 +226,20 @@ class Plugin(plugin.Plugin):
         loclb = gtk.Label()
         loclb.set_markup('<span size="small">Locals</span>')
         self.locs = LocalsTree(self.cb)
+        self.locs.connect_activate(self.cb_locs_activate)
         nb.append_page(self.locs.win, tab_label=loclb)
 
         gllb = gtk.Label()
         gllb.set_markup('<span size="small">Globals</span>')
         self.globs = VarTree(self.cb)
+        self.globs.connect_activate(self.cb_globs_activate)
         nb.append_page(self.globs.win, tab_label=gllb)
+
+        self.dumpwin = DumpWindow(self.cb)
+        self.add(self.dumpwin.win, expand=False)
+
+        self.term = DebugTerminal(self.cb)
+        self.add(self.term, expand=False)
 
         self.curindex = 0
         self.lfn = tempfile.mktemp('.py', 'pidatmp')
@@ -225,6 +253,11 @@ class Plugin(plugin.Plugin):
 
         #self.btree = tree.Tree(self.cb)
         #vp.pack1(self.stree)
+
+    def do_eval(self, s):
+        com, val = s.split('\n', 1)
+        self.dumpwin.set_text(val)
+        self.dumpwin.show('<span size="small">%s</span>' % com)
 
     def do_started(self, *args):
         self.load_breakpoints()
@@ -282,6 +315,14 @@ class Plugin(plugin.Plugin):
         self.locs.populate(frame.locs)
         self.globs.populate(frame.globs)
 
+    def cb_locs_activate(self, tree, path, col):
+        v = self.locs.selected(2)
+        self.send(v)
+
+    def cb_globs_activate(self, tree, path, col):
+        v = self.globs.selected(2)
+        self.send(v)
+
     def evt_bufferchange(self, nr, name):
         self.fn = name
 
@@ -294,6 +335,7 @@ class Plugin(plugin.Plugin):
         if fn:
             self.set_breakpoint(fn, line)
 
-        
+    def evt_started(self, *args):
+        self.dumpwin.hide()
 
 

@@ -70,14 +70,14 @@ class Transient(object):
         pass    
 
     def show(self, label):
-        self.label.set_label(label)
+        self.label.set_markup(label)
         self.win.show_all()
 
     def hide(self):
         self.win.hide_all()
 
     def cb_close_but(self, *args):
-        self.hide()    
+        self.hide()
 
 class Messagebox(Transient):
 
@@ -447,8 +447,8 @@ class Plugin(object):
         self.oldparent = self.win.get_parent()
         self.dwin = Winparent(self.cb, self)
 
-    def add(self, widget, *args):
-        self.frame.pack_start(widget, *args)
+    def add(self, widget, *args, **kwargs):
+        self.frame.pack_start(widget, *args, **kwargs)
 
     def add_button(self, stock, callback, tooltip='None Set!', cbargs=[]):
         self.popup.add_item(stock, tooltip, callback, cbargs)

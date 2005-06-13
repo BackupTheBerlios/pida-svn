@@ -39,6 +39,7 @@ import traceback
 import marshal
 import gtkipc
 import tempfile
+import cStringIO
 
 class Debugger(object):
     def __init__(self, sid):
@@ -51,7 +52,12 @@ class Debugger(object):
             gtk.main_iteration()
         
 
+    def evaled(self, line, s):
+        self.ipc.write('eval', '%s\n%s' % (line, s), 8)
+        self.loop()
+
     def received(self, stack, tb):
+        print tb
         s = self.format_stack(stack)
         self.ipc.write('stack', s, 8)
         self.loop()
@@ -160,7 +166,7 @@ class Pdb(pdb.Pdb):
     def __init__(self, cb):
         self.cb = cb
         pdb.Pdb.__init__(self)
-        self.prompt = 'Pdb> '
+        self.prompt = 'dbg> '
         #self.aliases = {}
         #self.mainpyfile = ''
         #self._wait_for_mainpyfile = 0
@@ -258,7 +264,7 @@ class Pdb(pdb.Pdb):
 
     def interaction(self, frame, traceback):
         self.setup(frame, traceback)
-        self.print_stack_entry(self.stack[self.curindex])
+        #self.print_stack_entry(self.stack[self.curindex])
         self.cb.received(self.stack, traceback)
         self.cmdloop()
         self.forget()
@@ -270,7 +276,14 @@ class Pdb(pdb.Pdb):
         globals = self.curframe.f_globals
         try:
             code = compile(line + '\n', '<stdin>', 'single')
+            s = cStringIO.StringIO()
+            oldstdout = sys.stdout
+            sys.stdout = s
             exec code in globals, locals
+            sys.stdout = oldstdout
+            s.seek(0)
+            self.cb.evaled(line, s.read())
+
         except:
             t, v = sys.exc_info()[:2]
             if type(t) == type(''):
@@ -821,235 +834,6 @@ class Pdb(pdb.Pdb):
 
     # Help methods (derived from pdb.doc)
 
-    def help_help(self):
-        self.help_h()
-
-    def help_h(self):
-        print """h(elp)
-Without argument, print the list of available commands.
-With a command name as argument, print help about that command
-"help pdb" pipes the full documentation file to the $PAGER
-"help exec" gives help on the ! command"""
-
-    def help_where(self):
-        self.help_w()
-
-    def help_w(self):
-        print """w(here)
-Print a stack trace, with the most recent frame at the bottom.
-An arrow indicates the "current frame", which determines the
-context of most commands.  'bt' is an alias for this command."""
-
-    help_bt = help_w
-
-    def help_down(self):
-        self.help_d()
-
-    def help_d(self):
-        print """d(own)
-Move the current frame one level down in the stack trace
-(to a newer frame)."""
-
-    def help_up(self):
-        self.help_u()
-
-    def help_u(self):
-        print """u(p)
-Move the current frame one level up in the stack trace
-(to an older frame)."""
-
-    def help_break(self):
-        self.help_b()
-
-    def help_b(self):
-        print """b(reak) ([file:]lineno | function) [, condition]
-With a line number argument, set a break there in the current
-file.  With a function name, set a break at first executable line
-of that function.  Without argument, list all breaks.  If a second
-argument is present, it is a string specifying an expression
-which must evaluate to true before the breakpoint is honored.
-
-The line number may be prefixed with a filename and a colon,
-to specify a breakpoint in another file (probably one that
-hasn't been loaded yet).  The file is searched for on sys.path;
-the .py suffix may be omitted."""
-
-    def help_clear(self):
-        self.help_cl()
-
-    def help_cl(self):
-        print "cl(ear) filename:lineno"
-        print """cl(ear) [bpnumber [bpnumber...]]
-With a space separated list of breakpoint numbers, clear
-those breakpoints.  Without argument, clear all breaks (but
-first ask confirmation).  With a filename:lineno argument,
-clear all breaks at that line in that file.
-
-Note that the argument is different from previous versions of
-the debugger (in python distributions 1.5.1 and before) where
-a linenumber was used instead of either filename:lineno or
-breakpoint numbers."""
-
-    def help_tbreak(self):
-        print """tbreak  same arguments as break, but breakpoint is
-removed when first hit."""
-
-    def help_enable(self):
-        print """enable bpnumber [bpnumber ...]
-Enables the breakpoints given as a space separated list of
-bp numbers."""
-
-    def help_disable(self):
-        print """disable bpnumber [bpnumber ...]
-Disables the breakpoints given as a space separated list of
-bp numbers."""
-
-    def help_ignore(self):
-        print """ignore bpnumber count
-Sets the ignore count for the given breakpoint number.  A breakpoint
-becomes active when the ignore count is zero.  When non-zero, the
-count is decremented each time the breakpoint is reached and the
-breakpoint is not disabled and any associated condition evaluates
-to true."""
-
-    def help_condition(self):
-        print """condition bpnumber str_condition
-str_condition is a string specifying an expression which
-must evaluate to true before the breakpoint is honored.
-If str_condition is absent, any existing condition is removed;
-i.e., the breakpoint is made unconditional."""
-
-    def help_step(self):
-        self.help_s()
-
-    def help_s(self):
-        print """s(tep)
-Execute the current line, stop at the first possible occasion
-(either in a function that is called or in the current function)."""
-
-    def help_next(self):
-        self.help_n()
-
-    def help_n(self):
-        print """n(ext)
-Continue execution until the next line in the current function
-is reached or it returns."""
-
-    def help_return(self):
-        self.help_r()
-
-    def help_r(self):
-        print """r(eturn)
-Continue execution until the current function returns."""
-
-    def help_continue(self):
-        self.help_c()
-
-    def help_cont(self):
-        self.help_c()
-
-    def help_c(self):
-        print """c(ont(inue))
-Continue execution, only stop when a breakpoint is encountered."""
-
-    def help_jump(self):
-        self.help_j()
-
-    def help_j(self):
-        print """j(ump) lineno
-Set the next line that will be executed."""
-
-    def help_debug(self):
-        print """debug code
-Enter a recursive debugger that steps through the code argument
-(which is an arbitrary expression or statement to be executed
-in the current environment)."""
-
-    def help_list(self):
-        self.help_l()
-
-    def help_l(self):
-        print """l(ist) [first [,last]]
-List source code for the current file.
-Without arguments, list 11 lines around the current line
-or continue the previous listing.
-With one argument, list 11 lines starting at that line.
-With two arguments, list the given range;
-if the second argument is less than the first, it is a count."""
-
-    def help_args(self):
-        self.help_a()
-
-    def help_a(self):
-        print """a(rgs)
-Print the arguments of the current function."""
-
-    def help_p(self):
-        print """p expression
-Print the value of the expression."""
-
-    def help_pp(self):
-        print """pp expression
-Pretty-print the value of the expression."""
-
-    def help_exec(self):
-        print """(!) statement
-Execute the (one-line) statement in the context of
-the current stack frame.
-The exclamation point can be omitted unless the first word
-of the statement resembles a debugger command.
-To assign to a global variable you must always prefix the
-command with a 'global' command, e.g.:
-(Pdb) global list_options; list_options = ['-l']
-(Pdb)"""
-
-    def help_quit(self):
-        self.help_q()
-
-    def help_q(self):
-        print """q(uit) or exit - Quit from the debugger.
-The program being executed is aborted."""
-
-    help_exit = help_q
-
-    def help_whatis(self):
-        print """whatis arg
-Prints the type of the argument."""
-
-    def help_EOF(self):
-        print """EOF
-Handles the receipt of EOF as a command."""
-
-    def help_alias(self):
-        print """alias [name [command [parameter parameter ...] ]]
-Creates an alias called 'name' the executes 'command'.  The command
-must *not* be enclosed in quotes.  Replaceable parameters are
-indicated by %1, %2, and so on, while %* is replaced by all the
-parameters.  If no command is given, the current alias for name
-is shown. If no name is given, all aliases are listed.
-
-Aliases may be nested and can contain anything that can be
-legally typed at the pdb prompt.  Note!  You *can* override
-internal pdb commands with aliases!  Those internal commands
-are then hidden until the alias is removed.  Aliasing is recursively
-applied to the first word of the command line; all other words
-in the line are left alone.
-
-Some useful aliases (especially when placed in the .pdbrc file) are:
-
-#Print instance variables (usage "pi classInst")
-alias pi for k in %1.__dict__.keys(): print "%1.",k,"=",%1.__dict__[k]
-
-#Print instance variables in self
-alias ps pi self
-"""
-
-    def help_unalias(self):
-        print """unalias name
-Deletes the specified alias."""
-
-    def help_pdb(self):
-        help()
 
     def lookupmodule(self, filename):
         """Helper function for break/clear parsing -- may be overridden.
