@@ -324,7 +324,7 @@ class Projecteditor(plugin.Transient):
 class Plugin(plugin.Plugin):
     NAME = 'Projects'
     ICON = 'project'
-    DICON = 'terminal', 'Open a temrinal in this directory.'
+    DICON = 'terminal', 'Open a terminal in this directory.'
 
     def populate_widgets(self):
         #self.tree = tree.Tree(self.cb, self.beautify)
