@@ -269,6 +269,9 @@ class Projecteditor(plugin.Transient):
         self.fr.pack_start(self.name_label, expand=False)
 
         self.name_entry = gtk.Entry()
+        def cb(*args):
+            self.wd_file_but.entry.grab_focus()
+        self.name_entry.connect('activate', cb)
         self.fr.pack_start(self.name_entry)
         
         sep = gtk.HSeparator()
@@ -280,10 +283,6 @@ class Projecteditor(plugin.Transient):
         self.wd_label = gtk.Label('Working directory')
         self.fr.pack_start(self.wd_label, expand=False)
 
-
-        self.wd_entry = gtk.Entry()
-        #self.fr.pack_start(self.wd_entry)
-        self.cb.tips.set_tip(self.wd_entry, wdl)
 
         self.wd_file = dialogs.FolderDialog(self.cb, lambda *a: None)
         self.wd_file_but = dialogs.FolderButton(self.cb)
@@ -318,7 +317,7 @@ class Projecteditor(plugin.Transient):
 
     def new(self):
         self.name_entry.set_text('')
-        self.wd_entry.set_text('')
+        self.wd_file_but.set_filename(os.path.expanduser('~'))
         self.show('New Project')
         self.name_entry.grab_focus()
 
@@ -369,6 +368,7 @@ class Plugin(plugin.Plugin):
         self.editor = Projecteditor(self.cb)
         self.transwin.pack_start(self.editor.win, expand=False)
         self.editor.submit.connect('clicked', self.cb_project_edited)
+        self.editor.wd_file_but.entry.connect('activate', self.cb_project_edited)
     
         self.dirmenu = plugin.ContextPopup(self.cb, 'dir')
 

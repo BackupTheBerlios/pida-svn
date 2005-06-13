@@ -110,8 +110,9 @@ class Questionbox(Messagebox):
         def cb(*args):
             self.submit.disconnect(self.qid)
             self.hide()
-            callback(self.entry.get_text())
+            callback(self.entry.get_text().strip())
         self.entry.set_text('')
+        self.entry.connect('activate', cb)
         self.qid = self.submit.connect('clicked', cb)
         self.display_label.set_label(msg)
         self.show('Question (%s)' % self.id)
