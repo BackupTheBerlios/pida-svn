@@ -1,7 +1,7 @@
 Change Log
 --
 version 0.1.8
-
+fixed return handling for text entry boxes
 fixed default focus for quesyions, new projects
 debugger: breakpoints, namespace
 debugger: command line
