@@ -194,6 +194,8 @@ class Opts(object):
                  'Enable the Python debugger <i>disabled</i>', 'boolean')
         self.add('plugins', 'project', '1',
                  'The project manager <i>experimental</i>', 'boolean')
+        self.add('plugins', 'profiler_python', '0',
+                 'The python profiler <i>experimental</i>', 'boolean')
 
         ### Python plugin
         self.add_section('python browser')

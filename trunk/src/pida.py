@@ -277,6 +277,9 @@ class BarHolder(gtk.HPaned):
         if int(self.cb.opts.get('plugins', 'python_debugger')):
             import pida_debugger
             self.barbook.add_plugin(pida_debugger.Plugin)
+        if self.cb.opts.get('plugins', 'profiler_python') == '1':
+            import pida_profiler
+            self.barbook.add_plugin(pida_profiler.Plugin)
 
 def main(argv):
     a = App()

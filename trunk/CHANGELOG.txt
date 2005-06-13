@@ -1,6 +1,10 @@
 Change Log
 --
 version 0.1.8
+
+debugger executes, and evaluates arbitrary python expressions in the namespace
+of the debugged application
+debugger context listing in main vim on list button click, and frame d-click
 fixed return handling for text entry boxes
 fixed default focus for quesyions, new projects
 debugger: breakpoints, namespace

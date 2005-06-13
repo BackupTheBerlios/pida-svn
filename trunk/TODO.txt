@@ -3,7 +3,6 @@
 docstring as tooltip
 confirm delete
 Bug with the class browser and reference list not updating
-fix debugger context showing
 
 Bugs
 --
