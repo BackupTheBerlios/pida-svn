@@ -1,0 +1,14 @@
+Source: pida
+Section: devel
+Priority: optional
+Maintainer: George Cristian Bîrzan <gcbirzan@wolfheart.ro>
+Build-Depends: @cdbs@, python (>= 2.3), python-dev (>= 2.3)
+Standards-Version: 3.6.1
+
+Package: pida
+Cpu: any
+System: any
+Depends: ${python:Depends}, gvim (>= 6.3), python-gtk2, python-vte
+Description: Python Integrated Development Applicationr, a Python IDE.
+ Pida uses Vim as its editor, and aims to integrate
+ existing tools rather than 

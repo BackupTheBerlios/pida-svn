@@ -1,0 +1,27 @@
+0.1.7
+--
+docstring as tooltip
+confirm delete
+Bug with the class browser and reference list not updating
+fix debugger context showing
+
+Bugs
+--
+Configuration options
+--
+markup
+
+0.2
+--
+documentation
+code commented
+custom debugger sub class
+project manager
+    #file list
+    #open file
+    open all files
+
+guibrowser
+    file identified as gui
+    builds gui, and inspects
+    main window?
