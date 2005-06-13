@@ -216,7 +216,7 @@ class Popup(object):
     def init(self, *args):
         pass
 
-POPUP_CONTEXTS = ['file', 'dir', 'terminal', 'string', 'url']
+POPUP_CONTEXTS = ['file', 'dir', 'terminal', 'position', 'url']
 
 class ContextGenerator(object):
 
@@ -281,7 +281,23 @@ class ContextPopup(ContextGenerator, Popup):
         else:
             args.append(fn)
         self.cb.action_newterminal(command, args)
+
+class PositionPopup(ContextPopup):
+
+    def popup(self, filename, line, time):
+        self.aargs = [filename]
+        self.clear()
+        self.add_item('break', 'Add breakpoint here', self.cb_setbp,
+                      [filename, line])
+        self.generate()
+        self.add_separator()
+        self.add_item('configure', 'Configure these shortcuts.',
+                       self.cb_configure, [])
+        Popup.popup(self, time)
     
+    def cb_setbp(self, menu, (filename, line)):
+        self.cb.evt('breakpointset', line, filename)
+
 class ContextToolbar(ContextGenerator, Toolbar):
     def __init__(self, cb, name):
         Toolbar.__init__(self, cb)

@@ -126,9 +126,12 @@ class Plugin(plugin.Plugin):
         self.add_button('rename', self.cb_but_rename, 'Rename class or method')
         self.add_button('find', self.cb_but_references, 'List references.')
 
+        self.menu = plugin.PositionPopup(self.cb, 'position')
+
     def connect_widgets(self):
         self.defs.connect_select(self.cb_defs_select)
         self.refs.connect_select(self.cb_refs_select)
+        self.defs.connect_rightclick(self.cb_defs_rclick)
 
     def get_references(self, label='References'):
         row, col = self.defs.selected(2), self.defs.selected(3)
@@ -176,6 +179,10 @@ class Plugin(plugin.Plugin):
         if fn != self.fn:
             self.cb.action_openfile(fn)
         self.cb.action_gotoline(line)
+
+    def cb_defs_rclick(self, ite, time):
+        line = self.defs.get(ite, 2)
+        self.menu.popup(self.fn, line, time)
 
     def cb_but_rename(self, *a):
         self.get_references(label='Renames')

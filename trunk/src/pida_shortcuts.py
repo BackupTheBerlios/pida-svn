@@ -127,7 +127,7 @@ class Plugin(plugin.Plugin):
         self.ctx_ch.append(gtk.CheckButton(label='Menu for files.'))
         self.ctx_ch.append(gtk.CheckButton(label='Menu for directories.'))
         self.ctx_ch.append(gtk.CheckButton(label='Shell plugin toolbar.'))
-        self.ctx_ch.append(gtk.CheckButton(label='Menu for strings (unused).'))
+        self.ctx_ch.append(gtk.CheckButton(label='Menu for positions in files.'))
         self.ctx_ch.append(gtk.CheckButton(label='Menu for urls (unused).'))
 
         for ch in self.ctx_ch:
@@ -267,7 +267,7 @@ class Shortcuts(object):
         self.config.set(name, 'file_context', ctx[0])
         self.config.set(name, 'directory_context', ctx[1])
         self.config.set(name, 'terminal_context', ctx[2])
-        self.config.set(name, 'string_context', ctx[3])
+        self.config.set(name, 'position_context', ctx[3])
         self.config.set(name, 'url_context', ctx[4])
 
     def delete(self, name):
@@ -324,7 +324,7 @@ class Shortcuts(object):
                 [self.config.get(name, 'file_context'),
                 self.config.get(name, 'directory_context'),
                 self.config.get(name, 'terminal_context'),
-                self.config.get(name, 'string_context'),
+                self.config.get(name, 'position_context'),
                 self.config.get(name, 'url_context')])
 
     def sections(self):

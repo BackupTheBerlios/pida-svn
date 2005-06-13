@@ -237,9 +237,11 @@ class Plugin(plugin.Plugin):
     def evt_die(self):
         self.term.kill()
 
-    def evt_breakpointset(self, line):
-        if self.fn:
-            self.set_breakpoint(self.fn, line)
+    def evt_breakpointset(self, line, fn=None):
+        if not fn:
+            fn = self.fn
+        if fn:
+            self.set_breakpoint(fn, line)
 
         
 
