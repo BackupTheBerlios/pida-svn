@@ -27,6 +27,7 @@ import gtk
 import os
 
 class VimWindow(gtk.Window):
+    ''' A GTK window that can communicate with Vim. '''
     def __init__(self, cb=None):
         self.cb = cb
         gtk.Window.__init__(self)
@@ -42,6 +43,7 @@ class VimWindow(gtk.Window):
         self.cwds = {}
 
     def serverlist(self):
+        ''' get the serverlist from the X root window '''
         rootwindow = gdk.get_default_root_window()
         # Read the property
         propval = rootwindow.property_get("VimRegistry")
@@ -59,9 +61,11 @@ class VimWindow(gtk.Window):
         return res
 
     def server_exists(self, id):
+        ''' Vaguely attempt to identify whether the server exists. '''
         return gdk.window_foreign_new(id)
     
     def server_window(self, name):
+        ''' Create and return a foreign window for a Vim server or None. '''
         try:
             wid = self.serverlist()[name]
             return self.server_exists(wid)
@@ -118,7 +122,6 @@ class VimWindow(gtk.Window):
             pass
         self.send_expr(server, 'foreground()', cb)
         
-
     def change_buffer(self, server, nr):
         self.send_ex(server, 'b!%s' % nr)
 
