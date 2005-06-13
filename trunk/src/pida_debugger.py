@@ -3,14 +3,14 @@
 import plugin
 import gtk
 import os
-import cPickle as pickle
+import pickle
 import tree
 import gobject
 import tempfile
 
 import gtkipc
 import linecache
-
+import marshal
 
 def script_directory():
     def f(): pass
@@ -73,16 +73,37 @@ def bframe(frame):
     return '%s %s %s %s %s' % (c.co_name,
         c.co_argcount, c.co_names, c.co_filename, c.co_firstlineno)
 
+class VarTree(tree.Tree):
+    COLUMNS = [('display', gobject.TYPE_STRING, gtk.CellRendererText, True,
+                'markup'),
+               ('dispval', gobject.TYPE_STRING, gtk.CellRendererText, True,
+                'markup'),
+               ('name', gobject.TYPE_STRING, None, False, None),
+               ('value', gobject.TYPE_STRING, None, False, None)]
+
+    def populate(self, varlist):
+        self.clear()
+        varlist.sort()
+        for n, v in varlist:
+            self.add_item(self.markup(n, v) + [n, v])
+
+    def markup(self, name, value):
+        MUN = '<span size="small"><b>%s</b></span>'
+        MUV = '<span size="small">%s</span>'
+        return [(MUN % name), (MUV % value)]
+
 from cgi import escape
 
 class PidaFrame(object):
-    def __init__(self, fn, lineno, name, args, ret, line):
+    def __init__(self, fn, lineno, name, args, ret, line, locs, globs=None):
         self.filename = fn
         self.lineno = lineno
         self.name = name
         self.args = args
         self.line = line
         self.ret = ret
+        self.locs = locs
+        self.globs = globs
 
     def markup(self):
         t = ('<span size="small">%s\n'
@@ -113,7 +134,7 @@ class DebugTerminal(vte.Terminal):
         self.cb = cb
         self.pid = None
         vte.Terminal.__init__(self)
-        self.set_size_request(-1, 300)
+        self.set_size_request(-1, 50)
 
     def kill(self):
         if self.pid:
@@ -162,9 +183,26 @@ class Plugin(plugin.Plugin):
 
         self.stack = StackTree(self.cb)
         tb.pack_start(self.stack.win)
+        self.stack.connect_select(self.cb_stack_select)
 
+
+        nb = gtk.Notebook()
+        vp.pack2(nb)
+
+        brlb = gtk.Label()
+        brlb.set_markup('<span size="small">Breaks</span>')
         self.breaks = BreakTree(self.cb)
-        vp.pack2(self.breaks.win)
+        nb.append_page(self.breaks.win, tab_label=brlb)
+
+        loclb = gtk.Label()
+        loclb.set_markup('<span size="small">Locals</span>')
+        self.locs = VarTree(self.cb)
+        nb.append_page(self.locs.win, tab_label=loclb)
+
+        gllb = gtk.Label()
+        gllb.set_markup('<span size="small">Globals</span>')
+        self.globs = VarTree(self.cb)
+        nb.append_page(self.globs.win, tab_label=gllb)
 
         self.curindex = 0
         self.lfn = tempfile.mktemp('.py', 'pidatmp')
@@ -187,7 +225,9 @@ class Plugin(plugin.Plugin):
         
     def do_stack(self, stacks):
         stack = pickle.loads(stacks)
+        #print len(stack[0].split('\1'))
         self.stack.populate([PidaFrame(*fr) for fr in stack], -1)
+        
 
     def send(self, command):
         if self.term.pid:
@@ -230,6 +270,13 @@ class Plugin(plugin.Plugin):
 
     def cb_continue(self, *args):
         self.send('continue')
+
+    def cb_stack_select(self, ite):
+        frame = self.stack.selected(1)
+        self.locs.populate(frame.locs)
+        self.globs.populate(frame.globs)
+        print frame.globs, frame.locs
+        
 
     def evt_bufferchange(self, nr, name):
         self.fn = name

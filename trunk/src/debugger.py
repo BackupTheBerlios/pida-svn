@@ -36,7 +36,7 @@ import os
 import re
 import pprint
 import traceback
-
+import marshal
 import gtkipc
 import tempfile
 
@@ -53,7 +53,7 @@ class Debugger(object):
 
     def received(self, stack, tb):
         s = self.format_stack(stack)
-        self.ipc.write('stack', pickle.dumps(s), 8)
+        self.ipc.write('stack', s, 8)
         self.loop()
         #self.ipc.write('frame', [self.pdb.curindex], 32)
 
@@ -66,7 +66,7 @@ class Debugger(object):
         self.loop()
     
     def format_stack(self, stack):
-        return [self.format_stack_entry(f) for f in stack]
+        return pickle.dumps([self.format_stack_entry(f) for f in stack])
 
     def format_stack_entry(self, frame_lineno, lprefix=': '):
         import linecache, repr
@@ -91,8 +91,24 @@ class Debugger(object):
             L.append(line.strip())
         else:
             L.append('')
+        L.append(self.format_namespace(frame.f_locals))
+        L.append(self.format_namespace(frame.f_globals))
         return L
 
+    def format_namespace(self, nsdict):
+        #return nsdict
+        L = []
+        ks = nsdict.keys()
+        for k in ks:
+            typ = type(nsdict[k])
+            v = ''
+            if typ in [int, str, long, float]:
+                v = '%r' % (nsdict[k])
+            else:
+                v = typ.__name__
+            L.append((k, v))
+        #print L
+        return L
 
 
 
