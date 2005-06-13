@@ -55,7 +55,8 @@ class Tree(object):
                 renderer.set_property('xpad', self.XPAD)
                 attrdict = {attr:i}
                 column = gtk.TreeViewColumn(name, renderer, **attrdict)
-                column.set_expand(False)
+                #column.set_expand(False)
+                column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
                 self.view.append_column(column)
             i = i + 1
 

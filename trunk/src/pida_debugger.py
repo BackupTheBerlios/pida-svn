@@ -66,7 +66,11 @@ class BreakTree(tree.Tree):
             yield [row[1], row[2]]
 
     def markup(self, filename, line):
-        return '%s\n%s' % (filename, line)
+        dn, fn = os.path.split(filename)
+        MU = ('<span size="small"><b>%s</b> '
+              '(<span foreground="#0000c0">%s</span>)\n'
+              '%s</span>')
+        return MU % (fn, line, dn)
 
 def bframe(frame):
     c = frame.f_code
@@ -80,7 +84,9 @@ class VarTree(tree.Tree):
                 'markup'),
                ('name', gobject.TYPE_STRING, None, False, None),
                ('value', gobject.TYPE_STRING, None, False, None)]
-
+    
+    VAR_COLOR = '#c00000'
+    
     def populate(self, varlist):
         self.clear()
         varlist.sort()
@@ -89,8 +95,11 @@ class VarTree(tree.Tree):
 
     def markup(self, name, value):
         MUN = '<span size="small"><b>%s</b></span>'
-        MUV = '<span size="small">%s</span>'
+        MUV = '<span size="small" foreground="%s">%%s</span>' % self.VAR_COLOR
         return [(MUN % name), (MUV % value)]
+
+class LocalsTree(VarTree):
+    VAR_COLOR = '#0000c0'
 
 from cgi import escape
 
@@ -196,7 +205,7 @@ class Plugin(plugin.Plugin):
 
         loclb = gtk.Label()
         loclb.set_markup('<span size="small">Locals</span>')
-        self.locs = VarTree(self.cb)
+        self.locs = LocalsTree(self.cb)
         nb.append_page(self.locs.win, tab_label=loclb)
 
         gllb = gtk.Label()
@@ -225,10 +234,8 @@ class Plugin(plugin.Plugin):
         
     def do_stack(self, stacks):
         stack = pickle.loads(stacks)
-        #print len(stack[0].split('\1'))
         self.stack.populate([PidaFrame(*fr) for fr in stack], -1)
         
-
     def send(self, command):
         if self.term.pid:
             self.term.feed_child('%s\n' % command)
@@ -256,7 +263,6 @@ class Plugin(plugin.Plugin):
     def cb_but_list(self, *args):
         self.send('list')
 
-
     def set_breakpoint(self, fn, line):
         self.breaks.add(fn, line)
         if self.debugger_loaded:
@@ -275,8 +281,6 @@ class Plugin(plugin.Plugin):
         frame = self.stack.selected(1)
         self.locs.populate(frame.locs)
         self.globs.populate(frame.globs)
-        print frame.globs, frame.locs
-        
 
     def evt_bufferchange(self, nr, name):
         self.fn = name
