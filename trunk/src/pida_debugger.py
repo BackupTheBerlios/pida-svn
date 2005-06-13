@@ -214,6 +214,7 @@ class Plugin(plugin.Plugin):
         self.stack = StackTree(self.cb)
         tb.pack_start(self.stack.win)
         self.stack.connect_select(self.cb_stack_select)
+        self.stack.connect_activate(self.cb_stack_activate)
 
 
         nb = gtk.Notebook()
@@ -295,7 +296,16 @@ class Plugin(plugin.Plugin):
         self.term.kill()
 
     def cb_but_list(self, *args):
-        self.send('list')
+        self.goto_stack()
+        
+    def goto_stack(self):
+        frame = self.stack.selected(1)
+        fn = frame.filename
+        line = frame.lineno
+        if fn != self.fn:
+            self.cb.action_openfile(fn)
+        self.cb.action_gotoline(line)
+        #self.send('list')
 
     def set_breakpoint(self, fn, line):
         self.breaks.add(fn, line)
@@ -315,6 +325,9 @@ class Plugin(plugin.Plugin):
         frame = self.stack.selected(1)
         self.locs.populate(frame.locs)
         self.globs.populate(frame.globs)
+
+    def cb_stack_activate(self, tree, path, col):
+        self.goto_stack()
 
     def cb_locs_activate(self, tree, path, col):
         v = self.locs.selected(2)
