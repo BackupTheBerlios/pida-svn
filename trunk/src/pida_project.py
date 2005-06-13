@@ -320,6 +320,7 @@ class Projecteditor(plugin.Transient):
         self.name_entry.set_text('')
         self.wd_entry.set_text('')
         self.show('New Project')
+        self.name_entry.grab_focus()
 
 class Plugin(plugin.Plugin):
     NAME = 'Projects'

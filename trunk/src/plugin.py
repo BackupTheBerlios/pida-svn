@@ -115,6 +115,7 @@ class Questionbox(Messagebox):
         self.qid = self.submit.connect('clicked', cb)
         self.display_label.set_label(msg)
         self.show('Question (%s)' % self.id)
+        self.entry.grab_focus()
         
 class Optionbox(Messagebox):
     def populate_widgets(self):
