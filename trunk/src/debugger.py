@@ -61,6 +61,9 @@ class Debugger(object):
         self.ipc.write('list', ''.join(L), 8)
         self.loop()
 
+    def started(self):
+        self.ipc.write('started', [1], 32)
+        self.loop()
     
     def format_stack(self, stack):
         return [self.format_stack_entry(f) for f in stack]
@@ -1147,6 +1150,7 @@ def main():
     client = Debugger(sid)
     pdb = Pdb(client)
     client.pdb = pdb
+    client.started()
     while 1:
         try:
             pdb._runscript(mainpyfile)

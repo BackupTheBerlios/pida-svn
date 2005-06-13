@@ -225,11 +225,11 @@ class Opts(object):
         else:
             self.write()
 
-        if not os.path.exists(vimscript) or self.dirty_version:
-            f = open(vimscript, 'w')
-            f.write(VIMSCRIPT)
-            f.close()
-            self.dirty_version = False
+        #if not os.path.exists(vimscript) or self.dirty_version:
+        #    f = open(vimscript, 'w')
+        #    f.write(VIMSCRIPT)
+        #    f.close()
+        #    self.dirty_version = False
 
     def add_section(self, section):
         ''' Add a configuration section. '''

@@ -48,9 +48,22 @@ class BreakTree(tree.Tree):
                ('filename', gobject.TYPE_STRING, None, False, None),
                ('line', gobject.TYPE_STRING, None, False, None)]
 
+    def init(self):
+        self.title = gtk.Label()
+        self.toolbar.pack_start(self.title)
+        self.refresh_label()
+
+    def refresh_label(self):
+        self.title.set_markup('Breakpoints')
+
     def add(self, filename, line):
         mu = self.markup(filename, line)
         self.add_item([mu, filename, line])
+
+    def get_list(self):
+        for row in self.model:
+            # not allowed to slice row sequences
+            yield [row[1], row[2]]
 
     def markup(self, filename, line):
         return '%s\n%s' % (filename, line)
@@ -155,6 +168,7 @@ class Plugin(plugin.Plugin):
 
         self.curindex = 0
         self.lfn = tempfile.mktemp('.py', 'pidatmp')
+        self.debugger_loaded = False
 
     def do_list(self, s):
         f = open(self.lfn, 'w')
@@ -165,6 +179,8 @@ class Plugin(plugin.Plugin):
         #self.btree = tree.Tree(self.cb)
         #vp.pack1(self.stree)
 
+    def do_started(self, *args):
+        self.load_breakpoints()
 
     def do_frame(self, fs):
         self.curindex = fs.pop()
@@ -173,10 +189,20 @@ class Plugin(plugin.Plugin):
         stack = pickle.loads(stacks)
         self.stack.populate([PidaFrame(*fr) for fr in stack], -1)
 
-
     def send(self, command):
         if self.term.pid:
             self.term.feed_child('%s\n' % command)
+
+    def send_breakpoint(self, fn, line):
+        self.send('break %s:%s' % (fn, line))
+
+    def load_breakpoints(self):
+        for bp in self.breaks.get_list():
+            self.send_breakpoint(*bp)
+
+    def load(self):
+        pid = self.term.start(self.ipc.get_lid(), self.fn)
+        self.debugger_loaded = True
 
     def cb_but_debug(self, *args):
         self.load()
@@ -190,8 +216,11 @@ class Plugin(plugin.Plugin):
     def cb_but_list(self, *args):
         self.send('list')
 
-    def load(self):
-        pid = self.term.start(self.ipc.get_lid(), self.fn)
+
+    def set_breakpoint(self, fn, line):
+        self.breaks.add(fn, line)
+        if self.debugger_loaded:
+            self.send_breakpoint(fn, line)
 
     def cb_step(self, *args):
         self.send('step')
@@ -206,9 +235,11 @@ class Plugin(plugin.Plugin):
         self.fn = name
 
     def evt_die(self):
-        pass
+        self.term.kill()
 
-
+    def evt_breakpointset(self, line):
+        if self.fn:
+            self.set_breakpoint(self.fn, line)
 
         
 

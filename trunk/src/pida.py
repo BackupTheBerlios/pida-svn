@@ -32,10 +32,10 @@ import plugin
 import icons
 import options
 import config
-from plugins import pida_server
-from plugins import pida_buffer
-from plugins import pida_shell
-from plugins import pida_shortcuts
+import pida_server
+import pida_buffer
+import pida_shell
+import pida_shortcuts
 
 # Version String
 import __init__
@@ -269,13 +269,13 @@ class BarHolder(gtk.HPaned):
         p2.pack2(self.barbook, True, True)
         
         if int(self.cb.opts.get('plugins', 'python_general')):
-            from plugins import pida_python
+            import pida_python
             self.barbook.add_plugin(pida_python.Plugin)
         if int(self.cb.opts.get('plugins', 'project')):
-            from plugins import pida_project
+            import pida_project
             self.barbook.add_plugin(pida_project.Plugin)
         if int(self.cb.opts.get('plugins', 'python_debugger')):
-            from plugins import pida_debugger
+            import pida_debugger
             self.barbook.add_plugin(pida_debugger.Plugin)
 
 def main(argv):
