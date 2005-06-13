@@ -25,14 +25,14 @@ class StackTree(tree.Tree):
                 'markup'),
                ('frame', gobject.TYPE_PYOBJECT, None, False, None)]
 
-    def init(self):
-        self.title = gtk.Label()
-        self.toolbar.pack_start(self.title)
-        self.refresh_label()
+    #def init(self):
+    #    self.title = gtk.Label()
+    #    self.toolbar.pack_start(self.title)
+    #    self.refresh_label()
     #def l_cb_selected(self, tv):
-        #self.fv.refresh_label(self.selected(1))
-    def refresh_label(self):
-        self.title.set_markup('Stack')
+    #    #self.fv.refresh_label(self.selected(1))
+    #def refresh_label(self):
+    #    self.title.set_markup('Stack')
 
 
     def populate(self, stack, curindex):
@@ -51,10 +51,10 @@ class BreakTree(tree.Tree):
                ('filename', gobject.TYPE_STRING, None, False, None),
                ('line', gobject.TYPE_STRING, None, False, None)]
 
-    def init(self):
-        self.title = gtk.Label()
-        self.toolbar.pack_start(self.title)
-        self.refresh_label()
+    #def init(self):
+    #    self.title = gtk.Label()
+    #    self.toolbar.pack_start(self.title)
+    #    self.refresh_label()
 
     def refresh_label(self):
         self.title.set_markup('Breakpoints')
@@ -178,6 +178,7 @@ class DumpWindow(plugin.Transient):
         self.dumptext = gtk.TextView(self.dumpbuf)
         self.dumptext.set_wrap_mode(gtk.WRAP_CHAR)
         self.dumptext.set_size_request(-1, 75)
+        self.dumptext.set_editable(False)
         sw.add(self.dumptext)
         self.frame.pack_start(sw)
 
