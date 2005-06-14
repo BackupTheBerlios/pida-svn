@@ -226,10 +226,10 @@ class Opts(object):
                  'The key press to set a breakpoint at the current line')
         self.add('vim shortcuts', 'shortcut_breakpoint_clear', 'B',
                  'The key press to clear a breakpoint at the current line')
-        self.add('vim shortcuts', 'shortcut_pydoc_yanked', '?',
+        self.add('vim shortcuts', 'shortcut_pydoc_yanked', '/',
                  'The keypress to Pydoc the most recently yankend text.')
-        self.add('vim shortcuts', 'shortcut_pydoc_cursor', '/',
-                 'The keypress to Pydoc the most recently yankend text.')
+        self.add('vim shortcuts', 'shortcut_pydoc_cursor', '?',
+                 'The keypress to Pydoc the word under the cursor.')
 
         if os.path.exists(conffile):
             self.load_defaults()
