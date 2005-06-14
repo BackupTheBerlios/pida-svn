@@ -215,6 +215,7 @@ class Plugin(plugin.Plugin):
         tb.pack_start(self.stack.win)
         self.stack.connect_select(self.cb_stack_select)
         self.stack.connect_activate(self.cb_stack_activate)
+        self.stack.connect_rightclick(self.cb_stack_rclick)
 
 
         nb = gtk.Notebook()
@@ -223,6 +224,7 @@ class Plugin(plugin.Plugin):
         brlb = gtk.Label()
         brlb.set_markup('<span size="small">Breaks</span>')
         self.breaks = BreakTree(self.cb)
+        self.breaks.connect_rightclick(self.cb_breaks_rclick)
         nb.append_page(self.breaks.win, tab_label=brlb)
 
         loclb = gtk.Label()
@@ -244,6 +246,7 @@ class Plugin(plugin.Plugin):
         self.add(self.term, expand=False)
 
         self.curindex = 0
+        self.menu = plugin.PositionPopup(self.cb, 'position')
         self.lfn = tempfile.mktemp('.py', 'pidatmp')
         self.debugger_loaded = False
 
@@ -288,6 +291,17 @@ class Plugin(plugin.Plugin):
     def load(self):
         pid = self.term.start(self.ipc.get_lid(), self.fn)
         self.debugger_loaded = True
+
+    def cb_breaks_rclick(self, ite, time):
+        fn = self.breaks.get(ite, 1)
+        line = self.breaks.get(ite, 2)
+        self.menu.popup(fn, line, time)
+
+    def cb_stack_rclick(self, ite, time):
+        frame = self.stack.get(ite, 1)
+        fn = frame.filename
+        line = frame.lineno
+        self.menu.popup(fn, line, time)
 
     def cb_but_debug(self, *args):
         self.load()
@@ -372,7 +386,6 @@ class Plugin(plugin.Plugin):
 
     def evt_breakpointclear(self, line, fn=None):
         line = '%s' % line
-        print 'clearing', fn, line
         if not fn:
             fn = self.fn
         if fn:
