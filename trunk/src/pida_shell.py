@@ -287,10 +287,9 @@ class Logterminal(PidaTerminal):
 
     def write_log(self, message, details='', level=0):
         if level >= self.level():
-        
             self.term.feed('%s ' % level, '32;1')
             self.term.feed('%s ' % message, '34;1')
-            self.term.feed('%s\r\n' % self.truncate(details)) 
+            self.term.feed('%s\r\n' % self.truncate(details))
 
     def truncate(self, message):
         return message[:36]

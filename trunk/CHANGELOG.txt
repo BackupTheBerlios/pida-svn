@@ -1,7 +1,9 @@
-Change Log
+change log
 --
 version 0.1.8
 
+button to launch pydoc search from Pida
+shortcuts to execute pydoc from vim
 frame/breakpoint context menus
 python profiler interface
 debugger executes, and evaluates arbitrary python expressions in the namespace
@@ -31,12 +33,12 @@ context menus made glob-configurable
 context sensitive menus for files and directories
 configurable terminal toolbar
 plugins informed when configuration registry has been changed
-vim shortcuts for controlling PIDA are configurable
+vim shortcuts for controlling pida are configurable
 File browser new files created in correct direcory.
 Fixed absolute path/relative path bug (thanks mw at agami dot at)
-Added VCS update support
-Added VCS add file support
-Add VCS remove file support
+Added vcs update support
+Added vcs add file support
+Add vcs remove file support
 Added controls to file browser
 Stepping debugger, combined text-graphical interface.
 debian packaging utilities gcbirzan @ at wolfheart.ro
