@@ -1,4 +1,3 @@
-breakpoint clearing
 breakpoint toolbar
 docstring as tooltip
 confirm delete
