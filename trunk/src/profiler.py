@@ -25,6 +25,7 @@ import sys
 import gtkipc
 import tempfile
 import pickle
+import gtk
 
 
 class Profiler(object):

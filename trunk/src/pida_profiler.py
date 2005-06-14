@@ -42,12 +42,41 @@ def script_directory():
 
 SCRIPT_DIR = script_directory()
 
+
+class DetailsWindow(gtk.Window):
+
+    def __init__(self, cb, treemodel):
+        self.cb = cb
+        gtk.Window.__init__(self)
+        self.set_title('PIDA Profiler Detailed View')
+        self.treeview = gtk.TreeView(treemodel)
+        self.treeview.set_headers_clickable(True)
+        self.treeview.set_rules_hint(True)
+        sw = gtk.ScrolledWindow()
+        sw.add(self.treeview)
+        self.add(sw)
+        for i, col in enumerate(PstatsTree.COLUMNS[1:]):
+            renderer = gtk.CellRendererText()
+            column = gtk.TreeViewColumn(col[0], renderer, text=i+1)
+            column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
+            column.set_clickable(True)
+            column.set_sort_column_id(i+1)
+            #column.connect('clicked', self.cb_col_clicked)
+            self.treeview.append_column(column)
+
+    def cb_col_clicked(self, col):
+        pass
+
+
 class PstatsTree(tree.Tree):
     COLUMNS = [('display', gobject.TYPE_STRING, gtk.CellRendererText, True,
                 'markup'),
-               ('filename', gobject.TYPE_STRING, None, False, None),
-               ('lineno', gobject.TYPE_INT, None, False, None),
-               ('function', gobject.TYPE_STRING, None, False, None),
+               ('filename', gobject.TYPE_STRING, gtk.CellRendererText, False,
+                'text'),
+               ('lineno', gobject.TYPE_INT, gtk.CellRendererText, False,
+                'text'),
+               ('function', gobject.TYPE_STRING, gtk.CellRendererText, False,
+                'text'),
                ('number of calls', gobject.TYPE_INT, None, False, None),
                ('total time', gobject.TYPE_FLOAT, None, False, None),
                ('total per call', gobject.TYPE_FLOAT, None, False, None),
@@ -82,9 +111,16 @@ class Plugin(plugin.Plugin):
             self.sortbox.append_text(col[0])
         self.sortbox.set_active(2)
 
+        self.add_button('fullscreen', self.cb_details,
+            'Open results in a separate window.')
+
         self.profiler = Profiler(self.cb)
         self.fn = None
         self.readbuf = ''
+
+    def cb_details(self, *args):
+        dw = DetailsWindow(self.cb, self.pstats.model)
+        dw.show_all()
 
     def cb_sort_changed(self, *args):
         order = self.sortbox.get_active() + 1
@@ -116,7 +152,7 @@ class Plugin(plugin.Plugin):
     def markup(self, fn, dn, line, func, ncalls, tott, totper, cumt, cumper):
         MU = ('<span size="small"><b>%s()</b> %s ('
               '<span foreground="#0000c0">%s</span>) %s\n'
-              'N:<b>%s</b> T:<b>%s</b>/<b>%s</b>) '
+              'N:<b>%s</b> T:<b>%s</b>/<b>%s</b> '
               'C:<b>%s</b>/<b>%s</b></span>')
         return MU % (cgi.escape(func), cgi.escape(fn),
                      line, dn, ncalls, tott, totper, cumt, cumper)
