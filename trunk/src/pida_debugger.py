@@ -278,6 +278,9 @@ class Plugin(plugin.Plugin):
     def send_breakpoint(self, fn, line):
         self.send('break %s:%s' % (fn, line))
 
+    def send_breakpoint_clear(self, fn, line):
+        self.send('clear %s:%s' % (fn, line))
+
     def load_breakpoints(self):
         for bp in self.breaks.get_list():
             self.send_breakpoint(*bp)
@@ -325,6 +328,9 @@ class Plugin(plugin.Plugin):
                 if self.breaks.get(ite, 2) == line:
                     self.breaks.model.remove(ite)
         self.breaks.model.foreach(remove)
+        if self.debugger_loaded:
+            self.send_breakpoint_clear(fn, line)
+
                 
 
     def cb_step(self, *args):
