@@ -225,3 +225,10 @@ class Plugin(plugin.Plugin):
         brm()
         self.refwin.hide()
 
+    def evt_pydoc(self, text):
+        pydoc = self.cb.opts.get('commands', 'pydoc')
+        self.cb.action_newterminal(pydoc, ['pydoc', text])
+
+
+
+

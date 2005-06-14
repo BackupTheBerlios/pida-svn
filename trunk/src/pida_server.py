@@ -37,7 +37,11 @@ SHORTCUTS = [('shortcut_execute',
              ('shortcut_breakpoint_set',
                 'Async_event("breakpointset,".line("."))'),
              ('shortcut_breakpoint_clear',
-                'Async_event("breakpointclear,".line("."))')]
+                'Async_event("breakpointclear,".line("."))'),
+             ('shortcut_pydoc_yanked',
+                '''Async_event("pydoc,".expand('<cword>'))'''),
+             ('shortcut_pydoc_cursor',
+                'Async_event("pydoc,".@")')]
 
 NMAP_COM = 'nmap %s :call %s<lt>CR>'
 

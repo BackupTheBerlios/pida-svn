@@ -163,6 +163,9 @@ class Opts(object):
         mccom = which('mc') or '/usr/bin/mc'
         self.add('commands', 'mc', mccom,
                  'The absolute path to a file manager Application', 'file')
+        pydoccom = which('pydoc') or '/usr/bin/pydoc'
+        self.add('commands', 'pydoc', pydoccom,
+                 'The absolute path to the pydoc Application', 'file')
 
         ### Logging options
         self.add_section('log')
@@ -223,6 +226,10 @@ class Opts(object):
                  'The key press to set a breakpoint at the current line')
         self.add('vim shortcuts', 'shortcut_breakpoint_clear', 'B',
                  'The key press to clear a breakpoint at the current line')
+        self.add('vim shortcuts', 'shortcut_pydoc_yanked', '?',
+                 'The keypress to Pydoc the most recently yankend text.')
+        self.add('vim shortcuts', 'shortcut_pydoc_cursor', '/',
+                 'The keypress to Pydoc the most recently yankend text.')
 
         if os.path.exists(conffile):
             self.load_defaults()
