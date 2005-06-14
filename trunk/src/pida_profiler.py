@@ -49,6 +49,7 @@ class DetailsWindow(gtk.Window):
         self.cb = cb
         gtk.Window.__init__(self)
         self.set_title('PIDA Profiler Detailed View')
+        self.set_size_request(640, 400)
         self.treeview = gtk.TreeView(treemodel)
         self.treeview.set_headers_clickable(True)
         self.treeview.set_rules_hint(True)
@@ -57,10 +58,14 @@ class DetailsWindow(gtk.Window):
         self.add(sw)
         for i, col in enumerate(PstatsTree.COLUMNS[1:]):
             renderer = gtk.CellRendererText()
+            renderer.set_property('scale', 0.8)
             column = gtk.TreeViewColumn(col[0], renderer, text=i+1)
-            column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
+            
+            #column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
+            column.set_expand(False)
             column.set_clickable(True)
             column.set_sort_column_id(i+1)
+            column.set_resizable(True)
             #column.connect('clicked', self.cb_col_clicked)
             self.treeview.append_column(column)
 

@@ -1,8 +1,8 @@
-0.1.7
---
+breakpoint clearing
+breakpoint toolbar
 docstring as tooltip
 confirm delete
-Bug with the class browser and reference list not updating
+
 
 Bugs
 --
@@ -19,8 +19,3 @@ project manager
     #file list
     #open file
     open all files
-
-guibrowser
-    file identified as gui
-    builds gui, and inspects
-    main window?

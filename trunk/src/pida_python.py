@@ -132,6 +132,7 @@ class Plugin(plugin.Plugin):
         self.defs.connect_select(self.cb_defs_select)
         self.refs.connect_select(self.cb_refs_select)
         self.defs.connect_rightclick(self.cb_defs_rclick)
+        self.refs.connect_rightclick(self.cb_refs_rclick)
 
     def get_references(self, label='References'):
         row, col = self.defs.selected(2), self.defs.selected(3)
@@ -182,6 +183,10 @@ class Plugin(plugin.Plugin):
 
     def cb_defs_rclick(self, ite, time):
         line = self.defs.get(ite, 2)
+        self.menu.popup(self.fn, line, time)
+
+    def cb_refs_rclick(self, ite, time):
+        line = self.refs.get(ite, 2)
         self.menu.popup(self.fn, line, time)
 
     def cb_but_rename(self, *a):
