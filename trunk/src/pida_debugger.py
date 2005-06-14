@@ -308,9 +308,24 @@ class Plugin(plugin.Plugin):
         #self.send('list')
 
     def set_breakpoint(self, fn, line):
-        self.breaks.add(fn, line)
-        if self.debugger_loaded:
-            self.send_breakpoint(fn, line)
+        exist = []
+        def exists(model, path, ite, exist):
+            if self.breaks.get(ite, 1) == fn:
+                if self.breaks.get(ite, 2) == line:
+                    exist.append(True)
+        self.breaks.model.foreach(exists, exist)
+        if not exist:
+            self.breaks.add(fn, line)
+            if self.debugger_loaded:
+                self.send_breakpoint(fn, line)
+
+    def clear_breakpoint(self, fn, line):
+        def remove(model, path, ite):
+            if self.breaks.get(ite, 1) == fn:
+                if self.breaks.get(ite, 2) == line:
+                    self.breaks.model.remove(ite)
+        self.breaks.model.foreach(remove)
+                
 
     def cb_step(self, *args):
         self.send('step')
@@ -348,6 +363,12 @@ class Plugin(plugin.Plugin):
             fn = self.fn
         if fn:
             self.set_breakpoint(fn, line)
+
+    def evt_breakpointclear(self, line, fn=None):
+        if not fn:
+            fn = self.fn
+        if fn:
+            self.clear_breakpoint(fn, line)
 
     def evt_started(self, *args):
         self.dumpwin.hide()

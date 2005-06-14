@@ -35,7 +35,9 @@ SHORTCUTS = [('shortcut_execute',
              ('shortcut_project_execute',
                 'Async_event("projectexecute,")'),
              ('shortcut_breakpoint_set',
-                'Async_event("breakpointset,".line("."))')]
+                'Async_event("breakpointset,".line("."))'),
+             ('shortcut_breakpoint_clear',
+                'Async_event("breakpointclear,".line("."))')]
 
 NMAP_COM = 'nmap %s :call %s<lt>CR>'
 

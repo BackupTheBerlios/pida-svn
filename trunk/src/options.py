@@ -183,7 +183,8 @@ class Opts(object):
                  'This is how the Windows-style text editors behave, and '
                  '<b>perfect if you hate Vim</b>', 'boolean')
         self.add('vim', 'mode_embedded', '0',
-                 'Embed Vim in Pida when running, like a standard IDE.',
+                 'Embed Vim in Pida when running, like a standard IDE. '
+                 '<b>Needs restart</b>',
                  'boolean')
 
         ### plugin options
@@ -220,6 +221,8 @@ class Opts(object):
                  'The key press to execute the current project in PIDA')
         self.add('vim shortcuts', 'shortcut_breakpoint_set', 'b',
                  'The key press to set a breakpoint at the current line')
+        self.add('vim shortcuts', 'shortcut_breakpoint_clear', 'B',
+                 'The key press to clear a breakpoint at the current line')
 
         if os.path.exists(conffile):
             self.load_defaults()
