@@ -119,8 +119,9 @@ class Plugin(plugin.Plugin):
 
         self.refs = self.refwin.tree
         
-        self.add_button('profile', self.cb_but_profile, 'Run in the Python profiler')
-        self.add_button('debug', self.cb_but_debug, 'Run in the Python debugger')
+        self.add_button('warning', self.cb_but_pydoc , 'Look up in Pydoc')
+        #self.add_button('profile', self.cb_but_profile, 'Run in the Python profiler')
+        #self.add_button('debug', self.cb_but_debug, 'Run in the Python debugger')
         self.add_separator()
         self.add_button('undo', self.cb_but_undo, 'Undo last refactoring')
         self.add_button('rename', self.cb_but_rename, 'Rename class or method')
@@ -164,6 +165,11 @@ class Plugin(plugin.Plugin):
     def cb_alternative(self):
         self.execute()
         
+    def cb_but_pydoc(self, *args):
+        def ans(text):
+            self.evt_pydoc(text)
+        self.question('Search Pydoc for:', ans)
+
     def cb_but_debug(self, *args):
         py = self.cb.opts.get('commands', 'python')
         self.cb.action_newterminal(py, ['pdb', '-m', 'pdb', self.fn])
