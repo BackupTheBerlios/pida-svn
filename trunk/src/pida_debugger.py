@@ -371,6 +371,8 @@ class Plugin(plugin.Plugin):
             self.set_breakpoint(fn, line)
 
     def evt_breakpointclear(self, line, fn=None):
+        line = '%s' % line
+        print 'clearing', fn, line
         if not fn:
             fn = self.fn
         if fn:

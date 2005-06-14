@@ -291,6 +291,8 @@ class PositionPopup(ContextPopup):
         self.clear()
         self.add_item('break', 'Add breakpoint here', self.cb_setbp,
                       [filename, line])
+        self.add_item('clear', 'Clear breakpoint here', self.cb_clrbp,
+                      [filename, line])
         self.generate()
         self.add_separator()
         self.add_item('configure', 'Configure these shortcuts.',
@@ -299,6 +301,9 @@ class PositionPopup(ContextPopup):
     
     def cb_setbp(self, menu, (filename, line)):
         self.cb.evt('breakpointset', line, filename)
+
+    def cb_clrbp(self, menu, (filename, line)):
+        self.cb.evt('breakpointclear', line, filename)
 
 class ContextToolbar(ContextGenerator, Toolbar):
     def __init__(self, cb, name):
