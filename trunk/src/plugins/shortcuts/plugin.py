@@ -193,7 +193,7 @@ class Plugin(plugin.Plugin):
         else:
             self.message('Name and Command must be entered.')
         self.refresh()
-        self.cb.action_resetshortcuts()
+        self.cb.evt('resetshortcuts')
     
     def display(self, name):
         s, g, i, ctx = self.shortcuts.get(name)

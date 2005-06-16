@@ -260,7 +260,7 @@ class ConfigEditor(object):
             for opt in self.opts.options(section):
                 self.controls[(section, opt)].save()
         self.opts.write()
-        self.cb.action_reset()
+        self.cb.evt('reset')
 
     def show(self):
         self.load()

@@ -75,14 +75,6 @@ class App(object):
         self.evt('init')
         self.evt('started', self.cw.serverlist())
 
-    def action_reset(self):
-        ''' called when the config has changed '''
-        self.evt('reset')
-
-    def action_resetshortcuts(self):
-        ''' Called when the shortcuts have been changed ''' 
-        self.evt('shortcutschanged')
-
     def action_showconfig(self):
         ''' called to show the config editor '''
         self.configeditor = config.ConfigEditor(self)
@@ -90,7 +82,7 @@ class App(object):
 
     def action_showshortcuts(self):
         ''' called to show the shortcut editor '''
-        self.shortcuts = pida_shortcuts.Plugin(self)
+        self.shortcuts = create_plugin('shortcuts', self)
         self.shortcuts.evt_init()
         self.shortcuts.show()
 
