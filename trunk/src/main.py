@@ -43,7 +43,8 @@ __version__ = __init__.__version__
 
 import gtkextra
 
-import imp
+
+PLUGINS = ['project', 'python_browser', 'python_debugger', 'python_profiler']
 
 def create_plugin(name, cb):
     mod = __import__('pida.plugins.%s.plugin' % name, {}, {}, [True])
@@ -192,60 +193,18 @@ class Window(gdkvim.VimWindow):
         self.set_title(caption)
         self.connect('key_press_event', self.cb_key_press)
 
-        self.bh = BarHolder(self.cb)
+        self.bh = gtk.HPaned()
+        self.bh.show()
         self.add(self.bh)
-        self.show()
 
-    def cb_key_press(self, widget, event):
-        #keyname = gtk.gdk.keyval_name(event.keyval)
-        #print "Key %s (%d) was pressed" % (keyname, event.keyval)
-        if event.state & gtk.gdk.CONTROL_MASK:
-            if event.keyval == 97:
-                print '<C-a>'
-                return True
-            elif event.keyval == 115:
-                print '<C-a>'
-                return True
-        return False
-# Will be moved
-class BarNotebook(gtk.EventBox):
-    def __init__(self, cb):
-        self.cb = cb
-        gtk.EventBox.__init__(self)
-        self.show()
-        self.nb = gtk.Notebook()
-        self.add(self.nb)
-        self.nb.set_show_border(True)
-        self.nb.show()
 
-    def add_plugin(self, plugin):
-        self.cb.plugins.append(plugin)
-        eb = gtk.EventBox()
-        tlab = gtk.HBox()
-        eb.add(tlab)
-        self.cb.tips.set_tip(eb, plugin.NAME)
-        im = self.cb.icons.get_image(plugin.ICON)
-        tlab.pack_start(im, expand=False)
-        label = gtk.Label('%s' % plugin.NAME[:2])
-        tlab.pack_start(label, expand=False, padding=2)
-        tlab.show_all()
-        self.nb.append_page(plugin.win, tab_label=eb)
-        self.nb.show_all()
-        plugin.ctlbar.remove(plugin.label)
-# will be moved   
-class BarHolder(gtk.HPaned):
-    def __init__(self, cb):
-        self.cb = cb
-        self.cb.barholder = self
-        gtk.HPaned.__init__(self)
-        self.show()
-
+        self.cb.barholder = self.bh
         self.cb.embedwindow = gtk.VBox()
-        self.pack1(self.cb.embedwindow, True, True)
+        self.bh.pack1(self.cb.embedwindow, True, True)
         
         p1 = gtk.VPaned()
         p1.show()
-        self.pack2(p1, True, True)
+        self.bh.pack2(p1, True, True)
 
         p2 = gtk.HPaned()
         p2.show()
@@ -270,24 +229,46 @@ class BarHolder(gtk.HPaned):
         lbox.pack_start(buffer_plug.win)
         self.cb.plugins.append(buffer_plug)
 
-        self.barbook = BarNotebook(self.cb)
-        p2.pack2(self.barbook, True, True)
         
-        if self.cb.opts.get('plugins', 'python_browser') == '1':
-            pi = create_plugin('python_browser', self.cb)
-            self.barbook.add_plugin(pi)
+        self.notebook = gtk.Notebook()
+        self.notebook.set_show_border(True)
+        self.notebook.show()
+        p2.pack2(self.notebook, True, True)
+
+        for plugin in PLUGINS:
+            if self.cb.opts.get('plugins', plugin) == '1':
+                pi = create_plugin(plugin, self.cb)
+                self.add_plugin(pi)
+
+        self.show()
             
-        if self.cb.opts.get('plugins', 'project') == '1':
-            pi = create_plugin('project', self.cb)
-            self.barbook.add_plugin(pi)
-            
-        if self.cb.opts.get('plugins', 'python_debugger') == '1':
-            pi = create_plugin('python_debugger', self.cb)
-            self.barbook.add_plugin(pi)
-            
-        if self.cb.opts.get('plugins', 'python_profiler') == '1':
-            pi = create_plugin('python_profiler', self.cb)
-            self.barbook.add_plugin(pi)
+    def cb_key_press(self, widget, event):
+        #keyname = gtk.gdk.keyval_name(event.keyval)
+        #print "Key %s (%d) was pressed" % (keyname, event.keyval)
+        if event.state & gtk.gdk.CONTROL_MASK:
+            if event.keyval == 97:
+                print '<C-a>'
+                return True
+            elif event.keyval == 115:
+                print '<C-a>'
+                return True
+        return False
+        
+    def add_plugin(self, plugin):
+        self.cb.plugins.append(plugin)
+        eb = gtk.EventBox()
+        tlab = gtk.HBox()
+        eb.add(tlab)
+        self.cb.tips.set_tip(eb, plugin.NAME)
+        im = self.cb.icons.get_image(plugin.ICON)
+        tlab.pack_start(im, expand=False)
+        label = gtk.Label('%s' % plugin.NAME[:2])
+        tlab.pack_start(label, expand=False, padding=2)
+        tlab.show_all()
+        self.notebook.append_page(plugin.win, tab_label=eb)
+        self.notebook.show_all()
+        plugin.ctlbar.remove(plugin.label)
+# will be moved   
 
 def main(argv):
     a = App()
