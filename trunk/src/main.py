@@ -27,35 +27,33 @@ import gtk
 import gobject
 
 # Pida
+import gtkextra
 import vim.gdkvim as gdkvim
-#import plugin
-#import icons
 import configuration.options as options
 import configuration.config as config
-#import pida_server
-#import pida_buffer
-#import pida_shell
-#import pida_shortcuts
 
 # Version String
 import __init__
 __version__ = __init__.__version__
 
-import gtkextra
-
-
+# Available plugins, could be automatically generated
 PLUGINS = ['project', 'python_browser', 'python_debugger', 'python_profiler']
 
+# Convenience method to ease importing plugin modules by name.
 def create_plugin(name, cb):
-    ''' Find a named plugin and instantiate it. '''
+    """ Find a named plugin and instantiate it. """
     # import the module
     # The last arg [True] just needs to be non-empty
     mod = __import__('pida.plugins.%s.plugin' % name, {}, {}, [True])
     # instantiate the plugin and return it
     return mod.Plugin(cb)
 
-class App(object):
-    ''' The application class, a glue for everything '''
+# Instance of this class is passed to every single custom object in Pida,
+# as the cb parameter on instantiation.
+# It is responsible for performing "actions" on the editor or other compnent
+# and also for initiating "events" and propogating them to plugins.
+class Application(object):
+    """ The application class, a glue for everything """
     def __init__(self):
         # List of plugins loaded used for event passing
         self.plugins = []
@@ -71,107 +69,128 @@ class App(object):
         self.plugins.append(self.shortcuts)
         # Communication window
         self.cw = Window(self)
-        #
+        # Ensure that there is no initial server set.
         self.server = None
         # start
         self.action_log('Pida', 'starting', 0)
+        # fire the init event, telling plugins to initialize
         self.evt('init')
+        # fire the started event with the initial server list
         self.evt('started', self.cw.serverlist())
 
     def action_showconfig(self):
-        ''' called to show the config editor '''
+        """ called to show the config editor """
+        # Create a new configuration editor, and show it.
         self.configeditor = config.ConfigEditor(self)
         self.configeditor.show()
 
     def action_showshortcuts(self):
-        ''' called to show the shortcut editor '''
+        """ called to show the shortcut editor """
+        # create a new shortcut editor and show it.
         self.shortcuts = create_plugin('shortcuts', self)
+        # is a plugin, so must fire its init event.
         self.shortcuts.evt_init()
         self.shortcuts.show()
 
     def action_log(self, message, details, level=0):
-        ''' called to make log entry '''
+        """ called to make log entry """
+        # Call the log event, the log itself will respond.
         self.evt('log', message, details, level)
 
     def action_close(self):
-        ''' Quit Pida. '''
+        """ Quit Pida. """
         # Tell plugins to die
         self.evt('die')
         # Fin
         gtk.main_quit()
 
     def action_connectserver(self, server):
-        ''' Connect to the named server. '''
+        """ Connect to the named server. """
         self.action_log('action', 'connectserver', 0)
         self.server = server
-        #vs = self.opts.get('files', 'script_vim')
-        #self.cw.send_ex(self.server, 'so %s' % vs)
-        # Send the server change event
+        # Send the server change event with the appropriate server
+        # The vim plugin (or others) will respond to this event
         self.evt('connectserver', server)
 
     def action_closebuffer(self):
+        """ Close the current buffer. """
         self.action_log('action', 'closebuffer', 0)
+        # Call the method of the vim communication window.
         self.cw.close_buffer(self.server)
 
     def action_gotoline(self, ln):
         self.action_log('action', 'gotoline', 0)
+        # Call the method of the vim communication window.
         self.cw.change_cursor(self.server, 1, ln)
+        # Optionally foreground Vim.
         self.action_foreground()
 
     def action_getbufferlist(self):
-        ''' Get the buffer list. '''
+        """ Get the buffer list. """
         self.action_log('action', 'getbufferlist', 0)
+        # Call the method of the vim communication window.
         self.cw.get_bufferlist(self.server)
 
     def action_getcurrentbuffer(self):
-        ''' Ask Vim to return the current buffer number. '''
+        """ Ask Vim to return the current buffer number. """
+        # Call the method of the vim communication window.
         self.cw.get_current_buffer(self.server)
 
     def action_changebuffer(self, nr):
-        '''Change buffer in the active vim'''
+        """Change buffer in the active vim"""
         self.action_log('action', 'changebuffer', 0)
+        # Call the method of the vim communication window.
         self.cw.change_buffer(self.server, nr)
+        # Optionally foreground Vim.
         self.action_foreground()
    
     def action_foreground(self):
-        ''' Put vim into the foreground '''
+        """ Put vim into the foreground """
+        # Check the configuration option.
         if int(self.opts.get('vim', 'foreground_jump')):
+            # Call the method of the vim communication window.
             self.cw.foreground(self.server)
-            #if self.opts.get('vim', 'mode_embedded') == '1':
-            #    self.embedwindow.get_children()[0].grab_focus()
  
     def action_openfile(self, fn):
-        '''open a new file in the connected vim'''
+        """open a new file in the connected vim"""
         self.action_log('action', 'openfile', 0)
+        # Call the method of the vim communication window.
         self.cw.open_file(self.server, fn)
 
     def action_preview(self, fn):
         self.cw.preview_file(self.server, fn)
 
     def action_newterminal(self, command, args, **kw):
-        '''Open a new terminal, by issuing an event'''
+        """Open a new terminal, by issuing an event"""
         self.action_log('action', 'newterminal', 0)
+        # Fire the newterm event, the terminal plugin will respond.
         self.evt('newterm', command, args, **kw)
 
     def send_ex(self, ex):
-        ''' Send a normal mode command. '''
+        """ Send a normal mode command. """
+        # Call the method of the vim communication window.
         if self.server:
             self.cw.send_ex(self.server, ex)
 
     def get_serverlist(self):
-        '''Get the list of servers'''
+        """Get the list of servers"""
+        # Call the method of the vim communication window.
         return self.cw.serverlist()
 
     def evt(self, name, *value, **kw):
-        '''Callback for events from vim client, propogates them to plugins'''
+        """Callback for events from vim client, propogates them to plugins"""
+        # log all events except for log events
         if name != 'log':
             self.action_log('event', name)
+        # pass the event to every plugin
         for plugin in self.plugins:
-            getattr(plugin, 'evt_%s' % name, lambda *a, **k: None)(*value, **kw)
+            # call the instance method, or an empty lambda
+            getattr(plugin, 'evt_%s' % name,
+                    lambda *a, **k: None)(*value, **kw)
 
 
 class Window(gdkvim.VimWindow):
-    ''' the main window '''
+    """ the main window """
     def __init__(self, cb):
         gdkvim.VimWindow.__init__(self, cb)
         self.set_size_request(20,200)
@@ -230,23 +249,28 @@ class Window(gdkvim.VimWindow):
         self.show()
             
     def cb_key_press(self, widget, event):
-        #keyname = gtk.gdk.keyval_name(event.keyval)
-        #print "Key %s (%d) was pressed" % (keyname, event.keyval)
+        """ Callback to all key press events """
+        # if <CONTROL> was pressed with the key
         if event.state & gtk.gdk.CONTROL_MASK:
             if event.keyval == 97:
                 print '<C-a>'
-                return True
+                # returning True prevents the key event propogating
+                return False
             elif event.keyval == 115:
-                print '<C-a>'
-                return True
+                print '<C-s>'
+                return False
         return False
         
     def cb_quit(self, *a):
-        '''Callback for user closing the main window'''
+        """ Callback for user closing the main window """
+        # call the close acition of the application.
         self.cb.action_close()
         
     def add_plugin(self, plugin):
+        """ Add a plugin to the optional plugin notebook. """
+        # add the plugin to the Application's list of plugins
         self.cb.plugins.append(plugin)
+        # create a label with a tooltip/EventBox
         eb = gtk.EventBox()
         tlab = gtk.HBox()
         eb.add(tlab)
@@ -256,13 +280,14 @@ class Window(gdkvim.VimWindow):
         label = gtk.Label('%s' % plugin.NAME[:2])
         tlab.pack_start(label, expand=False, padding=2)
         tlab.show_all()
+        # create a new notebook page
         self.notebook.append_page(plugin.win, tab_label=eb)
         self.notebook.show_all()
+        # Remove the toolbar label present by default on plugins
         plugin.ctlbar.remove(plugin.label)
-# will be moved   
 
 def main(argv):
-    a = App()
+    a = Application()
     gtk.main()
 
 if __name__ == '__main__':
