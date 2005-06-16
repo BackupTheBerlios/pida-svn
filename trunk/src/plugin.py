@@ -138,41 +138,6 @@ class Plugin(object):
         self.oldparent = self.win.get_parent()
         self.dwin = gtkextra.Winparent(self.cb, self)
 
-    def cb_sep_rclick(self, event):
-        """ Called when the toolbar separator is right clicked. 
-        
-        Default behaviour pops up the toolbar menu. Override this method to
-        change this behaviour.
-        """
-        self.toolbar_popup.popup(event.time)
-
-    def cb_sep_dclick(self, event):
-        """ Called when the horizontal separator bar is double clicked. 
-        
-        Override this method to add desired bahaviour
-        """
-        pass
-
-    def cb_alternative(self):
-        """ The alternative function called for non detachable plugins. """
-        pass
-    
-    def cb_toggledetatch(self, *a):
-        """ Called back when the detach button is clicked. """
-        # Check whther the detach button is active or not.
-        if self.dtbut.get_active():
-            # Detach detachable plugins, or call the alternative callback.
-            if self.DETACHABLE:
-                self.detatch()
-            else:
-                self.cb_alternative()
-                # Ensure the toggle button behaves normally.
-                self.dtbut.set_active(False)
-        else:
-            # Reattach detached plugins.
-            if self.DETACHABLE:
-                self.attach()
-        
     def log(self, message, level):
         """ Log a message. """
         # Add plugin name to message.
@@ -195,6 +160,41 @@ class Plugin(object):
         """ Log an error. """
         self.log(message, 3)
 
+    def cb_sep_rclick(self, event):
+        """ Called when the toolbar separator is right clicked. 
+        
+        Default behaviour pops up the toolbar menu. Override this method to
+        change this behaviour.
+        """
+        self.toolbar_popup.popup(event.time)
+
+    def cb_sep_dclick(self, event):
+        """ Called when the horizontal separator bar is double clicked. 
+        
+        Override this method to add desired bahaviour
+        """
+        pass
+
+    def cb_alternative(self):
+        """ The alternative function called for non detachable plugins. """
+        pass
+    
+    def cb_toggledetatch(self, *a):
+        """ Called back when the detach button is clicked. """
+        # Check whether the detach button is active or not.
+        if self.dtbut.get_active():
+            # Detach detachable plugins, or call the alternative callback.
+            if self.DETACHABLE:
+                self.detatch()
+            else:
+                self.cb_alternative()
+                # Ensure the toggle button behaves normally.
+                self.dtbut.set_active(False)
+        else:
+            # Reattach detached plugins.
+            if self.DETACHABLE:
+                self.attach()
+
     def evt_init(self):
         """ Called on initializing the plugin.
         
@@ -202,3 +202,76 @@ class Plugin(object):
         # Hide the transient windows
         self.msgbox.hide()
         self.qstbox.hide()
+
+    def evt_started(self, serverlist):
+        """ Called after creation. """
+        pass
+
+    def evt_die(self):
+        """ Called before shut-down. """
+        pass
+
+    def evt_reset(self):
+        """ Called when main configuration has been changed. """
+        pass
+
+    def evt_shortcuts(self):
+        """ Called for shortcuts window to be shown. """
+        pass
+
+    def evt_shortcutschanged(self):
+        """ Called when shortcuts have been changed. """
+        pass
+
+    def evt_newterm(self, command, args, **kw):
+        """ Called to open a command in a new terminal. """
+        pass
+
+    def evt_log(self, message, details, level=0):
+        """ Called to log a mesage. """
+        pass
+
+    def evt_connectserver(self, name):
+        """ Called to connect to a server. """
+        pass
+    
+    def evt_serverchange(self, servername):
+        """ Called when the server is changed """
+        pass
+
+    def evt_badserver(self, name):
+        """ Called after attempting to connect to a bad server. """
+        pass
+
+    def evt_bufferlist(self, bufferlist):
+        """ Called when a new buffer list is received. """
+        pass
+        
+    def evt_bufferchange(self, i, name):
+        """ Called when the buffer number has changed. """
+        pass
+
+    def evt_bufferunload(self, *a):
+        """ Called when a buffer is unloaded """
+        pass
+
+    def evt_bufferexecute(self):
+        """ Called to execute the contents of a buffer. """
+        pass
+
+    def evt_breakpointset(self, line, fn=None):
+        """ Called to set a breakpoint. """
+        pass
+
+    def evt_breakpointclear(self, line, fn=None):
+        """ Called to clear a breakpoint. """
+        pass
+
+    def evt_projectexecute(self, arg):
+        """ Called to execute the project. """  
+        pass
+
+    def evt_pydoc(self, text):
+        """ Called to perform a pydoc lookup. """
+        pass
+
