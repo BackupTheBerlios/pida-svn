@@ -71,7 +71,9 @@ class App(object):
         #
         self.server = None
         # start
-        self.action_start()
+        self.action_log('Pida', 'starting', 0)
+        self.evt('init')
+        self.evt('started', self.cw.serverlist())
 
     def action_reset(self):
         ''' called when the config has changed '''
@@ -95,13 +97,6 @@ class App(object):
     def action_log(self, message, details, level=0):
         ''' called to make log entry '''
         self.evt('log', message, details, level)
-
-    # might get rid of this
-    def action_start(self):
-        ''' called when pida started '''
-        self.action_log('action', 'start', 0)
-        self.evt('init')
-        self.evt('started', self.cw.serverlist())
 
     def action_close(self):
         ''' Quit Pida. '''
@@ -193,18 +188,17 @@ class Window(gdkvim.VimWindow):
         self.set_title(caption)
         self.connect('key_press_event', self.cb_key_press)
 
-        self.bh = gtk.HPaned()
-        self.bh.show()
-        self.add(self.bh)
+        p0 = gtk.HPaned()
+        p0.show()
+        self.add(p0)
 
-
-        self.cb.barholder = self.bh
+        self.cb.barholder = p0
         self.cb.embedwindow = gtk.VBox()
-        self.bh.pack1(self.cb.embedwindow, True, True)
+        p0.pack1(self.cb.embedwindow, True, True)
         
         p1 = gtk.VPaned()
         p1.show()
-        self.bh.pack2(p1, True, True)
+        p0.pack2(p1, True, True)
 
         p2 = gtk.HPaned()
         p2.show()
