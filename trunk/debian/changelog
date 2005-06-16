@@ -1,3 +1,12 @@
+pida (0.1.7) unstable; urgency=low
+
+  * New upstream release.
+  * Packaging now done upstream.
+  * Dependency on gvim actually works, but since it can't be versioned, Woody
+    users are out of luck.
+
+ -- George Cristian Bîrzan <gcbirzan@wolfheart.ro>  Mon, 13 Jun 2005 01:56:40 +0300
+
 pida (0.1.6+cvs20050608-1) unstable; urgency=low
 
   * Initial release 
