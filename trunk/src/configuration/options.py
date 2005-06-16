@@ -102,7 +102,6 @@ class Opts(object):
                  'A default file will be created at '
                  'this location if no file exists', 'file')
 
-        
         # icon data file
         iconsfn = os.path.join(libdir, 'icons.dat')
         self.add('files', 'data_icons', iconsfn,
@@ -117,8 +116,6 @@ class Opts(object):
         shortsfn = os.path.join(basedir, 'pida.shortcuts')
         self.add('files', 'data_shorcuts', shortsfn,
                  'Location of the shortcuts data file.', 'file')
-
-
 
         ### Terminal emulator options
         self.add_section('terminal')
@@ -136,7 +133,6 @@ class Opts(object):
         ### External command options
         self.add_section('commands')
  
-    
         vimcom = which('gvim') or '/usr/bin/gvim'
         self.add('commands', 'vim', vimcom,
                   'Command for executing graphical Vim.', 'file')
@@ -236,12 +232,6 @@ class Opts(object):
             self.write()
         else:
             self.write()
-
-        #if not os.path.exists(vimscript) or self.dirty_version:
-        #    f = open(vimscript, 'w')
-        #    f.write(VIMSCRIPT)
-        #    f.close()
-        #    self.dirty_version = False
 
     def add_section(self, section):
         ''' Add a configuration section. '''
