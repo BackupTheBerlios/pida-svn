@@ -188,7 +188,7 @@ class Opts(object):
 
         ### plugin options
         self.add_section('plugins')
-        self.add('plugins', 'python_general', '1',
+        self.add('plugins', 'python_browser', '1',
                  'Enable the Python code browser and refactorer.', 'boolean')
         self.add('plugins', 'python_debugger', '1',
                  'Enable the Python debugger <i>disabled</i>', 'boolean')

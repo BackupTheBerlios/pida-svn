@@ -273,7 +273,7 @@ class BarHolder(gtk.HPaned):
         self.barbook = BarNotebook(self.cb)
         p2.pack2(self.barbook, True, True)
         
-        if self.cb.opts.get('plugins', 'python_general') == '1':
+        if self.cb.opts.get('plugins', 'python_browser') == '1':
             pi = create_plugin('python_browser', self.cb)
             self.barbook.add_plugin(pi)
             
