@@ -21,6 +21,7 @@
 import gtk
 import gtk
 import shelve
+import fnmatch
 import gobject
 
 class Tree(object):
