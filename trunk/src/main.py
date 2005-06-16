@@ -285,7 +285,7 @@ class BarHolder(gtk.HPaned):
             pi = create_plugin('python_debugger', self.cb)
             self.barbook.add_plugin(pi)
             
-        if self.cb.opts.get('plugins', 'profiler_python') == '1':
+        if self.cb.opts.get('plugins', 'python_profiler') == '1':
             pi = create_plugin('python_profiler', self.cb)
             self.barbook.add_plugin(pi)
 
