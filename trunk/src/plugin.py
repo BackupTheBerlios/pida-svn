@@ -460,7 +460,6 @@ class Plugin(object):
     def add_button(self, stock, callback, tooltip='None Set!', cbargs=[]):
         self.popup.add_item(stock, tooltip, callback, cbargs)
         return self.cusbar.add_button(stock, callback, tooltip, cbargs)
-
     
     def add_separator(self):
         self.popup.add_separator()
@@ -489,7 +488,6 @@ class Plugin(object):
             if self.DETACHABLE:
                 self.attach()
         
-
     def cb_shrink(self, *a):
         self.shrink()
 

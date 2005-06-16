@@ -27,10 +27,10 @@ import mimetypes
 import gtk
 import gobject
 # Pida imports
-import tree
-import plugin
+#import tree
+import pida.plugin as plugin
 #import dialogs
-import gtkextra
+import pida.gtkextra as gtkextra
 
 class BufferTree(gtkextra.Tree):
     ''' Tree view control for buffer list. '''

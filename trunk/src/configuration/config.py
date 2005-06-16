@@ -19,8 +19,8 @@
 #SOFTWARE.
 
 import gtk
-import dialogs
 import textwrap
+import pida.gtkextra as gtkextra
 
 class ConfigWidget(object):
     def __init__(self, cb, widget, section, key):
@@ -114,7 +114,7 @@ class ConfigFont(ConfigWidget):
 
 class ConfigFile(ConfigWidget):
     def __init__(self, cb, section, key):
-        widget = dialogs.FileButton(cb)
+        widget = gtkextra.FileButton(cb)
         ConfigWidget.__init__(self, cb, widget, section, key)
         
     def load(self):
@@ -126,7 +126,7 @@ class ConfigFile(ConfigWidget):
 
 class ConfigFolder(ConfigFile):
     def __init__(self, cb, section, key):
-        widget = dialogs.FolderButton(cb)
+        widget = gtkextra.FolderButton(cb)
         ConfigWidget.__init__(self, cb, widget, section, key)
        
 class ConfigColor(ConfigWidget):

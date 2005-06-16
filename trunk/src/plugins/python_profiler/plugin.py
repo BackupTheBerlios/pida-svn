@@ -31,10 +31,10 @@ import gtk
 import gobject
 
 # Pida imports
-import tree
-import plugin
-import gtkipc
-
+#import tree
+import pida.plugin as plugin
+import pida.gtkextra as gtkextra
+import pida.gtkipc as gtkipc
 def script_directory():
     def f(): pass
     d, f = os.path.split(f.func_code.co_filename)
@@ -73,7 +73,7 @@ class DetailsWindow(gtk.Window):
         pass
 
 
-class PstatsTree(tree.Tree):
+class PstatsTree(gtkextra.Tree):
     COLUMNS = [('display', gobject.TYPE_STRING, gtk.CellRendererText, True,
                 'markup'),
                ('filename', gobject.TYPE_STRING, gtk.CellRendererText, False,

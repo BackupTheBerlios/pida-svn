@@ -25,10 +25,9 @@ import time
 import gtk
 import gobject
 # Pida imports
-import plugin
-import options
+import pida.plugin as plugin
 import vimembed
-import gtkextra
+import pida.gtkextra as gtkextra
 
 
 SHORTCUTS = [('shortcut_execute',

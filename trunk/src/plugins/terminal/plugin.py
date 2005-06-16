@@ -29,8 +29,8 @@ import gtk
 import vte
 
 # Pida plug in base
-import plugin
-import gtkextra
+import pida.plugin as plugin
+import pida.gtkextra as gtkextra
 # will vanish, superceded by plugin.ContextMenu
 class TerminalMenu(gtk.Menu):
     def __init__(self, cb):

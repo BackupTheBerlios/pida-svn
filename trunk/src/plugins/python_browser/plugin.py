@@ -20,11 +20,11 @@
 
 
 import gtk
-import plugin
+import pida.plugin as plugin
 #import tree
 import os
 import gobject
-import gtkextra
+import pida.gtkextra as gtkextra
 
 try:
     import bike

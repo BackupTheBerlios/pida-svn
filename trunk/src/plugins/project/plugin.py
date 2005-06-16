@@ -19,13 +19,13 @@
 #SOFTWARE.
 
 import gtk
-import plugin
+import pida.plugin as plugin
 #import tree
 import ConfigParser
 import os
-import dialogs
-import tree
-import gtkextra
+#import dialogs
+#import tree
+import pida.gtkextra as gtkextra
 VCS_NONE = 0
 VCS_DARCS = 1
 VCS_CVS = 2
@@ -284,8 +284,8 @@ class Projecteditor(gtkextra.Transient):
         self.fr.pack_start(self.wd_label, expand=False)
 
 
-        self.wd_file = dialogs.FolderDialog(self.cb, lambda *a: None)
-        self.wd_file_but = dialogs.FolderButton(self.cb)
+        self.wd_file = gtkextra.FolderDialog(self.cb, lambda *a: None)
+        self.wd_file_but = gtkextra.FolderButton(self.cb)
         self.fr.pack_start(self.wd_file_but, expand=False)
         
         sep = gtk.HSeparator()

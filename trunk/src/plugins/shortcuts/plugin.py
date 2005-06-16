@@ -21,13 +21,12 @@
 
 import gtk
 
-import plugin
+import pida.plugin as plugin
 import ConfigParser
 import os
 #import tree
 import gobject
-import dialogs
-import gtkextra
+import pida.gtkextra as gtkextra
 
 class ShortcutTree(gtkextra.Tree):
     COLUMNS = [('name', gobject.TYPE_STRING,
@@ -99,7 +98,7 @@ class Plugin(plugin.Plugin):
         icon_l.set_markup('<b>Icon</b>\n'
                           'The icon you wish to use.\n')
         hbi.pack_start(icon_l, expand=False)
-        self.icon = dialogs.FileButton(self.cb)
+        self.icon = gtkextra.FileButton(self.cb)
         vb.pack_start(self.icon)
         
         addsep()

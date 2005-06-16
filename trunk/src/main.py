@@ -27,21 +27,27 @@ import gtk
 import gobject
 
 # Pida
-import gdkvim
+import vim.gdkvim as gdkvim
 #import plugin
 #import icons
-import options
-import config
-import pida_server
-import pida_buffer
-import pida_shell
-import pida_shortcuts
+import configuration.options as options
+import configuration.config as config
+#import pida_server
+#import pida_buffer
+#import pida_shell
+#import pida_shortcuts
 
 # Version String
 import __init__
 __version__ = __init__.__version__
 
 import gtkextra
+
+import imp
+
+def create_plugin(name, cb):
+    mod = __import__('plugins.%s.plugin' % name, {}, {}, [True])
+    return mod.Plugin(cb)
 
 class App(object):
     '''The application class, a glue for everything'''
@@ -56,7 +62,7 @@ class App(object):
         self.tips = gtk.Tooltips()
         self.tips.enable()
         # Shortcuts
-        self.shortcuts = pida_shortcuts.Plugin(self)
+        self.shortcuts = create_plugin('shortcuts', self)
         self.plugins.append(self.shortcuts)
         # Communication window
         self.cw = Window(self)
@@ -212,8 +218,7 @@ class BarNotebook(gtk.EventBox):
         self.nb.set_show_border(True)
         self.nb.show()
 
-    def add_plugin(self, plugintype):
-        plugin = plugintype(self.cb)
+    def add_plugin(self, plugin):
         self.cb.plugins.append(plugin)
         eb = gtk.EventBox()
         tlab = gtk.HBox()
@@ -249,7 +254,7 @@ class BarHolder(gtk.HPaned):
         p1.set_position(550)
         p2.set_position(200)
 
-        shell_plug = pida_shell.Plugin(self.cb)
+        shell_plug = create_plugin('terminal', self.cb)
         self.cb.plugins.append(shell_plug)
         p1.pack2(shell_plug.win, True, True)
 
@@ -257,29 +262,32 @@ class BarHolder(gtk.HPaned):
         lbox.show()
         p2.pack1(lbox, True, True)
 
-        server_plug = pida_server.Plugin(self.cb)
+        server_plug = create_plugin('vim', self.cb)
         lbox.pack_start(server_plug.win, expand=False)
         self.cb.plugins.append(server_plug)
 
-        buffer_plug = pida_buffer.Plugin(self.cb)
+        buffer_plug = create_plugin('buffer', self.cb)
         lbox.pack_start(buffer_plug.win)
         self.cb.plugins.append(buffer_plug)
 
         self.barbook = BarNotebook(self.cb)
         p2.pack2(self.barbook, True, True)
         
-        if int(self.cb.opts.get('plugins', 'python_general')):
-            import pida_python
-            self.barbook.add_plugin(pida_python.Plugin)
-        if int(self.cb.opts.get('plugins', 'project')):
-            import pida_project
-            self.barbook.add_plugin(pida_project.Plugin)
-        if int(self.cb.opts.get('plugins', 'python_debugger')):
-            import pida_debugger
-            self.barbook.add_plugin(pida_debugger.Plugin)
+        if self.cb.opts.get('plugins', 'python_general') == '1':
+            pi = create_plugin('python_browser', self.cb)
+            self.barbook.add_plugin(pi)
+            
+        if self.cb.opts.get('plugins', 'project') == '1':
+            pi = create_plugin('project', self.cb)
+            self.barbook.add_plugin(pi)
+            
+        if self.cb.opts.get('plugins', 'python_debugger') == '1':
+            pi = create_plugin('python_debugger', self.cb)
+            self.barbook.add_plugin(pi)
+            
         if self.cb.opts.get('plugins', 'profiler_python') == '1':
-            import pida_profiler
-            self.barbook.add_plugin(pida_profiler.Plugin)
+            pi = create_plugin('python_profiler', self.cb)
+            self.barbook.add_plugin(pi)
 
 def main(argv):
     a = App()

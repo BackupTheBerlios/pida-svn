@@ -1,14 +1,14 @@
 
 
-import plugin
+import pida.plugin as plugin
 import gtk
 import os
 import pickle
 #import tree
 import gobject
 import tempfile
-import gtkextra
-import gtkipc
+import pida.gtkextra as gtkextra
+import pida.gtkipc as gtkipc
 import linecache
 import marshal
 import cStringIO
