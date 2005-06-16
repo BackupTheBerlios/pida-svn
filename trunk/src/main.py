@@ -47,11 +47,15 @@ import gtkextra
 PLUGINS = ['project', 'python_browser', 'python_debugger', 'python_profiler']
 
 def create_plugin(name, cb):
+    ''' Find a named plugin and instantiate it. '''
+    # import the module
+    # The last arg [True] just needs to be non-empty
     mod = __import__('pida.plugins.%s.plugin' % name, {}, {}, [True])
+    # instantiate the plugin and return it
     return mod.Plugin(cb)
 
 class App(object):
-    '''The application class, a glue for everything'''
+    ''' The application class, a glue for everything '''
     def __init__(self):
         # List of plugins loaded used for event passing
         self.plugins = []

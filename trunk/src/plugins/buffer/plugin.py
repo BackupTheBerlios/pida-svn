@@ -18,7 +18,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-''' The Pida buffer explorer plugin '''
+""" The Pida buffer explorer plugin """
 
 # system imports
 import os
@@ -27,17 +27,17 @@ import mimetypes
 import gtk
 import gobject
 # Pida imports
-#import tree
 import pida.plugin as plugin
-#import dialogs
 import pida.gtkextra as gtkextra
 
 class BufferTree(gtkextra.Tree):
     ''' Tree view control for buffer list. '''
     YPAD = 2
     XPAD = 2
-    COLUMNS = [('icon', gtk.gdk.Pixbuf, gtk.CellRendererPixbuf, True, 'pixbuf'),
-                ('name', gobject.TYPE_STRING, gtk.CellRendererText, True, 'text'),
+    COLUMNS = [('icon', gtk.gdk.Pixbuf, gtk.CellRendererPixbuf, True,
+                 'pixbuf'),
+                ('name', gobject.TYPE_STRING, gtk.CellRendererText, True,
+                 'text'),
                 ('file', gobject.TYPE_STRING, None, False, None),
                 ('number', gobject.TYPE_INT, None, False, None)]
 
