@@ -67,7 +67,6 @@ class App(object):
         self.plugins.append(self.shortcuts)
         # Communication window
         self.cw = Window(self)
-        self.cw.connect('destroy', self.cb_quit)
         #
         self.server = None
         # start
@@ -166,9 +165,6 @@ class App(object):
         for plugin in self.plugins:
             getattr(plugin, 'evt_%s' % name, lambda *a, **k: None)(*value, **kw)
 
-    def cb_quit(self, *a):
-        '''Callback for user closing the main window'''
-        self.action_close()
 
 class Window(gdkvim.VimWindow):
     ''' the main window '''
@@ -178,6 +174,7 @@ class Window(gdkvim.VimWindow):
         self.resize(400,800)
         caption = 'PIDA %s' % __version__
         self.set_title(caption)
+        self.connect('destroy', self.cb_quit)
         self.connect('key_press_event', self.cb_key_press)
 
         p0 = gtk.HPaned()
@@ -239,6 +236,10 @@ class Window(gdkvim.VimWindow):
                 print '<C-a>'
                 return True
         return False
+        
+    def cb_quit(self, *a):
+        '''Callback for user closing the main window'''
+        self.cb.action_close()
         
     def add_plugin(self, plugin):
         self.cb.plugins.append(plugin)

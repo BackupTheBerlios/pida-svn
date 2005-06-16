@@ -155,7 +155,7 @@ class Opts(object):
                  'The absolute path to a paging program (eg less).', 'file')
         seecom = which('see') or '/usr/bin/see'
         self.add('commands', 'see', seecom,
-                 'The absolute path to the "see" program for previewing files.', 'file')
+                 'The absolute path to the "see" program.', 'file')
         mccom = which('mc') or '/usr/bin/mc'
         self.add('commands', 'mc', mccom,
                  'The absolute path to a file manager Application', 'file')
