@@ -24,11 +24,12 @@ import gtk
 import plugin
 import ConfigParser
 import os
-import tree
+#import tree
 import gobject
 import dialogs
+import gtkextra
 
-class ShortcutTree(tree.Tree):
+class ShortcutTree(gtkextra.Tree):
     COLUMNS = [('name', gobject.TYPE_STRING,
                 gtk.CellRendererText, True, 'text')]
     SCROLLABLE = False

@@ -21,9 +21,10 @@
 
 import gtk
 import plugin
-import tree
+#import tree
 import os
 import gobject
+import gtkextra
 
 try:
     import bike
@@ -42,7 +43,7 @@ def brm():
         brmctx = bike.init().brmctx
     return brmctx
 
-class DefTree(tree.Tree):
+class DefTree(gtkextra.Tree):
     COLUMNS = [('name', gobject.TYPE_STRING, None, False, None),
                ('display', gobject.TYPE_STRING, gtk.CellRendererText, True,
                 'markup'),
@@ -71,7 +72,7 @@ class DefTree(tree.Tree):
         fl = el.getLine(0).strip().split(' ', 1)[-1].replace(name, '', 1)
         return mu % (col, typl, name, fl)
 
-class RefTree(tree.Tree):
+class RefTree(gtkextra.Tree):
     COLUMNS = [('name', gobject.TYPE_STRING, None, False, None),
                ('display', gobject.TYPE_STRING, gtk.CellRendererText, True,
                 'markup'),
@@ -95,7 +96,7 @@ class RefTree(tree.Tree):
         s = '%s:%s' % (element.lineno, element.colno)
         return disp
 
-class RefWin(plugin.Transient):
+class RefWin(gtkextra.Transient):
 
     def populate_widgets(self):
         self.tree = RefTree(self.cb)
@@ -127,7 +128,7 @@ class Plugin(plugin.Plugin):
         self.add_button('rename', self.cb_but_rename, 'Rename class or method')
         self.add_button('find', self.cb_but_references, 'List references.')
 
-        self.menu = plugin.PositionPopup(self.cb, 'position')
+        self.menu = gtkextra.PositionPopup(self.cb, 'position')
 
     def connect_widgets(self):
         self.defs.connect_select(self.cb_defs_select)

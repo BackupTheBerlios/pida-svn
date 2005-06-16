@@ -30,7 +30,7 @@ import vte
 
 # Pida plug in base
 import plugin
-
+import gtkextra
 # will vanish, superceded by plugin.ContextMenu
 class TerminalMenu(gtk.Menu):
     def __init__(self, cb):
@@ -322,7 +322,7 @@ class Plugin(plugin.Plugin):
                             'Configure this shortcut bar',
                             self.cb_conf_clicked, [])
 
-        self.ctxbar = plugin.ContextToolbar(self.cb, 'terminal')
+        self.ctxbar = gtkextra.ContextToolbar(self.cb, 'terminal')
         self.shortbar.pack_start(self.ctxbar.win)
 
         self.logterm = self.new_log()

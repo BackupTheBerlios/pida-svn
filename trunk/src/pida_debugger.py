@@ -4,10 +4,10 @@ import plugin
 import gtk
 import os
 import pickle
-import tree
+#import tree
 import gobject
 import tempfile
-
+import gtkextra
 import gtkipc
 import linecache
 import marshal
@@ -20,7 +20,7 @@ def script_directory():
 
 SCRIPT_DIR = script_directory()
 
-class StackTree(tree.Tree):
+class StackTree(gtkextra.Tree):
     COLUMNS = [('display', gobject.TYPE_STRING, gtk.CellRendererText, True,
                 'markup'),
                ('frame', gobject.TYPE_PYOBJECT, None, False, None)]
@@ -45,7 +45,7 @@ class StackTree(tree.Tree):
             path = self.model.get_path(last)
             self.view.set_cursor(path)
 
-class BreakTree(tree.Tree):
+class BreakTree(gtkextra.Tree):
     COLUMNS = [('display', gobject.TYPE_STRING, gtk.CellRendererText, True,
                 'markup'),
                ('filename', gobject.TYPE_STRING, None, False, None),
@@ -80,7 +80,7 @@ def bframe(frame):
     return '%s %s %s %s %s' % (c.co_name,
         c.co_argcount, c.co_names, c.co_filename, c.co_firstlineno)
 
-class VarTree(tree.Tree):
+class VarTree(gtkextra.Tree):
     COLUMNS = [('display', gobject.TYPE_STRING, gtk.CellRendererText, True,
                 'markup'),
                ('dispval', gobject.TYPE_STRING, gtk.CellRendererText, True,
@@ -168,7 +168,7 @@ class DebugTerminal(vte.Terminal):
         self.grab_focus()
         return self.pid
 
-class DumpWindow(plugin.Transient):
+class DumpWindow(gtkextra.Transient):
 
     def populate_widgets(self):
         sw = gtk.ScrolledWindow()
@@ -255,9 +255,6 @@ class Plugin(plugin.Plugin):
         f.write(s)
         f.close()
         self.cb.action_preview(self.lfn)
-
-        #self.btree = tree.Tree(self.cb)
-        #vp.pack1(self.stree)
 
     def do_eval(self, s):
         com, val = s.split('\n', 1)

@@ -29,9 +29,10 @@ import gobject
 # Pida imports
 import tree
 import plugin
-import dialogs
+#import dialogs
+import gtkextra
 
-class BufferTree(tree.Tree):
+class BufferTree(gtkextra.Tree):
     ''' Tree view control for buffer list. '''
     YPAD = 2
     XPAD = 2
@@ -98,7 +99,7 @@ class Plugin(plugin.Plugin):
     def cb_open(self, *args):
         ''' Called when the open button is clicked. '''
         if not self.odialog:
-            self.odialog = dialogs.FileDialog(self.cb, self.cb_open_response)
+            self.odialog = gtkextra.FileDialog(self.cb, self.cb_open_response)
             self.odialog.connect('destroy', self.cb_open_destroy)
         self.odialog.show()
 

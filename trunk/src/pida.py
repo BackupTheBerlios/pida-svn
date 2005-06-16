@@ -28,8 +28,8 @@ import gobject
 
 # Pida
 import gdkvim
-import plugin
-import icons
+#import plugin
+#import icons
 import options
 import config
 import pida_server
@@ -41,7 +41,7 @@ import pida_shortcuts
 import __init__
 __version__ = __init__.__version__
 
-
+import gtkextra
 
 class App(object):
     '''The application class, a glue for everything'''
@@ -51,7 +51,7 @@ class App(object):
         # Main config options
         self.opts = options.Opts()
         # Icons shared
-        self.icons = icons.Icons(self)
+        self.icons = gtkextra.Icons(self)
         # Tooltips shared
         self.tips = gtk.Tooltips()
         self.tips.enable()

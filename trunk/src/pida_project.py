@@ -20,12 +20,12 @@
 
 import gtk
 import plugin
-import tree
+#import tree
 import ConfigParser
 import os
 import dialogs
 import tree
-
+import gtkextra
 VCS_NONE = 0
 VCS_DARCS = 1
 VCS_CVS = 2
@@ -86,7 +86,7 @@ def analyze_working_directory(dirname):
 
 import gobject
 
-class FileTree(tree.Tree):
+class FileTree(gtkextra.Tree):
     COLUMNS = [('name', gobject.TYPE_STRING, gtk.CellRendererText, True,
                 'markup'),
                 ('file', gobject.TYPE_STRING, None, False,
@@ -99,7 +99,7 @@ class FileTree(tree.Tree):
         self.dir_label = gtk.Label()
         tb.pack_start(self.dir_label)
         
-        ctrls = plugin.Toolbar(self.cb)
+        ctrls = gtkextra.Toolbar(self.cb)
         tb.pack_start(ctrls.win)
 
         ctrls.add_button('up', self.cb_but,
@@ -116,8 +116,8 @@ class FileTree(tree.Tree):
         #self.view.connect('row-expanded', self.cb_expand)
         self.view.connect('test-expand-row', self.cb_expand)
         
-        self.filemenu = plugin.ContextPopup(self.cb, 'file')
-        self.dirmenu = plugin.ContextPopup(self.cb, 'dir')
+        self.filemenu = gtkextra.ContextPopup(self.cb, 'file')
+        self.dirmenu = gtkextra.ContextPopup(self.cb, 'dir')
 
         self.root = None
         
@@ -243,7 +243,7 @@ class FileTree(tree.Tree):
         self.cb.action_newterminal(shell, ['shell'], directory=root)
         
 
-class ProjectTree(tree.Tree):
+class ProjectTree(gtkextra.Tree):
     COLUMNS = [('Name', gobject.TYPE_STRING, gtk.CellRendererText, False,
                 'text'),
                ('Display', gobject.TYPE_STRING, gtk.CellRendererText, True,
@@ -259,9 +259,9 @@ class ProjectTree(tree.Tree):
                 return True
         return False
 
-class Projecteditor(plugin.Transient):
+class Projecteditor(gtkextra.Transient):
     def populate_widgets(self):
-        plugin.Transient.populate_widgets(self)
+        gtkextra.Transient.populate_widgets(self)
 
         self.fr = self.frame
 
@@ -370,7 +370,7 @@ class Plugin(plugin.Plugin):
         self.editor.submit.connect('clicked', self.cb_project_edited)
         self.editor.wd_file_but.entry.connect('activate', self.cb_project_edited)
     
-        self.dirmenu = plugin.ContextPopup(self.cb, 'dir')
+        self.dirmenu = gtkextra.ContextPopup(self.cb, 'dir')
 
         self.config = ConfigParser.ConfigParser()
 

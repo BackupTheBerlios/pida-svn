@@ -28,6 +28,7 @@ import gobject
 import plugin
 import options
 import vimembed
+import gtkextra
 
 
 SHORTCUTS = [('shortcut_execute',
