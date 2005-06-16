@@ -20,6 +20,7 @@
 
 import gtk
 import gtk
+import shelve
 import gobject
 
 class Tree(object):
@@ -168,12 +169,7 @@ class FolderDialog(gtk.FileChooserDialog):
     def connect_widgets(self):
         pass
 
-    #def show(self):
-        #self.set_current_folder(directory)
-    #    self.show()
-
 class FolderButton(gtk.HBox):
-    
     DTYPE = FolderDialog
 
     def __init__(self, cb):
@@ -524,12 +520,7 @@ class ContextToolbar(ContextGenerator, Toolbar):
         for i in self.win.get_children():
             self.win.remove(i)
 
-
-import gtk
-import shelve
-
 class Icons(object):
-    
     def __init__(self, cb):
         self.cb = cb
         icon_file = self.cb.opts.get('files','data_icons')
@@ -552,8 +543,8 @@ class Icons(object):
         ic = self.get_image(name)
         but = gtk.ToolButton(icon_widget=ic)
         return but
+        
 class IPWindow(object):
-    
     def __init__(self, pb):
         self.pb = pb
         self.rw = gtk.Window()
