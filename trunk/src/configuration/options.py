@@ -27,7 +27,7 @@ import textwrap
 import ConfigParser as configparser
 
 # import the base and set the version
-import __init__
+import pida.__init__ as __init__
 __version__ = __init__.__version__
 
 
