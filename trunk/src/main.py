@@ -46,7 +46,7 @@ import gtkextra
 import imp
 
 def create_plugin(name, cb):
-    mod = __import__('plugins.%s.plugin' % name, {}, {}, [True])
+    mod = __import__('pida.plugins.%s.plugin' % name, {}, {}, [True])
     return mod.Plugin(cb)
 
 class App(object):

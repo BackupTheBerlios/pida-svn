@@ -20,12 +20,23 @@
 
 from distutils.core import setup
 
+import os
+
+plugindir = os.path.join('src', 'plugins')
+plugins = []
+for plugin in os.listdir(plugindir):
+    if not plugin[0] in ['.', '_']:
+        plugins.append('pida.plugins.%s' % plugin)
+
 setup(name='pida',
       version='0.1.7pre1',
       author='Ali Afshar',
       author_email='aafshar@gmail.com',
       url='http://pida.berlios.de',
-      packages=['pida'],
+      packages=['pida',
+                'pida.vim',
+                'pida.configuration',
+                'pida.plugins'] + plugins,
       package_dir = {'pida': 'src'},
       scripts=['scripts/pida'],
       data_files=[('share/pida', ['data/icons.dat'])]
