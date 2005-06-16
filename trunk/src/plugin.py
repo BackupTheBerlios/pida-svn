@@ -27,6 +27,7 @@ import gtk
 import gtkextra
 
 class Plugin(object):
+    """ The base plugin class. """
     # Class attributes for overriding.
     # The name of the plugin.
     NAME = 'Plugin'
@@ -84,9 +85,6 @@ class Plugin(object):
         #question dialog
         self.qstbox = gtkextra.Questionbox(self.cb)
         self.transwin.pack_start(self.qstbox.win, expand=False)
-        # The option dialog
-        self.optbox = gtkextra.Optionbox(self.cb)
-        self.transwin.pack_start(self.optbox.win, expand=False)
         # The content area.
         self.frame = gtk.VBox()
         self.win.pack_start(self.frame)
@@ -97,134 +95,110 @@ class Plugin(object):
         self.frame.show_all()
         self.win.show_all()
 
-    def cb_sep_rclick(self, event):
-        self.toolbar_popup.popup(event.time)
-
-    def cb_sep_dclick(self, event):
-        pass
-
     def populate_widgets(self):
+        """ Called after the constructor to populate the plugin.
+        
+        Override this method and add the desired widgets to the plugin.
+        """
         pass
 
     def connect_widgets(self):
+        """ Called after widget population to connect signals. """
         pass
 
-    def message(self, message):
-        self.msgbox.message(message)
-
-    def question(self, message, callback):
-        self.qstbox.question(message, callback)
-
-    def option(self, message, opts, callback):
-        self.optbox.option(message, opts, callback)
-
-    def query(self, message, options, callback):
-        if len(options):
-            self.option(message, options, callback)
-        else:
-            self.question(message, callback)
-
-    def attach(self, *a):
-        self.win.reparent(self.oldparent)
-        self.dwin.destroy()
-    
-    def detatch(self):
-        self.oldparent = self.win.get_parent()
-        self.dwin = Winparent(self.cb, self)
-
     def add(self, widget, *args, **kwargs):
+        """ Add a widget to the plugin. """
         self.frame.pack_start(widget, *args, **kwargs)
 
     def add_button(self, stock, callback, tooltip='None Set!', cbargs=[]):
+        """ Add a button to the pluugin toolbar and toolbar menu. """
         self.toolbar_popup.add_item(stock, tooltip, callback, cbargs)
         return self.cusbar.add_button(stock, callback, tooltip, cbargs)
     
     def add_separator(self):
+        """ Add a separator to the toolbar and toolbar menu. """
         self.toolbar_popup.add_separator()
         self.cusbar.add_separator()
         
-    def cb_alternative(self):
-        pass
+    def message(self, message):
+        """ Give the user a message in a transient window. """
+        self.msgbox.message(message)
+
+    def question(self, message, callback):
+        """ Ask the user a question in a transient window. """
+        self.qstbox.question(message, callback)
+
+    def attach(self, *a):
+        """ Reparent the plugin in the original parent. """
+        self.win.reparent(self.oldparent)
+        self.dwin.destroy()
     
-    def cb_sepbar_rclick(self):
+    def detatch(self):
+        """ Reparent the plugin in a top-level window. """
+        self.oldparent = self.win.get_parent()
+        self.dwin = gtkextra.Winparent(self.cb, self)
+
+    def cb_sep_rclick(self, event):
+        """ Called when the toolbar separator is right clicked. 
+        
+        Default behaviour pops up the toolbar menu. Override this method to
+        change this behaviour.
+        """
+        self.toolbar_popup.popup(event.time)
+
+    def cb_sep_dclick(self, event):
+        """ Called when the horizontal separator bar is double clicked. 
+        
+        Override this method to add desired bahaviour
+        """
         pass
 
-    def cb_sepbar_rclick(self):
+    def cb_alternative(self):
+        """ The alternative function called for non detachable plugins. """
         pass
-
-    def cb_toggledview(self, *a):
-        self.check_visibility()
     
     def cb_toggledetatch(self, *a):
+        """ Called back when the detach button is clicked. """
+        # Check whther the detach button is active or not.
         if self.dtbut.get_active():
+            # Detach detachable plugins, or call the alternative callback.
             if self.DETACHABLE:
                 self.detatch()
             else:
                 self.cb_alternative()
+                # Ensure the toggle button behaves normally.
                 self.dtbut.set_active(False)
         else:
+            # Reattach detached plugins.
             if self.DETACHABLE:
                 self.attach()
         
-    def cb_shrink(self, *a):
-        self.shrink()
-
-    def cb_grow(self, *a):
-        self.grow()
-
-    def grow(self):
-        nh = self.win.size_request()[1] + 64
-        nh = 64 * divmod(nh, 64)[0]
-        self.win.set_size_request(-1, nh)       
-
-    def shrink(self):
-        nh = self.win.size_request()[1] - 64
-        if nh < 64:
-            nh = 64
-        else:
-            nh = 64 * divmod(nh, 64)[0]
-        self.win.set_size_request(-1, nh)      
-
-    def check_visibility(self):
-        #self.set_visibility(not self.vtbut.get_active())
-        self.set_visibility(True)
-    
-    def set_visibility(self, visible):
-        if visible:
-            self.show()
-        else:
-            self.hide()
-        self.ctlbar.show_all()
-
-    def hide(self):
-        self.frame.hide_all()
-        #self.frame.set_size_request(0, 0)
-        self.cusbar.hide_all()
-        #self.vtbut.set_icon_widget(self.vtgicon)
-
-    def show(self):
-        self.frame.show_all()
-        #self.frame.set_size_request(-1, -1)
-        self.cusbar.show_all()
-        #self.vtbut.set_icon_widget(self.vtsicon)
-    
     def log(self, message, level):
+        """ Log a message. """
+        # Add plugin name to message.
         text = '%s: %s' % (self.NAME, message)
         self.cb.action_log(self.NAME, message, level)
 
     def debug(self, message):
+        """ Log a debug message. """
         self.log(message, 0)
 
     def info(self, message):
+        """ Log an info message. """
         self.log(message, 1)
 
     def warn(self, message):
+        """ Log a warning. """
         self.log(message, 2)
 
     def error(self, message):
+        """ Log an error. """
         self.log(message, 3)
 
     def evt_init(self):
+        """ Called on initializing the plugin.
+        
+        You are advised to call this method at least if overriding."""
+        # Hide the transient windows
         self.msgbox.hide()
-        self.optbox.hide()
         self.qstbox.hide()
