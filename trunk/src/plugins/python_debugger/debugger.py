@@ -37,13 +37,13 @@ import re
 import pprint
 import traceback
 import marshal
-import gtkipc
+import pida.gtkextra as gtkextra
 import tempfile
 import cStringIO
 
 class Debugger(object):
     def __init__(self, sid):
-        self.ipc = gtkipc.IPWindow(self)
+        self.ipc = gtkextra.IPWindow(self)
         self.ipc.reset(long(sid))
         self.ipc.connect()
     

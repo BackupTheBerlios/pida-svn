@@ -22,7 +22,7 @@
 import profile
 import os
 import sys
-import gtkipc
+import pida.gtkextra as gtkextra
 import tempfile
 import pickle
 import gtk
@@ -30,7 +30,7 @@ import gtk
 
 class Profiler(object):
     def __init__(self, sid):
-        self.ipc = gtkipc.IPWindow(self)
+        self.ipc = gtkextra.IPWindow(self)
         self.ipc.reset(long(sid))
         self.ipc.connect()
 

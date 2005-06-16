@@ -552,4 +552,50 @@ class Icons(object):
         ic = self.get_image(name)
         but = gtk.ToolButton(icon_widget=ic)
         return but
+class IPWindow(object):
+    
+    def __init__(self, pb):
+        self.pb = pb
+        self.rw = gtk.Window()
+        self.rw.realize()
+        self.rw.add_events(gtk.gdk.PROPERTY_CHANGE_MASK)
+        self.rw.connect('property-notify-event', self.cb_r)
 
+    def reset(self, id):
+        self.ww = gtk.gdk.window_foreign_new(id)
+
+    def write(self, property, value, ptype=32):
+        self.ww.property_change(property, gtk.gdk.SELECTION_TYPE_STRING,
+                                ptype,
+                                gtk.gdk.PROP_MODE_REPLACE,
+                                value)
+
+    def connect(self):
+        self.write('connect', [self.rw.window.xid])
+        
+    def cb_r(self, window, ev):
+        if hasattr(ev, 'atom'):
+            message = self.rw.window.property_get(ev.atom, pdelete=True)
+            if message and ev.atom[0].islower():
+                self.do(ev, message)
+
+    def do(self, ev, message):
+                self.pre_do()
+                c = 'do_%s' % ev.atom
+                v = message[-1]
+                if hasattr(self.pb, c):
+                    getattr(self.pb, c)(v)
+                else:
+                    getattr(self, c, lambda a: None)(v)
+
+    def pre_do(self):
+        pass
+
+    def do_connect(self, cid):
+        self.reset(long(cid[0]))
+
+    def get_lid(self):
+        return self.rw.window.xid
+
+    def get_rid(self):
+        return self.ww.xid

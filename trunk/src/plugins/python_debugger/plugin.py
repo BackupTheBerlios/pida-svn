@@ -8,7 +8,6 @@ import pickle
 import gobject
 import tempfile
 import pida.gtkextra as gtkextra
-import pida.gtkipc as gtkipc
 import linecache
 import marshal
 import cStringIO
@@ -196,7 +195,7 @@ class Plugin(plugin.Plugin):
 
     def populate_widgets(self):
         self._dbg = None
-        self.ipc = gtkipc.IPWindow(self)
+        self.ipc = gtkextra.IPWindow(self)
         #self.add_button('debug', self.cb_but_debug, 'start')
         self.add_button('stop', self.cb_but_stop, 'Stop debugging.')
         self.add_button('step', self.cb_step, 'step')
