@@ -118,10 +118,10 @@ class Application(object):
         # Call the method of the vim communication window.
         self.cw.close_buffer(self.server)
 
-    def action_gotoline(self, ln):
+    def action_gotoline(self, line):
         self.action_log('action', 'gotoline', 0)
         # Call the method of the vim communication window.
-        self.cw.change_cursor(self.server, 1, ln)
+        self.cw.change_cursor(self.server, 1, line)
         # Optionally foreground Vim.
         self.action_foreground()
 
@@ -136,11 +136,11 @@ class Application(object):
         # Call the method of the vim communication window.
         self.cw.get_current_buffer(self.server)
 
-    def action_changebuffer(self, nr):
+    def action_changebuffer(self, number):
         """Change buffer in the active vim"""
         self.action_log('action', 'changebuffer', 0)
         # Call the method of the vim communication window.
-        self.cw.change_buffer(self.server, nr)
+        self.cw.change_buffer(self.server, number)
         # Optionally foreground Vim.
         self.action_foreground()
    
@@ -151,14 +151,14 @@ class Application(object):
             # Call the method of the vim communication window.
             self.cw.foreground(self.server)
  
-    def action_openfile(self, fn):
+    def action_openfile(self, filename):
         """open a new file in the connected vim"""
         self.action_log('action', 'openfile', 0)
         # Call the method of the vim communication window.
-        self.cw.open_file(self.server, fn)
+        self.cw.open_file(self.server, filename)
 
-    def action_preview(self, fn):
-        self.cw.preview_file(self.server, fn)
+    def action_preview(self, filename):
+        self.cw.preview_file(self.server, filename)
 
     def action_newterminal(self, command, args, **kw):
         """Open a new terminal, by issuing an event"""
