@@ -13,8 +13,3 @@ markup
 --
 documentation
 code commented
-custom debugger sub class
-project manager
-    #file list
-    #open file
-    open all files
