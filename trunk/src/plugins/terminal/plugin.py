@@ -317,8 +317,8 @@ class Plugin(plugin.Plugin):
                         'Close current tab.')
        
         self.panes = {}
-        self.popup.add_separator()
-        self.popup.add_item('configure',
+        self.toolbar_popup.add_separator()
+        self.toolbar_popup.add_item('configure',
                             'Configure this shortcut bar',
                             self.cb_conf_clicked, [])
 

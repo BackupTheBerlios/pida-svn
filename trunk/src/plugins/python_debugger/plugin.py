@@ -245,7 +245,7 @@ class Plugin(plugin.Plugin):
         self.add(self.term, expand=False)
 
         self.curindex = 0
-        self.menu = plugin.PositionPopup(self.cb, 'position')
+        self.menu = gtkextra.PositionPopup(self.cb, 'position')
         self.lfn = tempfile.mktemp('.py', 'pidatmp')
         self.debugger_loaded = False
 
