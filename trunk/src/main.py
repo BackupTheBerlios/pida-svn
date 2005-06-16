@@ -104,13 +104,13 @@ class Application(object):
         # Fin
         gtk.main_quit()
 
-    def action_connectserver(self, server):
+    def action_connectserver(self, servername):
         """ Connect to the named server. """
         self.action_log('action', 'connectserver', 0)
-        self.server = server
+        self.server = servername
         # Send the server change event with the appropriate server
         # The vim plugin (or others) will respond to this event
-        self.evt('connectserver', server)
+        self.evt('connectserver', servername)
 
     def action_closebuffer(self):
         """ Close the current buffer. """
@@ -188,64 +188,70 @@ class Application(object):
             getattr(plugin, 'evt_%s' % name,
                     lambda *a, **k: None)(*value, **kw)
 
-
+# The main application window.
+# This is multiply split into 3 Paned sections.
 class Window(gdkvim.VimWindow):
     """ the main window """
     def __init__(self, cb):
         gdkvim.VimWindow.__init__(self, cb)
+        # Set the minimum size.
         self.set_size_request(20,200)
+        # Request a sane initial size.
         self.resize(400,800)
+        # Set the window title.
         caption = 'PIDA %s' % __version__
         self.set_title(caption)
+        # Connect the destroy event.
         self.connect('destroy', self.cb_quit)
+        # Connect the keypress event.
         self.connect('key_press_event', self.cb_key_press)
-
+        # The outer pane
         p0 = gtk.HPaned()
         p0.show()
         self.add(p0)
-
+        # Set these properties for later embedding
         self.cb.barholder = p0
         self.cb.embedwindow = gtk.VBox()
         p0.pack1(self.cb.embedwindow, True, True)
-        
+        # The plugin/terminal area
         p1 = gtk.VPaned()
         p1.show()
         p0.pack2(p1, True, True)
-
+        # Pane for standard and optional plugins
         p2 = gtk.HPaned()
         p2.show()
         p1.pack1(p2, True, True)
-        
+        # Set sane starting positions
         p1.set_position(550)
         p2.set_position(200)
-
+        # The terminal plugin
         shell_plug = create_plugin('terminal', self.cb)
         self.cb.plugins.append(shell_plug)
         p1.pack2(shell_plug.win, True, True)
-
         lbox = gtk.VBox()
         lbox.show()
         p2.pack1(lbox, True, True)
-
+        # The vim plugin.
         server_plug = create_plugin('vim', self.cb)
         lbox.pack_start(server_plug.win, expand=False)
         self.cb.plugins.append(server_plug)
-
+        # The buffer explorer plugin.
         buffer_plug = create_plugin('buffer', self.cb)
         lbox.pack_start(buffer_plug.win)
         self.cb.plugins.append(buffer_plug)
-
-        
+        # The optional plugin  area
         self.notebook = gtk.Notebook()
         self.notebook.set_show_border(True)
         self.notebook.show()
         p2.pack2(self.notebook, True, True)
-
+        # Populate with the configured plugins
         for plugin in PLUGINS:
+            # Check the config value.
             if self.cb.opts.get('plugins', plugin) == '1':
+                # Instantiate and add the plugin.
                 pi = create_plugin(plugin, self.cb)
                 self.add_plugin(pi)
-
+        # Show the window as late as possible.
         self.show()
             
     def cb_key_press(self, widget, event):
