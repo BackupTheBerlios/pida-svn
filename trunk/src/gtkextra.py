@@ -23,6 +23,8 @@ import shelve
 import fnmatch
 import gobject
 
+POPUP_CONTEXTS = ['file', 'dir', 'terminal', 'position', 'string', 'url']
+
 class Tree(object):
     ''' A custom treeview subclass that is used throughout Pida. '''
     COLUMNS = [('name', gobject.TYPE_STRING, gtk.CellRendererText, True,
@@ -220,9 +222,7 @@ class FileDialog(FolderDialog):
         self.connect('file-activated', cb)
         
 class FileButton(FolderButton):
-
     DTYPE = FileDialog
-
 
 class Winparent(gtk.Window):
     def __init__(self, cb, child):
@@ -234,7 +234,6 @@ class Winparent(gtk.Window):
         self.connect('destroy', child.attach)
 
 class Transient(object):
-    
     def __init__(self, cb):
         self.cb = cb
         self.win = gtk.VBox()
@@ -411,10 +410,8 @@ class Popup(object):
     def init(self, *args):
         pass
 
-POPUP_CONTEXTS = ['file', 'dir', 'terminal', 'position', 'url']
 
 class ContextGenerator(object):
-
     def __init__(self, cb, name):
         self.cb = cb
         self.name = name
@@ -443,7 +440,6 @@ class ContextGenerator(object):
         pass
 
 class ContextPopup(ContextGenerator, Popup):
-
     def __init__(self, cb, name):
         Popup.__init__(self, cb)
         ContextGenerator.__init__(self, cb, name)
@@ -478,7 +474,6 @@ class ContextPopup(ContextGenerator, Popup):
         self.cb.action_newterminal(command, args)
 
 class PositionPopup(ContextPopup):
-
     def popup(self, filename, line, time):
         self.aargs = [filename]
         self.clear()

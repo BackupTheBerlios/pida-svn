@@ -128,6 +128,7 @@ class Plugin(plugin.Plugin):
         self.ctx_ch.append(gtk.CheckButton(label='Menu for directories.'))
         self.ctx_ch.append(gtk.CheckButton(label='Shell plugin toolbar.'))
         self.ctx_ch.append(gtk.CheckButton(label='Menu for positions in files.'))
+        self.ctx_ch.append(gtk.CheckButton(label='Menu for strings.'))
         self.ctx_ch.append(gtk.CheckButton(label='Menu for urls (unused).'))
 
         for ch in self.ctx_ch:
@@ -211,7 +212,6 @@ class Plugin(plugin.Plugin):
         if g == '':
             g = '*'
         i = self.icon.get_filename()
-        
         ctx = []
         for ch in self.ctx_ch:
             ctx.append(int(ch.get_active()))
@@ -268,7 +268,8 @@ class Shortcuts(object):
         self.config.set(name, 'directory_context', ctx[1])
         self.config.set(name, 'terminal_context', ctx[2])
         self.config.set(name, 'position_context', ctx[3])
-        self.config.set(name, 'url_context', ctx[4])
+        self.config.set(name, 'string_context', ctx[4])
+        self.config.set(name, 'url_context', ctx[5])
 
     def delete(self, name):
         self.config.remove_section(name)
@@ -294,23 +295,23 @@ class Shortcuts(object):
         DEF = [('Preview',
                 self.cb.opts.get('commands', 'see'),
                 '*', 'stock:preview',
-                ['1', '0', '0', '0', '0']),
+                ['1', '0', '0', '0', '0', '0']),
                ('Python',
                 self.cb.opts.get('commands', 'python'),
                 '*.py', 'stock:python',
-                ['1', '0', '1', '0', '0']),
+                ['1', '0', '1', '0', '0', '0']),
                ('Pager',
                 self.cb.opts.get('commands', 'pager'),
                 '*', 'stock:list',
-                ['1', '0', '0', '0', '0']),
+                ['1', '0', '0', '0', '0', '0']),
                ('Browser',
                 self.cb.opts.get('commands', 'browser'),
                 '*', 'stock:internet',
-                ['1', '1', '1', '0', '0']),
+                ['1', '1', '1', '0', '0', '0']),
                ('Midnight Commander',
                 self.cb.opts.get('commands', 'mc'),
                 '*', 'stock:filemanager',
-                ['0', '1', '1', '0', '0'])]
+                ['0', '1', '1', '0', '0', '0'])]
         
         self.config = ConfigParser.ConfigParser()
         for d in DEF:
@@ -325,6 +326,7 @@ class Shortcuts(object):
                 self.config.get(name, 'directory_context'),
                 self.config.get(name, 'terminal_context'),
                 self.config.get(name, 'position_context'),
+                self.config.get(name, 'string_context'),
                 self.config.get(name, 'url_context')])
 
     def sections(self):
