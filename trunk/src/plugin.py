@@ -22,7 +22,6 @@
 
 # GTK import
 import gtk
-
 # Pida import
 import gtkextra
 
