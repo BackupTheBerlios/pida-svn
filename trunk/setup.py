@@ -21,22 +21,60 @@
 from distutils.core import setup
 
 import os
+import sys
+import shutil
 
+VERBOSE = True
+
+def log(message):
+    if VERBOSE:
+        print 'Pida:', message
+
+if sys.argv[-1] == 'upgrade':
+    log('Preparing for upgrade')
+    for path in sys.path:
+        if path and os.path.exists(path):
+            for dirname in os.listdir(path):
+                dirpath = os.path.join(path, dirname)
+                if os.path.isdir(dirpath) and dirpath.count(sys.prefix):
+                    for packagename in os.listdir(dirpath):
+                        if packagename == 'pida':
+                            packagepath = os.path.join(dirpath, packagename)
+                            log('Pida found at %s' % packagepath)
+                            ri = raw_input('Delete old Pida '
+                                           '(reccommended) Y/N? ')
+                            if ri[0].lower() == 'y':
+                                log('Deleting %s' % packagepath)
+                                try:
+                                    shutil.rmtree(packagepath)
+                                except OSError, e:
+                                    log('Failed to remove old Pida: %s' % e)
+                            else:
+                                log('Not deleting.')
+    sys.argv.pop()
+    sys.argv.append('install')
+                                                  
+
+log('Preparing core')
+packages = ['pida',
+            'pida.vim',
+            'pida.configuration',
+            'pida.plugins']
+
+log('Preparing plugins')
 plugindir = os.path.join('src', 'plugins')
-plugins = []
 for plugin in os.listdir(plugindir):
     if not plugin[0] in ['.', '_']:
-        plugins.append('pida.plugins.%s' % plugin)
+        log('Adding plugin "%s"' % plugin)
+        packages.append('pida.plugins.%s' % plugin)
 
+log('Performing setup.')
 setup(name='pida',
       version='0.1.7pre1',
       author='Ali Afshar',
       author_email='aafshar@gmail.com',
       url='http://pida.berlios.de',
-      packages=['pida',
-                'pida.vim',
-                'pida.configuration',
-                'pida.plugins'] + plugins,
+      packages=packages,
       package_dir = {'pida': 'src'},
       scripts=['scripts/pida'],
       data_files=[('share/pida', ['data/icons.dat'])]

@@ -20,7 +20,7 @@ version 0.1.7pre1
 
 bugs
 --
-refreshing serverlist when unnecesary fixed                                    
+refreshing serverlist when unnecesary fixed
 
 version: 0.1.7pre
 
