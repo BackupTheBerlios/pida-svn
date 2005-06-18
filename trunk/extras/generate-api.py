@@ -74,6 +74,7 @@ class ObjectDoc(object):
                 else:
                     self.add_variable(item, obj)
 
+
     def add_variable(self, name, value):
         if not name.startswith('_'):
             render_dict = {'name':name,
@@ -181,9 +182,9 @@ WIKI_TEMPLATE = """== Api for %(name)s ==
 %(functions)s"""
 
 CLASSES_TEMPLATE = """=== class %(name)s ===
-==== Variables ====
+==== Variables (%(name)s) ====
 %(variables)s
-==== Functions ====
+==== Methods (%(name)s) ====
 %(functions)s"""
 
 VARIABLE_TEMPLATE = """%(name)s
