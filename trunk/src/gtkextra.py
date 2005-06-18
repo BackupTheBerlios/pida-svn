@@ -26,7 +26,16 @@ import gobject
 POPUP_CONTEXTS = ['file', 'dir', 'terminal', 'position', 'string', 'url']
 
 class Tree(object):
-    ''' A custom treeview subclass that is used throughout Pida. '''
+    """
+    A custom treeview subclass that is used throughout Pida.
+    
+    @cvar COLUMNS: The columns that will be created for this table
+    @type COLUMNS: a C{list} of C{(name, data_type, renderer_type, visibility,
+        display_field) tuples}
+
+    @cvar SCROLLABLE: Whether the tree will be placed in a scrolled window.
+    @type SCROLLABLE: C{boolean}
+    """
     COLUMNS = [('name', gobject.TYPE_STRING, gtk.CellRendererText, True,
                 'markup')]
     SCROLLABLE = True
@@ -77,27 +86,27 @@ class Tree(object):
         self.init()
     
     def init(self):
-        ''' Called by the constructor, for overriding. '''
+        """ Called by the constructor, for overriding. """
         pass
 
     def add_item(self, data, parent=None):
-        ''' Add an item to the tree view's model. '''
+        """ Add an item to the tree view's model. """
         return self.model.append(parent, data)
 
     def clear(self):
-        ''' Clear the View. '''
+        """ Clear the View. """
         self.model.clear()
 
     def connect_select(self, cb):
-        ''' Connect the external single-click handler. '''
+        """ Connect the external single-click handler. """
         self.r_cb_selected = cb
 
     def connect_activate(self, cb):
-        ''' Connect the external activate handler. '''
+        """ Connect the external activate handler. """
         self.r_cb_activated = cb
 
     def connect_rightclick(self, cb):
-        ''' Connect the external right-click handler. '''
+        """ Connect the external right-click handler. """
         self.r_cb_rightclick = cb
 
     def cb_activated(self, *args):
