@@ -8,6 +8,9 @@ Standards-Version: 3.6.1
 Package: python-pida
 Architecture: any
 Depends: ${python:Depends}, python2.3-pida
+Conflicts: pida
+Replaces: pida
+Provides: pida
 Description: Python Integrated Development Applicationr, a Python IDE.
  Pida uses Vim as its editor, and aims to integrate
  existing tools rather than 
@@ -17,7 +20,9 @@ Description: Python Integrated Development Applicationr, a Python IDE.
 Package: python2.3-pida
 Architecture: any
 Depends: ${python:Depends}, gvim, python2.3-gtk2, python-vte
-Conflicts: python2.4-pida
+Conflicts: python2.4-pida, pida
+Replaces: pida
+Provides: pida
 Description: Python Integrated Development Applicationr, a Python IDE.
  Pida uses Vim as its editor, and aims to integrate
  existing tools rather than 
@@ -27,7 +32,9 @@ Description: Python Integrated Development Applicationr, a Python IDE.
 Package: python2.4-pida
 Architecture: any
 Depends: ${python:Depends}, gvim, python2.4-gtk2, python-vte
-Conflicts: python2.3-pida
+Conflicts: python2.3-pida, pida
+Replaces: pida
+Provides: pida
 Description: Python Integrated Development Applicationr, a Python IDE.
  Pida uses Vim as its editor, and aims to integrate
  existing tools rather than

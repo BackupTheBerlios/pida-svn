@@ -9,6 +9,9 @@ Package: python-pida
 Cpu: any
 System: any
 Depends: ${python:Depends}, python2.3-pida
+Conflicts: pida
+Replaces: pida
+Provides: pida
 Description: Python Integrated Development Applicationr, a Python IDE.
  Pida uses Vim as its editor, and aims to integrate
  existing tools rather than 
@@ -19,7 +22,9 @@ Package: python2.3-pida
 Cpu: any
 System: any
 Depends: ${python:Depends}, gvim, python2.3-gtk2, python-vte
-Conflicts: python2.4-pida
+Conflicts: python2.4-pida, pida
+Replaces: pida
+Provides: pida
 Description: Python Integrated Development Applicationr, a Python IDE.
  Pida uses Vim as its editor, and aims to integrate
  existing tools rather than 
@@ -30,7 +35,9 @@ Package: python2.4-pida
 Cpu: any
 System: any
 Depends: ${python:Depends}, gvim, python2.4-gtk2, python-vte
-Conflicts: python2.3-pida
+Conflicts: python2.3-pida, pida
+Replaces: pida
+Provides: pida
 Description: Python Integrated Development Applicationr, a Python IDE.
  Pida uses Vim as its editor, and aims to integrate
  existing tools rather than
