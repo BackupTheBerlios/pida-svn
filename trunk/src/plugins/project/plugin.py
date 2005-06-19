@@ -504,12 +504,6 @@ class Plugin(plugin.Plugin):
             '%s</span>') % (section, vcs, wd)
         return b
        
-    #def cb_changed(self, path):
-    #    i = self.tree.get_selected_id()
-    #    path = self.config.get(i, 'directory')
-    #    self.files.clear()
-    #    self.files.set_root(path)
- 
     def cb_projchanged(self, tv):
         name = self.projects.selected(0)
         path = self.config.get(name, 'directory')
