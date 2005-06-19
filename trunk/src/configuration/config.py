@@ -193,54 +193,147 @@ class ConfigBoolen(ConfigWidget):
         self.set_value(val)
 
 class ConfigFont(ConfigWidget):
+    """
+    A font selection dialogue that takes its values from the config database.
+    """
     def __init__(self, cb, section, key):
+        """
+        Constructor.
+        
+        @param cb: An instance of the application class.
+        @type cb: pida.main.Application
+
+        @param section: The configuration section that the widget is for.
+        @type section: string
+
+        @param key: The configuration key that the widget is for
+        @type key: string
+        """
         widget = gtk.FontButton()
         ConfigWidget.__init__(self, cb, widget, section, key)
         
     def load(self):
+        """
+        Load th font value from the options database.
+        """
         fn = self.value()
         self.widget.set_font_name(fn)
 
     def save(self):
+        """
+        Save the font value to the options database.
+        """
         self.set_value(self.widget.get_font_name())
 
 
 class ConfigFile(ConfigWidget):
+    """
+    A widget that represents a file selection entry and dialogue button.
+    """
     def __init__(self, cb, section, key):
+        """
+        Constructor.
+        
+        @param cb: An instance of the application class.
+        @type cb: pida.main.Application
+
+        @param section: The configuration section that the widget is for.
+        @type section: string
+
+        @param key: The configuration key that the widget is for
+        @type key: string
+        """
         widget = gtkextra.FileButton(cb)
         ConfigWidget.__init__(self, cb, widget, section, key)
         
     def load(self):
+        """
+        Load the filename from the options database.
+        """
         fn = self.value()
         self.widget.set_filename(fn)
 
     def save(self):
+        """
+        Save the filename to the options database.
+        """
         self.set_value(self.widget.get_filename())
 
 class ConfigFolder(ConfigFile):
+    """
+    A widget that represents a directory entry and dialogue button.
+    
+    (Note called "Folder" because GTK calls it a "Folder").
+    """
     def __init__(self, cb, section, key):
+        """
+        Constructor.
+        
+        @param cb: An instance of the application class.
+        @type cb: pida.main.Application
+
+        @param section: The configuration section that the widget is for.
+        @type section: string
+
+        @param key: The configuration key that the widget is for
+        @type key: string
+        """
         widget = gtkextra.FolderButton(cb)
         ConfigWidget.__init__(self, cb, widget, section, key)
        
 class ConfigColor(ConfigWidget):
+    """
+    A widget for a colour selection button and dialogue.
+    """
     def __init__(self, cb, section, key):
+        """
+        Constructor.
+        
+        @param cb: An instance of the application class.
+        @type cb: pida.main.Application
+
+        @param section: The configuration section that the widget is for.
+        @type section: string
+
+        @param key: The configuration key that the widget is for
+        @type key: string
+        """
         widget = gtk.ColorButton()
         ConfigWidget.__init__(self, cb, widget, section, key)
+
     def load(self):
+        """
+        Load the colour from the options database.
+        """
         cn = self.value()
         col = self.widget.get_colormap().alloc_color(cn)
         self.widget.set_color(col)
+
     def save(self):
+        """
+        Save the colour to the options database.
+        """
         c = self.widget.get_color()
         v = gtk.color_selection_palette_to_string([c])
         self.set_value(v)
 
-
 class ListTree(gtk.TreeView):
+    """
+    A treeview control for switching a notebook's tabs.
+    """
+    def __init__(self, cb, configeditor):
+        """
+        Constructor.
+        
+        @param cb: An instance of the application class.
+        @type cb: pida.main.Application
 
-    def __init__(self, cb, ce):
+        @param configeditor: The configuration editor that the list is used
+            for.
+        @type configeditor: pida.config.ConfigEditor
+        """
         self.cb = cb
-        self.ce = ce
+        self.configeditor = configeditor
         self.store = gtk.ListStore(str, int)
         gtk.TreeView.__init__(self, self.store)
         renderer = gtk.CellRendererText()
@@ -250,73 +343,75 @@ class ListTree(gtk.TreeView):
         self.connect('cursor-changed', self.cb_select)
 
     def cb_select(self, *args):
+        """
+        Callback when an item in the list is selected.
+        """
         path = self.store.get_iter(self.get_cursor()[0])
         tid = self.store.get_value(path, 1)
-        self.ce.cb_select(tid)
+        # call the config editor's callback
+        self.configeditor.cb_select(tid)
 
     def populate(self, names):
+        """
+        Populate the list with the required names.
+        """
         self.store.clear()
         for name, i in names:
             s = '%s' % name
             self.store.append((s, i))
 
-
-
 class ConfigEditor(object):
+    """
+    A top-level window containing dynamically generated controls for
+    configuration information from the Pida options database.
+    """
     def __init__(self, cb):
+        """
+        Constructor.
+        
+        @param cb: An instance of the application class.
+        @type cb: pida.main.Application
+        """
         self.cb = cb
-
         # main window
         self.win = gtk.Window()
         self.win.set_title('PIDA Configuration Editor')
         self.win.set_transient_for(self.cb.cw)
         self.win.connect('destroy', self.cb_cancel)
-
         # top container
         hbox = gtk.HBox()
         self.win.add(hbox)
-
         self.lmodel = gtk.ListStore(str, int)
         self.tree = ListTree(self.cb, self)
-
         hbox.pack_start(self.tree, expand=False, padding=6)
-
         vbox = gtk.VBox()
         hbox.pack_start(vbox)
-        
         # notebook
         self.nb = gtk.Notebook()
         vbox.pack_start(self.nb, padding=4)
         self.nb.set_show_tabs(False)
-
         # Button Bar
         cb = gtk.HBox()
         vbox.pack_start(cb, expand=False, padding=2)
-        
         # separator
         sep = gtk.HSeparator()
         cb.pack_start(sep)
-
         # cancel button
         self.cancel_b = gtk.Button(stock=gtk.STOCK_CANCEL)
         cb.pack_start(self.cancel_b, expand=False)
         self.cancel_b.connect('clicked', self.cb_cancel)
-        
         # reset button
         self.reset_b = gtk.Button(stock=gtk.STOCK_UNDO)
         cb.pack_start(self.reset_b, expand=False)
         self.reset_b.connect('clicked', self.cb_reset)
-
         # apply button
         self.apply_b = gtk.Button(stock=gtk.STOCK_APPLY)
         cb.pack_start(self.apply_b, expand=False)
         self.apply_b.connect('clicked', self.cb_apply)
-        
         # save button
         self.save_b = gtk.Button(stock=gtk.STOCK_SAVE)
         cb.pack_start(self.save_b, expand=False)
         self.save_b.connect('clicked', self.cb_save)
-        
         self.controls = {}
         self.setopts()
         self.initialize()
@@ -325,6 +420,10 @@ class ConfigEditor(object):
         self.opts = self.cb.opts
 
     def initialize(self):
+        """
+        Load the initial database options into the config editor, and generate
+        the required widgets.
+        """
         pages = []
         sects =  self.opts.sections()
         sects.sort()
@@ -344,11 +443,17 @@ class ConfigEditor(object):
         self.tree.populate(pages)
 
     def load(self):
+        """
+        Load the configuration information from the database.
+        """
         for section in self.opts.sections():
             for opt in self.opts.options(section):
                 self.controls[(section, opt)].load()
 
     def save(self):
+        """
+        Save the configuration information to the database.
+        """
         for section in self.opts.sections():
             for opt in self.opts.options(section):
                 self.controls[(section, opt)].save()
