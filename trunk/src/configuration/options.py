@@ -23,6 +23,7 @@
 # System imports
 import os
 import sys
+import shutil
 import textwrap
 import ConfigParser as configparser
 
@@ -233,9 +234,10 @@ class Opts(object):
 
         if os.path.exists(conffile):
             self.load_defaults()
-            self.write()
-        else:
-            self.write()
+        if self.dirty_version:
+            backconf = '%s.bak' % conffile
+            shutil.move(conffile, backconf)
+        self.write()
 
     def add_section(self, section):
         ''' Add a configuration section. '''
@@ -270,6 +272,7 @@ class Opts(object):
         f = open(self.opts.get('files', 'config_user'), 'r')
         v = f.readline()
         version = v.strip()[1:]
+        print version
         if version == __version__:
             self.opts.readfp(f)
         else:

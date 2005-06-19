@@ -33,8 +33,8 @@ import configuration.options as options
 import configuration.config as config
 
 # Version String
-import __init__
-__version__ = __init__.__version__
+import pida.__init__
+__version__ = pida.__init__.__version__
 
 # Available plugins, could be automatically generated
 PLUGINS = ['project', 'python_browser', 'python_debugger', 'python_profiler']
