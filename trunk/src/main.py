@@ -289,7 +289,12 @@ class Window(gdkvim.VimWindow):
         self.cb.action_close()
         
     def add_plugin(self, plugin):
-        """ Add a plugin to the optional plugin notebook. """
+        """
+        Add a plugin to the optional plugin notebook.
+        
+        @param plugin: An instance of the plugin.
+        @type plugin: pida.plugin.Plugin
+        """
         # add the plugin to the Application's list of plugins
         self.cb.plugins.append(plugin)
         # create a label with a tooltip/EventBox
