@@ -151,18 +151,44 @@ class ConfigEntry(ConfigWidget):
         self.set_value(self.widget.get_text())
 
 class ConfigBoolen(ConfigWidget):
+    """
+    A checkbox widget forr boolean configuration values.
+    """
     def __init__(self, cb, section, key):
+        """
+        Constructor.
+        
+        @param cb: An instance of the application class.
+        @type cb: pida.main.Application
+
+        @param section: The configuration section that the widget is for.
+        @type section: string
+
+        @param key: The configuration key that the widget is for
+        @type key: string
+        """
         widget = gtk.CheckButton(label="Yes")
         ConfigWidget.__init__(self, cb, widget, section, key)
        
     def stob(self, s):
+        """
+        Convert a string to a boolean. 
+        
+        This method is deprecated and should not be used
+        """
         return s.lower().startswith('t')
  
     def load(self):
+        """
+        Load the checkbox active status from the options database.
+        """
         enabled = bool(int(self.value()))
         self.widget.set_active(enabled)
 
     def save(self):
+        """
+        Save the checkbox active state to the options database.
+        """
         val = str(int(self.widget.get_active()))
         self.set_value(val)
 
