@@ -341,8 +341,6 @@ class Plugin(plugin.Plugin):
         if self.debugger_loaded:
             self.send_breakpoint_clear(fn, line)
 
-                
-
     def cb_step(self, *args):
         self.send('step')
 
