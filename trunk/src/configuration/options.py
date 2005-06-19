@@ -234,9 +234,6 @@ class Opts(object):
 
         if os.path.exists(conffile):
             self.load_defaults()
-        if self.dirty_version:
-            backconf = '%s.bak' % conffile
-            shutil.move(conffile, backconf)
         self.write()
 
     def add_section(self, section):
@@ -269,15 +266,14 @@ class Opts(object):
 
     def load_defaults(self):
         ''' Load the option file from the configured location. '''
+        tempopts = Config()
         f = open(self.opts.get('files', 'config_user'), 'r')
-        v = f.readline()
-        version = v.strip()[1:]
-        print version
-        if version == __version__:
-            self.opts.readfp(f)
-        else:
-            self.dirty_version = True
+        tempopts.readfp(f)
         f.close()
+        for section in tempopts.sections():
+            for option in tempopts.options(section):
+                if self.opts.has_option(section, option):
+                    self.set(section, option, tempopts.get(section, option))
 
     def create_dir(self, dirname):
         ''' Create a directory if it does not already exist. '''
