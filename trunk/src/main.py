@@ -255,7 +255,18 @@ class Window(gdkvim.VimWindow):
         self.show()
             
     def cb_key_press(self, widget, event):
-        """ Callback to all key press events """
+        """
+        Callback to all key press events.
+
+        This method must return False for the key-press event to be propogated
+        to the child widgets.
+
+        @param widget: The widget that received the key-press event.
+        @type widget: gtk.Widget
+
+        @param event: The event received.
+        @type event: gtk.gdk.Event
+        """
         # if <CONTROL> was pressed with the key
         if event.state & gtk.gdk.CONTROL_MASK:
             if event.keyval == 97:
