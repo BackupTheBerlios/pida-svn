@@ -279,7 +279,12 @@ class Window(gdkvim.VimWindow):
         return False
         
     def cb_quit(self, *a):
-        """ Callback for user closing the main window """
+        """
+        Callback for user closing the main window.
+        
+        This method is called when the main window is destroyed, wither by
+        pressing the close button, or by a window manager hint.
+        """
         # call the close acition of the application.
         self.cb.action_close()
         
