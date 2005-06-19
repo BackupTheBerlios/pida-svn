@@ -171,14 +171,6 @@ class Plugin(plugin.Plugin):
             self.evt_pydoc(text)
         self.question('Search Pydoc for:', ans)
 
-    def cb_but_debug(self, *args):
-        py = self.cb.opts.get('commands', 'python')
-        self.cb.action_newterminal(py, ['pdb', '-m', 'pdb', self.fn])
-   
-    def cb_but_profile(self, *args):
-        py = self.cb.opts.get('commands', 'python')
-        self.cb.action_newterminal(py, ['python', '-m', 'profile', self.fn])
-    
     def cb_defs_select(self, tv):
         self.cb.action_gotoline(self.defs.selected(2))
 
@@ -224,9 +216,6 @@ class Plugin(plugin.Plugin):
 
     def evt_bufferexecute(self):
         self.execute()
-
-    def evt_bufferdebug(self):
-        self.cb_but_debug()
 
     def evt_started(self, *args):
         brm()

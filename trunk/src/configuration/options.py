@@ -55,10 +55,14 @@ class Config(configparser.ConfigParser):
             fp.write("[%s]\n\n" % section)
             for (key, value) in self._sections[section].items():
                 if key != "__name__":
-                    help = helpdict[(section, key)]
-                    helptext = '\n'.join(['#%s' % s for s in textwrap.wrap(help)])
-                    fp.write('%s\n' % helptext)
-                    fp.write("%s = %s\n\n" %
+                    try:
+                        help = helpdict[(section, key)]
+                    except KeyError:
+                        help = None
+                    if help:
+                        helptext = '\n'.join(['#%s' % s for s in textwrap.wrap(help)])
+                        fp.write('%s\n' % helptext)
+                        fp.write("%s = %s\n\n" %
                              (key, str(value).replace('\n', '\n\t')))
             fp.write("\n")
 
