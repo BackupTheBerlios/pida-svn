@@ -165,6 +165,7 @@ class ObjectDoc(object):
         return ' '.join([line.strip() for line in lines])
         
 class ModuleDoc(ObjectDoc):
+    """A document for a module."""
 
     def __init__(self, name):
         mod = __import__(name, {}, {}, [True])
