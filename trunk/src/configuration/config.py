@@ -119,14 +119,35 @@ class ConfigWidget(object):
         pass
 
 class ConfigEntry(ConfigWidget):
+    """
+    An entry widget for plain configuration strings.
+    """
     def __init__(self, cb, section, key):
+        """
+        Constructor.
+        
+        @param cb: An instance of the application class.
+        @type cb: pida.main.Application
+
+        @param section: The configuration section that the widget is for.
+        @type section: string
+
+        @param key: The configuration key that the widget is for
+        @type key: string
+        """
         widget = gtk.Entry()
         ConfigWidget.__init__(self, cb, widget, section, key)
 
     def load(self):
+        """
+        Set the entry widget text to the option database value.
+        """
         self.widget.set_text(self.value())
 
     def save(self):
+        """
+        Set the option database value to the widgets text.
+        """
         self.set_value(self.widget.get_text())
 
 class ConfigBoolen(ConfigWidget):
