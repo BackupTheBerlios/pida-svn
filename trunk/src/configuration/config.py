@@ -18,58 +18,104 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+"""Provides the widgets for dynamically generating a configuration editor."""
+
+# GTK import
 import gtk
+# System imports
 import textwrap
+#Pida imports
 import pida.gtkextra as gtkextra
 
 class ConfigWidget(object):
+    """
+    A widget holder which can save or load its state.
+    
+    This class is largely abstract, and must be overriden for useful use. See
+    the examples below.
+    """
     def __init__(self, cb, widget, section, key):
+        """
+        Constructor
+        
+        @param cb: An instance of the application class
+        @type cb: pida.main.Application
+
+        @param widget: The actual widget for the holder.
+        @type widget: gtk.Widget
+
+        @param section: The configuration section that the widget is for.
+        @type section: string
+
+        @param key: The configuration key that the widget is for
+        @type key: string
+        """
+        # The application class
         self.cb = cb
-        self.setopts()
+        # A local referenec to the options object
+        self.opts = self.cb.opts
+        # Store information about the configuration we will need.
         self.section = section
         self.key = key
-
+        # Build the widget
+        # Containers
         self.win = gtk.VBox()
-       
         hb = gtk.HBox()
         self.win.pack_start(hb)
-
+        # Name label
         self.name_l = gtk.Label()
         self.name_l.set_markup('<span weight="bold">'
                                '%s</span>' % self.get_name())
         hb.pack_start(self.name_l, padding=4, expand=True)
         self.name_l.set_size_request(100, -1)
-
+        # Actual widget
         self.widget = widget
         hb.pack_start(widget, padding=4)
-
         hb2 = gtk.HBox()
         self.win.pack_start(hb2)
-
+        # Help label
         self.help_l = gtk.Label()
         self.help_l.set_markup(self.get_help())
         hb2.pack_start(self.help_l, expand=False, padding=4)
 
-    def setopts(self):
-        self.opts = self.cb.opts
-
     def get_name(self):
+        """
+        Return a beautified name for the configuration option.
+        """
         return ' '.join(self.key.split('_')[::-1])
    
     def get_help(self):
+        """
+        Return the help for the option.
+        """
         help = self.opts.help[(self.section, self.key)]
         return '\n'.join(textwrap.wrap(help, 60))
 
     def set_value(self, value):
+        """
+        Set the configuration value to the widget's value.
+
+        @param value: The value to set the widget to.
+        @type value: string
+        """
         self.opts.set(self.section, self.key, value)
     
     def value(self):
+        """
+        Get the configuration value from the options database.
+        """
         return self.opts.get(self.section, self.key)
 
     def load(self):
+        """
+        Called to load data from the options database into the widget.
+        """
         pass
 
     def save(self):
+        """
+        Called to save data from the widget into the opitons database.
+        """
         pass
 
 class ConfigEntry(ConfigWidget):
