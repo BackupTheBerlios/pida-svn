@@ -167,6 +167,9 @@ class VimWindow(gtk.Window):
             self.cwds[server] = cwd
         self.send_expr(server, "getcwd()", cb)
 
+    def quit(self, server):
+        self.send_ex(server, 'q')
+
     def abspath(self, server, name):
         if not name.startswith('/'):
             hdir = os.path.expanduser('~')

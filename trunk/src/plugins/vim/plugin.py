@@ -174,6 +174,11 @@ class Plugin(plugin.Plugin):
     def cb_alternative(self, *args):
         self.cb.action_showconfig()
 
+    #def evt_die(self):
+    #    if self.vim:
+    #        self.cb.action_quitvim()
+            
+
     def evt_reset(self):
         self.load_shortcuts()
 

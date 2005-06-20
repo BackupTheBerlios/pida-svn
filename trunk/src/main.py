@@ -166,6 +166,12 @@ class Application(object):
         # Fire the newterm event, the terminal plugin will respond.
         self.evt('newterm', command, args, **kw)
 
+    def action_quitvim(self):
+        """
+        Quit Vim.
+        """
+        self.cw.quit(self.server)
+
     def send_ex(self, ex):
         """ Send a normal mode command. """
         # Call the method of the vim communication window.
