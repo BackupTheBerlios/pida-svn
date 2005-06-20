@@ -70,7 +70,7 @@ for plugin in os.listdir(plugindir):
 
 log('Performing setup.')
 setup(name='pida',
-      version='0.1.7pre1',
+      version='0.2.0',
       author='Ali Afshar',
       author_email='aafshar@gmail.com',
       url='http://pida.berlios.de',
