@@ -1,0 +1,100 @@
+change log
+--
+version 0.2.0
+
+installer: added an "upgrade" option to optionally remove old installations.
+
+debugger: executes, and evaluates arbitrary python expressions in the namespace
+debugger: context listing button click, and frame d-click
+debugger: breakpoints
+debugger: namespace viewing
+debugger: command line
+debugger: frame and breakpoint context menus
+
+profiler: profile python buffers
+profiler: synchronized external detailed view
+
+pydoc: button to launch pydoc search from Pida
+pydoc: shortcuts to execute pydoc from vim
+
+fixed: return key handling for text entry boxes
+fixed: default focus for questions
+fixed: default foxus for new projects
+fixed: refreshing serverlist when unnecesary fixed
+
+general: refactored module locations heavily
+general: plugin API formalized and published
+general: plugins in own directory
+general: plugins dynamically loaded
+general: GTK helper classes in gtkextra.py
+
+version: 0.1.7
+
+Major
+--
+optional embedded mode, runs with single embedded vim instance
+optionally use evim.
+short-cut editor
+context menus made glob-configurable
+context sensitive menus for files and directories
+configurable terminal toolbar
+plugins informed when configuration registry has been changed
+vim shortcuts for controlling pida are configurable
+File browser new files created in correct direcory.
+Fixed absolute path/relative path bug (thanks mw at agami dot at)
+Added vcs update support
+Added vcs add file support
+Add vcs remove file support
+Added controls to file browser
+Stepping debugger, combined text-graphical interface.
+debian packaging utilities gcbirzan @ at wolfheart.ro
+
+Minor
+--
+user orderable project lists
+default shell checks the SHELL environment variable.
+confirm with user when changing a current buffer that has been modified
+added shortcut for executing project file if one is defined
+file browser buffer opening on double-click
+terminal button in working directory for file browser
+right-click on seperator of plugin bars gives menu of functions
+
+Version: 0.1.6
+07/06/05
+
+Major
+--
+
+* Project manager updated to includes file browser.
+* Subversion support added. gcbirzan at wolfheart.ro
+
+Minor
+--
+* Python browser uses colours optionally.
+* Directories colour in file list configurable.
+* Better looks and layout of config widgets
+* Config editor sidebar, not tab bar
+* Colourful lists
+* config help items are Markupable.
+* Fixed buffer list icons
+
+
+Version: 0.1.5
+Date: 05/06/05
+
+Major
+--
+* Determine initial locations of commands using 'which'.
+* Foregrounding vim configurable.
+* Made terminal background and foreground colours configurable.
+* Allow user to decide which plugins are started.
+* Configuration file and vim script are versioned, and removed if the version
+is unmatched.
+
+Minor
+--
+* Write help entries for configuration to config file.
+* Changed configuration names to be more user friendly.
+* Capitalize section labels in configuration editor.
+* Fixed main title.
+

@@ -1,0 +1,6 @@
+include *.txt
+include *.py
+recursive-include src *.py
+include scripts/*
+include data/icons.dat
+recursive-include debian *
