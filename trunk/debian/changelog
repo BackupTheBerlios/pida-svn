@@ -1,3 +1,10 @@
+pida (0.2.0) unstable; urgency=low
+
+  * New upstream release.
+  * Multiple Python version package versions.
+
+ -- George Cristian Bîrzan <gcbirzan@wolfheart.ro>  Mon, 20 Jun 2005 13:33:07 +0300
+
 pida (0.1.7) unstable; urgency=low
 
   * New upstream release.

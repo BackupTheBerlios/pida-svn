@@ -1,4 +1,2 @@
-* Do different versions for Python 2.3 and 2.4.
-* Figure out if that will fix Ubuntu bug (http://developer.berlios.de/bugs/?func=detailbug&bug_id=4259&group_id=3862)
 * See about Woody and the gvim version.
 * Figure out if the profiler bits will work on 2.3.
