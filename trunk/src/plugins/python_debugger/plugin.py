@@ -145,7 +145,10 @@ class DebugTerminal(vte.Terminal):
         self.cb = cb
         self.pid = None
         vte.Terminal.__init__(self)
-        self.set_size_request(-1, 16)
+         #font
+        self.set_font_from_string(self.cb.opts.get('terminal', 'font_default'))
+
+        self.set_size_request(-1, 32)
 
     def kill(self):
         if self.pid:
