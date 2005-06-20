@@ -7,7 +7,7 @@ Standards-Version: 3.6.1
 
 Package: python-pida
 Architecture: any
-Depends: ${python:Depends}, python2.3-pida | python2.4-pida
+Depends: ${python:Depends}, python2.3-pida
 Conflicts: pida
 Replaces: pida
 Provides: pida
