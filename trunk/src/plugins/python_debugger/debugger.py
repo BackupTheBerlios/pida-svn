@@ -57,7 +57,6 @@ class Debugger(object):
         self.loop()
 
     def received(self, stack, tb):
-        print tb
         s = self.format_stack(stack)
         self.ipc.write('stack', s, 8)
         self.loop()

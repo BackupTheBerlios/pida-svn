@@ -93,8 +93,9 @@ class Plugin(plugin.Plugin):
 
     def cb_bufs_selected(self, tv):
         ''' Called when an element in the buffer list is selected. '''
-        if not self.cbuf or self.cbuf != self.buffers.selected(3):
-            self.cb.action_changebuffer(self.buffers.selected(3))
+        sel = self.buffers.selected(3)
+        if not self.cbuf or self.cbuf != sel:
+            self.cb.action_changebuffer(sel)
 
     def cb_open(self, *args):
         ''' Called when the open button is clicked. '''
