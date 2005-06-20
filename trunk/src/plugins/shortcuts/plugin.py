@@ -285,9 +285,30 @@ class Shortcuts(object):
         ''' Load the option file from the configured location. '''
         fn = self.cb.opts.get('files', 'data_shorcuts')
         if os.path.exists(fn):
+            tempopts = ConfigParser.ConfigParser()
             f = open(fn, 'r')
-            self.config.readfp(f)
+            tempopts.readfp(f)
             f.close()
+            for section in tempopts.sections():
+                if tempopts.has_option(section, 'command'):
+                    command = tempopts.get(section, 'command')
+                    if tempopts.has_option(section, 'glob'):
+                        glob = tempopts.get(section, 'glob')
+                    else:
+                        glob = '*'
+                    if tempopts.has_option(section, 'icon'):
+                        icon = tempopts.get(section, 'icon')
+                    else:
+                        icon = 'new'
+                    ctxs = []
+                    for ctx in ['file_context', 'directory_context',
+                    'terminal_context', 'position_context', 'string_context',
+                    'url_context']:
+                        if tempopts.has_option(section, ctx):
+                            ctxs.append(tempopts.get(section, ctx))
+                        else:
+                            ctxs.append('0')
+                    self.set(section, command, glob, icon, ctxs)
         else:
             self.reset_defaults()
 
