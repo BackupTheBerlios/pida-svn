@@ -463,8 +463,15 @@ class Plugin(plugin.Plugin):
         fn = self.cb.opts.get('files', 'data_project')
         if os.path.exists(fn):
             f = open(fn, 'r')
-            self.config.readfp(f)
+            tempopts = ConfigParser.ConfigParser()
+            tempopts.readfp(f)
             f.close()
+        for section in tempopts.sections():
+            if tempopts.has_option(section, 'directory'):
+                dirn = tempopts.get(section, 'directory')
+                if not self.config.has_section(section):
+                    self.config.add_section(section)
+                self.config.set(section, 'directory', dirn)
         if not self.config.has_section(CWD):
             self.config.add_section(CWD)
         self.config.set(CWD, 'directory', 'None')
