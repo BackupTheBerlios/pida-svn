@@ -1,28 +1,34 @@
 change log
 --
-version 0.1.8
+version 0.2.0
 
-button to launch pydoc search from Pida
-shortcuts to execute pydoc from vim
-frame/breakpoint context menus
-python profiler interface
-debugger executes, and evaluates arbitrary python expressions in the namespace
-of the debugged application
-debugger context listing in main vim on list button click, and frame d-click
-fixed return handling for text entry boxes
-fixed default focus for quesyions, new projects
-debugger: breakpoints, namespace
+installer: added an "upgrade" option to optionally remove old installations.
+
+debugger: executes, and evaluates arbitrary python expressions in the namespace
+debugger: context listing button click, and frame d-click
+debugger: breakpoints
+debugger: namespace viewing
 debugger: command line
+debugger: frame and breakpoint context menus
 
+profiler: profile python buffers
+profiler: synchronized external detailed view
 
+pydoc: button to launch pydoc search from Pida
+pydoc: shortcuts to execute pydoc from vim
 
-version 0.1.7pre1
+fixed: return key handling for text entry boxes
+fixed: default focus for questions
+fixed: default foxus for new projects
+fixed: refreshing serverlist when unnecesary fixed
 
-bugs
---
-refreshing serverlist when unnecesary fixed
+general: refactored module locations heavily
+general: plugin API formalized and published
+general: plugins in own directory
+general: plugins dynamically loaded
+general: GTK helper classes in gtkextra.py
 
-version: 0.1.7pre
+version: 0.1.7
 
 Major
 --
