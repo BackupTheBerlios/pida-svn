@@ -21,7 +21,7 @@ Description: Python Integrated Development Applicationr, a Python IDE.
 Package: python2.3-pida
 Cpu: any
 System: any
-Depends: ${python:Depends}, gvim, python2.3-gtk2, python-vte
+Depends: ${python:Depends}, gvim, python2.3-gtk2, python-vte, bicyclerepair, python2.3-profiler
 Conflicts: python2.4-pida, pida
 Replaces: pida
 Provides: pida
@@ -34,7 +34,7 @@ Description: Python Integrated Development Applicationr, a Python IDE.
 Package: python2.4-pida
 Cpu: any
 System: any
-Depends: ${python:Depends}, gvim, python2.4-gtk2, python-vte
+Depends: ${python:Depends}, gvim, python2.4-gtk2, python-vte, bicyclerepair, python2.4-profiler
 Conflicts: python2.3-pida, pida
 Replaces: pida
 Provides: pida

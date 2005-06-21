@@ -23,6 +23,7 @@ import pida.plugin as plugin
 #import tree
 import ConfigParser
 import os
+import re
 #import dialogs
 #import tree
 import pida.gtkextra as gtkextra
@@ -135,6 +136,9 @@ class FileTree(gtkextra.Tree):
             flist = os.listdir(path)
         except OSError:
             flist = []
+	if self.cb.opts.get('project browser', 'tree_exclude') != '0':
+            pattern = re.compile(self.cb.opts.get('project browser', 'pattern_exclude'))
+            flist = [fn for fn in flist if not pattern.match(fn)]
         for fn in flist:
             fp = os.path.join(path, fn)
             if os.path.isdir(fp):
