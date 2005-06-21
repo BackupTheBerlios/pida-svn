@@ -571,7 +571,7 @@ class IPWindow(object):
     def cb_r(self, window, ev):
         if hasattr(ev, 'atom'):
             message = self.rw.window.property_get(ev.atom, pdelete=True)
-            if message and ev.atom[0].islower():
+            if message and ev.atom and ev.atom[0].islower():
                 self.do(ev, message)
 
     def do(self, ev, message):

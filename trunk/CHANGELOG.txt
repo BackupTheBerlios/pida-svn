@@ -1,5 +1,10 @@
 change log
 --
+version 0.2.1
+
+project browser: file list now has optional regular expression exclude mask
+
+
 version 0.2.0
 
 installer: added an "upgrade" option to optionally remove old installations.
