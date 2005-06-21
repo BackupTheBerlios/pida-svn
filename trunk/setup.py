@@ -70,12 +70,25 @@ for plugin in os.listdir(plugindir):
 
 log('Performing setup.')
 setup(name='pida',
-      version='0.2.0',
-      author='Ali Afshar',
-      author_email='aafshar@gmail.com',
-      url='http://pida.berlios.de',
-      packages=packages,
-      package_dir = {'pida': 'src'},
-      scripts=['scripts/pida'],
-      data_files=[('share/pida', ['data/icons.dat'])]
+    version='0.2.0',
+    author='Ali Afshar',
+    author_email='aafshar@gmail.com',
+    url='http://pida.berlios.de',
+    download_url='http://pida.berlios.de/index.php/PIDA:Downloads',
+    description=('A Python IDE written in Python and GTK, '
+                 'which uses Vim as its editor.'),
+    long_description='Please visit the Pida website at for more details.',
+    packages=packages,
+    package_dir = {'pida': 'src'},
+    scripts=['scripts/pida'],
+    data_files=[('share/pida', ['data/icons.dat'])],
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Environment :: X11 Applications',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Topic :: Software Development']
+      
       )
