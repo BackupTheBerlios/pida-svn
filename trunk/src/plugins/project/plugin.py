@@ -136,7 +136,7 @@ class FileTree(gtkextra.Tree):
             flist = os.listdir(path)
         except OSError:
             flist = []
-	if self.cb.opts.get('project browser', 'tree_exclude') != '0':
+        if self.cb.opts.get('project browser', 'tree_exclude') != '0':
             pattern = re.compile(self.cb.opts.get('project browser', 'pattern_exclude'))
             flist = [fn for fn in flist if not pattern.match(fn)]
         for fn in flist:
