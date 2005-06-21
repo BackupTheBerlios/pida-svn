@@ -20,25 +20,15 @@
 
 # Copied from the bdb, pdb, Idle and eric3 debuggers
 
-import bdb
 import gtk
-import sys
 import os
 import cPickle as pickle
 import types
 import sys
 import linecache
-import cmd
-import bdb
 import pdb
-from repr import Repr
-import os
-import re
-import pprint
 import traceback
-import marshal
 import pida.gtkextra as gtkextra
-import tempfile
 import cStringIO
 
 class Debugger(object):
