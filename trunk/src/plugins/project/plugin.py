@@ -163,7 +163,10 @@ class FileTree(gtkextra.Tree):
    
     def refresh(self):
         self.clear()
-        self.set_root(self.root)
+        if self.projects.selected(0) == CWD:
+            self.set_root(self.config.get(CWD, 'directory'))
+        else:
+            self.set_root(self.root)
         self.update() 
     
     def up(self):
@@ -504,7 +507,8 @@ class Plugin(plugin.Plugin):
         self.config.set(CWD, 'directory', cwd)
         self.analyse_project(CWD)
         self.write()
-        self.refresh()
+        if self.projects.selected(0) == CWD:
+            self.refresh()
 
     def beautify(self, section):
         vcs = self.config.get(section, 'version_control')
@@ -536,8 +540,6 @@ class Plugin(plugin.Plugin):
         cwd = os.path.split(name)[0]
         if cwd != self.config.get(CWD, 'directory'):
             self.set_current(cwd)
-            if self.projects.selected(0) == '__current__':
-                self.cb_changed(cwd)
 
     def evt_projectexecute(self, arg):
         name = self.projects.selected(0)
