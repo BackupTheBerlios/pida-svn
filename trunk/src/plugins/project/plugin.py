@@ -593,15 +593,8 @@ class Plugin(plugin.Plugin):
         else:
             self.cb.action_log('Execution Failed',
             'No main file defined for project.', 3)
-            
-
-class CommandMapper(object):
-    def __init__(self, cb):
-        self.cb = cb
-        self.set()
 
 class VersionControlSystem(object):
-
     COMMAND = ''
     ARGS = []
 
@@ -641,56 +634,25 @@ class VersionControlSystem(object):
                                    directory=kw['dir'], envv=kw['env'])
 
 class Darcs(VersionControlSystem):
-
     COMMAND = '/usr/bin/darcs'
     ARGS = ['darcs']
 
     def command_commit(self, **kw):
-        args = ['record']
-        self.launch(args, **kw)
+        self.launch(['record'], **kw)
 
     def command_send(self, **kw):
-        args = ['send']
-        self.launch(args, **kw)
+        self.launch(['send'], **kw)
         
 class Subversion(VersionControlSystem):
-
     COMMAND = '/usr/bin/svn'
     ARGS = ['svn']
 
     def command_update(self, **kw):
-        args = ['update']
-        self.launch(args, **kw)
+        self.launch(['update'], **kw)
     
     def command_commit(self, **kw):
-        args = ['commit']
-        self.launch(args, **kw)
-    
-#class Darcs(CommandMapper):
-#        def set(self):
-#            self.command = '/usr/bin/darcs'
-#            self.args = ['darcs']
-#            self.commit = ['record']
-#            self.update = ['pull']
+        self.launch(['commit'], **kw)
 
-#class Cvs(CommandMapper):
-#        def set(self):
-#            self.command = '/usr/bin/cvs'
-#            self.args = ['cvs']
-#            self.commit = ['commit']
-#            self.update = ['update']
-#            self.add = ['add']
-#            self.remove = ['remove']
-#
-#class Svn(CommandMapper):
-#        def set(self):
-#            self.command = '/usr/bin/svn'
-#            self.args = ['svn']
-#            self.commit = ['commit']
-#            self.update = ['update']
-#            self.add = ['add']
-#            self.remove = ['remove']
-#
 def get_vcs_for_directory(dirname):
     vcs = 0
     if os.path.exists(dirname) and os.path.isdir(dirname):
