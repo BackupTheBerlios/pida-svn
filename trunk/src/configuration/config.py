@@ -437,7 +437,7 @@ class ConfigEditor(object):
             opts = self.opts.options(section)
             opts.sort()
             for opt in opts:
-                ctype = TYPES[self.get_type(section, option)]
+                ctype = TYPES[self.get_type(section, opt)]
                 cw = ctype(self.cb, section, opt)
                 box.pack_start(cw.win, expand=False, padding=4)
                 self.controls[(section, opt)] = cw
@@ -445,7 +445,7 @@ class ConfigEditor(object):
         self.tree.populate(pages)
 
     def get_type(self, section, option):
-        return self.opts.types[(section, opt)]
+        return self.opts.types[(section, option)]
 
     def load(self):
         """
