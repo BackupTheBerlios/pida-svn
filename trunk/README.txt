@@ -31,8 +31,13 @@ copy.)
 Upgrading
 --
 
-To be on the safe side, please delete the ~/.pida/pida.vim file.
+It is advised to remove old installations of Pida if upgrading from version
+0.1.* to version 0.2.*. To achieve this automatically, please use the command:
 
+    python setup.py upgrade
+
+This will prompt you as to whether you want to remove previous Pida
+installations.
 
 Running
 --
