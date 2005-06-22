@@ -1,3 +1,6 @@
+
+save geometry on exit
+
 breakpoint toolbar
 docstring as tooltip
 confirm delete

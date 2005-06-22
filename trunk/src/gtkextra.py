@@ -133,7 +133,7 @@ class Tree(object):
     def l_cb_activated(self, tv, path, arg):
         return True
 
-    def l_cb_selected(self, tv):
+    def l_cb_selected(self, *args):
         return True
 
     def l_cb_rightclick(self, ite, time):
@@ -157,6 +157,9 @@ class Tree(object):
 
     def get(self, niter, column):
         return self.model.get_value(niter, column)
+
+    def set(self, niter, column, value):
+        self.model.set_value(niter, column, value)
 
     def toggle_expand(self, path):
         niter = self.model.get_iter(path)

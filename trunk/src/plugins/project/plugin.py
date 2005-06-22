@@ -21,7 +21,9 @@
 #SOFTWARE.
 
 import gtk
+import gobject
 import pida.plugin as plugin
+import pida.configuration.config as config
 #import tree
 import ConfigParser
 import os
@@ -40,54 +42,185 @@ VCS = {0: 'None', 1: 'Darcs', 2: 'CVS', 3: 'SVN'}
 
 CWD = '__current__working_directory__'
 
-class CommandMapper(object):
-    def __init__(self, cb):
+PROJECT_ATTRIBUTES = [
+    ('directory',
+     'The working directory the project is in',
+     os.path.expanduser('~'),
+     'folder'),
+    ('project_executable',
+     'The executable file for the project',
+     '',
+     'file'),
+    ('environment',
+     'The environment variable list',
+     '',
+     None)]
+
+class ProjectRegistry(ConfigParser.ConfigParser):
+    
+    def __init__(self, cb, filename):
         self.cb = cb
-        self.set()
+        ConfigParser.ConfigParser.__init__(self)
+        self.filename = filename
+        self.types = {}
+        for attribute in PROJECT_ATTRIBUTES:
+            self.types[attribute[0]] = attribute[3]
+
+    def set_project(self, projname, **kw):
+        if not self.has_section(projname):
+            self.add_section(projname)
+        for attribute in PROJECT_ATTRIBUTES:
+            name = attribute[0]
+            if name in kw:
+                self.set(projname, name, kw[name])
+            else:
+                default = attribute[2]
+                self.set(projname, name, default)
+
+    def delete(self, projname):
+        if self.has_section(projname):
+            self.remove_section(projname)
+
+    def load(self):
+        tempopts = ConfigParser.ConfigParser()
+        if os.path.exists(self.filename):
+            f = open(self.filename, 'r')
+            tempopts.readfp(f)
+            f.close()
+            kw = {}
+            for section in tempopts.sections():
+                if not section == CWD and tempopts.has_option(section, 'directory'):
+                    for option in tempopts.options(section):
+                        kw[option] = tempopts.get(section, option)
+                    self.set_project(section, **kw)
+
+    def save(self):
+        f = open(self.filename, 'w')
+        self.write(f)
+        f.close()
+
+class ProjectEditor(object):
+    def __init__(self, cb, project_registry):
+        self.cb = cb
+        self.project_registry = project_registry
+        
+        self.win = gtk.Window()
+        self.win.set_title('PIDA Project Editor')
+        self.win.set_size_request(600,480)
+        self.win.set_transient_for(self.cb.cw)
+
+        mainbox = gtk.HBox()
+        self.win.add(mainbox)
+
+        leftbox = gtk.VBox()
+        mainbox.pack_start(leftbox)
+
+        self.projects = ProjectTree(self.cb)
+        leftbox.pack_start(self.projects.win)
+        self.projects.connect_select(self.cb_project_select)
+        self.projects.populate(self.project_registry)
+
+        rightbox = gtk.VBox()
+        mainbox.pack_start(rightbox)
+
+        attrbox = gtk.VBox()
+        rightbox.pack_start(attrbox)
 
 
-class Darcs(CommandMapper):
-        def set(self):
-            self.command = '/usr/bin/darcs'
-            self.args = ['darcs']
-            self.commit = ['record']
-            self.update = ['pull']
+        hbox = gtk.HBox()
+        attrbox.pack_start(hbox, expand=False)
+        namelabel = gtk.Label('Name')
+        hbox.pack_start(namelabel)
+        self.nameentry = gtk.Entry()
+        hbox.pack_start(self.nameentry)
 
-class Cvs(CommandMapper):
-        def set(self):
-            self.command = '/usr/bin/cvs'
-            self.args = ['cvs']
-            self.commit = ['commit']
-            self.update = ['update']
-            self.add = ['add']
-            self.remove = ['remove']
+        self.attribute_widgets = {}
+        for attribute in PROJECT_ATTRIBUTES:
+            hbox = gtk.HBox()
+            attrbox.pack_start(hbox, expand=False)
+            name = attribute[0]
+            namelabel = gtk.Label(name)
+            hbox.pack_start(namelabel)
+            entry = gtk.Entry()
+            hbox.pack_start(entry)
+            self.attribute_widgets[name] = entry
+        
+        # Button Bar
+        cb = gtk.HBox()
+        rightbox.pack_start(cb, expand=False, padding=2)
+        
+        # separator
+        sep = gtk.HSeparator()
+        cb.pack_start(sep)
+        
+        # reset button
+        revert_b = gtk.Button(stock=gtk.STOCK_REVERT_TO_SAVED)
+        cb.pack_start(revert_b, expand=False)
+        revert_b.connect('clicked', self.cb_revert)
 
-class Svn(CommandMapper):
-        def set(self):
-            self.command = '/usr/bin/svn'
-            self.args = ['svn']
-            self.commit = ['commit']
-            self.update = ['update']
-            self.add = ['add']
-            self.remove = ['remove']
+        # cancel button
+        delete_b = gtk.Button(stock=gtk.STOCK_DELETE)
+        cb.pack_start(delete_b, expand=False)
+        delete_b.connect('clicked', self.cb_delete)
+        
+        # apply button
+        new_b = gtk.Button(stock=gtk.STOCK_NEW)
+        cb.pack_start(new_b, expand=False)
+        new_b.connect('clicked', self.cb_new)
+        
+        # save button
+        save_b = gtk.Button(stock=gtk.STOCK_SAVE)
+        cb.pack_start(save_b, expand=False)
+        save_b.connect('clicked', self.cb_save)
+    
+    def new(self):
+        self.nameentry.set_text('')
+        for attribute in PROJECT_ATTRIBUTES:
+            attrname = attribute[0]
+            print attrname
+            self.attribute_widgets[attrname].set_text('')
 
-def analyze_working_directory(dirname):
-    exists = os.path.exists(dirname)
-    vcs = 0
-    if exists:
-        for i in os.listdir(dirname):
-            if i == '_darcs':
-                vcs = VCS_DARCS
-                break
-            elif i == '.svn':
-                vcs = VCS_SVN
-                break
-            elif i == 'CVS':
-                vcs = VCS_CVS
-                break
-    return exists, vcs
+    def show(self):
+        self.win.show_all()
 
-import gobject
+    def display(self, projectname):
+        if self.project_registry.has_section(projectname):
+            self.nameentry.set_text(projectname)
+            for attribute in PROJECT_ATTRIBUTES:
+                attrname = attribute[0]
+                val = self.project_registry.get(projectname, attrname)
+                self.attribute_widgets[attribute[0]].set_text(val)
+            
+    def projects_changed(self):
+        self.project_registry.save()
+        self.projects.populate(self.project_registry)
+        self.cb.evt('projectschanged')
+            
+    def cb_project_select(self, *args):
+        projname = self.projects.selected(0)
+        self.display(projname)
+         
+    def cb_new(self, *args):
+        self.new()
+
+    def cb_revert(self, *args):
+        self.project_registry.load()
+        self.projects_changed()
+
+    def cb_save(self, *args):
+        name = self.nameentry.get_text()
+        if name:
+            kw = {}
+            for attrname in self.attribute_widgets:
+                kw[attrname] = self.attribute_widgets[attrname].get_text()
+            self.project_registry.set_project(name, **kw)
+            self.projects_changed()
+
+    def cb_delete(self, *args):
+        projname = self.projects.selected(0)
+        self.project_registry.delete(projname)
+        self.projects_changed()
+        self.projects.view.set_cursor(self.projects.model[0].path)
 
 class FileTree(gtkextra.Tree):
     COLUMNS = [('name', gobject.TYPE_STRING, gtk.CellRendererText, True,
@@ -125,6 +258,8 @@ class FileTree(gtkextra.Tree):
         self.root = None
         
     def set_root(self, path, parent=None):
+        if not parent and path == self.root:
+            return
         def small(s):
             return '<span size="small">%s</span>' % s
         def smallblue(s):
@@ -167,7 +302,7 @@ class FileTree(gtkextra.Tree):
             self.set_root(self.config.get(CWD, 'directory'))
         else:
             self.set_root(self.root)
-        self.update() 
+        self.update()
     
     def up(self):
         self.clear()
@@ -260,7 +395,33 @@ class ProjectTree(gtkextra.Tree):
    
     def init(self):
         self.view.set_reorderable(True)
+
+    def populate(self, project_registry, cwd=None):
+        self.project_registry = project_registry
+        act = self.selected(0)
+        self.clear()
+        if cwd:
+            self.add_item([CWD, self.beautify('Current Directory', cwd)])
+        for name in self.project_registry.sections():
+            #self.analyse_project(name)
+            #vcs = self.project_registry.get(section, 'version_control')
+            wd = self.project_registry.get(name, 'directory')
+            self.add_item([name, self.beautify(name, wd)])
+        if act:
+            self.set_active(act)
           
+    def beautify(self, name, directory):
+        #vcs = self.project_registry.get(section, 'version_control')
+        vcs = get_vcs_name_for_directory(directory)
+        wd = directory
+        wd = wd.replace(os.path.expanduser('~'), '~')
+        #if section == CWD:
+        #    section = '<span foreground="#c00000">Currrent Directory</span>'
+        b = ('<span size="small"><b>%s</b> ('
+            '<span foreground="#0000c0">%s</span>)\n'
+            '%s</span>') % (name, vcs, wd)
+        return b
+        
     def set_active(self, i):
         for node in self.model:
             if node[0] == i:
@@ -268,67 +429,15 @@ class ProjectTree(gtkextra.Tree):
                 return True
         return False
 
-class Projecteditor(gtkextra.Transient):
-    def populate_widgets(self):
-        gtkextra.Transient.populate_widgets(self)
-
-        self.fr = self.frame
-
-        self.name_label = gtk.Label('Name of project')
-        self.fr.pack_start(self.name_label, expand=False)
-
-        self.name_entry = gtk.Entry()
-        def cb(*args):
-            self.wd_file_but.entry.grab_focus()
-        self.name_entry.connect('activate', cb)
-        self.fr.pack_start(self.name_entry)
-        
-        sep = gtk.HSeparator()
-        self.fr.pack_start(sep)
+    def change_cwd(self, cwd):
+        niter = self.model[0].iter
+        if self.get(niter, 0) == CWD:
+            self.set(niter, 1, self.beautify('Current Directory', cwd))
+            if self.selected(0) == CWD:
+                self.cb_selected()
                 
-        wdl = ('Relative paths are taken relative to the current working '
-               'directory.')
+            
 
-        self.wd_label = gtk.Label('Working directory')
-        self.fr.pack_start(self.wd_label, expand=False)
-
-
-        self.wd_file = gtkextra.FolderDialog(self.cb, lambda *a: None)
-        self.wd_file_but = gtkextra.FolderButton(self.cb)
-        self.fr.pack_start(self.wd_file_but, expand=False)
-        
-        sep = gtk.HSeparator()
-        self.fr.pack_start(sep)
-
-
-        self.bbox = gtk.HBox()
-        self.fr.pack_start(self.bbox)
-        
-        sep = gtk.HSeparator()
-        self.bbox.pack_start(sep)
-
-        self.cancel = self.cb.icons.get_button('cancel', 14)
-        eb = gtk.EventBox()
-        eb.add(self.cancel)
-        self.bbox.pack_start(eb, expand=False)
-        self.cb.tips.set_tip(eb, 'Cancel project addition')
-        self.cancel.connect('clicked', self.cb_hide)
-
-        eb = gtk.EventBox()
-        self.submit = self.cb.icons.get_button('apply', 14)
-        eb.add(self.submit)
-        self.cb.tips.set_tip(eb, 'Submit project addition')
-        self.bbox.pack_start(eb, expand=False)
-
-    def cb_hide(self, *args):
-        self.hide()
-
-
-    def new(self):
-        self.name_entry.set_text('')
-        self.wd_file_but.set_filename(os.path.expanduser('~'))
-        self.show('New Project')
-        self.name_entry.grab_focus()
 
 class Plugin(plugin.Plugin):
     NAME = 'Projects'
@@ -336,10 +445,9 @@ class Plugin(plugin.Plugin):
     DICON = 'terminal', 'Open a terminal in this directory.'
 
     def populate_widgets(self):
-        #self.tree = tree.Tree(self.cb, self.beautify)
-        #self.tree.show()
-        #self.tree.view.connect('cursor-changed', self.cb_changed)
-        #self.add(self.tree)
+
+        self.vcsbar = gtk.EventBox()
+        self.add(self.vcsbar, expand=False)
 
         vp = gtk.VPaned()
         self.add(vp)
@@ -356,14 +464,7 @@ class Plugin(plugin.Plugin):
         vp.pack2(self.files.win, resize=True, shrink=True)
 
 
-        self.add_button('remove', self.cb_cvs,
-                        'Remove file from version control.', ['remove', True])
-        self.add_button('add', self.cb_cvs,
-                        'Add file to to version control', ['add', True])
-        self.add_button('up', self.cb_cvs,
-                        'Commit changes to version control', ['commit'])
-        self.add_button('down', self.cb_cvs,
-                        'Update changes from version control', ['update'])
+
 
         sep = gtk.VSeparator()
         self.cusbar.pack_start(sep, expand=False)
@@ -372,20 +473,25 @@ class Plugin(plugin.Plugin):
                         'Remove project from workspace.')
         self.add_button('new', self.cb_project_new,
                         'Add project to workbench.')
+        self.add_button('editor', self.cb_project_edit,
+                        'Edit projects on workbench.')
 
-
-        self.editor = Projecteditor(self.cb)
-        self.transwin.pack_start(self.editor.win, expand=False)
-        self.editor.submit.connect('clicked', self.cb_project_edited)
-        self.editor.wd_file_but.entry.connect('activate', self.cb_project_edited)
-    
+   
         self.dirmenu = gtkextra.ContextPopup(self.cb, 'dir')
 
-        self.config = ConfigParser.ConfigParser()
+        self.current_directory = os.getcwd()
+    
+        conffile = fn = self.cb.opts.get('files', 'data_project')
+        
+        self.config = ProjectRegistry(self.cb, conffile)
+        self.config.load()
+        print self.config.options('tmp')
+        self.projects.populate(self.config, self.current_directory)
 
-        self.maps = {1: Darcs(self.cb),
-                     2: Cvs(self.cb),
-                     3: Svn(self.cb)}
+        self.editor = None
+
+        self.maps = {1: Darcs(self.cb, self.cb_vcs_command),
+                     3: Subversion(self.cb, self.cb_vcs_command)}
 
 
     def cb_cvs(self, but, command, inc_filename=False):
@@ -396,150 +502,76 @@ class Plugin(plugin.Plugin):
         wd = self.config.get(n, 'directory')
         self.dirmenu.popup(wd, time)
 
-    def cvs_command(self, command, inc_filename):
-        name = self.projects.selected(0)
-        vcs = self.config.get(name, 'version_control')
-        for vc in VCS:
-            if VCS[vc] == vcs:
-                if vc in self.maps:
-                    map = self.maps[vc]
-                    if hasattr(map, command):
-                        com = map.command
-                        args = map.args + getattr(map, command)
-                        dir = self.config.get(name, 'directory')
-                        if inc_filename:
-                            rfn = self.files.selected(1)
-                            if rfn:
-                                fn = rfn.replace(dir, '').lstrip('/')
-                                args.append(fn)
-                            else:
-                                self.message('No file is selected.\n'
-                                             'Please select a file,\n'
-                                             'and try again.')
-                                return
-                        print args
-                        self.cb.action_newterminal(com, args, directory=dir)
-                    else:
-                        self.message('Unsupported command:\n'
-                                     '"%s" (%s)' % (command, vcs))
-    
-                
-                
-
-    def cb_project_edited(self, *a):
-        name = self.editor.name_entry.get_text()
-        #wd = self.editor.wd_entry.get_text()
-        wd = self.editor.wd_file_but.get_filename()
-        self.add_project(name, wd)
-        self.editor.hide()
-
-    def cb_details(self):
-        self.editor.show()
-
-    def add_project(self, name, dir):
-        if self.config.has_section(name):
-            self.message('Name already exists') 
-        else:
-            exists, vcs = analyze_working_directory(dir)
-            if not exists:
-                try:
-                    os.mkdir(dir)
-                    exists = True
-                except OSError:
-                    exists = False
-            exists, vcs = analyze_working_directory(dir)
-            if exists:
-                self.config.add_section(name)
-                self.config.set(name, 'directory', dir)
-                self.config.set(name, 'version_control', VCS[vcs])
-                self.write()
-                self.refresh()
-            else:
-                self.message('Unable to create working directory.')
-
-    def analyse_project(self, name):
-        wd = self.config.get(name, 'directory')
-        exists, vcs = analyze_working_directory(wd)
-        if exists:
-            self.config.set(name, 'version_control', VCS[vcs])
-        elif name == CWD:
-            self.config.set(name, 'version_control', 'None')
-        else:
-            print 'removing section'
-            self.config.remove_section(name)
-
-    def load(self):
-        fn = self.cb.opts.get('files', 'data_project')
-        if os.path.exists(fn):
-            f = open(fn, 'r')
-            tempopts = ConfigParser.ConfigParser()
-            tempopts.readfp(f)
-            f.close()
-            for section in tempopts.sections():
-                if tempopts.has_option(section, 'directory'):
-                    dirn = tempopts.get(section, 'directory')
-                    if not self.config.has_section(section):
-                        self.config.add_section(section)
-                    self.config.set(section, 'directory', dirn)
-            if not self.config.has_section(CWD):
-                self.config.add_section(CWD)
-            self.config.set(CWD, 'directory', 'None')
-            self.write()
-
-    def write(self):
-        fn = self.cb.opts.get('files', 'data_project')
-        f = open(fn, 'w')
-        self.config.write(f)
-        f.close()
         
-    def refresh(self):
-        act = self.projects.selected(0) 
-        self.projects.clear()
-        for name in self.config.sections():
-            self.analyse_project(name)
-            self.projects.add_item([name, self.beautify(name)])
-        if act:
-            self.projects.set_active(act)
+
+    def cb_vcs_command(self, but, vcsmap, command):
+        commandname = 'command_%s' % command
+        commandfunc = getattr(vcsmap, commandname, None)
+        if commandfunc:
+            kw = {}
+            projname = self.projects.selected(0)
+            if projname == CWD:
+                kw['dir'] = self.current_directory
+                kw['env'] = []
+            else:
+                kw['dir'] = self.config.get(projname, 'directory')
+                envs = self.config.get(projname, 'environment')
+                kw['env'] = envs.split(';')
+                #['SVN_SSH=ssh -l aafshar']
+            kw['filename'] = self.files.selected(0)
+            print kw
+            commandfunc(**kw)
         else:
-            self.projects.set_active(CWD)
+            self.message('Unsupported command %s' % command)
+                
 
-    def set_current(self, cwd):
-        self.config.set(CWD, 'directory', cwd)
-        self.analyse_project(CWD)
-        self.write()
-        if self.projects.selected(0) == CWD:
-            self.refresh()
+    def cb_project_edit(self, *args):
+        self.show_editor()
 
-    def beautify(self, section):
-        vcs = self.config.get(section, 'version_control')
-        wd = self.config.get(section, 'directory')
-        wd = wd.replace(os.path.expanduser('~'), '~')
-        if section == CWD:
-            section = '<span foreground="#c00000">Currrent Directory</span>'
-        b = ('<span size="small"><b>%s</b> ('
-            '<span foreground="#0000c0">%s</span>)\n'
-            '%s</span>') % (section, vcs, wd)
-        return b
+    def show_editor(self):
+        if self.editor:
+            del self.editor
+        self.editor = ProjectEditor(self.cb, self.config)
+        self.editor.show()
        
-    def cb_projchanged(self, tv):
+    def cb_projchanged(self, *args):
         name = self.projects.selected(0)
-        path = self.config.get(name, 'directory')
-        self.files.clear()
-        self.files.set_root(path)
+        path = None
+        if name == CWD:
+            path = self.current_directory
+        else:
+            path = self.config.get(name, 'directory')
+        if path != self.files.root:
+            self.files.clear()
+            self.files.set_root(path)
+        vcs = get_vcs_for_directory(path)
+
+        curbar = self.vcsbar.get_child()
+        if curbar:
+            self.vcsbar.remove(curbar)
+        if vcs in self.maps:
+            newbar = self.maps[vcs].toolbar.win
+            self.vcsbar.add(newbar)
+            self.vcsbar.show_all()
+
+            
 
     def cb_files_activate(self, tv, path, niter):
         fn = self.files.selected(1)
         self.cb.action_openfile(fn)
 
     def evt_started(self, *args):
-        self.editor.hide()
-        self.load()
-        self.refresh()
+        #self.editor.hide()
+        #self.load()
+        #self.refresh()
+        pass
        
     def evt_bufferchange(self, nr, name):
         cwd = os.path.split(name)[0]
-        if cwd != self.config.get(CWD, 'directory'):
-            self.set_current(cwd)
+        self.current_directory = cwd
+        self.projects.change_cwd(cwd)
+        #if cwd != self.config.get(CWD, 'directory'):
+        #    self.set_current(cwd)
 
     def evt_projectexecute(self, arg):
         name = self.projects.selected(0)
@@ -559,6 +591,7 @@ class Plugin(plugin.Plugin):
         self.refresh()
 
     def cb_project_new(self, *args):
+        self.show_editor()
         self.editor.new()
 
     def cb_terminal_proj(self, *a):
@@ -569,3 +602,121 @@ class Plugin(plugin.Plugin):
 
     cb_alternative = cb_terminal_proj
 
+    def evt_projectschanged(self, *a):
+        self.config.load()
+        self.projects.populate(self.config, self.current_directory)
+
+
+class CommandMapper(object):
+    def __init__(self, cb):
+        self.cb = cb
+        self.set()
+
+class VersionControlSystem(object):
+
+    COMMAND = ''
+    ARGS = []
+
+    def __init__(self, cb, callbackfunc):
+        self.cb = cb
+        self.callbackfunc = callbackfunc
+
+        self.toolbar = gtkextra.Toolbar(self.cb)
+        #self.buttons = []
+        self.add_default_buttons()
+        self.add_custom_buttons()
+
+    def add_default_buttons(self):
+        self.add_button('remove', 'remove',
+                        'Remove file from version control.')
+        self.add_button('add', 'add',
+                        'Add file to to version control')
+        self.add_button('up', 'commit',
+                        'Commit changes to version control')
+        self.add_button('down', 'update',
+                        'Update changes from version control')
+
+    def add_custom_buttons(self):
+        pass
+
+    def add_button(self, icon, command, tooltip):
+        print 'button', command
+        cargs = [self, command]
+        b = self.toolbar.add_button(icon, self.callbackfunc, tooltip, cargs)
+        #self.buttons.append(b)
+        return b
+
+    def launch(self, args, **kw):
+        args = self.ARGS + args
+        print self.COMMAND, args, kw
+        self.cb.action_newterminal(self.COMMAND, args,
+                                   directory=kw['dir'], envv=kw['env'])
+
+class Darcs(VersionControlSystem):
+
+    COMMAND = '/usr/bin/darcs'
+    ARGS = ['darcs']
+
+    def command_commit(self, **kw):
+        args = ['record']
+        self.launch(args, **kw)
+
+    def command_send(self, **kw):
+        args = ['send']
+        self.launch(args, **kw)
+        
+class Subversion(VersionControlSystem):
+
+    COMMAND = '/usr/bin/svn'
+    ARGS = ['svn']
+
+    def command_update(self, **kw):
+        args = ['update']
+        self.launch(args, **kw)
+    
+    def command_commit(self, **kw):
+        args = ['commit']
+        self.launch(args, **kw)
+    
+#class Darcs(CommandMapper):
+#        def set(self):
+#            self.command = '/usr/bin/darcs'
+#            self.args = ['darcs']
+#            self.commit = ['record']
+#            self.update = ['pull']
+
+#class Cvs(CommandMapper):
+#        def set(self):
+#            self.command = '/usr/bin/cvs'
+#            self.args = ['cvs']
+#            self.commit = ['commit']
+#            self.update = ['update']
+#            self.add = ['add']
+#            self.remove = ['remove']
+#
+#class Svn(CommandMapper):
+#        def set(self):
+#            self.command = '/usr/bin/svn'
+#            self.args = ['svn']
+#            self.commit = ['commit']
+#            self.update = ['update']
+#            self.add = ['add']
+#            self.remove = ['remove']
+#
+def get_vcs_for_directory(dirname):
+    vcs = 0
+    if os.path.exists(dirname) and os.path.isdir(dirname):
+        for i in os.listdir(dirname):
+            if i == '_darcs':
+                vcs = VCS_DARCS
+                break
+            elif i == '.svn':
+                vcs = VCS_SVN
+                break
+            elif i == 'CVS':
+                vcs = VCS_CVS
+                break
+    return vcs
+
+def get_vcs_name_for_directory(dirname):
+    return VCS[get_vcs_for_directory(dirname)]
