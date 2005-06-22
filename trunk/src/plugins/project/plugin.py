@@ -36,7 +36,10 @@ VCS_DARCS = 1
 VCS_CVS = 2
 VCS_SVN = 3
 
-VCS = {0: 'None', 1: 'Darcs', 2: 'CVS', 3: 'SVN'}
+VCS = {VCS_NONE: 'None',
+       VCS_DARCS: 'Darcs',
+       VCS_CVS: 'CVS',
+       VCS_SVN: 'SVN'}
 
 CWD = '__current__working_directory__'
 
@@ -209,7 +212,6 @@ class ProjectEditor(object):
         self.nameentry.set_text('')
         for attribute in PROJECT_ATTRIBUTES:
             attrname = attribute[0]
-            print attrname
             self.attribute_widgets[attrname].set_text('')
 
     def show(self):
@@ -503,8 +505,7 @@ class Plugin(plugin.Plugin):
 
         self.editor = None
 
-        self.maps = {1: Darcs(self.cb, self.cb_vcs_command),
-                     3: Subversion(self.cb, self.cb_vcs_command)}
+        self.maps = create_vcs_maps(self.cb, self.cb_vcs_command)
 
     def vcs_command(self, vcsmap, command):
         commandname = 'command_%s' % command
@@ -601,9 +602,7 @@ class VersionControlSystem(object):
     def __init__(self, cb, callbackfunc):
         self.cb = cb
         self.callbackfunc = callbackfunc
-
         self.toolbar = gtkextra.Toolbar(self.cb)
-        #self.buttons = []
         self.add_default_buttons()
         self.add_custom_buttons()
 
@@ -621,15 +620,11 @@ class VersionControlSystem(object):
         pass
 
     def add_button(self, icon, command, tooltip):
-        print 'button', command
         cargs = [self, command]
-        b = self.toolbar.add_button(icon, self.callbackfunc, tooltip, cargs)
-        #self.buttons.append(b)
-        return b
+        return self.toolbar.add_button(icon, self.callbackfunc, tooltip, cargs)
 
     def launch(self, args, **kw):
         args = self.ARGS + args
-        print self.COMMAND, args, kw
         self.cb.action_newterminal(self.COMMAND, args,
                                    directory=kw['dir'], envv=kw['env'])
 
@@ -652,6 +647,10 @@ class Subversion(VersionControlSystem):
     
     def command_commit(self, **kw):
         self.launch(['commit'], **kw)
+
+def create_vcs_maps(cb, callbackfunc):
+    return {VCS_DARCS: Darcs(cb, callbackfunc),
+            VCS_SVN: Subversion(cb, callbackfunc)}
 
 def get_vcs_for_directory(dirname):
     vcs = 0
