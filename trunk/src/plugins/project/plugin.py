@@ -20,28 +20,27 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+# GTK imports
 import gtk
 import gobject
-import pida.plugin as plugin
-import pida.configuration.config as config
-#import tree
-import ConfigParser
+# system imports
 import os
 import re
-#import dialogs
-#import tree
+import ConfigParser
+# Pida imports
+import pida.plugin as plugin
 import pida.gtkextra as gtkextra
+
 VCS_NONE = 0
 VCS_DARCS = 1
 VCS_CVS = 2
 VCS_SVN = 3
 
-
-
 VCS = {0: 'None', 1: 'Darcs', 2: 'CVS', 3: 'SVN'}
 
 CWD = '__current__working_directory__'
 
+# Default attributes for projects
 PROJECT_ATTRIBUTES = [
     ('directory',
      'The working directory the project is in',
@@ -57,8 +56,19 @@ PROJECT_ATTRIBUTES = [
      None)]
 
 class ProjectRegistry(ConfigParser.ConfigParser):
-    
+    """
+    A class to store, and serialize project data.
+    """
     def __init__(self, cb, filename):
+        """
+        Constructor.
+
+        @param cb: An instance of the main application class.
+        @type cb: pida.main.Application
+
+        @param filename: The filename for storing the data.
+        @type filename: str
+        """
         self.cb = cb
         ConfigParser.ConfigParser.__init__(self)
         self.filename = filename
@@ -67,6 +77,16 @@ class ProjectRegistry(ConfigParser.ConfigParser):
             self.types[attribute[0]] = attribute[3]
 
     def set_project(self, projname, **kw):
+        """
+        Set the attributes for a project.
+        
+        This method creates the project if it is not existing.
+
+        @param projnmame: the name of the project
+        @type projname: str
+        
+        @param **kw: The attributes as keywords
+        """
         if not self.has_section(projname):
             self.add_section(projname)
         for attribute in PROJECT_ATTRIBUTES:
@@ -78,10 +98,19 @@ class ProjectRegistry(ConfigParser.ConfigParser):
                 self.set(projname, name, default)
 
     def delete(self, projname):
+        """
+        Delete the named section from the in memory object.
+        """
         if self.has_section(projname):
             self.remove_section(projname)
 
     def load(self):
+        """
+        Load the disk data into memory.
+        
+        This method checks the loaded attributes, replacing bad/missing
+        attributes with sensible defaults.
+        """
         tempopts = ConfigParser.ConfigParser()
         if os.path.exists(self.filename):
             f = open(self.filename, 'r')
@@ -95,6 +124,9 @@ class ProjectRegistry(ConfigParser.ConfigParser):
                     self.set_project(section, **kw)
 
     def save(self):
+        """
+        Write the in-memory object to disk.
+        """
         f = open(self.filename, 'w')
         self.write(f)
         f.close()
@@ -128,19 +160,19 @@ class ProjectEditor(object):
 
 
         hbox = gtk.HBox()
-        attrbox.pack_start(hbox, expand=False)
-        namelabel = gtk.Label('Name')
-        hbox.pack_start(namelabel)
+        attrbox.pack_start(hbox, expand=False, padding=4)
+        namelabel = gtk.Label('name')
+        hbox.pack_start(namelabel, expand=False, padding=4)
         self.nameentry = gtk.Entry()
         hbox.pack_start(self.nameentry)
 
         self.attribute_widgets = {}
         for attribute in PROJECT_ATTRIBUTES:
             hbox = gtk.HBox()
-            attrbox.pack_start(hbox, expand=False)
+            attrbox.pack_start(hbox, expand=False, padding=4)
             name = attribute[0]
             namelabel = gtk.Label(name)
-            hbox.pack_start(namelabel)
+            hbox.pack_start(namelabel, expand=False, padding=4)
             entry = gtk.Entry()
             hbox.pack_start(entry)
             self.attribute_widgets[name] = entry
@@ -351,7 +383,6 @@ class FileTree(gtkextra.Tree):
             self.dirmenu.popup(fn, time)
         else:
             self.filemenu.popup(fn, time)
-        
 
     def cb_but(self, but, command):
         fn = self.selected(1)
@@ -385,7 +416,6 @@ class FileTree(gtkextra.Tree):
         root = self.get_selected_root(fn)
         shell = self.cb.opts.get('commands', 'shell')
         self.cb.action_newterminal(shell, ['shell'], directory=root)
-        
 
 class ProjectTree(gtkextra.Tree):
     COLUMNS = [('Name', gobject.TYPE_STRING, gtk.CellRendererText, False,
@@ -393,30 +423,23 @@ class ProjectTree(gtkextra.Tree):
                ('Display', gobject.TYPE_STRING, gtk.CellRendererText, True,
                 'markup')]
    
-    def init(self):
-        self.view.set_reorderable(True)
-
     def populate(self, project_registry, cwd=None):
         self.project_registry = project_registry
         act = self.selected(0)
         self.clear()
         if cwd:
-            self.add_item([CWD, self.beautify('Current Directory', cwd)])
+            self.add_item([CWD, self.beautify('<span foreground="#c00000">'
+                                              'Current Directory</span>', cwd)])
         for name in self.project_registry.sections():
-            #self.analyse_project(name)
-            #vcs = self.project_registry.get(section, 'version_control')
             wd = self.project_registry.get(name, 'directory')
             self.add_item([name, self.beautify(name, wd)])
         if act:
             self.set_active(act)
           
     def beautify(self, name, directory):
-        #vcs = self.project_registry.get(section, 'version_control')
         vcs = get_vcs_name_for_directory(directory)
         wd = directory
         wd = wd.replace(os.path.expanduser('~'), '~')
-        #if section == CWD:
-        #    section = '<span foreground="#c00000">Currrent Directory</span>'
         b = ('<span size="small"><b>%s</b> ('
             '<span foreground="#0000c0">%s</span>)\n'
             '%s</span>') % (name, vcs, wd)
@@ -432,12 +455,10 @@ class ProjectTree(gtkextra.Tree):
     def change_cwd(self, cwd):
         niter = self.model[0].iter
         if self.get(niter, 0) == CWD:
-            self.set(niter, 1, self.beautify('Current Directory', cwd))
+            self.set(niter, 1, self.beautify('<span foreground="#c00000">'
+                                              'Current Directory</span>', cwd))
             if self.selected(0) == CWD:
                 self.cb_selected()
-                
-            
-
 
 class Plugin(plugin.Plugin):
     NAME = 'Projects'
@@ -445,7 +466,6 @@ class Plugin(plugin.Plugin):
     DICON = 'terminal', 'Open a terminal in this directory.'
 
     def populate_widgets(self):
-
         self.vcsbar = gtk.EventBox()
         self.add(self.vcsbar, expand=False)
 
@@ -453,8 +473,8 @@ class Plugin(plugin.Plugin):
         self.add(vp)
 
         self.projects = ProjectTree(self.cb)
-        self.projects.connect_select(self.cb_projchanged)
-        self.projects.connect_rightclick(self.cb_proj_rclick)
+        self.projects.connect_select(self.cb_project_select)
+        self.projects.connect_rightclick(self.cb_project_rclick)
         vp.pack1(self.projects.win, resize=True, shrink=True)
 
         self.files = FileTree(self.cb)
@@ -463,19 +483,13 @@ class Plugin(plugin.Plugin):
         self.files.connect_activate(self.cb_files_activate)
         vp.pack2(self.files.win, resize=True, shrink=True)
 
-
-
-
         sep = gtk.VSeparator()
         self.cusbar.pack_start(sep, expand=False)
 
-        self.add_button('delete', self.cb_project_del,
-                        'Remove project from workspace.')
         self.add_button('new', self.cb_project_new,
                         'Add project to workbench.')
         self.add_button('editor', self.cb_project_edit,
                         'Edit projects on workbench.')
-
    
         self.dirmenu = gtkextra.ContextPopup(self.cb, 'dir')
 
@@ -485,7 +499,6 @@ class Plugin(plugin.Plugin):
         
         self.config = ProjectRegistry(self.cb, conffile)
         self.config.load()
-        print self.config.options('tmp')
         self.projects.populate(self.config, self.current_directory)
 
         self.editor = None
@@ -493,18 +506,7 @@ class Plugin(plugin.Plugin):
         self.maps = {1: Darcs(self.cb, self.cb_vcs_command),
                      3: Subversion(self.cb, self.cb_vcs_command)}
 
-
-    def cb_cvs(self, but, command, inc_filename=False):
-        self.cvs_command(command, inc_filename)
-
-    def cb_proj_rclick(self, ite, time):
-        n = self.projects.get(ite, 0)
-        wd = self.config.get(n, 'directory')
-        self.dirmenu.popup(wd, time)
-
-        
-
-    def cb_vcs_command(self, but, vcsmap, command):
+    def vcs_command(self, vcsmap, command):
         commandname = 'command_%s' % command
         commandfunc = getattr(vcsmap, commandname, None)
         if commandfunc:
@@ -517,16 +519,10 @@ class Plugin(plugin.Plugin):
                 kw['dir'] = self.config.get(projname, 'directory')
                 envs = self.config.get(projname, 'environment')
                 kw['env'] = envs.split(';')
-                #['SVN_SSH=ssh -l aafshar']
             kw['filename'] = self.files.selected(0)
-            print kw
             commandfunc(**kw)
         else:
             self.message('Unsupported command %s' % command)
-                
-
-    def cb_project_edit(self, *args):
-        self.show_editor()
 
     def show_editor(self):
         if self.editor:
@@ -534,7 +530,10 @@ class Plugin(plugin.Plugin):
         self.editor = ProjectEditor(self.cb, self.config)
         self.editor.show()
        
-    def cb_projchanged(self, *args):
+    def cb_vcs_command(self, but, vcsmap, command):
+        self.vcs_command(vcsmap, command)
+
+    def cb_project_select(self, *args):
         name = self.projects.selected(0)
         path = None
         if name == CWD:
@@ -554,24 +553,36 @@ class Plugin(plugin.Plugin):
             self.vcsbar.add(newbar)
             self.vcsbar.show_all()
 
-            
+    def cb_project_rclick(self, ite, time):
+        n = self.projects.get(ite, 0)
+        wd = self.config.get(n, 'directory')
+        self.dirmenu.popup(wd, time)
 
     def cb_files_activate(self, tv, path, niter):
         fn = self.files.selected(1)
         self.cb.action_openfile(fn)
-
-    def evt_started(self, *args):
-        #self.editor.hide()
-        #self.load()
-        #self.refresh()
-        pass
        
+    def cb_project_new(self, *args):
+        self.show_editor()
+        self.editor.new()
+
+    def cb_project_edit(self, *args):
+        self.show_editor()
+
+    def cb_alternative(self, *a):
+        name = self.projects.selected(0)
+        wd = self.config.get(name, 'directory')
+        shell = self.cb.opts.get('commands', 'shell')
+        self.cb.action_newterminal(shell, ['shell'], directory=wd)
+
+    def evt_projectschanged(self, *a):
+        self.config.load()
+        self.projects.populate(self.config, self.current_directory)
+
     def evt_bufferchange(self, nr, name):
         cwd = os.path.split(name)[0]
         self.current_directory = cwd
         self.projects.change_cwd(cwd)
-        #if cwd != self.config.get(CWD, 'directory'):
-        #    self.set_current(cwd)
 
     def evt_projectexecute(self, arg):
         name = self.projects.selected(0)
@@ -583,29 +594,6 @@ class Plugin(plugin.Plugin):
             self.cb.action_log('Execution Failed',
             'No main file defined for project.', 3)
             
-
-    def cb_project_del(self, *args):
-        a = self.projects.selected(0)
-        self.config.remove_section(a)
-        self.write()
-        self.refresh()
-
-    def cb_project_new(self, *args):
-        self.show_editor()
-        self.editor.new()
-
-    def cb_terminal_proj(self, *a):
-        name = self.projects.selected(0)
-        wd = self.config.get(name, 'directory')
-        shell = self.cb.opts.get('commands', 'shell')
-        self.cb.action_newterminal(shell, ['shell'], directory=wd)
-
-    cb_alternative = cb_terminal_proj
-
-    def evt_projectschanged(self, *a):
-        self.config.load()
-        self.projects.populate(self.config, self.current_directory)
-
 
 class CommandMapper(object):
     def __init__(self, cb):
