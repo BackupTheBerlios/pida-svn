@@ -76,6 +76,8 @@ class Application(object):
         # start
         self.action_log('Pida', 'starting', 0)
         # fire the init event, telling plugins to initialize
+        self.cw.fetch_serverlist()
+        self.cw.feed_serverlist()
         self.evt('init')
         # fire the started event with the initial server list
         self.evt('started', self.cw.serverlist())
