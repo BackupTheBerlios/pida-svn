@@ -36,4 +36,7 @@ stock_stop stop
 xfce-filemanager filemanager
 xfce-graphics preview
 gedit-icon editor
-vcs_commit commit
+vcs_commit vcs_commit
+vcs_update vcs_update
+vcs_add vcs_add
+vcs_remove vcs_remove

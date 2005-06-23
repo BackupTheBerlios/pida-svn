@@ -607,13 +607,13 @@ class VersionControlSystem(object):
         self.add_custom_buttons()
 
     def add_default_buttons(self):
-        self.add_button('remove', 'remove',
+        self.add_button('vcs_remove', 'remove',
                         'Remove file from version control.')
-        self.add_button('add', 'add',
+        self.add_button('vcs_add', 'add',
                         'Add file to to version control')
-        self.add_button('commit', 'commit',
+        self.add_button('vcs_commit', 'commit',
                         'Commit changes to version control')
-        self.add_button('down', 'update',
+        self.add_button('vcs_update', 'update',
                         'Update changes from version control')
 
     def add_custom_buttons(self):
