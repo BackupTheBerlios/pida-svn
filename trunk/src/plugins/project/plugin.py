@@ -648,6 +648,20 @@ class Subversion(VersionControlSystem):
     def command_commit(self, **kw):
         self.launch(['commit'], **kw)
 
+    def command_resolved(self, **kw):
+        self.launch(['resolved'], **kw)
+
+    def command_diff(self, **kw):
+        self.launch(['diff'], **kw)
+
+    def add_custom_buttons(self):
+        self.add_button('clear', 'resolved',
+                        'Remove conflicted state on working copy files')
+        self.add_button('diff', 'diff',
+                        'Show the diff between the working copy and the'
+                        'repository')
+
+
 def create_vcs_maps(cb, callbackfunc):
     return {VCS_DARCS: Darcs(cb, callbackfunc),
             VCS_SVN: Subversion(cb, callbackfunc)}
