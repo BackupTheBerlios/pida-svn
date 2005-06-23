@@ -26,7 +26,22 @@
 # You require pygtk probably
 import gtk.gdk as gdk
 import gtk
+import gobject
 import os
+
+
+class VimServer(object):
+    def __init__(self, name, wid):
+        self.name = name
+        self.wid = wid
+        self.cwd = None
+        self.window = None
+        self.alive = False
+
+    def server_window(self):
+        if self.window == None:
+            self.window = gtk.gdk.window_foreign_new(self.wid)
+        return self.window
 
 class VimWindow(gtk.Window):
     ''' A GTK window that can communicate with Vim. '''
@@ -39,40 +54,70 @@ class VimWindow(gtk.Window):
         self.add_events(gtk.gdk.PROPERTY_CHANGE_MASK)
         self.connect('property-notify-event', self.cb_notify)
         self.serial = 1
-        self.messages = []
         self.callbacks = {}
-        self.bad_servers = []
-        self.cwds = {}
+        self.servers = {}
+        self.root_window = gdk.get_default_root_window()
+        
+        gobject.timeout_add(2000, self.fetch_serverlist)
+        gobject.timeout_add(2000, self.feed_serverlist)
 
-    def serverlist(self):
-        ''' get the serverlist from the X root window '''
-        rootwindow = gdk.get_default_root_window()
+    def fetch_serverlist(self):
+        shell_servers = self.get_shell_serverlist()
+        for name, wid in self.get_rootwindow_serverlist():
+            server = self.servers.setdefault(name, VimServer(name, wid))
+            if name in shell_servers:
+                server.alive = True
+                if server.cwd:
+                    self.fetch_cwd(server)
+            else:
+                server.alive = False
+        return True
+
+    def get_rootwindow_serverlist(self):
+        self.get_shell_serverlist()
+        res = []
         # Read the property
-        propval = rootwindow.property_get("VimRegistry")
-        res = {}
+        propval = self.root_window.property_get("VimRegistry")
         if propval:
             prop = propval[-1].split('\0')
             for r in prop:
                 if r:
                     rs = r.split()
-                    id = long(int(rs[0], 16))
+                    wid = long(int(rs[0], 16))
                     name = rs[1]
-                    w = self.server_exists(id)
-                    if w and not (name in self.bad_servers):
-                        res[name] = id
+                    res.append([name, wid])
         return res
 
-    def server_exists(self, id):
-        ''' Vaguely attempt to identify whether the server exists. '''
-        return gdk.window_foreign_new(id)
-    
-    def server_window(self, name):
-        ''' Create and return a foreign window for a Vim server or None. '''
-        try:
-            wid = self.serverlist()[name]
-            return self.server_exists(wid)
-        except KeyError:
-            return None
+    def get_shell_serverlist(self):
+        vimcom = self.cb.opts.get('commands', 'vim')
+        p = os.popen('%s --serverlist' % vimcom)
+        servers = p.read()
+        p.close()
+        return servers.splitlines()
+
+    def serverlist(self):
+        res = []
+        for server in self.servers:
+            if self.servers[server].alive:
+                res.append(server)
+        return res
+
+    def feed_serverlist(self):
+        self.cb.evt('serverlist', self.serverlist())
+        return True
+
+    def fetch_cwd(self, server):
+        def cb(cwd):
+            self.servers[server].cwd = cwd
+        self.send_expr(server, "getcwd()", cb)
+
+    def abspath(self, server, filename):
+        if not filename.startswith('/'):
+            cwd = self.servers[server].cwd
+            if not cwd:
+                cwd = os.path.expanduser('~')
+            filename = os.path.join(cwd, filename)
+        return filename
 
     def generate_message(self, server, cork, message, sourceid):
         """ Generate a message. """
@@ -90,17 +135,19 @@ class VimWindow(gtk.Window):
                     m['t'] = t[0]    
         return m
 
-    def send_message(self, server, message, asexpr, callback):
-        cork = (asexpr and 'c') or 'k'
-        sw = self.server_window(server)
-        if sw and sw.property_get("Vim"):
-            mp = self.generate_message(server, cork, message,
-                                    self.window.xid)
-            sw.property_change("Comm", gdk.TARGET_STRING, 8,
-                                    gdk.PROP_MODE_APPEND, mp)
-            if asexpr and callback:
-                self.callbacks['%s' % (self.serial)] = callback
-                self.serial += 1
+    def send_message(self, servername, message, asexpr, callback):
+        server = self.servers[servername]
+        if server.alive:
+            cork = (asexpr and 'c') or 'k'
+            sw = server.server_window()
+            if sw and sw.property_get("Vim"):
+                mp = self.generate_message(server.name, cork, message,
+                                        self.window.xid)
+                sw.property_change("Comm", gdk.TARGET_STRING, 8,
+                                        gdk.PROP_MODE_APPEND, mp)
+                if asexpr and callback:
+                    self.callbacks['%s' % (self.serial)] = callback
+                    self.serial += 1
 
     def send_expr(self, server, message, callback):
         self.send_message(server, message, True, callback)
@@ -150,7 +197,7 @@ class VimWindow(gtk.Window):
             l = [i.split(':') for i in bl.strip(';').split(';')]
             l = [(n[0], self.abspath(server, n[1])) for n in l]
             self.cb.evt('bufferlist', l)
-        self.get_cwd(server)
+        #self.get_cwd(server)
         self.send_expr(server, 'Bufferlist()', cb)
 
     def get_current_buffer(self, server):
@@ -158,25 +205,11 @@ class VimWindow(gtk.Window):
             bn = bs.split(',')
             bn[1] = self.abspath(server, bn[1])
             self.cb.evt('bufferchange', *bn)
-        self.get_cwd(server)
+        #self.get_cwd(server)
         self.send_expr(server, "bufnr('%').','.bufname('%')", cb)
-
-    def cwd(self, server):
-        return self.cwds[server]
-
-    def get_cwd(self, server):
-        def cb(cwd):
-            self.cwds[server] = cwd
-        self.send_expr(server, "getcwd()", cb)
 
     def quit(self, server):
         self.send_ex(server, 'q')
-
-    def abspath(self, server, name):
-        if not name.startswith('/'):
-            hdir = os.path.expanduser('~')
-            name = os.path.join(self.cwds.setdefault(server, hdir), name)
-        return name
 
     def cb_notify(self, *a):
         win, ev =  a
@@ -186,9 +219,6 @@ class VimWindow(gtk.Window):
                 if message:
                     self.cb_reply(message[-1])
         return True
-
-
-   
 
     def cb_reply(self, data):
         mdict = self.parse_message(data)
@@ -203,9 +233,8 @@ class VimWindow(gtk.Window):
             evt, d = data.split(',', 1)
             self.cb.evt(evt, *d.split(','))
         else:
-            self.bad_servers.append(data)
-            self.cb.evt('badserver', data)
-            print '?bad server', data        
+            pass
+            print 'bad async reply', data
 
 if __name__ == '__main__':
     w = VimWindow()
