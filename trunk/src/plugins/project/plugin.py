@@ -629,7 +629,7 @@ class VersionControlSystem(object):
                                    directory=kw['dir'], envv=kw['env'])
 
 
-class Cvs(VersionContrrolSystem):
+class Cvs(VersionControlSystem):
     COMMAND = '/usr/bin/cvs'
     ARGS = ['cvs']
     

@@ -187,17 +187,18 @@ class Application(object):
         # Call the method of the vim communication window.
         return self.cw.serverlist()
 
-    def evt(self, name, *value, **kw):
+    def evt(self, name, *args, **kw):
         """Callback for events from vim client, propogates them to plugins"""
         # log all events except for log events
         if name != 'log':
             self.action_log('event', name)
         # pass the event to every plugin
+        eventname = 'evt_%s' % name
         for plugin in self.plugins:
             # call the instance method, or an empty lambda
-            getattr(plugin, 'evt_%s' % name,
-                    lambda *a, **k: None)(*value, **kw)
-
+            eventfunc = getattr(plugin, eventname, None)
+            if eventfunc:
+                eventfunc(*args, **kw)
 # The main application window.
 # This is multiply split into 3 Paned sections.
 class Window(gdkvim.VimWindow):
@@ -231,9 +232,6 @@ class Window(gdkvim.VimWindow):
         p2 = gtk.HPaned()
         p2.show()
         p1.pack1(p2, True, True)
-        # Set sane starting positions
-        p1.set_position(550)
-        p2.set_position(200)
         # The terminal plugin
         shell_plug = create_plugin('terminal', self.cb)
         self.cb.plugins.append(shell_plug)
@@ -262,8 +260,44 @@ class Window(gdkvim.VimWindow):
                 pi = create_plugin(plugin, self.cb)
                 self.add_plugin(pi)
         # Show the window as late as possible.
+
+        self.p0 = p0
+        self.p1 = p1
+        self.p2 = p2
+       
+        self.load_geometry()
+        
         self.show()
-            
+    
+    def get_current_geometry(self):
+        geom = {}
+        geom['x_origin']
+        geom['y_origin']
+        geom['width']
+        geom['height']
+        geom['vim_slider']
+        geom['terminal_slider']
+        geom['plugin_slider']
+    
+    def load_geometry(self):
+        geom = {}
+        for attr in ['x_origin', 'y_origin', 'width', 'height', 'vim_slider',
+                  'terminal_slider', 'plugin_slider']:
+            try:
+                val = int(self.cb.opts.get('geometry', attr))
+            except ValueError:
+                val = -1
+            geom[attr] = val
+        self.move(geom['x_origin'], geom['y_origin'])
+        self.resize(geom['width'], geom['height'])
+        if self.cb.opts.get('vim', 'mode_embedded') == '1':
+            self.p0.set_position(geom['vim_slider'])
+        else:
+            self.p0.set_position(0)
+        self.p1.set_position(geom['terminal_slider'])
+        self.p2.set_position(geom['plugin_slider'])
+        
+    
     def cb_key_press(self, widget, event):
         """
         Callback to all key press events.

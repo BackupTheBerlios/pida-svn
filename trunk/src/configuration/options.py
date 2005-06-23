@@ -238,6 +238,23 @@ class Opts(object):
         self.add('vim shortcuts', 'shortcut_pydoc_cursor', '?',
                  'The keypress to Pydoc the word under the cursor.')
 
+        self.add_section('geometry')
+        self.add('geometry', 'x_origin', '64',
+                 'The starting X position of the window.')
+        self.add('geometry', 'y_origin', '64',
+                 'The starting Y position of the window.')
+        self.add('geometry', 'width', '800',
+                 'The width of the window.')
+        self.add('geometry', 'height', '600',
+                 'The height of the window.')
+        self.add('geometry', 'vim_slider', '500',
+                 'The starting position of the Vim slider (embed mode).')
+        self.add('geometry', 'terminal_slider', '400',
+                 'The starting position of the terminal slider.')
+        self.add('geometry', 'plugin_slider', '200',
+                 'The starting X position of the plugin_slider.')
+
+
         if os.path.exists(conffile):
             self.load_defaults()
         self.write()

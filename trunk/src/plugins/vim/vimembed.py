@@ -90,14 +90,3 @@ class PidaVim(Vim):
         holder.show_all()
         self.run()
         
-
-class TestWindow(gtk.Window):
-    def __init__(self):
-        gtk.Window.__init__(self)
-        self.set_size_request(600,400)
-        v = PidaVim(None, self, '/usr/bin/gvim', 'TEST')
-
-
-if __name__ == '__main__':
-    a = TestWindow()
-    gtk.main()

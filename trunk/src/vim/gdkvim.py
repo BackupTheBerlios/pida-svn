@@ -194,9 +194,13 @@ class VimWindow(gtk.Window):
 
     def get_bufferlist(self, server):
         def cb(bl):
-            l = [i.split(':') for i in bl.strip(';').split(';')]
-            l = [(n[0], self.abspath(server, n[1])) for n in l]
-            self.cb.evt('bufferlist', l)
+            if bl:
+                l = [i.split(':') for i in bl.strip(';').split(';')]
+                L = []
+                for n in l:
+                    if not n[0].startswith('E'):
+                        L.append([n[0], self.abspath(server, n[1])])
+                self.cb.evt('bufferlist', L)
         #self.get_cwd(server)
         self.send_expr(server, 'Bufferlist()', cb)
 

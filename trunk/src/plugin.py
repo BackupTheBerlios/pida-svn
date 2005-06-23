@@ -324,6 +324,9 @@ class Plugin(object):
         self.msgbox.hide()
         self.qstbox.hide()
 
+
+class CommonEvents(object):
+    """ Just for reference """
     def evt_started(self, serverlist):
         """
         Event: called on starting.

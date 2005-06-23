@@ -33,7 +33,7 @@ import pida.gtkextra as gtkextra
 
 
 SHORTCUTS = [('shortcut_execute',
-                'Async_event("bufferexecute,"'),
+                'Async_event("bufferexecute,")'),
              ('shortcut_project_execute',
                 'Async_event("projectexecute,")'),
              ('shortcut_breakpoint_set',
@@ -163,11 +163,12 @@ class Plugin(plugin.Plugin):
 
     def cb_plugged(self):
         #self.cb.embedwindow.set_size_request(600, -1)
-        self.cb.barholder.set_position(200)
+        #self.cb.barholder.set_position(200)
+        pass
 
     def cb_unplugged(self):
         #self.cb.embedwindow.set_size_request(0, -1)
-        self.cb.barholder.set_position(0)
+        #self.cb.barholder.set_position(0)
         self.vim = None
 
     def cb_connect(self, *a):

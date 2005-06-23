@@ -216,7 +216,7 @@ class Plugin(plugin.Plugin):
         else:
             self.defs.model.clear()
 
-    def evt_bufferexecute(self):
+    def evt_bufferexecute(self, *args):
         self.execute()
 
     def evt_started(self, *args):
