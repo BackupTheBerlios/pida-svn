@@ -611,7 +611,7 @@ class VersionControlSystem(object):
                         'Remove file from version control.')
         self.add_button('add', 'add',
                         'Add file to to version control')
-        self.add_button('up', 'commit',
+        self.add_button('commit', 'commit',
                         'Commit changes to version control')
         self.add_button('down', 'update',
                         'Update changes from version control')
