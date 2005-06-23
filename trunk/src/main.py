@@ -206,9 +206,9 @@ class Window(gdkvim.VimWindow):
     def __init__(self, cb):
         gdkvim.VimWindow.__init__(self, cb)
         # Set the minimum size.
-        self.set_size_request(20,200)
+        #self.set_size_request(20,200)
         # Request a sane initial size.
-        self.resize(400,800)
+        #self.resize(400,800)
         # Set the window title.
         caption = 'PIDA %s' % __version__
         self.set_title(caption)
@@ -271,13 +271,12 @@ class Window(gdkvim.VimWindow):
     
     def get_current_geometry(self):
         geom = {}
-        geom['x_origin']
-        geom['y_origin']
-        geom['width']
-        geom['height']
-        geom['vim_slider']
-        geom['terminal_slider']
-        geom['plugin_slider']
+        geom['x_origin'], geom['y_origin'] = self.get_position()
+        geom['width'], geom['height'] = self.get_size()
+        geom['vim_slider'] = self.p0.get_position()
+        geom['terminal_slider'] = self.p1.get_position()
+        geom['plugin_slider'] = self.p2.get_position()
+        return geom
     
     def load_geometry(self):
         geom = {}
@@ -297,7 +296,14 @@ class Window(gdkvim.VimWindow):
         self.p1.set_position(geom['terminal_slider'])
         self.p2.set_position(geom['plugin_slider'])
         
-    
+   
+    def save_geometry(self):
+        if self.cb.opts.get('geometry', 'save_on_shutdown') == '1':
+            geom = self.get_current_geometry()
+            for attr in geom:
+                self.cb.opts.set('geometry', attr, '%s' % geom[attr])
+            self.cb.opts.write()
+   
     def cb_key_press(self, widget, event):
         """
         Callback to all key press events.
@@ -330,6 +336,7 @@ class Window(gdkvim.VimWindow):
         pressing the close button, or by a window manager hint.
         """
         # call the close acition of the application.
+        self.save_geometry()
         self.cb.action_close()
         
     def add_plugin(self, plugin):

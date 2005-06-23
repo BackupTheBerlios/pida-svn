@@ -237,8 +237,12 @@ class Opts(object):
                  'The keypress to Pydoc the most recently yankend text.')
         self.add('vim shortcuts', 'shortcut_pydoc_cursor', '?',
                  'The keypress to Pydoc the word under the cursor.')
-
+        
+        # geometry
         self.add_section('geometry')
+        self.add('geometry', 'save_on_shutdown', '1',
+                 'Whether your geometry settings will be saved on shutdown.',
+                 'boolean')
         self.add('geometry', 'x_origin', '64',
                  'The starting X position of the window.')
         self.add('geometry', 'y_origin', '64',
