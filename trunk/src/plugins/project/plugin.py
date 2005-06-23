@@ -655,9 +655,9 @@ class Subversion(VersionControlSystem):
         self.launch(['diff'], **kw)
 
     def add_custom_buttons(self):
-        self.add_button('clear', 'resolved',
+        self.add_button('vcs_resolve', 'resolved',
                         'Remove conflicted state on working copy files')
-        self.add_button('diff', 'diff',
+        self.add_button('vcs_diff', 'diff',
                         'Show the diff between the working copy and the '
                         'repository')
 
