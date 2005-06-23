@@ -93,7 +93,7 @@ class Plugin(plugin.Plugin):
         self.old_shortcuts = []
         self.vim = None
         self.embedname = None
-        gobject.timeout_add(2000, self.cb_refresh)
+        #gobject.timeout_add(2000, self.cb_refresh)
         self.currentserver = None
         self.oldservers = []
     
@@ -116,6 +116,11 @@ class Plugin(plugin.Plugin):
     def refresh(self, serverlist):
         if serverlist != self.oldservers:
             self.oldservers = serverlist
+            actiter = self.entry.get_active_iter()
+            act = None
+            if actiter:
+                act = self.entry.get_model().get_value(actiter, 0)
+            #self.cb.action_connectserver(name)
             self.entry.get_model().clear()
             for i in serverlist:
                 s = i.strip()
@@ -127,7 +132,12 @@ class Plugin(plugin.Plugin):
                 else:
                     self.entry.append_text(s.strip())
             self.entry.show_all()
-            self.entry.set_active(0)
+            if act:
+                for row in self.entry.get_model():
+                    if row[0] == act:
+                        self.entry.set_active_iter(row.iter)
+            else:
+                self.entry.set_active(0)
 
     def load_shortcuts(self):
         if self.old_shortcuts:
@@ -192,15 +202,18 @@ class Plugin(plugin.Plugin):
         self.cb.evt('serverchange', name)
 
     def evt_started(self, serverlist):
-        self.refresh(serverlist)
         if self.is_embedded():
             self.launch()
         elif int(self.cb.opts.get('vim', 'connect_startup')):
             self.cb_connect()
 
-    def evt_badserver(self, name):
-        self.cb_refresh()
-        self.cb_connect()
+    def evt_serverlist(self, serverlist):
+        self.refresh(serverlist)
+
+
+    #def evt_badserver(self, name):
+    #    self.cb_refresh()
+    #    self.cb_connect()
 
     def evt_serverchange(self, name):
         pass
