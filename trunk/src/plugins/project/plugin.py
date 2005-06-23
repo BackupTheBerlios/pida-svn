@@ -628,6 +628,15 @@ class VersionControlSystem(object):
         self.cb.action_newterminal(self.COMMAND, args,
                                    directory=kw['dir'], envv=kw['env'])
 
+
+class Cvs(VersionContrrolSystem):
+    COMMAND = '/usr/bin/cvs'
+    ARGS = ['cvs']
+    
+    def command_commit(self, **kw):
+        self.launch(['commit'], **kw)
+
+
 class Darcs(VersionControlSystem):
     COMMAND = '/usr/bin/darcs'
     ARGS = ['darcs']
