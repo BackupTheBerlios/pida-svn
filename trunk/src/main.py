@@ -76,8 +76,8 @@ class Application(object):
         # start
         self.action_log('Pida', 'starting', 0)
         # fire the init event, telling plugins to initialize
-        self.cw.fetch_serverlist()
-        self.cw.feed_serverlist()
+        #self.cw.fetch_serverlist()
+        #self.cw.feed_serverlist()
         self.evt('init')
         # fire the started event with the initial server list
         self.evt('started', self.cw.serverlist())
@@ -205,10 +205,6 @@ class Window(gdkvim.VimWindow):
     """ the main window """
     def __init__(self, cb):
         gdkvim.VimWindow.__init__(self, cb)
-        # Set the minimum size.
-        #self.set_size_request(20,200)
-        # Request a sane initial size.
-        #self.resize(400,800)
         # Set the window title.
         caption = 'PIDA %s' % __version__
         self.set_title(caption)
@@ -216,28 +212,30 @@ class Window(gdkvim.VimWindow):
         self.connect('destroy', self.cb_quit)
         # Connect the keypress event.
         self.connect('key_press_event', self.cb_key_press)
+        # connect movement
+        self.connect('configure_event', self.cb_configure)
         # The outer pane
         p0 = gtk.HPaned()
-        p0.show()
+        #p0.show()
         self.add(p0)
         # Set these properties for later embedding
-        self.cb.barholder = p0
+        #self.cb.barholder = p0
         self.cb.embedwindow = gtk.VBox()
         p0.pack1(self.cb.embedwindow, True, True)
         # The plugin/terminal area
         p1 = gtk.VPaned()
-        p1.show()
+        #p1.show()
         p0.pack2(p1, True, True)
         # Pane for standard and optional plugins
         p2 = gtk.HPaned()
-        p2.show()
+        #p2.show()
         p1.pack1(p2, True, True)
         # The terminal plugin
         shell_plug = create_plugin('terminal', self.cb)
         self.cb.plugins.append(shell_plug)
         p1.pack2(shell_plug.win, True, True)
         lbox = gtk.VBox()
-        lbox.show()
+        #lbox.show()
         p2.pack1(lbox, True, True)
         # The vim plugin.
         server_plug = create_plugin('vim', self.cb)
@@ -250,7 +248,7 @@ class Window(gdkvim.VimWindow):
         # The optional plugin  area
         self.notebook = gtk.Notebook()
         self.notebook.set_show_border(True)
-        self.notebook.show()
+        #self.notebook.show()
         p2.pack2(self.notebook, True, True)
         # Populate with the configured plugins
         for plugin in PLUGINS:
@@ -266,13 +264,16 @@ class Window(gdkvim.VimWindow):
         self.p2 = p2
        
         self.load_geometry()
+        self.geometry = None
         
-        self.show()
-    
+        self.show_all()
+        
     def get_current_geometry(self):
         geom = {}
-        geom['x_origin'], geom['y_origin'] = self.get_position()
-        geom['width'], geom['height'] = self.get_size()
+        (geom['x_origin'],
+         geom['y_origin'],
+         geom['width'],
+         geom['height']) = self.geometry
         geom['vim_slider'] = self.p0.get_position()
         geom['terminal_slider'] = self.p1.get_position()
         geom['plugin_slider'] = self.p2.get_position()
@@ -293,8 +294,8 @@ class Window(gdkvim.VimWindow):
             self.p0.set_position(geom['vim_slider'])
         else:
             self.p0.set_position(0)
-        self.p1.set_position(geom['terminal_slider'])
         self.p2.set_position(geom['plugin_slider'])
+        self.p1.set_position(geom['terminal_slider'])
         
    
     def save_geometry(self):
@@ -303,6 +304,9 @@ class Window(gdkvim.VimWindow):
             for attr in geom:
                 self.cb.opts.set('geometry', attr, '%s' % geom[attr])
             self.cb.opts.write()
+   
+    def cb_configure(self, window, event):
+        self.geometry = [event.x, event.y, event.width, event.height]
    
     def cb_key_press(self, widget, event):
         """
