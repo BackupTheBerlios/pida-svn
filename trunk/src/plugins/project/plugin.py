@@ -658,7 +658,7 @@ class Subversion(VersionControlSystem):
         self.add_button('clear', 'resolved',
                         'Remove conflicted state on working copy files')
         self.add_button('diff', 'diff',
-                        'Show the diff between the working copy and the'
+                        'Show the diff between the working copy and the '
                         'repository')
 
 
