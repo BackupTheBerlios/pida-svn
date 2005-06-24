@@ -28,20 +28,9 @@ import gtk.gdk as gdk
 import gtk
 import gobject
 import os
+import sys
+import tempfile
 
-
-class VimServer(object):
-    def __init__(self, name, wid):
-        self.name = name
-        self.wid = wid
-        self.cwd = None
-        self.window = None
-        self.alive = False
-
-    def server_window(self):
-        if self.window == None:
-            self.window = gtk.gdk.window_foreign_new(self.wid)
-        return self.window
 
 class VimWindow(gtk.Window):
     ''' A GTK window that can communicate with Vim. '''
@@ -55,31 +44,26 @@ class VimWindow(gtk.Window):
         self.connect('property-notify-event', self.cb_notify)
         self.serial = 1
         self.callbacks = {}
-        self.servers = {}
+        self.server_cwds = {}
         self.oldservers = None
+        
         self.root_window = gdk.get_default_root_window()
+        
         
         gobject.timeout_add(3000, self.fetch_serverlist)
 
     def fetch_serverlist(self):
-        shell_servers = self.get_shell_serverlist()
-        for name, wid in self.get_rootwindow_serverlist():
-            server = self.servers.setdefault(name, VimServer(name, wid))
-            if name in shell_servers:
-                server.alive = True
-                if server.cwd:
-                    self.fetch_cwd(server)
-            else:
-                server.alive = False
-        serverlist = self.serverlist()
+        serverlist = self.get_shell_serverlist()
+        for server in serverlist:
+            if server not in self.server_cwds:
+                self.fetch_cwd(server)
         if serverlist != self.oldservers:
             self.oldservers = serverlist
-            self.feed_serverlist()
+            self.feed_serverlist(serverlist)
         return True
 
     def get_rootwindow_serverlist(self):
-        self.get_shell_serverlist()
-        res = []
+        res = {}
         # Read the property
         propval = self.root_window.property_get("VimRegistry")
         if propval:
@@ -89,34 +73,43 @@ class VimWindow(gtk.Window):
                     rs = r.split()
                     wid = long(int(rs[0], 16))
                     name = rs[1]
-                    res.append([name, wid])
+                    res[name] = wid
         return res
 
     def get_shell_serverlist(self):
-        vimcom = self.cb.opts.get('commands', 'vim')
+        vimcom = self.cb.opts.get('commands', 'vim_console')
         p = os.popen('%s --serverlist' % vimcom)
         servers = p.read()
         p.close()
         return servers.splitlines()
 
-    def serverlist(self):
-        res = []
-        for server in self.servers:
-            if self.servers[server].alive:
-                res.append(server)
-        return res
+    def get_server_wid(self, servername):
+        try:
+            wid = self.get_rootwindow_serverlist()[servername]
+        except KeyError:
+            wid = None
+        return long(wid)
 
-    def feed_serverlist(self):
-        self.cb.evt('serverlist', self.serverlist())
+    def get_server_window(self, wid):
+        return gtk.gdk.window_foreign_new(wid)
+
+    def serverlist(self):
+        return self.get_shell_serverlist()
+
+    def feed_serverlist(self, serverlist):
+        self.cb.evt('serverlist', serverlist)
 
     def fetch_cwd(self, server):
         def cb(cwd):
-            self.servers[server].cwd = cwd
+            self.server_cwds[server] = cwd
         self.send_expr(server, "getcwd()", cb)
 
     def abspath(self, server, filename):
         if not filename.startswith('/'):
-            cwd = self.servers[server].cwd
+            try:
+                cwd = self.server_cwds[server]
+            except KeyError:
+                cwd = None
             if not cwd:
                 cwd = os.path.expanduser('~')
             filename = os.path.join(cwd, filename)
@@ -139,12 +132,14 @@ class VimWindow(gtk.Window):
         return m
 
     def send_message(self, servername, message, asexpr, callback):
-        server = self.servers[servername]
-        if server.alive:
+        #server = dict(self.get_rootwindow_serverlist())[servername]
+        #if 1:#server.alive:
+        wid = self.get_server_wid(servername)
+        if wid:
             cork = (asexpr and 'c') or 'k'
-            sw = server.server_window()
+            sw = self.get_server_window(wid)
             if sw and sw.property_get("Vim"):
-                mp = self.generate_message(server.name, cork, message,
+                mp = self.generate_message(servername, cork, message,
                                         self.window.xid)
                 sw.property_change("Comm", gdk.TARGET_STRING, 8,
                                         gdk.PROP_MODE_APPEND, mp)

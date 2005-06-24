@@ -148,6 +148,9 @@ class Opts(object):
         vimcom = which('gvim') or '/usr/bin/gvim'
         self.add('commands', 'vim', vimcom,
                   'Command for executing graphical Vim.', 'file')
+        cvimcom = which('vim') or '/usr/bin/vim'
+        self.add('commands', 'vim_console', cvimcom,
+                  'Command for executing console Vim.', 'file')
         evimcom = which('evim') or '/usr/bin/evim'
         self.add('commands', 'evim', evimcom,
                   'Command for executing the modeless Vim. '
