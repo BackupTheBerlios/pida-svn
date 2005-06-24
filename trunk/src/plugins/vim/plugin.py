@@ -140,8 +140,9 @@ class Plugin(plugin.Plugin):
                 self.entry.set_active(0)
             if not self.currentserver:
                 server = None
-                if serverlist:
-                    server = serverlist[0]
+                if not self.is_embedded():
+                    if serverlist:
+                        server = serverlist[0]
                 self.cb.action_connectserver(server)
 
     def load_shortcuts(self):
@@ -223,10 +224,11 @@ class Plugin(plugin.Plugin):
         if self.is_embedded():
             if self.cb.opts.get('vim', 'shutdown_with_vim') == '1':
                 self.cb.action_close()
-        else:
-            del self.old_shortcuts[self.currentserver]
-            self.currentserver = None
-            self.cb_refresh()
+                return
+        
+        del self.old_shortcuts[self.currentserver]
+        self.currentserver = None
+        self.cb_refresh()
     #def evt_badserver(self, name):
     #    self.cb_refresh()
     #    self.cb_connect()

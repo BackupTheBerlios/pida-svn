@@ -227,3 +227,7 @@ class Plugin(plugin.Plugin):
         '''
         self.cb.action_getbufferlist()
 
+
+    def evt_disconnected(self, *args):
+        self.buffers.clear()
+
