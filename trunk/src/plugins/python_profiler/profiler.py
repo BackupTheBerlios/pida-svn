@@ -25,16 +25,19 @@ import profile
 import os
 import sys
 import pida.gtkextra as gtkextra
+import pida.gobjectreactor as gobjectreactor
 import tempfile
 import pickle
 import gtk
 
 
 class Profiler(object):
-    def __init__(self, sid):
-        self.ipc = gtkextra.IPWindow(self)
-        self.ipc.reset(long(sid))
-        self.ipc.connect()
+    def __init__(self, parentsocket, childsocket):
+        #self.ipc = gtkextra.IPWindow(self)
+        #self.ipc.reset(long(sid))
+        #self.ipc.connect()
+        self.reactor = gobjectreactor.Reactor(self, childsocket, parentsocket)
+        self.reactor.start()
 
     def profile(self, filename):
         p = profile.Profile()
@@ -45,15 +48,16 @@ class Profiler(object):
         f = open(outf, 'w')
         s = pickle.dump(p.stats, f)
         f.close()
-        self.ipc.write('stats', outf, 8)
+        #self.ipc.write('stats', outf, 8)
+        self.reactor.remote('stats', outf)
         while gtk.events_pending():
             gtk.main_iteration()
 
 
-def main(filename, sid):
-    profiler = Profiler(sid)
+def main(filename, parentsocket, childsocket):
+    profiler = Profiler(parentsocket, childsocket)
     profiler.profile(filename)
 
 if __name__ == '__main__':
     print sys.argv
-    main(sys.argv[1], sys.argv[2])
+    main(sys.argv[1], sys.argv[2], sys.argv[3])

@@ -1,13 +1,12 @@
 
-import gtk
 import gobject
 import socket
 import os
 
-class Server(object):
+class Reactor(object):
 
-    def __init__(self, localsocketfile, remotesocketfile):
-        self.reactor = DummyCB()
+    def __init__(self, reactor, localsocketfile, remotesocketfile):
+        self.reactor = reactor
         self.socketfile = localsocketfile
         self.remote_socketfile = remotesocketfile
         self.read_buffer = ''
@@ -65,6 +64,7 @@ class DummyCB(object):
         print args
 
 if __name__ == '__main__':
-    s = Server('/home/ali/socket', '/home/ali/csocket')
+    import gtk
+    s = Server(DummyCB(), '/home/ali/socket', '/home/ali/csocket')
     s.start()
     gtk.main()

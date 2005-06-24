@@ -36,6 +36,8 @@ import gobject
 #import tree
 import pida.plugin as plugin
 import pida.gtkextra as gtkextra
+import pida.gobjectreactor as gobjectreactor
+
 def script_directory():
     def f(): pass
     d, f = os.path.split(f.func_code.co_filename)
@@ -172,17 +174,24 @@ class Profiler(object):
 
     def __init__(self, cb):
         self.cb = cb
-        self.ipc = gtkextra.IPWindow(self)
+        sockdir = self.cb.opts.get('directories', 'socket')
+        self.parentsock = os.path.join(sockdir, 'profiler_parent')
+        self.childsock = os.path.join(sockdir, 'profiler_child')
+        self.reactor = gobjectreactor.Reactor(self, self.parentsock,
+                                              self.childsock)
+        #self.ipc = gtkextra.IPWindow(self)
         self.r_cb_stats = None
 
     def run(self, filename, statscb):
         self.r_cb_stats = statscb
+        self.reactor.start()
         profilerfn = os.path.join(SCRIPT_DIR, 'profiler.py')
-        xid = '%s' % self.ipc.get_lid()
+        #xid = '%s' % self.ipc.get_lid()
         py = self.cb.opts.get('commands', 'python')
         pid = os.fork()
         if pid == 0:
-            os.execvp(py, ['python', profilerfn, filename, xid])
+            os.execvp(py, ['python', profilerfn, filename, self.parentsock,
+                            self.childsock])
         else:
             self.pid = pid
         print 'run'

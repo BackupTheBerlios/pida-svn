@@ -92,6 +92,11 @@ class Opts(object):
         self.add('directories', 'shared', libdir,
                  'The shared library directory.', 'dir')
 
+        sockdir = os.path.join(basedir, '.sockets')
+        self.add('directories', 'socket', sockdir,
+                 'Where Pida will start Unix Domain Sockets')
+        self.create_dir(sockdir)
+
         ### Files
         self.add_section('files')
 
