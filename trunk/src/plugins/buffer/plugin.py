@@ -128,6 +128,14 @@ class Plugin(plugin.Plugin):
         '''
         self.buffers.populate(bufferlist)
 
+    def delayed_get_buffer(self, delay=1000):
+        def get():
+            self.cb.action_getbufferlist()
+            return False
+        # would grab it immediately, but it pays to wait.
+        gobject.timeout_add(delay, get)
+
+
     def cb_alternative(self):
         '''
         Called when the detach button is clicked.
@@ -182,6 +190,7 @@ class Plugin(plugin.Plugin):
         '''
         # Close the active buffer.
         self.cb.action_closebuffer()
+        self.delayed_get_buffer()
 
     def evt_bufferlist(self, bufferlist):
         '''
@@ -207,11 +216,10 @@ class Plugin(plugin.Plugin):
         @param: 
         '''
         self.cbuf = int(buffernumber)
+        # the new buffer may not be in our list
         if not self.buffers.set_active(self.cbuf):
-            def reget():
-                self.cb.action_getbufferlist()
-                return False
-            gobject.timeout_add(1000, reget)
+            self.delayed_get_buffer(500)
+
     def evt_bufferunload(self, *a):
         '''
         Event: Called when a buffer is unloaded
