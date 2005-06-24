@@ -208,8 +208,10 @@ class Plugin(plugin.Plugin):
         '''
         self.cbuf = int(buffernumber)
         if not self.buffers.set_active(self.cbuf):
-            self.cb.action_getbufferlist()
-
+            def reget():
+                self.cb.action_getbufferlist()
+                return False
+            gobject.timeout_add(1000, reget)
     def evt_bufferunload(self, *a):
         '''
         Event: Called when a buffer is unloaded

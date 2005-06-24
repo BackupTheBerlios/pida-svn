@@ -50,7 +50,7 @@ class VimWindow(gtk.Window):
         self.root_window = gdk.get_default_root_window()
         
         
-        gobject.timeout_add(9000, self.fetch_serverlist)
+        gobject.timeout_add(3000, self.fetch_serverlist)
 
     def fetch_serverlist(self):
         serverlist = self.get_shell_serverlist()
@@ -88,7 +88,7 @@ class VimWindow(gtk.Window):
             wid = self.get_rootwindow_serverlist()[servername]
         except KeyError:
             wid = None
-        return long(wid)
+        return wid and long(wid) or None
 
     def get_server_window(self, wid):
         return gtk.gdk.window_foreign_new(wid)

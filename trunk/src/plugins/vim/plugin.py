@@ -73,6 +73,7 @@ endfunction
 :silent au! pida
 :silent au pida BufEnter * call Async_event("bufferchange,".bufnr('%').",".bufname('%'))
 :silent au pida BufDelete * call Async_event("bufferunload,")
+:silent au pida VimLeave * call Async_event("vimshutdown,")
 :echo "PIDA connected"
 '''
 
@@ -90,7 +91,7 @@ class Plugin(plugin.Plugin):
             'Refresh server list')
         self.entry = gtk.combo_box_new_text()
         self.add(self.entry, False)
-        self.old_shortcuts = []
+        self.old_shortcuts = {}
         self.vim = None
         self.embedname = None
         #gobject.timeout_add(2000, self.cb_refresh)
@@ -120,7 +121,6 @@ class Plugin(plugin.Plugin):
             act = None
             if actiter:
                 act = self.entry.get_model().get_value(actiter, 0)
-            #self.cb.action_connectserver(name)
             self.entry.get_model().clear()
             for i in serverlist:
                 s = i.strip()
@@ -138,19 +138,24 @@ class Plugin(plugin.Plugin):
                         self.entry.set_active_iter(row.iter)
             else:
                 self.entry.set_active(0)
+            if not self.currentserver:
+                server = None
+                if serverlist:
+                    server = serverlist[0]
+                self.cb.action_connectserver(server)
 
     def load_shortcuts(self):
-        if self.old_shortcuts:
-            for sc in self.old_shortcuts:
+        if self.old_shortcuts.setdefault(self.currentserver, []):
+            for sc in self.old_shortcuts[self.currentserver]:
                 self.cb.send_ex(UNMAP_COM % sc)
-        self.old_shortcuts = []
+        self.old_shortcuts[self.currentserver] = []
 
         l = self.cb.opts.get('vim shortcuts', 'shortcut_leader')
         
         for name, command in SHORTCUTS:
             c = self.cb.opts.get('vim shortcuts', name)
             sc = ''.join([l, c])
-            self.old_shortcuts.append(sc)
+            self.old_shortcuts[self.currentserver].append(sc)
             self.cb.send_ex(NMAP_COM % (sc, command))
 
 
@@ -196,11 +201,14 @@ class Plugin(plugin.Plugin):
         self.load_shortcuts()
 
     def evt_connectserver(self, name):
-        self.currentserver = name
-        self.load_shortcuts()
-        self.cb.send_ex('%s' % VIMSCRIPT)
-        self.cb.action_foreground()
-        self.cb.evt('serverchange', name)
+        if name:
+            self.currentserver = name
+            self.load_shortcuts()
+            self.cb.send_ex('%s' % VIMSCRIPT)
+            self.cb.action_foreground()
+            self.cb.evt('serverchange', name)
+        else:
+            self.cb.evt('disconnected', name)
 
     def evt_started(self, serverlist):
         if self.is_embedded():
@@ -211,10 +219,16 @@ class Plugin(plugin.Plugin):
     def evt_serverlist(self, serverlist):
         self.refresh(serverlist)
 
-
+    def evt_vimshutdown(self, *args):
+        if self.is_embedded():
+            self.cb.action_close()
+        else:
+            del self.old_shortcuts[self.currentserver]
+            self.currentserver = None
+            self.cb_refresh()
     #def evt_badserver(self, name):
     #    self.cb_refresh()
     #    self.cb_connect()
 
     def evt_serverchange(self, name):
-        pass
+        self.currentserver = name
