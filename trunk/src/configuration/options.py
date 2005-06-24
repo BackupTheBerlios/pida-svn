@@ -200,6 +200,10 @@ class Opts(object):
                  'Embed Vim in Pida when running, like a standard IDE. '
                  '<b>Needs restart</b>',
                  'boolean')
+        self.add('vim', 'shutdown_with_vim', '0',
+                 '(Embedded mode only) Determines whether Pida will '
+                 'shut down when the embedded Vim is quit.',
+                 'boolean')
 
         ### plugin options
         self.add_section('plugins')
