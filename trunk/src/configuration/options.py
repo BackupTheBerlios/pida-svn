@@ -188,9 +188,9 @@ class Opts(object):
         self.add('vim', 'foreground_jump', '1',
                  'Determines whether Pida will foreground Vim when the buffer'
                  'is changed, or the cursor is moved', 'boolean')
-        self.add('vim', 'connect_startup', '1',
-                 'Determines whether Pida will attempt to connect to Vim '
-                 'on startup', 'boolean')
+        #self.add('vim', 'connect_startup', '1',
+        #         'Determines whether Pida will attempt to connect to Vim '
+        #         'on startup', 'boolean')
         self.add('vim', 'mode_easy', '0',
                  'Determines whether Pida will run Vim as Evim (easy mode). '
                  'Some people may prefer this mode of operation. '

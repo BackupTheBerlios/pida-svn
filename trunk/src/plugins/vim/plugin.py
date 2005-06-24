@@ -213,8 +213,8 @@ class Plugin(plugin.Plugin):
     def evt_started(self, serverlist):
         if self.is_embedded():
             self.launch()
-        elif int(self.cb.opts.get('vim', 'connect_startup')):
-            self.cb_connect()
+        #elif self.cb.opts.get('vim', 'connect_startup') == '1':
+        #    self.cb_connect()
 
     def evt_serverlist(self, serverlist):
         self.refresh(serverlist)
