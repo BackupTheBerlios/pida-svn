@@ -520,7 +520,7 @@ class Plugin(plugin.Plugin):
                 kw['dir'] = self.config.get(projname, 'directory')
                 envs = self.config.get(projname, 'environment')
                 kw['env'] = envs.split(';')
-            kw['filename'] = self.files.selected(0)
+            kw['filename'] = self.files.selected(1)
             commandfunc(**kw)
         else:
             self.message('Unsupported command %s' % command)
@@ -662,6 +662,10 @@ class Subversion(VersionControlSystem):
 
     def command_diff(self, **kw):
         self.launch(['diff'], **kw)
+
+    def command_add(self, **kw):
+        if kw['filename']:
+            self.launch(['add', kw['filename']], **kw)
 
     def add_custom_buttons(self):
         self.add_button('vcs_resolve', 'resolved',
