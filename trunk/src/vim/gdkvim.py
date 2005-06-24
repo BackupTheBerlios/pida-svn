@@ -77,6 +77,7 @@ class VimWindow(gtk.Window):
         return res
 
     def get_shell_serverlist(self):
+        # This blocks
         vimcom = self.cb.opts.get('commands', 'vim_console')
         p = os.popen('%s --serverlist' % vimcom)
         servers = p.read()

@@ -84,7 +84,7 @@ class ConfigWidget(object):
         """
         Return a beautified name for the configuration option.
         """
-        return ' '.join(self.key.split('_')[::-1])
+        return self.key.replace('_', ' ')
    
     def get_help(self):
         """
@@ -226,7 +226,6 @@ class ConfigFont(ConfigWidget):
         Save the font value to the options database.
         """
         self.set_value(self.widget.get_font_name())
-
 
 class ConfigFile(ConfigWidget):
     """

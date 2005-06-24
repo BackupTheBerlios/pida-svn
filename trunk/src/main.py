@@ -80,7 +80,7 @@ class Application(object):
         #self.cw.feed_serverlist()
         self.evt('init')
         # fire the started event with the initial server list
-        self.evt('started', self.cw.serverlist())
+        self.evt('started', None)
 
     def action_showconfig(self):
         """ called to show the config editor """
@@ -185,7 +185,8 @@ class Application(object):
     def get_serverlist(self):
         """Get the list of servers"""
         # Call the method of the vim communication window.
-        return self.cw.serverlist()
+        # return self.cw.serverlist()
+        self.cw.fetch_serverlist()
 
     def evt(self, name, *args, **kw):
         """Callback for events from vim client, propogates them to plugins"""

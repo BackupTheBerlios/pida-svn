@@ -184,7 +184,8 @@ class Plugin(plugin.Plugin):
             self.cb.action_connectserver(name)
    
     def cb_refresh(self, *args):
-        self.refresh(self.cb.get_serverlist())
+        #self.refresh(self.cb.get_serverlist())
+        self.cb.get_serverlist()
         return True
 
     def cb_run(self, *args):
