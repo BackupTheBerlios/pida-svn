@@ -221,7 +221,8 @@ class Plugin(plugin.Plugin):
 
     def evt_vimshutdown(self, *args):
         if self.is_embedded():
-            self.cb.action_close()
+            if self.cb.opts.get('vim', 'shutdown_with_vim') == '1':
+                self.cb.action_close()
         else:
             del self.old_shortcuts[self.currentserver]
             self.currentserver = None
