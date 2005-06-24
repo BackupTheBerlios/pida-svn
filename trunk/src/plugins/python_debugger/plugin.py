@@ -10,6 +10,7 @@ import pickle
 import gobject
 import tempfile
 import pida.gtkextra as gtkextra
+import pida.gobjectreactor as gobjectreactor
 import linecache
 import marshal
 import cStringIO
@@ -162,12 +163,11 @@ class DebugTerminal(vte.Terminal):
                 except OSError:
                     pass
 
-    def start(self, xid, fn):
+    def start(self, fn, parentsock, childsock):
         self.kill()
-        
         sn = os.path.join(SCRIPT_DIR, 'debugger.py')
         c = self.cb.opts.get('commands', 'python')
-        args = ['python', sn, fn, '%s' % xid]
+        args = ['python', sn, fn, parentsock, childsock]
         self.pid = self.fork_command(c, args)
         self.grab_focus()
         return self.pid
@@ -198,9 +198,18 @@ class Plugin(plugin.Plugin):
     ICON = 'debug'
     DICON = 'debug', 'Load current buffer into debugger.'
 
+    def create_reactor(self):
+        sockdir = self.cb.opts.get('directories', 'socket')
+        self.parentsock = os.path.join(sockdir, 'profiler_parent')
+        self.childsock = os.path.join(sockdir, 'profiler_child')
+        self.reactor = gobjectreactor.Reactor(self, self.parentsock,
+                                              self.childsock)
+
     def populate_widgets(self):
         self._dbg = None
-        self.ipc = gtkextra.IPWindow(self)
+        
+        self.create_reactor()
+        #self.ipc = gtkextra.IPWindow(self)
         #self.add_button('debug', self.cb_but_debug, 'start')
         self.add_button('stop', self.cb_but_stop, 'Stop debugging.')
         self.add_button('step', self.cb_step, 'step')
@@ -260,7 +269,7 @@ class Plugin(plugin.Plugin):
         f.close()
         self.cb.action_preview(self.lfn)
 
-    def do_eval(self, s):
+    def do_eval(self, s, *args):
         com, val = s.split('\n', 1)
         self.dumpwin.set_text(val)
         self.dumpwin.show('<span size="small">%s</span>' % com)
@@ -290,7 +299,8 @@ class Plugin(plugin.Plugin):
             self.send_breakpoint(*bp)
 
     def load(self):
-        pid = self.term.start(self.ipc.get_lid(), self.fn)
+        self.reactor.start()
+        pid = self.term.start(self.fn, self.parentsock, self.childsock)
         self.debugger_loaded = True
 
     def cb_breaks_rclick(self, ite, time):

@@ -25,15 +25,14 @@ class Reactor(object):
         if condition == gobject.IO_IN:
             data, address = socket.recvfrom(6024)
             self.received_data(data)
+        return True
 
     def send(self, data):
-        print 'sending'
         self.socket.sendto(data, self.remote_socketfile)
 
     def local(self, command, *args):
         commandname = 'do_%s' % command
         if hasattr(self.reactor, commandname):
-            print command, args
             getattr(self.reactor, commandname)(*args)
 
     def remote(self, command, *args):

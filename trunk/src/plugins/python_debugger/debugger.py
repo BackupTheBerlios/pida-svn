@@ -31,13 +31,16 @@ import linecache
 import pdb
 import traceback
 import pida.gtkextra as gtkextra
+import pida.gobjectreactor as gobjectreactor
 import cStringIO
 
 class Debugger(object):
-    def __init__(self, sid):
-        self.ipc = gtkextra.IPWindow(self)
-        self.ipc.reset(long(sid))
-        self.ipc.connect()
+    def __init__(self, parentsock, childsock):
+        self.reactor = gobjectreactor.Reactor(self, childsock, parentsock)
+        self.reactor.start()
+        #self.ipc = gtkextra.IPWindow(self)
+        #self.ipc.reset(long(sid))
+        #self.ipc.connect()
     
     def loop(self):
         while gtk.gdk.events_pending():
@@ -45,21 +48,21 @@ class Debugger(object):
         
 
     def evaled(self, line, s):
-        self.ipc.write('eval', '%s\n%s' % (line, s), 8)
+        self.reactor.remote('eval', '%s\n%s' % (line, s))
         self.loop()
 
     def received(self, stack, tb):
         s = self.format_stack(stack)
-        self.ipc.write('stack', s, 8)
+        self.reactor.remote('stack', s)
         self.loop()
         #self.ipc.write('frame', [self.pdb.curindex], 32)
 
     def listed(self, L):
-        self.ipc.write('list', ''.join(L), 8)
+        self.reactor.remote('list', ''.join(L))
         self.loop()
 
     def started(self):
-        self.ipc.write('started', [1], 32)
+        self.reactor.remote('started', '1')
         self.loop()
     
     def format_stack(self, stack):
@@ -209,7 +212,8 @@ def main():
         print 'Error:', mainpyfile, 'does not exist'
         sys.exit(1)
 
-    sid = sys.argv[2]
+    parentsock = sys.argv[2]
+    childsock = sys.argv[3]
     #del sys.argv[0]         # Hide "pdb.py" from argument list
 
     # Replace pdb's dir with script's dir in front of module search path.
@@ -220,7 +224,7 @@ def main():
     # changed by the user from the command line. The best approach would be to
     # have a "restart" command which would allow explicit specification of
     # command line arguments.
-    client = Debugger(sid)
+    client = Debugger(parentsock, childsock)
     pdb = Pidadb(client)
     client.pdb = pdb
     client.started()
