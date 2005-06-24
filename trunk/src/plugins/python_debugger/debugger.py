@@ -30,7 +30,6 @@ import sys
 import linecache
 import pdb
 import traceback
-import pida.gtkextra as gtkextra
 import pida.gobjectreactor as gobjectreactor
 import cStringIO
 
@@ -38,9 +37,6 @@ class Debugger(object):
     def __init__(self, parentsock, childsock):
         self.reactor = gobjectreactor.Reactor(self, childsock, parentsock)
         self.reactor.start()
-        #self.ipc = gtkextra.IPWindow(self)
-        #self.ipc.reset(long(sid))
-        #self.ipc.connect()
     
     def loop(self):
         while gtk.gdk.events_pending():
@@ -56,10 +52,6 @@ class Debugger(object):
         self.reactor.remote('stack', s)
         self.loop()
         #self.ipc.write('frame', [self.pdb.curindex], 32)
-
-    def listed(self, L):
-        self.reactor.remote('list', ''.join(L))
-        self.loop()
 
     def started(self):
         self.reactor.remote('started', '1')
@@ -133,97 +125,13 @@ class Pidadb(pdb.Pdb):
         s.seek(0)
         self.cb.evaled(line.strip(), s.read())
 
-    def do_jump(self, arg):
-        if self.curindex + 1 != len(self.stack):
-            print "*** You can only jump within the bottom frame"
-            return
-        try:
-            arg = int(arg)
-        except ValueError:
-            print "*** The 'jump' command requires a line number."
-        else:
-            try:
-                # Do the jump, fix up our copy of the stack, and display the
-                # new position
-                self.curframe.f_lineno = arg
-                self.stack[self.curindex] = self.stack[self.curindex][0], arg
-                self.print_stack_entry(self.stack[self.curindex])
-            except ValueError, e:
-                print '*** Jump failed:', e
-
-    def do_list(self, arg):
-        self.lastcmd = 'list'
-        last = None
-        if arg:
-            try:
-                x = eval(arg, {}, {})
-                if type(x) == type(()):
-                    first, last = x
-                    first = int(first)
-                    last = int(last)
-                    if last < first:
-                        # Assume it's a count
-                        last = first + last
-                else:
-                    first = max(1, int(x) - 5)
-            except:
-                print '*** Error in argument:', repr(arg)
-                return
-        elif self.lineno is None:
-            first = max(1, self.curframe.f_lineno - 5)
-        else:
-            first = self.lineno + 1
-        if last is None:
-            last = first + 10
-        filename = self.curframe.f_code.co_filename
-        breaklist = self.get_file_breaks(filename)
-        try:
-            L = []
-            for lineno in range(first, last+1):
-                line = linecache.getline(filename, lineno)
-                if not line:
-                    print '[EOF]'
-                    break
-                else:
-                    s = repr(lineno).rjust(3)
-                    if len(s) < 4: s = s + ' '
-                    if lineno in breaklist: s = s + 'B'
-                    else: s = s + ' '
-                    if lineno == self.curframe.f_lineno:
-                        s = s + '->'
-                    else:
-                        s = s + '  '
-                    s = s + '  ' + line
-                    L.append(s)
-                    #print s
-                    self.lineno = lineno
-            self.cb.listed(L)
-        except KeyboardInterrupt:
-            pass
-
-
 
 def main():
-    if not sys.argv[1:]:
-        print "usage: pdb.py scriptfile [arg] ..."
-        sys.exit(2)
     mainpyfile =  sys.argv[1]     # Get script filename
-    if not os.path.exists(mainpyfile):
-        print 'Error:', mainpyfile, 'does not exist'
-        sys.exit(1)
-
     parentsock = sys.argv[2]
     childsock = sys.argv[3]
-    #del sys.argv[0]         # Hide "pdb.py" from argument list
-
     # Replace pdb's dir with script's dir in front of module search path.
     sys.path[0] = os.path.dirname(mainpyfile)
-
-    # Note on saving/restoring sys.argv: it's a good idea when sys.argv was
-    # modified by the script being debugged. It's a bad idea when it was
-    # changed by the user from the command line. The best approach would be to
-    # have a "restart" command which would allow explicit specification of
-    # command line arguments.
     client = Debugger(parentsock, childsock)
     pdb = Pidadb(client)
     client.pdb = pdb
@@ -233,11 +141,9 @@ def main():
             pdb._runscript(mainpyfile)
             if pdb._user_requested_quit:
                 break
-            print "The program finished and will be restarted"
         except SystemExit:
+            pass
             # In most cases SystemExit does not warrant a post-mortem session.
-            print "The program exited via sys.exit(). Exit status: ",
-            print sys.exc_info()[1]
         except:
             traceback.print_exc()
             print "Uncaught exception. Entering post mortem debugging"

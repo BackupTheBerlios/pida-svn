@@ -56,10 +56,10 @@ class VimWindow(gtk.Window):
         self.serial = 1
         self.callbacks = {}
         self.servers = {}
+        self.oldservers = None
         self.root_window = gdk.get_default_root_window()
         
-        gobject.timeout_add(2000, self.fetch_serverlist)
-        gobject.timeout_add(2000, self.feed_serverlist)
+        gobject.timeout_add(3000, self.fetch_serverlist)
 
     def fetch_serverlist(self):
         shell_servers = self.get_shell_serverlist()
@@ -71,6 +71,10 @@ class VimWindow(gtk.Window):
                     self.fetch_cwd(server)
             else:
                 server.alive = False
+        serverlist = self.serverlist()
+        if serverlist != self.oldservers:
+            self.oldservers = serverlist
+            self.feed_serverlist()
         return True
 
     def get_rootwindow_serverlist(self):
@@ -104,7 +108,6 @@ class VimWindow(gtk.Window):
 
     def feed_serverlist(self):
         self.cb.evt('serverlist', self.serverlist())
-        return True
 
     def fetch_cwd(self, server):
         def cb(cwd):

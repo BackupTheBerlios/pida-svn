@@ -54,16 +54,3 @@ class Reactor(object):
         command = args.pop(0)
         self.local(command, *args)
 
-
-
-
-class DummyCB(object):
-
-    def do_hello(self, *args):
-        print args
-
-if __name__ == '__main__':
-    import gtk
-    s = Server(DummyCB(), '/home/ali/socket', '/home/ali/csocket')
-    s.start()
-    gtk.main()
