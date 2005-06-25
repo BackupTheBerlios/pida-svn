@@ -43,6 +43,7 @@ class VimHidden(object):
         if not self.pid:
             command = self.cb.opts.get('commands', 'vim_console')
             pid, fd = pty.fork()
+            #gobject.io_add_watch(fd, gobject.IO_HUP, self.cb_hup)
             if pid == 0:
                 os.execvp(command, ['vim', '--servername', self.name])
             else:
@@ -54,7 +55,7 @@ class VimHidden(object):
                 os.kill(self.pid, 0)
                 return True
             except OSError:
-                pass
+                self.pid = None
         return False
             
 
@@ -80,7 +81,7 @@ class VimWindow(gtk.Window):
         self.vim_hidden.start()
         
         
-        gobject.timeout_add(700, self.fetch_serverlist)
+        gobject.timeout_add(500, self.fetch_serverlist)
 
     def fetch_serverlist(self):
         def gotservers(serverlist):
@@ -107,19 +108,23 @@ class VimWindow(gtk.Window):
                     res[name] = wid
         return res
 
-    #def get_shell_serverlist(self):
-    #    # This blocks
-    #    vimcom = self.cb.opts.get('commands', 'vim_console')
-    #    p = os.popen('%s --serverlist' % vimcom)
-    #    servers = p.read()
-    #    p.close()
-    #    return servers.splitlines()
+    def get_shell_serverlist(self):
+        # This blocks, so we don't use it
+        vimcom = self.cb.opts.get('commands', 'vim_console')
+        p = os.popen('%s --serverlist' % vimcom)
+        servers = p.read()
+        p.close()
+        return servers.splitlines()
  
     def get_hidden_serverlist(self, callbackfunc):
         def cb(serverstring):
             servers = serverstring.splitlines()
             callbackfunc([svr for svr in servers if not svr.startswith('__')])
-        self.send_expr(self.vim_hidden.name, 'serverlist()', cb)
+        alive = self.vim_hidden.is_alive()
+        if alive:
+            self.send_expr(self.vim_hidden.name, 'serverlist()', cb)
+        else:
+            self.vim_hidden.start()
         
     def get_server_wid(self, servername):
         try:
