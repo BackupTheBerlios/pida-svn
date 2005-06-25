@@ -159,7 +159,6 @@ class Plugin(plugin.Plugin):
             self.old_shortcuts[self.currentserver].append(sc)
             self.cb.send_ex(NMAP_COM % (sc, command))
 
-
     def generate_embedname(self):
         self.embedname = 'PIDA_EMBED_%s' % time.time()
         return self.embedname
@@ -168,13 +167,9 @@ class Plugin(plugin.Plugin):
         return self.cb.opts.get('vim', 'mode_embedded') == '1'
 
     def cb_plugged(self):
-        #self.cb.embedwindow.set_size_request(600, -1)
-        #self.cb.barholder.set_position(200)
         pass
 
     def cb_unplugged(self):
-        #self.cb.embedwindow.set_size_request(0, -1)
-        #self.cb.barholder.set_position(0)
         self.vim = None
 
     def cb_connect(self, *a):
@@ -194,45 +189,38 @@ class Plugin(plugin.Plugin):
     def cb_alternative(self, *args):
         self.cb.action_showconfig()
 
-    #def evt_die(self):
-    #    if self.vim:
-    #        self.cb.action_quitvim()
-            
-
     def evt_reset(self):
         self.load_shortcuts()
 
     def evt_connectserver(self, name):
+        # Actually does the connecting
         if name:
             self.currentserver = name
             self.load_shortcuts()
             self.cb.send_ex('%s' % VIMSCRIPT)
-            self.cb.action_foreground()
             self.cb.evt('serverchange', name)
         else:
+            # Being asked to connect to None is the same as having nothing
+            # to connect to.
             self.cb.evt('disconnected', name)
 
-    def evt_started(self, serverlist):
+    def evt_started(self, *args):
         if self.is_embedded():
             self.launch()
-        #elif self.cb.opts.get('vim', 'connect_startup') == '1':
-        #    self.cb_connect()
 
     def evt_serverlist(self, serverlist):
         self.refresh(serverlist)
 
     def evt_vimshutdown(self, *args):
         if self.is_embedded():
+            # Check if users want shutdown with Vim
             if self.cb.opts.get('vim', 'shutdown_with_vim') == '1':
+                # Quit pida
                 self.cb.action_close()
-                return
-        
+                # The application never gets here
         del self.old_shortcuts[self.currentserver]
         self.currentserver = None
         self.cb_refresh()
-    #def evt_badserver(self, name):
-    #    self.cb_refresh()
-    #    self.cb_connect()
 
     def evt_serverchange(self, name):
         self.currentserver = name

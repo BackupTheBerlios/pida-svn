@@ -29,8 +29,34 @@ import gtk
 import gobject
 import os
 import sys
-import tempfile
+import time
+import pty
 
+class VimHidden(object):
+
+    def __init__(self, cb):
+        self.cb = cb
+        self.name = '__%s_PIDA_HIDDEN' % time.time()
+        self.pid = None
+
+    def start(self):
+        if not self.pid:
+            command = self.cb.opts.get('commands', 'vim_console')
+            pid, fd = pty.fork()
+            if pid == 0:
+                os.execvp(command, ['vim', '--servername', self.name])
+            else:
+                self.pid = pid
+
+    def is_alive(self):
+        if self.pid:
+            try:
+                os.kill(self.pid, 0)
+                return True
+            except OSError:
+                pass
+        return False
+            
 
 class VimWindow(gtk.Window):
     ''' A GTK window that can communicate with Vim. '''
@@ -48,18 +74,23 @@ class VimWindow(gtk.Window):
         self.oldservers = None
         
         self.root_window = gdk.get_default_root_window()
+
+        
+        self.vim_hidden = VimHidden(self.cb)
+        self.vim_hidden.start()
         
         
-        gobject.timeout_add(3000, self.fetch_serverlist)
+        gobject.timeout_add(700, self.fetch_serverlist)
 
     def fetch_serverlist(self):
-        serverlist = self.get_shell_serverlist()
-        for server in serverlist:
-            if server not in self.server_cwds:
-                self.fetch_cwd(server)
-        if serverlist != self.oldservers:
-            self.oldservers = serverlist
-            self.feed_serverlist(serverlist)
+        def gotservers(serverlist):
+            for server in serverlist:
+                if server not in self.server_cwds:
+                    self.fetch_cwd(server)
+            if serverlist != self.oldservers:
+                self.oldservers = serverlist
+                self.feed_serverlist(serverlist)
+        self.get_hidden_serverlist(gotservers)
         return True
 
     def get_rootwindow_serverlist(self):
@@ -76,14 +107,20 @@ class VimWindow(gtk.Window):
                     res[name] = wid
         return res
 
-    def get_shell_serverlist(self):
-        # This blocks
-        vimcom = self.cb.opts.get('commands', 'vim_console')
-        p = os.popen('%s --serverlist' % vimcom)
-        servers = p.read()
-        p.close()
-        return servers.splitlines()
-
+    #def get_shell_serverlist(self):
+    #    # This blocks
+    #    vimcom = self.cb.opts.get('commands', 'vim_console')
+    #    p = os.popen('%s --serverlist' % vimcom)
+    #    servers = p.read()
+    #    p.close()
+    #    return servers.splitlines()
+ 
+    def get_hidden_serverlist(self, callbackfunc):
+        def cb(serverstring):
+            servers = serverstring.splitlines()
+            callbackfunc([svr for svr in servers if not svr.startswith('__')])
+        self.send_expr(self.vim_hidden.name, 'serverlist()', cb)
+        
     def get_server_wid(self, servername):
         try:
             wid = self.get_rootwindow_serverlist()[servername]
