@@ -31,6 +31,7 @@ import os
 import sys
 import time
 import pty
+import select
 
 class VimHidden(object):
 
@@ -46,10 +47,12 @@ class VimHidden(object):
             #gobject.io_add_watch(fd, gobject.IO_HUP, self.cb_hup)
             if pid == 0:
                 os.execvp(command, ['vim', '--servername', self.name])
+                print "gets here"
             else:
                 self.pid = pid
+                self.childfd = fd
 
-    def is_alive(self):
+    def is_alive2(self):
         if self.pid:
             try:
                 os.kill(self.pid, 0)
@@ -58,6 +61,24 @@ class VimHidden(object):
                 self.pid = None
         return False
             
+
+    def is_alive(self):
+        if self.pid:
+            try:
+                pid, sts = os.waitpid(self.pid, os.WNOHANG)
+            except OSError:
+                # might still be starting up
+                return False
+            if pid == self.pid:
+                # has shut down
+                self.pid = None
+                return False
+            else:
+                # is still alive
+                return True
+        else:
+            # Not started yet
+            return False
 
 class VimWindow(gtk.Window):
     ''' A GTK window that can communicate with Vim. '''
@@ -120,11 +141,11 @@ class VimWindow(gtk.Window):
         def cb(serverstring):
             servers = serverstring.splitlines()
             callbackfunc([svr for svr in servers if not svr.startswith('__')])
-        #alive = self.vim_hidden.is_alive()
-        #if alive:
-        self.send_expr(self.vim_hidden.name, 'serverlist()', cb)
-        #else:
-        #    self.vim_hidden.start()
+        alive = self.vim_hidden.is_alive()
+        if alive:
+            self.send_expr(self.vim_hidden.name, 'serverlist()', cb)
+        else:
+            self.vim_hidden.start()
         
     def get_server_wid(self, servername):
         try:
