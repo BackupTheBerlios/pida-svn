@@ -120,11 +120,11 @@ class VimWindow(gtk.Window):
         def cb(serverstring):
             servers = serverstring.splitlines()
             callbackfunc([svr for svr in servers if not svr.startswith('__')])
-        alive = self.vim_hidden.is_alive()
-        if alive:
-            self.send_expr(self.vim_hidden.name, 'serverlist()', cb)
-        else:
-            self.vim_hidden.start()
+        #alive = self.vim_hidden.is_alive()
+        #if alive:
+        self.send_expr(self.vim_hidden.name, 'serverlist()', cb)
+        #else:
+        #    self.vim_hidden.start()
         
     def get_server_wid(self, servername):
         try:
