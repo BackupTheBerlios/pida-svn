@@ -213,8 +213,6 @@ class Window(gdkvim.VimWindow):
         self.connect('destroy', self.cb_quit)
         # Connect the keypress event.
         self.connect('key_press_event', self.cb_key_press)
-        # connect movement
-        self.connect('configure_event', self.cb_configure)
         # The outer pane
         p0 = gtk.HPaned()
         #p0.show()
@@ -264,50 +262,52 @@ class Window(gdkvim.VimWindow):
         self.p1 = p1
         self.p2 = p2
        
-        self.load_geometry()
-        self.geometry = None
+        # It doesn't work. Too many window managers
+        #self.connect('configure_event', self.cb_configure)
+        #self.load_geometry()
+        #self.geometry = None
         
         self.show_all()
         
-    def get_current_geometry(self):
-        geom = {}
-        (geom['x_origin'],
-         geom['y_origin'],
-         geom['width'],
-         geom['height']) = self.geometry
-        geom['vim_slider'] = self.p0.get_position()
-        geom['terminal_slider'] = self.p1.get_position()
-        geom['plugin_slider'] = self.p2.get_position()
-        return geom
+    #def get_current_geometry(self):
+    #    geom = {}
+    #    (geom['x_origin'],
+    #     geom['y_origin'],
+    #     geom['width'],
+    #     geom['height']) = self.geometry
+    #    geom['vim_slider'] = self.p0.get_position()
+    #    geom['terminal_slider'] = self.p1.get_position()
+    #    geom['plugin_slider'] = self.p2.get_position()
+    #    return geom
     
-    def load_geometry(self):
-        geom = {}
-        for attr in ['x_origin', 'y_origin', 'width', 'height', 'vim_slider',
-                  'terminal_slider', 'plugin_slider']:
-            try:
-                val = int(self.cb.opts.get('geometry', attr))
-            except ValueError:
-                val = -1
-            geom[attr] = val
-        self.move(geom['x_origin'], geom['y_origin'])
-        self.resize(geom['width'], geom['height'])
-        if self.cb.opts.get('vim', 'mode_embedded') == '1':
-            self.p0.set_position(geom['vim_slider'])
-        else:
-            self.p0.set_position(0)
-        self.p2.set_position(geom['plugin_slider'])
-        self.p1.set_position(geom['terminal_slider'])
+    #def load_geometry(self):
+    #    geom = {}
+    #    for attr in ['x_origin', 'y_origin', 'width', 'height', 'vim_slider',
+    #              'terminal_slider', 'plugin_slider']:
+    #        try:
+    #            val = int(self.cb.opts.get('geometry', attr))
+    #        except ValueError:
+    #            val = -1
+    #        geom[attr] = val
+    #    self.move(geom['x_origin'], geom['y_origin'])
+    #    self.resize(geom['width'], geom['height'])
+    #    if self.cb.opts.get('vim', 'mode_embedded') == '1':
+    #        self.p0.set_position(geom['vim_slider'])
+    #    else:
+    #        self.p0.set_position(0)
+    #    self.p2.set_position(geom['plugin_slider'])
+    #    self.p1.set_position(geom['terminal_slider'])
         
    
-    def save_geometry(self):
-        if self.cb.opts.get('geometry', 'save_on_shutdown') == '1':
-            geom = self.get_current_geometry()
-            for attr in geom:
-                self.cb.opts.set('geometry', attr, '%s' % geom[attr])
-            self.cb.opts.write()
+    #def save_geometry(self):
+    #    if self.cb.opts.get('geometry', 'save_on_shutdown') == '1':
+    #        geom = self.get_current_geometry()
+    #        for attr in geom:
+    #            self.cb.opts.set('geometry', attr, '%s' % geom[attr])
+    #        self.cb.opts.write()
    
-    def cb_configure(self, window, event):
-        self.geometry = [event.x, event.y, event.width, event.height]
+    #def cb_configure(self, window, event):
+    #    self.geometry = [event.x, event.y, event.width, event.height]
    
     def cb_key_press(self, widget, event):
         """
@@ -341,7 +341,7 @@ class Window(gdkvim.VimWindow):
         pressing the close button, or by a window manager hint.
         """
         # call the close acition of the application.
-        self.save_geometry()
+        # self.save_geometry()
         self.cb.action_close()
         
     def add_plugin(self, plugin):

@@ -28,9 +28,9 @@ import gtk
 import gobject
 # Pida imports
 import pida.plugin as plugin
-import vimembed
 import pida.gtkextra as gtkextra
-
+# local imports
+import vimembed
 
 SHORTCUTS = [('shortcut_execute',
                 'Async_event("bufferexecute,")'),
