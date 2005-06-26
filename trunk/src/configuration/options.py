@@ -227,7 +227,7 @@ class Opts(object):
                  'Colour used for directories in file list', 'color')
         self.add('project browser', 'tree_exclude', '1',
                  'Exclude patterns from tree file list view', 'boolean')
-        self.add('project browser', 'pattern_exclude', '^(CVS|\.svn|\..*\.swp)$',
+        self.add('project browser', 'pattern_exclude', '^(CVS|_darcs|\.svn|\..*\.swp)$',
                  'Files to exclude from tree file list view')
 	
         # Vim shortcuts
