@@ -229,7 +229,7 @@ class VimWindow(gtk.Window):
         self.vim_hidden.start()
         # Start the timer for fetching the server list at the specified number
         # of milliseconds (500).
-        gobject.timeout_add(500, self.fetch_serverlist)
+        gobject.timeout_add(1000, self.fetch_serverlist)
     
     def fetch_serverlist(self):
         """
