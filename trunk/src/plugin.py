@@ -105,10 +105,10 @@ class Plugin(object):
         self.win.pack_start(self.frame)
         # The toolbar popup menu.
         self.toolbar_popup = gtkextra.Popup(self.cb)
-        self.populate_widgets()
-        self.connect_widgets()
-        self.frame.show_all()
-        self.win.show_all()
+        #self.populate_widgets()
+        #self.connect_widgets()
+        #self.frame.show_all()
+        #self.win.show_all()
 
     def configure(self, reg):
         pass
@@ -327,6 +327,11 @@ class Plugin(object):
         self.msgbox.hide()
         self.qstbox.hide()
 
+    def evt_populate(self):
+        self.populate_widgets()
+        self.connect_widgets()
+        self.frame.show_all()
+        self.win.show_all()
 
 class CommonEvents(object):
     """ Just for reference """
