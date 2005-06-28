@@ -119,6 +119,7 @@ class RegistryGroup(object):
             raise BadRegistryKey, '"%s"' % childname
 
 class Directory(RegistryItem):
+    DISPLAY_WIDGET = config.ConfigFolder
     def validate(self, value):
         return os.path.isdir(value)
         
@@ -131,6 +132,7 @@ class CreatingDirectory(Directory):
             return Directory.validate(self, value)
 
 class File(RegistryItem):
+    DISPLAY_WIDGET = config.ConfigFile
     pass
 
 class MustExistFile(File):
@@ -146,6 +148,9 @@ class WhichFile(File):
             self.set(path)
         else:
             self.set('')
+
+class Font(RegistryItem):
+    DISPLAY_WIDGET = config.ConfigFont
 
 class Boolean(RegistryItem):
     DISPLAY_WIDGET = config.ConfigBoolean

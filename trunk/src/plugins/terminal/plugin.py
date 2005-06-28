@@ -315,7 +315,7 @@ class Plugin(plugin.Plugin):
             'Options for the built in terminal emulator.')
         
         self.registry.add('font',
-                       registry.RegistryItem,
+                       registry.Font,
                        'Monospace 10',
                        'The font for newly started terminals.')
 
