@@ -358,7 +358,7 @@ class Plugin(plugin.Plugin):
         self.ctxbar = gtkextra.ContextToolbar(self.cb, 'terminal')
         self.shortbar.pack_start(self.ctxbar.win)
 
-        self.logterm = self.new_log()
+        #self.logterm = self.new_log()
 
     def cb_conf_clicked(self, *args):
         self.cb.action_showshortcuts()
