@@ -28,7 +28,7 @@ import sys
 import shutil
 import textwrap
 import ConfigParser as configparser
-
+import registry
 # import the base and set the version
 import pida.__init__ as __init__
 __version__ = __init__.__version__
@@ -336,3 +336,198 @@ def which(name):
     else:
         return None
 
+
+def configure(reg):
+
+    dirs_group = reg.add_group('directories',
+                                  'Locations of directories pida will use.')
+    # user directory
+    dirs_user = dirs_group.add('user',
+                 registry.CreatingDirectory,
+                 os.path.expanduser('~/.pida2'),
+                 'The base per-user directory')
+    # libraries
+    dirs_libs = dirs_group.add('shared',
+                 registry.Directory,
+                 os.path.join(sys.prefix, 'share', 'pida'),
+                 'The shared library directory.')
+
+    dirs_sock = dirs_group.add('socket',
+                 registry.CreatingDirectory,
+                 os.path.join(dirs_user._default, '.sockets'),
+                 'Where Pida will start Unix Domain Sockets')
+                 
+ #       ### Files
+    file_group = reg.add_group('files',
+        'Location of files Pida will use.')
+
+    file_icon = file_group.add('icon_data',
+                registry.MustExistFile,
+                os.path.join(dirs_libs._default, 'icons.dat'),
+                'Location of the icons file')
+    
+    file_proj = file_group.add('project_data',
+                registry.File,
+                os.path.join(dirs_user._default, 'pida.projects'),
+                'Location of the project data file.')
+
+    file_shrt = file_group.add('shortcut_data',
+                registry.File,
+                os.path.join(dirs_user._default, 'pida.shortcuts'),
+                'Location of the shortcuts data file.')
+
+
+ #       ### External command options
+    coms_group = reg.add_group('commands',
+        'Paths to external commands used by Pida')
+                  
+
+    coms_gvim = coms_group.add('vim',
+                registry.WhichFile,
+                'gvim',
+                'Path to Gvim (may be set as /path/to/vim -g).')
+
+    coms_cvim = coms_group.add('console_vim',
+                registry.WhichFile,
+                'vim',
+                'Path to console Vim')
+
+    coms_evim = coms_group.add('evim',
+                registry.WhichFile,
+                'evim',
+                'Path to the modeless (easy) Vim version.')
+
+    coms_pyth = coms_group.add('python',
+                registry.WhichFile,
+                'python',
+                'Path to the Python interpreter.')
+
+    coms_shel = coms_group.add('shell',
+                registry.WhichFile,
+                os.getenv('SHELL'),
+                'The path to your preferred shell.')
+ 
+    coms_brow = coms_group.add('browser',
+                registry.WhichFile,
+                'firefox',
+                'The path to your preferred browser.')
+
+    coms_page = coms_group.add('pager',
+                registry.WhichFile,
+                'less',
+                'The path to the paging program (eg less).')
+
+    coms_seem = coms_group.add('see',
+                registry.WhichFile,
+                'see',
+                'The path to the "see" general previewer.')
+    
+    coms_mcom = coms_group.add('mc',
+                registry.WhichFile,
+                'mc',
+                'The path to the midnight commander or any file manager.')
+
+    coms_pdoc = coms_group.add('pydoc',
+                registry.WhichFile,
+                'pydoc',
+                'The path to the pydoc program.')
+
+    logs_group = reg.add_group('log',
+                               'Logging options.')
+
+    logs_group.add('level',
+                   registry.Integer,
+                   1,
+                   'The default logging level (0=debug)')
+
+    
+
+ #       ###vim options 
+ #       self.add_section('vim')
+ #       self.add('vim', 'foreground_jump', '1',
+ #                'Determines whether Pida will foreground Vim when the buffer'
+ #                'is changed, or the cursor is moved', 'boolean')
+ #       #self.add('vim', 'connect_startup', '1',
+ #       #         'Determines whether Pida will attempt to connect to Vim '
+ #       #         'on startup', 'boolean')
+ #       self.add('vim', 'mode_easy', '0',
+ #                'Determines whether Pida will run Vim as Evim (easy mode). '
+ #                'Some people may prefer this mode of operation. '
+ #                'This is how the Windows-style text editors behave, and '
+ #                '<b>perfect if you hate Vim</b>', 'boolean')
+ #       self.add('vim', 'mode_embedded', '0',
+ #                'Embed Vim in Pida when running, like a standard IDE. '
+ #                '<b>Needs restart</b>',
+ #                'boolean')
+ #       self.add('vim', 'shutdown_with_vim', '0',
+ #                '(Embedded mode only) Determines whether Pida will '
+ #                'shut down when the embedded Vim is quit.',
+ #                'boolean')
+
+ #       ### plugin options
+ #       self.add_section('plugins')
+ #       self.add('plugins', 'python_browser', '1',
+ #                'Enable the Python code browser and refactorer.', 'boolean')
+ #       self.add('plugins', 'python_debugger', '1',
+ #                'Enable the Python debugger <i>disabled</i>', 'boolean')
+ #       self.add('plugins', 'project', '1',
+ #                'The project manager <i>experimental</i>', 'boolean')
+ #       self.add('plugins', 'python_profiler', '1',
+ #                'The python profiler <i>experimental</i>', 'boolean')
+
+ #       ### Terminal emulator options
+ #       self.add_section('terminal')
+ #       self.add('terminal', 'font_default', 'Monospace 10',
+ #                'The font for newly started terminals.', 'font')
+ #       self.add('terminal', 'font_log', 'Monospace 8',
+ #                'The font for the logging terminal', 'font')
+ #       self.add('terminal', 'transparency_enable', '0',
+ #                'Determines whether terminals will exhibit '
+ #                'pseudo-transparency.', 'boolean')
+ #       self.add('terminal', 'colour_background', '#000000',
+ #                'A string representing the background colour', 'color')
+ #       self.add('terminal', 'colour_foreground', '#c0c0c0',
+ #                'A string representing the foreground colour', 'color')
+ #       ### Python plugin
+ #       self.add_section('python browser')
+ #       self.add('python browser', 'colors_use', '1',
+ #                'Determines whther colours will be used for the Python '
+ #                'elements listing', 'boolean')
+
+ #       self.add_section('project browser')
+ #       self.add('project browser', 'color_directory', '#0000c0',
+ #                'Colour used for directories in file list', 'color')
+ #       self.add('project browser', 'tree_exclude', '1',
+ #                'Exclude patterns from tree file list view', 'boolean')
+ #       self.add('project browser', 'pattern_exclude', '^(CVS|_darcs|\.svn|\..*\.swp)$',
+ #                'Files to exclude from tree file list view')
+#	
+ #       # Vim shortcuts
+ #       self.add_section('vim shortcuts')
+ #       self.add('vim shortcuts', 'shortcut_leader', ',',
+ #                'The value of the leader keypress. Pressed before the '
+ #                'actual keypress. :he &lt;Leader&gt;. Normal mode only.')
+ #       self.add('vim shortcuts', 'shortcut_execute', 'x',
+ #                'The key press to execute the current buffer in PIDA')
+ #       self.add('vim shortcuts', 'shortcut_debug', 'd',
+ #                'The key press to debug the current buffer in PIDA')
+ #       self.add('vim shortcuts', 'shortcut_project_execute', 'p',
+ #                'The key press to execute the current project in PIDA')
+ #       self.add('vim shortcuts', 'shortcut_breakpoint_set', 'b',
+ #                'The key press to set a breakpoint at the current line')
+ #       self.add('vim shortcuts', 'shortcut_breakpoint_clear', 'B',
+ #                'The key press to clear a breakpoint at the current line')
+ #       self.add('vim shortcuts', 'shortcut_pydoc_yanked', '/',
+ #                'The keypress to Pydoc the most recently yankend text.')
+ #       self.add('vim shortcuts', 'shortcut_pydoc_cursor', '?',
+ #                'The keypress to Pydoc the word under the cursor.')
+ #       
+
+
+if __name__ == '__main__':
+    r = registry.Registry('/home/ali/tmp/treg')
+    configure(r)
+    r.load()
+    for s in r.iter_pretty():
+        print s
+    r.save()
