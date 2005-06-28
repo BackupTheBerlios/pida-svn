@@ -57,6 +57,14 @@ class Plugin(object):
         """
         # Instance of the Application class.
         self.cb = cb
+
+    def init(self):
+        pass
+
+    def configure(self, reg):
+        pass
+
+    def __populate__(self):
         # The main box.
         self.win = gtk.VBox()
         self.win.show()
@@ -109,9 +117,7 @@ class Plugin(object):
         #self.connect_widgets()
         #self.frame.show_all()
         #self.win.show_all()
-
-    def configure(self, reg):
-        pass
+    
 
     def populate_widgets(self):
         """
@@ -320,18 +326,19 @@ class Plugin(object):
     def evt_init(self):
         """
         Event: called on initializing the plugin.
-        
-        You are advised to call this method at least if overriding.
         """
-        # Hide the transient windows
-        self.msgbox.hide()
-        self.qstbox.hide()
+        self.init()
 
     def evt_populate(self):
+        self.__populate__()
         self.populate_widgets()
         self.connect_widgets()
         self.frame.show_all()
         self.win.show_all()
+
+    def evt_shown(self):
+        self.msgbox.hide()
+        self.qstbox.hide()
 
 class CommonEvents(object):
     """ Just for reference """

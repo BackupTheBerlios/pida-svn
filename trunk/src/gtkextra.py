@@ -532,7 +532,7 @@ class ContextToolbar(ContextGenerator, Toolbar):
 class Icons(object):
     def __init__(self, cb):
         self.cb = cb
-        icon_file = self.cb.opts.get('files','data_icons')
+        icon_file = self.cb.opts.get('files','icon_data')
         self.d = shelve.open(icon_file, 'r')
         self.cs = gtk.gdk.COLORSPACE_RGB
     

@@ -138,7 +138,7 @@ class VimHidden(object):
         """
         if not self.pid:
             # Get the console vim executable path
-            command = self.cb.opts.get('commands', 'vim_console')
+            command = self.cb.opts.get('commands', 'console_vim')
             # Fork using pty.fork to prevent Vim taking the terminal
             pid, fd = pty.fork()
             if pid == 0:

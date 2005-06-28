@@ -34,7 +34,7 @@ import gtkextra
 import vim.gdkvim as gdkvim
 import configuration.options as options
 import configuration.config as config
-
+import configuration.registry as registry
 # Version String
 import pida.__init__
 __version__ = pida.__init__.__version__
@@ -47,6 +47,7 @@ def create_plugin(name, cb):
     """ Find a named plugin and instantiate it. """
     # import the module
     # The last arg [True] just needs to be non-empty
+    print name, 'name'
     mod = __import__('pida.plugins.%s.plugin' % name, {}, {}, [True])
     # instantiate the plugin and return it
     return mod.Plugin(cb)
@@ -61,7 +62,7 @@ class DummyOpts(object):
 
     def get(self, groupname, optname):
         group = getattr(self.cb.registry, groupname)
-        option = getattr(group, option)
+        option = getattr(group, optname)
         return option.value()
 
 # Instance of this class is passed to every single custom object in Pida,
@@ -74,17 +75,13 @@ class Application(object):
         # List of plugins loaded used for event passing
         self.plugins = []
         # Main config options
-        self.opts = options.Opts()
+        #self.opts = options.Opts()
+        self.opts = DummyOpts(self)
         # Icons shared
-        self.icons = gtkextra.Icons(self)
-        # Tooltips shared
-        self.tips = gtk.Tooltips()
-        self.tips.enable()
+        self.startup()
         # Shortcuts
-        self.shortcuts = create_plugin('shortcuts', self)
-        self.plugins.append(self.shortcuts)
         # Communication window
-        self.cw = Window(self)
+        #self.cw = Window(self)
         # Ensure that there is no initial server set.
         self.server = None
         # start
@@ -92,33 +89,55 @@ class Application(object):
         # fire the init event, telling plugins to initialize
         #self.cw.fetch_serverlist()
         #self.cw.feed_serverlist()
-        self.evt('init')
+        #self.evt('init')
         # fire the started event with the initial server list
-        self.evt('started', None)
+        #self.evt('started', None)
 
     def startup(self):
         self.optparser = optparse.OptionParser()
         self.registry = registry.Registry('/tmp/trefef')
-        
+       
+        options.configure(self.registry)
         # now the plugins
         shell_plug = self.add_plugin('terminal')
         server_plug = self.add_plugin('vim')
         buffer_plug = self.add_plugin('buffer')
         
+       
+        opt_plugs = []
         
+        self.shortcuts = self.add_plugin('shortcuts')
+
+        self.evt('init')
+       
+       
         self.registry.prime_optparser(self.optparser)
-        self.optparser.parse_opts()
+        self.optparser.parse_args()
         self.registry.load()
         self.registry.save()
-
+      
+        self.shortcuts.load()
+      
+        for i in self.registry.iter_pretty():
+            print i
+       
+        self.icons = gtkextra.Icons(self)
+        # Tooltips shared
+        self.tips = gtk.Tooltips()
+        self.tips.enable()
         self.evt('populate')
+        self.cw = MainWindow(self, server_plug, buffer_plug, shell_plug, opt_plugs)
+        self.cw.show_all()
+        self.evt('shown')
+        self.evt('started')
+        print self.plugins
         
 
     def add_plugin(self, name):
         """
         Create and return the plugin
         """
-        plugin = create_plugin(self, name)
+        plugin = create_plugin(name, self)
         plugin.configure(self.registry)
         self.plugins.append(plugin)
         return plugin
@@ -242,6 +261,118 @@ class Application(object):
             if eventfunc:
                 eventfunc(*args, **kw)
 # The main application window.
+class MainWindow(gdkvim.VimWindow):
+    """ the main window """
+    def __init__(self, cb, server_plug, buffer_plug, shell_plug, opt_plugs):
+        gdkvim.VimWindow.__init__(self, cb)
+        # Set the window title.
+        caption = 'PIDA %s' % __version__
+        self.set_title(caption)
+        # Connect the destroy event.
+        self.connect('destroy', self.cb_quit)
+        # Connect the keypress event.
+        self.connect('key_press_event', self.cb_key_press)
+        # The outer pane
+        p0 = gtk.HPaned()
+        #p0.show()
+        self.add(p0)
+        # Set these properties for later embedding
+        #self.cb.barholder = p0
+        self.cb.embedwindow = gtk.VBox()
+        p0.pack1(self.cb.embedwindow, True, True)
+        # The plugin/terminal area
+        p1 = gtk.VPaned()
+        #p1.show()
+        p0.pack2(p1, True, True)
+        # Pane for standard and optional plugins
+        p2 = gtk.HPaned()
+        #p2.show()
+        p1.pack1(p2, True, True)
+        # The terminal plugin
+        #shell_plug = create_plugin('terminal', self.cb)
+        p1.pack2(shell_plug.win, True, True)
+        lbox = gtk.VBox()
+        #lbox.show()
+        p2.pack1(lbox, True, True)
+        # The vim plugin.
+        #server_plug = create_plugin('vim', self.cb)
+        lbox.pack_start(server_plug.win, expand=False)
+        # The buffer explorer plugin.
+        #buffer_plug = create_plugin('buffer', self.cb)
+        lbox.pack_start(buffer_plug.win)
+        # The optional plugin  area
+        self.notebook = gtk.Notebook()
+        self.notebook.set_show_border(True)
+        #self.notebook.show()
+        p2.pack2(self.notebook, True, True)
+        # Populate with the configured plugins
+        for plugin in opt_plugs:
+            # Check the config value.
+            # if self.cb.opts.get('plugins', plugin) == '1':
+            # Instantiate and add the plugin.
+            #pi = create_plugin(plugin, self.cb)
+            self.add_opt_plugin(plugin)
+        # Show the window as late as possible.
+
+    
+    def add_opt_plugin(self, plugin):
+        """
+        Add a plugin to the optional plugin notebook.
+        
+        @param plugin: An instance of the plugin.
+        @type plugin: pida.plugin.Plugin
+        """
+        # create a label with a tooltip/EventBox
+        eb = gtk.EventBox()
+        tlab = gtk.HBox()
+        eb.add(tlab)
+        self.cb.tips.set_tip(eb, plugin.NAME)
+        im = self.cb.icons.get_image(plugin.ICON)
+        tlab.pack_start(im, expand=False)
+        label = gtk.Label('%s' % plugin.NAME[:2])
+        tlab.pack_start(label, expand=False, padding=2)
+        tlab.show_all()
+        # create a new notebook page
+        self.notebook.append_page(plugin.win, tab_label=eb)
+        self.notebook.show_all()
+        # Remove the toolbar label present by default on plugins
+        plugin.ctlbar.remove(plugin.label)
+
+    def cb_key_press(self, widget, event):
+        """
+        Callback to all key press events.
+
+        This method must return False for the key-press event to be propogated
+        to the child widgets.
+
+        @param widget: The widget that received the key-press event.
+        @type widget: gtk.Widget
+
+        @param event: The event received.
+        @type event: gtk.gdk.Event
+        """
+        # if <CONTROL> was pressed with the key
+        if event.state & gtk.gdk.CONTROL_MASK:
+            if event.keyval == 97:
+                print '<C-a>'
+                # returning True prevents the key event propogating
+                return False
+            elif event.keyval == 115:
+                print '<C-s>'
+                return False
+        return False
+        
+    def cb_quit(self, *a):
+        """
+        Callback for user closing the main window.
+        
+        This method is called when the main window is destroyed, wither by
+        pressing the close button, or by a window manager hint.
+        """
+        # call the close acition of the application.
+        # self.save_geometry()
+        self.cb.action_close()
+   
 # This is multiply split into 3 Paned sections.
 class Window(gdkvim.VimWindow):
     """ the main window """

@@ -442,10 +442,10 @@ def configure(reg):
 
     
 
+ 
  #       ###vim options 
  #       self.add_section('vim')
  #       self.add('vim', 'foreground_jump', '1',
- #                'Determines whether Pida will foreground Vim when the buffer'
  #                'is changed, or the cursor is moved', 'boolean')
  #       #self.add('vim', 'connect_startup', '1',
  #       #         'Determines whether Pida will attempt to connect to Vim '

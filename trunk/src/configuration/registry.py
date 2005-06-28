@@ -227,7 +227,7 @@ class Registry(object):
                 f.write('%s = %s\n\n' % (option._name, option.value()))
         f.close()
 
-    def prime_optparse(self, optparser):
+    def prime_optparser(self, optparser):
         if hasattr(optparser, 'add_option'):
             def setfilename(opt, opt_str, value, parser):
                 self.filename = value

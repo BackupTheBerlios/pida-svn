@@ -168,6 +168,8 @@ class Plugin(plugin.Plugin):
         save_b = gtk.Button(stock=gtk.STOCK_SAVE)
         cb.pack_start(save_b, expand=False)
         save_b.connect('clicked', self.cb_save)
+
+    def init(self):
         self.shortcuts = Shortcuts(self.cb)
 
     def makewin(self):
@@ -244,6 +246,9 @@ class Plugin(plugin.Plugin):
     def evt_shortcuts(self):
         self.show()
 
+    def load(self):
+        self.shortcuts.load()
+
     def get_shortcuts(self):
         sects = self.shortcuts.sections()
         sects.sort()
@@ -258,7 +263,7 @@ class Shortcuts(object):
     def __init__(self, cb):
         self.cb = cb
         self.config = ConfigParser.ConfigParser()
-        self.load()
+        #self.load()
 
     def set(self, name, s, glob, icon, ctx):
         if not self.config.has_section(name):
@@ -279,14 +284,16 @@ class Shortcuts(object):
 
     def save(self):
         ''' Write the options file to the configured location. '''
-        f = open(self.cb.opts.get('files', 'data_shorcuts'), 'w')
+        fn = self.cb.opts.get('files', 'shortcut_data')
+        f = open(fn, 'w')
         self.config.write(f)
         f.close()
 
     def load(self):
         ''' Load the option file from the configured location. '''
-        fn = self.cb.opts.get('files', 'data_shorcuts')
-        if os.path.exists(fn):
+        fn = self.cb.opts.get('files', 'shortcut_data')
+        print 'scfn', fn
+        if fn and os.path.exists(fn):
             tempopts = ConfigParser.ConfigParser()
             f = open(fn, 'r')
             tempopts.readfp(f)

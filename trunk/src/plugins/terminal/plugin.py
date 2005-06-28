@@ -33,6 +33,7 @@ import vte
 # Pida plug in base
 import pida.plugin as plugin
 import pida.gtkextra as gtkextra
+import pida.configuration.registry as registry
 # will vanish, superceded by plugin.ContextMenu
 class TerminalMenu(gtk.Menu):
     def __init__(self, cb):
@@ -117,7 +118,7 @@ class Terminal(vte.Terminal):
         vte.Terminal.__init__(self)
         ## set config stuff
         # transparency
-        v = self.cb.opts.get('terminal','transparency_enable')
+        v = self.cb.opts.get('terminal','enable_transparency')
         trans = int(v)
         if trans:
             self.set_background_transparent(trans)
@@ -125,15 +126,15 @@ class Terminal(vte.Terminal):
         # get the colour map
         cmap = self.get_colormap()
         # bg
-        c = self.cb.opts.get('terminal', 'colour_background')
+        c = self.cb.opts.get('terminal', 'background_color')
         bgcol = cmap.alloc_color(c)
         # fg
-        c = self.cb.opts.get('terminal', 'colour_foreground')
+        c = self.cb.opts.get('terminal', 'foreground_color')
         fgcol = cmap.alloc_color(c)
         # set to the new values
         self.set_colors(fgcol, bgcol, [])
         #font
-        self.set_font_from_string(self.cb.opts.get('terminal', 'font_default'))
+        self.set_font_from_string(self.cb.opts.get('terminal', 'font'))
         # set the default size really small
         self.set_size(40, 20)
 
@@ -279,8 +280,8 @@ class Logterminal(PidaTerminal):
 
     def __init__(self, *args):
         PidaTerminal.__init__(self, *args)
-        self.term.set_font_from_string(self.cb.opts.get('terminal',
-                                                        'font_log'))
+        #self.term.set_font_from_string(self.cb.opts.get('terminal',
+        #                                                'font_log'))
         self.term.feed('Log started at ')
         self.term.feed('Level %s\r\n' % self.level(), '32;1')
     
@@ -303,6 +304,36 @@ class Plugin(plugin.Plugin):
     ''' The terminal emulator plugin '''
     NAME = "Shell"
     DETACHABLE = True
+
+    def init(self):
+        pass
+
+    def configure(self, reg):
+        ### Terminal emulator options
+        
+        self.registry = reg.add_group('terminal',
+            'Options for the built in terminal emulator.')
+        
+        self.registry.add('font',
+                       registry.RegistryItem,
+                       'Monospace 10',
+                       'The font for newly started terminals.')
+
+        self.registry.add('enable_transparency',
+                       registry.Boolean,
+                       0,
+                       'Determines whether terminals will appear transparent')
+                       
+        self.registry.add('background_color',
+                registry.RegistryItem,
+                '#000000',
+                'The background colour for terminals')
+
+        self.registry.add('foreground_color',
+                registry.RegistryItem,
+                '#d0d0d0',
+                'The foreground colour for terminals')
+    
     def populate_widgets(self):
         self.notebook = gtk.Notebook()
         self.notebook.set_tab_pos(gtk.POS_TOP)
@@ -365,7 +396,8 @@ class Plugin(plugin.Plugin):
         self.new_command(command, args, 'terminal', **kw)
 
     def evt_log(self, message, details, level=0):
-        self.logterm.write_log(message, details, level)
+        #self.logterm.write_log(message, details, level)
+        print level, message, details
 
     def evt_question(self, prompt, callback):
         self.new_question(prompt, callback)

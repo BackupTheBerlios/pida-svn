@@ -29,6 +29,7 @@ import gobject
 # Pida imports
 import pida.plugin as plugin
 import pida.gtkextra as gtkextra
+import pida.configuration.registry as registry
 # local imports
 import vimembed
 
@@ -82,6 +83,91 @@ class Plugin(plugin.Plugin):
     RESIZABLE = False
     DICON = 'configure', 'Configure Pida'
 
+    def configure(self, reg):
+        self.registry = reg.add_group('vim', 'Options pertaining to the editor')
+
+        self.registry.add('foreground_jump',
+                  registry.Boolean,
+                  1,
+                  'Determines whether Pida will foreground Vim on actions.')
+        self.registry.add('easy_mode',
+                  registry.Boolean,
+                  0,
+                  'Determines whether Pida start Vim in Evim (easy mode).')
+                  
+        self.registry.add('embedded_mode',
+                  registry.Boolean,
+                  1,
+                  'Determines whether Pida will start Vim embedded.')
+                  
+        self.registry.add('shutdown_with_vim',
+                  registry.Boolean,
+                  1,
+                  'Determines whether Pida will foreground Vim on actions.')
+
+        shgrp = reg.add_group('vim shortcuts', 'Shortcuts called from vim.')
+
+        shgrp.add('shortcut_leader',
+                  registry.RegistryItem,
+                  ',',
+                  'The value of the leasder key press')
+
+        shgrp.add('shortcut_debug',
+                  registry.RegistryItem,
+                  'x',
+                  'The shortcut to ')
+
+        shgrp.add('shortcut_breakpoint_set',
+                  registry.RegistryItem,
+                  'b',
+                  'The shortcut to ')
+
+        shgrp.add('shortcut_breakpoint_clear',
+                  registry.RegistryItem,
+                  'B',
+                  'The shortcut to ')
+
+        shgrp.add('shortcut_execute',
+                  registry.RegistryItem,
+                  'x',
+                  'The shortcut to ')
+
+        shgrp.add('shortcut_project_execute',
+                  registry.RegistryItem,
+                  'p',
+                  'The shortcut to ')
+
+        shgrp.add('shortcut_pydoc_yanked',
+                  registry.RegistryItem,
+                  '/',
+                  'The shortcut to ')
+
+        shgrp.add('shortcut_pydoc_cursor',
+                  registry.RegistryItem,
+                  '?',
+                  'The shortcut to ')
+    
+
+#            self.add_section('vim shortcuts')
+ #       self.add('vim shortcuts', 'shortcut_leader', ',',
+ #                'The value of the leader keypress. Pressed before the '
+ #                'actual keypress. :he &lt;Leader&gt;. Normal mode only.')
+ #       self.add('vim shortcuts', 'shortcut_execute', 'x',
+ #                'The key press to execute the current buffer in PIDA')
+ #       self.add('vim shortcuts', 'shortcut_debug', 'd',
+ #                'The key press to debug the current buffer in PIDA')
+ #       self.add('vim shortcuts', 'shortcut_project_execute', 'p',
+ #                'The key press to execute the current project in PIDA')
+ #       self.add('vim shortcuts', 'shortcut_breakpoint_set', 'b',
+ #                'The key press to set a breakpoint at the current line')
+ #       self.add('vim shortcuts', 'shortcut_breakpoint_clear', 'B',
+ #                'The key press to clear a breakpoint at the current line')
+ #       self.add('vim shortcuts', 'shortcut_pydoc_yanked', '/',
+ #                'The keypress to Pydoc the most recently yankend text.')
+ #       self.add('vim shortcuts', 'shortcut_pydoc_cursor', '?',
+ #                'The keypress to Pydoc the word under the cursor.')
+
+
     def populate_widgets(self):
         self.add_button('connect', self.cb_connect,
             'Connect to Vim session')
@@ -100,7 +186,7 @@ class Plugin(plugin.Plugin):
     
     def launch(self):
         vc = 'vim'
-        if int(self.cb.opts.get('vim', 'mode_easy')):
+        if int(self.cb.opts.get('vim', 'easy_mode')):
             vc = 'evim'
         vimcom = self.cb.opts.get('commands', vc)
         if self.is_embedded():
@@ -164,7 +250,7 @@ class Plugin(plugin.Plugin):
         return self.embedname
 
     def is_embedded(self):
-        return self.cb.opts.get('vim', 'mode_embedded') == '1'
+        return self.registry.embedded_mode
 
     def cb_plugged(self):
         pass
