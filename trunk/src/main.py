@@ -103,8 +103,10 @@ class Application(object):
         server_plug = self.add_plugin('vim')
         buffer_plug = self.add_plugin('buffer')
         
-       
+      
         opt_plugs = []
+        for plugname in PLUGINS:
+            opt_plugs.append(self.add_plugin(plugname))
         
         self.shortcuts = self.add_plugin('shortcuts')
 
@@ -259,7 +261,10 @@ class Application(object):
             # call the instance method, or an empty lambda
             eventfunc = getattr(plugin, eventname, None)
             if eventfunc:
-                eventfunc(*args, **kw)
+                try:
+                    eventfunc(*args, **kw)
+                except:
+                    print 'error passing event to %s' % plugin
 # The main application window.
 class MainWindow(gdkvim.VimWindow):
     """ the main window """

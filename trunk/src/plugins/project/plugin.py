@@ -28,6 +28,7 @@ import os
 import re
 import ConfigParser
 # Pida imports
+import pida.configuration.registry as registry
 import pida.plugin as plugin
 import pida.gtkextra as gtkextra
 
@@ -467,6 +468,26 @@ class Plugin(plugin.Plugin):
     ICON = 'project'
     DICON = 'terminal', 'Open a terminal in this directory.'
 
+    def configure(self, reg):
+        self.registry = reg.add_group('project browser',
+                                      'Options for the project browser.')
+
+        self.registry.add('color_directory',
+                          registry.RegistryItem,
+                          '#0000c0',
+                          'Colour used for directories in file list.')
+        
+        self.registry.add('tree_exclude',
+                          registry.Boolean,
+                          1,
+                          'Exclude patterns from tree file list view.')
+ 
+        self.registry.add('pattern_exclude',
+                          registry.RegistryItem,
+                          '^(CVS|_darcs|\.svn|\..*\.swp)$',
+                          'The files to be excluded from the file tree view.')
+
+
     def populate_widgets(self):
         self.vcsbar = gtk.EventBox()
         self.add(self.vcsbar, expand=False)
@@ -497,7 +518,7 @@ class Plugin(plugin.Plugin):
 
         self.current_directory = os.getcwd()
     
-        conffile = fn = self.cb.opts.get('files', 'data_project')
+        conffile = fn = self.cb.opts.get('files', 'project_data')
         
         self.config = ProjectRegistry(self.cb, conffile)
         self.config.load()

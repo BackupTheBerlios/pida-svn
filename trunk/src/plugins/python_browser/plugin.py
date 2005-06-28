@@ -27,6 +27,7 @@ import pida.plugin as plugin
 import os
 import gobject
 import pida.gtkextra as gtkextra
+import pida.configuration.registry as registry
 
 try:
     import bike
@@ -66,7 +67,7 @@ class DefTree(gtkextra.Tree):
         name = el.name
         typl = el.type[0].lower()
         col = ''
-        if int(self.cb.opts.get('python browser', 'colors_use')):
+        if int(self.cb.opts.get('python browser', 'use_colors')):
             if typl == 'f':
                 col = ' foreground="#0000c0"'
             else:
@@ -108,6 +109,15 @@ class Plugin(plugin.Plugin):
     ICON = 'python'
     DICON = 'run', 'Execute Python script'
     NAME = "Python"
+
+    def configure(self, reg):
+        self.registry = reg.add_group('python browser',
+            'The Python sopurce code browser.')
+        self.registry.add('use_colors',
+            registry.Boolean,
+            1,
+            'Whether colors will be used in the definition list')
+      
 
     def populate_widgets(self):
 
