@@ -242,18 +242,16 @@ class Registry(object):
         if hasattr(optparser, 'add_option'):
             def setfilename(opt, opt_str, value, parser):
                 self.filename = value
-            optparser.add_option('-f', '--config-file', type='string', nargs=1,
+            def setitem(opt, opt_str, value, parser):
+                if value.count('='):
+                    name, value = value.split('=', 1)
+                    if name.count('.'):
+                        group, child = name.split('.', 1)
+                        self.optparseopts[(group, child)] = value
+            optparser.add_option('-f', '--registry-file', type='string', nargs=1,
                                  action='callback', callback=setfilename)
-            for group, option in self.iter_items():
-                def setitem(opt, opt_str, value, parser):
-                    self.optparseopts[(group._name, option._name)] = opt_str
-                name = '%s.%s' % (group._name, option._name)
-                longopt = '--config.%s' % name
-                optparser.add_option(longopt,
-                                     action='callback',
-                                     type="string",
-                                     callback=setitem, nargs=1, dest=name,
-                                     help=option.doc)
+            optparser.add_option('-c', '--config', type='string', nargs=1,
+                                 action='callback', callback=setitem)
             
 def which(name):
     ''' Returns the path of the application named name using 'which'. '''
