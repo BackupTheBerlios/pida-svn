@@ -264,8 +264,8 @@ class Application(object):
             if eventfunc:
                 try:
                     eventfunc(*args, **kw)
-                except:
-                    print 'error passing event to %s' % plugin
+                except Exception, e:
+                    print 'error passing event "%s" to %s %s' % (name, plugin, e)
 
     def attr(self, name, callbackfunc, *args, **kw):
         attrname = 'attr_%s' % name

@@ -1,5 +1,4 @@
 
-save geometry on exit
 tab icons
 
 breakpoint toolbar

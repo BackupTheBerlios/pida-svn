@@ -216,10 +216,10 @@ class Plugin(plugin.Plugin):
                 self.cb.send_ex(UNMAP_COM % sc)
         self.old_shortcuts[self.currentserver] = []
 
-        l = self.cb.opts.get('vim shortcuts', 'shortcut_leader')
+        l = self.cb.opts.get('vim_shortcuts', 'shortcut_leader')
         
         for name, command in SHORTCUTS:
-            c = self.cb.opts.get('vim shortcuts', name)
+            c = self.cb.opts.get('vim_shortcuts', name)
             sc = ''.join([l, c])
             self.old_shortcuts[self.currentserver].append(sc)
             self.cb.send_ex(NMAP_COM % (sc, command))

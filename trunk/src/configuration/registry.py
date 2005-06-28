@@ -267,7 +267,7 @@ CONFIG_FILE_INTRO = ('#This is an automatically generated Pida config file.\n'
              '#Notes:\n'
              '#Boolean values are 1 or 0\n'
              '#Blank lines are ignored as are lines beginning #\n'
-             '(comments).\n\n')
+             '#(comments).\n\n')
 
 if __name__ == '__main__':
 
