@@ -50,6 +50,19 @@ def create_plugin(name, cb):
     # instantiate the plugin and return it
     return mod.Plugin(cb)
 
+
+class DummyOpts(object):
+    """
+    A dummy object to make the transition to the new registry
+    """
+    def __init__(self, cb):
+        self.cb = cb
+
+    def get(self, groupname, optname):
+        group = getattr(self.cb.registry, groupname)
+        option = getattr(group, option)
+        return option.value()
+
 # Instance of this class is passed to every single custom object in Pida,
 # as the cb parameter on instantiation.
 # It is responsible for performing "actions" on the editor or other compnent
@@ -81,6 +94,19 @@ class Application(object):
         self.evt('init')
         # fire the started event with the initial server list
         self.evt('started', None)
+
+    def startup(self):
+        pass
+        self.registry
+
+    def add_plugin(self, name):
+        """
+        Create and return the plugin
+        """
+        plugin = create_plugin(self, name)
+        plugin.configure(self.registry)
+        self.plugins.append(plugin)
+        return plugin
 
     def action_showconfig(self):
         """ called to show the config editor """
