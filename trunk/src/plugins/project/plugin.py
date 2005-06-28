@@ -308,7 +308,7 @@ class FileTree(gtkextra.Tree):
             flist = os.listdir(path)
         except OSError:
             flist = []
-        if self.cb.opts.get('project browser', 'tree_exclude') != '0':
+        if self.cb.opts.get('project browser', 'tree_exclude'):
             pattern = re.compile(self.cb.opts.get('project browser', 'pattern_exclude'))
             flist = [fn for fn in flist if not pattern.match(fn)]
         for fn in flist:
@@ -475,7 +475,7 @@ class Plugin(plugin.Plugin):
         self.registry.add('color_directory',
                           registry.RegistryItem,
                           '#0000c0',
-                          'Colour used for directories in file list.')
+                          'Colour used for directories in file list')
         
         self.registry.add('tree_exclude',
                           registry.Boolean,
