@@ -47,7 +47,6 @@ def create_plugin(name, cb):
     """ Find a named plugin and instantiate it. """
     # import the module
     # The last arg [True] just needs to be non-empty
-    print name, 'name'
     mod = __import__('pida.plugins.%s.plugin' % name, {}, {}, [True])
     # instantiate the plugin and return it
     return mod.Plugin(cb)
@@ -122,9 +121,6 @@ class Application(object):
       
         self.shortcuts.load()
       
-        for i in self.registry.iter_pretty():
-            print i
-       
         self.icons = gtkextra.Icons(self)
         # Tooltips shared
         self.tips = gtk.Tooltips()
