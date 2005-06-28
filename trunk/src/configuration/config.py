@@ -306,6 +306,33 @@ class ConfigColor(ConfigWidget):
         v = gtk.color_selection_palette_to_string([c])
         self.set_value(v)
 
+class ConfigInteger(ConfigEntry):
+    MIN = 0
+    MAX = 99
+    STEP = 1
+    
+    def __init__(self, cb, option):
+        if hasattr(option, 'adjustment'):
+            adjvals = option.adjustment
+        else:
+            adjvals = self.MIN, self.MAX, self.STEP
+        adj = gtk.Adjustment(0, *adjvals)
+        widget = gtk.SpinButton(adj)
+        ConfigWidget.__init__(self, cb, widget, option)
+
+    def load(self):
+        """
+        Set the entry widget text to the option database value.
+        """
+        self.widget.set_value(self.value())
+
+    def save(self):
+        """
+        Set the option database value to the widgets text.
+        """
+        self.set_value(self.widget.get_value())
+
+
 class ListTree(gtk.TreeView):
     """
     A treeview control for switching a notebook's tabs.

@@ -435,10 +435,12 @@ def configure(reg):
     logs_group = reg.add_group('log',
                                'Logging options.')
 
-    logs_group.add('level',
+    log_level = logs_group.add('level',
                    registry.Integer,
                    1,
                    'The default logging level (0=debug)')
+
+    log_level.adjustment = (0, 5, 1)
 
     
 

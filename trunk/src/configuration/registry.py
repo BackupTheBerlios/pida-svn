@@ -164,7 +164,7 @@ class Boolean(RegistryItem):
         return val
 
 class Integer(RegistryItem):
-
+    DISPLAY_WIDGET = config.ConfigInteger
     def unserialize(self, data):
         try:
             val = int(data)
