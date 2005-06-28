@@ -36,7 +36,7 @@ class ConfigWidget(object):
     This class is largely abstract, and must be overriden for useful use. See
     the examples below.
     """
-    def __init__(self, cb, widget, section, key):
+    def __init__(self, cb, widget, option):
         """
         Constructor
         
@@ -45,20 +45,10 @@ class ConfigWidget(object):
 
         @param widget: The actual widget for the holder.
         @type widget: gtk.Widget
-
-        @param section: The configuration section that the widget is for.
-        @type section: string
-
-        @param key: The configuration key that the widget is for
-        @type key: string
         """
         # The application class
         self.cb = cb
-        # A local referenec to the options object
-        self.opts = self.cb.opts
-        # Store information about the configuration we will need.
-        self.section = section
-        self.key = key
+        self.option = option
         # Build the widget
         # Containers
         self.win = gtk.VBox()
@@ -84,13 +74,13 @@ class ConfigWidget(object):
         """
         Return a beautified name for the configuration option.
         """
-        return self.key.replace('_', ' ')
+        return self.option._name.replace('_', ' ')
    
     def get_help(self):
         """
         Return the help for the option.
         """
-        help = self.opts.help[(self.section, self.key)]
+        help = self.option.doc
         return '\n'.join(textwrap.wrap(help, 60))
 
     def set_value(self, value):
@@ -100,13 +90,13 @@ class ConfigWidget(object):
         @param value: The value to set the widget to.
         @type value: string
         """
-        self.opts.set(self.section, self.key, value)
+        self.option.set(value)
     
     def value(self):
         """
         Get the configuration value from the options database.
         """
-        return self.opts.get(self.section, self.key)
+        return self.option.value()
 
     def load(self):
         """
@@ -124,7 +114,7 @@ class ConfigEntry(ConfigWidget):
     """
     An entry widget for plain configuration strings.
     """
-    def __init__(self, cb, section, key):
+    def __init__(self, cb, option):
         """
         Constructor.
         
@@ -138,13 +128,13 @@ class ConfigEntry(ConfigWidget):
         @type key: string
         """
         widget = gtk.Entry()
-        ConfigWidget.__init__(self, cb, widget, section, key)
+        ConfigWidget.__init__(self, cb, widget, option)
 
     def load(self):
         """
         Set the entry widget text to the option database value.
         """
-        self.widget.set_text(self.value())
+        self.widget.set_text('%s' % self.value())
 
     def save(self):
         """
@@ -152,11 +142,11 @@ class ConfigEntry(ConfigWidget):
         """
         self.set_value(self.widget.get_text())
 
-class ConfigBoolen(ConfigWidget):
+class ConfigBoolean(ConfigWidget):
     """
     A checkbox widget forr boolean configuration values.
     """
-    def __init__(self, cb, section, key):
+    def __init__(self, cb, option):
         """
         Constructor.
         
@@ -170,7 +160,7 @@ class ConfigBoolen(ConfigWidget):
         @type key: string
         """
         widget = gtk.CheckButton(label="Yes")
-        ConfigWidget.__init__(self, cb, widget, section, key)
+        ConfigWidget.__init__(self, cb, widget, option)
        
     def stob(self, s):
         """
@@ -184,21 +174,19 @@ class ConfigBoolen(ConfigWidget):
         """
         Load the checkbox active status from the options database.
         """
-        enabled = bool(int(self.value()))
-        self.widget.set_active(enabled)
+        self.widget.set_active(self.value())
 
     def save(self):
         """
         Save the checkbox active state to the options database.
         """
-        val = str(int(self.widget.get_active()))
-        self.set_value(val)
+        self.set_value(self.widget.get_active())
 
 class ConfigFont(ConfigWidget):
     """
     A font selection dialogue that takes its values from the config database.
     """
-    def __init__(self, cb, section, key):
+    def __init__(self, cb, option):
         """
         Constructor.
         
@@ -212,7 +200,7 @@ class ConfigFont(ConfigWidget):
         @type key: string
         """
         widget = gtk.FontButton()
-        ConfigWidget.__init__(self, cb, widget, section, key)
+        ConfigWidget.__init__(self, cb, widget, option)
         
     def load(self):
         """
@@ -231,7 +219,7 @@ class ConfigFile(ConfigWidget):
     """
     A widget that represents a file selection entry and dialogue button.
     """
-    def __init__(self, cb, section, key):
+    def __init__(self, cb, option):
         """
         Constructor.
         
@@ -245,7 +233,7 @@ class ConfigFile(ConfigWidget):
         @type key: string
         """
         widget = gtkextra.FileButton(cb)
-        ConfigWidget.__init__(self, cb, widget, section, key)
+        ConfigWidget.__init__(self, cb, widget, option)
         
     def load(self):
         """
@@ -266,7 +254,7 @@ class ConfigFolder(ConfigFile):
     
     (Note called "Folder" because GTK calls it a "Folder").
     """
-    def __init__(self, cb, section, key):
+    def __init__(self, cb, option):
         """
         Constructor.
         
@@ -280,13 +268,13 @@ class ConfigFolder(ConfigFile):
         @type key: string
         """
         widget = gtkextra.FolderButton(cb)
-        ConfigWidget.__init__(self, cb, widget, section, key)
+        ConfigWidget.__init__(self, cb, widget, option)
        
 class ConfigColor(ConfigWidget):
     """
     A widget for a colour selection button and dialogue.
     """
-    def __init__(self, cb, section, key):
+    def __init__(self, cb, option):
         """
         Constructor.
         
@@ -300,7 +288,7 @@ class ConfigColor(ConfigWidget):
         @type key: string
         """
         widget = gtk.ColorButton()
-        ConfigWidget.__init__(self, cb, widget, section, key)
+        ConfigWidget.__init__(self, cb, widget, option)
 
     def load(self):
         """
@@ -414,11 +402,12 @@ class ConfigEditor(object):
         cb.pack_start(self.save_b, expand=False)
         self.save_b.connect('clicked', self.cb_save)
         self.controls = {}
+        
         self.setopts()
         self.initialize()
 
     def setopts(self):
-        self.opts = self.cb.opts
+        self.registry = self.cb.registry
 
     def initialize(self):
         """
@@ -426,20 +415,20 @@ class ConfigEditor(object):
         the required widgets.
         """
         pages = []
-        sects =  self.opts.sections()
-        sects.sort()
-        for section in sects:
+        for group in self.registry.iter_groups():
+        
+        #sects =  self.opts.sections()
+        #sects.sort()
+        #for section in sects:
             box = gtk.VBox()
-            sectlab = ''.join([section[0].upper(), section[1:]])
-            tid = self.nb.append_page(box, gtk.Label(sectlab))
-            pages.append((sectlab, tid))
-            opts = self.opts.options(section)
-            opts.sort()
-            for opt in opts:
-                ctype = TYPES[self.get_type(section, opt)]
-                cw = ctype(self.cb, section, opt)
+            sectlab = ''.join([group._name[0].upper(), group._name[1:]])
+            tabid = self.nb.append_page(box, gtk.Label(sectlab))
+            pages.append((sectlab, tabid))
+            for option in group:
+                #ctype = TYPES[self.get_type(section, opt)]
+                cw = option.DISPLAY_WIDGET(self.cb, option)
                 box.pack_start(cw.win, expand=False, padding=4)
-                self.controls[(section, opt)] = cw
+                self.controls[(group._name, option._name)] = cw
                 box.pack_start(gtk.HSeparator(), expand=False, padding=4)
         self.tree.populate(pages)
 
@@ -450,18 +439,23 @@ class ConfigEditor(object):
         """
         Load the configuration information from the database.
         """
-        for section in self.opts.sections():
-            for opt in self.opts.options(section):
-                self.controls[(section, opt)].load()
+        #for group, option in self.registry.iter_items():
+        #for section in self.opts.sections():
+        #    for opt in self.opts.options(section):
+        for k in self.controls:
+            self.controls[k].load()
 
     def save(self):
         """
         Save the configuration information to the database.
         """
-        for section in self.opts.sections():
-            for opt in self.opts.options(section):
-                self.controls[(section, opt)].save()
-        self.opts.write()
+        for k in self.controls:
+            self.controls[k].save()
+        self.registry.save()
+        #for section in self.opts.sections():
+        #    for opt in self.opts.options(section):
+        #        self.controls[(section, opt)].save()
+        #self.opts.write()
         self.cb.evt('reset')
 
     def show(self):
@@ -488,12 +482,6 @@ class ConfigEditor(object):
         self.save()
         self.hide()
 
-TYPES = {None: ConfigEntry,
-         'boolean': ConfigBoolen,
-         'font': ConfigFont,
-         'file': ConfigFile,
-         'dir': ConfigFolder,
-         'color':ConfigColor}
 
 if __name__ == '__main__':
     w = ConfigEditor(None)

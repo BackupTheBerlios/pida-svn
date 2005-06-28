@@ -22,6 +22,7 @@
 
 
 import os
+import config
 import ConfigParser as configparser
 
 class BadRegistryKey(Exception):
@@ -41,6 +42,7 @@ class BadRegistryDefault(Exception):
 
 
 class RegistryItem(object):
+    DISPLAY_WIDGET = config.ConfigEntry
 
     def __init__(self, name, default, doc):
         self._name = name
@@ -146,6 +148,7 @@ class WhichFile(File):
             self.set('')
 
 class Boolean(RegistryItem):
+    DISPLAY_WIDGET = config.ConfigBoolean
     def unserialize(self, data):
         try:
             val = int(data)
