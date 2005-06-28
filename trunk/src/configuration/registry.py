@@ -255,7 +255,6 @@ class Registry(object):
             
 def which(name):
     ''' Returns the path of the application named name using 'which'. '''
-    print 'which'
     p = os.popen('which %s' % name)
     w = p.read().strip()
     p.close()

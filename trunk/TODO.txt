@@ -1,19 +1,11 @@
-
-tab icons
-
+near future
+--
 breakpoint toolbar
 docstring as tooltip
 confirm delete
 
 
-Bugs
---
-Configuration options
---
-markup
-
-0.2
+on going
 --
 documentation
 code commented
-upgrade unstructions
