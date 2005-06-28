@@ -475,6 +475,7 @@ class ContextPopup(ContextGenerator, Popup):
         if stock.startswith('stock:'):
             stock = stock.replace('stock:', '', 1)
         mi = Popup.add_item(self, stock, name, cb, cbargs)
+        return mi
 
     def cb_configure(self, *args):
         self.cb.action_showshortcuts()
