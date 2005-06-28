@@ -43,6 +43,7 @@ class Plugin(object):
     DICON = 'fullscreen', 'Detach window.'
     # Whether the plugin is detachable.
     DETACHABLE = False
+    VISIBLE = True
 
     def __init__(self, cb):
         """ 

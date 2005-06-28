@@ -146,27 +146,6 @@ class Plugin(plugin.Plugin):
                   registry.RegistryItem,
                   '?',
                   'The shortcut to ')
-    
-
-#            self.add_section('vim shortcuts')
- #       self.add('vim shortcuts', 'shortcut_leader', ',',
- #                'The value of the leader keypress. Pressed before the '
- #                'actual keypress. :he &lt;Leader&gt;. Normal mode only.')
- #       self.add('vim shortcuts', 'shortcut_execute', 'x',
- #                'The key press to execute the current buffer in PIDA')
- #       self.add('vim shortcuts', 'shortcut_debug', 'd',
- #                'The key press to debug the current buffer in PIDA')
- #       self.add('vim shortcuts', 'shortcut_project_execute', 'p',
- #                'The key press to execute the current project in PIDA')
- #       self.add('vim shortcuts', 'shortcut_breakpoint_set', 'b',
- #                'The key press to set a breakpoint at the current line')
- #       self.add('vim shortcuts', 'shortcut_breakpoint_clear', 'B',
- #                'The key press to clear a breakpoint at the current line')
- #       self.add('vim shortcuts', 'shortcut_pydoc_yanked', '/',
- #                'The keypress to Pydoc the most recently yankend text.')
- #       self.add('vim shortcuts', 'shortcut_pydoc_cursor', '?',
- #                'The keypress to Pydoc the word under the cursor.')
-
 
     def populate_widgets(self):
         self.add_button('connect', self.cb_connect,

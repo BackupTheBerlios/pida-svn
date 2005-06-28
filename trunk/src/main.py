@@ -106,7 +106,9 @@ class Application(object):
       
         opt_plugs = []
         for plugname in PLUGINS:
-            opt_plugs.append(self.add_plugin(plugname))
+            plugin = self.add_plugin(plugname)
+            if plugin.VISIBLE:
+                opt_plugs.append(plugin)
         
         self.shortcuts = self.add_plugin('shortcuts')
 
