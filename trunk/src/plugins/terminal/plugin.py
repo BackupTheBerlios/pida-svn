@@ -424,5 +424,10 @@ class Plugin(plugin.Plugin):
     def cb_browser(self, *args):
         self.new_browser('http://www.google.com/palm/')
 
-
+    def attr_test(self, *args, **kw):
+        # Example of how to call, from any plugin
+        #def cb(attr):
+        #    print attr
+        #self.cb.attr('test', cb)
+        return 'hello'
 

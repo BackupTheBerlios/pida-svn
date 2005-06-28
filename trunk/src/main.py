@@ -265,6 +265,15 @@ class Application(object):
                     eventfunc(*args, **kw)
                 except:
                     print 'error passing event to %s' % plugin
+
+    def attr(self, name, callbackfunc, *args, **kw):
+        attrname = 'attr_%s' % name
+        for plugin in self.plugins:
+            attrfunc = getattr(plugin, attrname, None)
+            if attrfunc:
+                result = attrfunc(*args, **kw)
+                callbackfunc(result)
+    
 # The main application window.
 class MainWindow(gdkvim.VimWindow):
     """ the main window """
