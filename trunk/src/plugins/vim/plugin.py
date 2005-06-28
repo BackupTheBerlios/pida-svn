@@ -102,7 +102,7 @@ class Plugin(plugin.Plugin):
                   
         self.registry.add('shutdown_with_vim',
                   registry.Boolean,
-                  1,
+                  0,
                   'Determines whether Pida will foreground Vim on actions.')
 
         shgrp = reg.add_group('vim shortcuts', 'Shortcuts called from vim.')
@@ -186,7 +186,7 @@ class Plugin(plugin.Plugin):
     
     def launch(self):
         vc = 'vim'
-        if int(self.cb.opts.get('vim', 'easy_mode')):
+        if self.registry.easy_mode:
             vc = 'evim'
         vimcom = self.cb.opts.get('commands', vc)
         if self.is_embedded():
@@ -300,7 +300,7 @@ class Plugin(plugin.Plugin):
     def evt_vimshutdown(self, *args):
         if self.is_embedded():
             # Check if users want shutdown with Vim
-            if self.cb.opts.get('vim', 'shutdown_with_vim') == '1':
+            if self.registry.shutdown_with_vim:
                 # Quit pida
                 self.cb.action_close()
                 # The application never gets here
