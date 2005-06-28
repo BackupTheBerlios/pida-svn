@@ -646,7 +646,8 @@ class VersionControlSystem(object):
 
     def launch(self, args, **kw):
         args = self.ARGS + args
-        self.cb.action_newterminal(self.COMMAND, args,
+        icon = 'vcs_%s' % args[1]
+        self.cb.action_newterminal(self.COMMAND, args, icon=icon,
                                    directory=kw['dir'], envv=kw['env'])
 
 
