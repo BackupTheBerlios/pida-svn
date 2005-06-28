@@ -110,6 +110,9 @@ class Plugin(object):
         self.frame.show_all()
         self.win.show_all()
 
+    def configure(self, reg):
+        pass
+
     def populate_widgets(self):
         """
         Called after the constructor to populate the plugin.
