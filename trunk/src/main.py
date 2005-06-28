@@ -95,7 +95,7 @@ class Application(object):
 
     def startup(self):
         self.optparser = optparse.OptionParser()
-        self.registry = registry.Registry('/tmp/trefef')
+        self.registry = registry.Registry(os.path.expanduser('~/.pida/pida.conf'))
        
         options.configure(self.registry)
         # now the plugins
@@ -134,7 +134,6 @@ class Application(object):
         self.cw.show_all()
         self.evt('shown')
         self.evt('started')
-        print self.plugins
         
 
     def add_plugin(self, name):

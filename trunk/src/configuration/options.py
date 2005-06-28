@@ -344,7 +344,7 @@ def configure(reg):
     # user directory
     dirs_user = dirs_group.add('user',
                  registry.CreatingDirectory,
-                 os.path.expanduser('~/.pida2'),
+                 os.path.expanduser('~/.pida'),
                  'The base per-user directory')
     # libraries
     dirs_libs = dirs_group.add('shared',
