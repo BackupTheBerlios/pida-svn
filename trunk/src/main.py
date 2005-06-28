@@ -23,6 +23,7 @@
 # System imports
 import os
 import sys
+import optparse
 
 # Gtk
 import gtk
@@ -96,8 +97,22 @@ class Application(object):
         self.evt('started', None)
 
     def startup(self):
-        pass
-        self.registry
+        self.optparser = optparse.OptionParser()
+        self.registry = registry.Registry('/tmp/trefef')
+        
+        # now the plugins
+        shell_plug = self.add_plugin('terminal')
+        server_plug = self.add_plugin('vim')
+        buffer_plug = self.add_plugin('buffer')
+        
+        
+        self.registry.prime_optparser(self.optparser)
+        self.optparser.parse_opts()
+        self.registry.load()
+        self.registry.save()
+
+        self.evt('populate')
+        
 
     def add_plugin(self, name):
         """
