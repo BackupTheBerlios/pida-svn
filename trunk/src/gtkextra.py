@@ -408,6 +408,7 @@ class Popup(object):
         hb.pack_start(im, expand=False, padding=4)
         lb = gtk.Label(text)
         hb.pack_start(lb, expand=False)
+        return mi
 
     def add_separator(self):
         ms = gtk.SeparatorMenuItem()
@@ -441,8 +442,11 @@ class ContextGenerator(object):
                         gmatch = fnmatch.fnmatch(self.aargs[0], glob)
                     if not self.aargs or gmatch:
                         com, args = self.cargs_from_line(command)
-                        self.add_item(icon, name,
+                        if icon.startswith('stock:'):
+                            icon = icon.replace('stock:', '', 1)
+                        mi = self.add_item(icon, name,
                             self.cb_activate, [com, args, self.aargs])
+                        mi.stock_icon = icon
 
     def cargs_from_line(self, line):
         el = line.split(' ')
@@ -470,7 +474,7 @@ class ContextPopup(ContextGenerator, Popup):
     def add_item(self, stock, name, cb, cbargs):
         if stock.startswith('stock:'):
             stock = stock.replace('stock:', '', 1)
-        Popup.add_item(self, stock, name, cb, cbargs)
+        mi = Popup.add_item(self, stock, name, cb, cbargs)
 
     def cb_configure(self, *args):
         self.cb.action_showshortcuts()
@@ -485,7 +489,7 @@ class ContextPopup(ContextGenerator, Popup):
             args[args.index('<fn>')] = fn
         else:
             args.append(fn)
-        self.cb.action_newterminal(command, args)
+        self.cb.action_newterminal(command, args, icon=menu.stock_icon)
 
 class PositionPopup(ContextPopup):
     def popup(self, filename, line, time):
@@ -516,10 +520,11 @@ class ContextToolbar(ContextGenerator, Toolbar):
     def add_item(self, stock, name, cb, cbargs):
         if stock.startswith('stock:'):
             stock = stock.replace('stock:', '', 1)
-        self.add_button(stock, cb, name, cbargs)
+        return self.add_button(stock, cb, name, cbargs)
 
     def cb_activate(self, button, command, args, aargs):
-        self.cb.action_newterminal(command, args)
+        print button.stock_icon
+        self.cb.action_newterminal(command, args, icon=button.stock_icon)
        
     def refresh(self):
         self.clear()

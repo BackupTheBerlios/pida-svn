@@ -394,7 +394,11 @@ class Plugin(plugin.Plugin):
         return self.add_terminal(Logterminal, icon, True)
 
     def evt_newterm(self, command, args, **kw):
-        self.new_command(command, args, 'terminal', **kw)
+        icon = 'terminal'
+        if 'icon' in kw:
+            icon = kw['icon']
+            del kw['icon']
+        self.new_command(command, args, icon, **kw)
 
     def evt_log(self, message, details, level=0):
         #self.logterm.write_log(message, details, level)
