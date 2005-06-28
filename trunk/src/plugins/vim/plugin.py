@@ -103,7 +103,7 @@ class Plugin(plugin.Plugin):
         self.registry.add('shutdown_with_vim',
                   registry.Boolean,
                   0,
-                  'Determines whether Pida will foreground Vim on actions.')
+                  'Determines whether Pida will shutdown when Vim shuts down.')
 
         shgrp = reg.add_group('vim shortcuts', 'Shortcuts called from vim.')
 
