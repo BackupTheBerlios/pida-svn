@@ -165,7 +165,7 @@ class Plugin(plugin.Plugin):
     
     def launch(self):
         vc = 'vim'
-        if self.registry.easy_mode:
+        if self.registry.easy_mode.value():
             vc = 'evim'
         vimcom = self.cb.opts.get('commands', vc)
         if self.is_embedded():
@@ -229,7 +229,7 @@ class Plugin(plugin.Plugin):
         return self.embedname
 
     def is_embedded(self):
-        return self.registry.embedded_mode
+        return self.registry.embedded_mode.value()
 
     def cb_plugged(self):
         pass
@@ -279,7 +279,7 @@ class Plugin(plugin.Plugin):
     def evt_vimshutdown(self, *args):
         if self.is_embedded():
             # Check if users want shutdown with Vim
-            if self.registry.shutdown_with_vim:
+            if self.registry.shutdown_with_vim.value():
                 # Quit pida
                 self.cb.action_close()
                 # The application never gets here

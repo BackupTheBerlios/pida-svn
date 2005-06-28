@@ -377,7 +377,8 @@ class Plugin(plugin.Plugin):
     def remove_terminal(self, index):
         child = self.notebook.get_nth_page(index)
         child.kill()
-        return child.remove()
+        removed =  child.remove()
+        return removed
 
     def new_command(self, command, args, icon, **kw):
         child = self.add_terminal(PidaTerminal, icon, False)

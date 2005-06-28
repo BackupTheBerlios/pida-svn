@@ -284,15 +284,14 @@ class Shortcuts(object):
 
     def save(self):
         ''' Write the options file to the configured location. '''
-        fn = self.cb.opts.get('files', 'shortcut_data')
+        fn = self.cb.registry.files.shortcut_data.value()
         f = open(fn, 'w')
         self.config.write(f)
         f.close()
 
     def load(self):
         ''' Load the option file from the configured location. '''
-        fn = self.cb.opts.get('files', 'shortcut_data')
-        print 'scfn', fn
+        fn = self.cb.registry.files.shortcut_data.value()
         if fn and os.path.exists(fn):
             tempopts = ConfigParser.ConfigParser()
             f = open(fn, 'r')

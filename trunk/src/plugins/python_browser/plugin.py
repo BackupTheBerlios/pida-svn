@@ -67,7 +67,7 @@ class DefTree(gtkextra.Tree):
         name = el.name
         typl = el.type[0].lower()
         col = ''
-        if self.cb.registry.python_browser.use_colors:
+        if self.cb.registry.python_browser.use_colors.value():
             if typl == 'f':
                 col = ' foreground="#0000c0"'
             else:
