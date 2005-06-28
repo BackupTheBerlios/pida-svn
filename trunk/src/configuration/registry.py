@@ -167,6 +167,9 @@ class Integer(RegistryItem):
             raise BadRegistryData
         return val
 
+class Color(RegistryItem):
+    DISPLAY_WIDGET = config.ConfigColor
+
 class Registry(object):
 
     def __init__(self, filename):

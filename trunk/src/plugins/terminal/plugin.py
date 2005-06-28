@@ -325,12 +325,12 @@ class Plugin(plugin.Plugin):
                        'Determines whether terminals will appear transparent')
                        
         self.registry.add('background_color',
-                registry.RegistryItem,
+                registry.Color,
                 '#000000',
                 'The background colour for terminals')
 
         self.registry.add('foreground_color',
-                registry.RegistryItem,
+                registry.Color,
                 '#d0d0d0',
                 'The foreground colour for terminals')
     
