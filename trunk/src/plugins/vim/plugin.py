@@ -105,7 +105,7 @@ class Plugin(plugin.Plugin):
                   0,
                   'Determines whether Pida will shutdown when Vim shuts down.')
 
-        shgrp = reg.add_group('vim shortcuts', 'Shortcuts called from vim.')
+        shgrp = reg.add_group('vim_shortcuts', 'Shortcuts called from vim.')
 
         shgrp.add('shortcut_leader',
                   registry.RegistryItem,
