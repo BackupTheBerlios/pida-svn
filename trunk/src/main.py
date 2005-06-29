@@ -40,7 +40,8 @@ import pida.__init__
 __version__ = pida.__init__.__version__
 
 # Available plugins, could be automatically generated
-PLUGINS = ['project', 'python_browser', 'python_debugger', 'python_profiler']
+PLUGINS = ['project', 'python_browser', 'python_debugger', 'python_profiler',
+'gazpacho']
 
 # Convenience method to ease importing plugin modules by name.
 def create_plugin(name, cb):
@@ -125,8 +126,9 @@ class Application(object):
         # Tooltips shared
         self.tips = gtk.Tooltips()
         self.tips.enable()
+        self.cw = MainWindow(self)
         self.evt('populate')
-        self.cw = MainWindow(self, server_plug, buffer_plug, shell_plug, opt_plugs)
+        self.cw.set_plugins(server_plug, buffer_plug, shell_plug, opt_plugs)
         self.cw.show_all()
         self.evt('shown')
         self.evt('started')
@@ -274,7 +276,7 @@ class Application(object):
 # The main application window.
 class MainWindow(gdkvim.VimWindow):
     """ the main window """
-    def __init__(self, cb, server_plug, buffer_plug, shell_plug, opt_plugs):
+    def __init__(self, cb):
         gdkvim.VimWindow.__init__(self, cb)
         # Set the window title.
         caption = 'PIDA %s' % __version__
@@ -284,18 +286,20 @@ class MainWindow(gdkvim.VimWindow):
         # Connect the keypress event.
         self.connect('key_press_event', self.cb_key_press)
         # The outer pane
+
+    def set_plugins(self, server_plug, buffer_plug, shell_plug, opt_plugs):
         p0 = gtk.HPaned()
         #p0.show()
         self.add(p0)
         # Set these properties for later embedding
-        p3 = gtk.VPaned()
-        p0.pack1(p3, True, True)
+        #p3 = gtk.VPaned()
+        #p0.pack1(p3, True, True)
         
         self.cb.embedwindow = gtk.VBox()
-        p3.pack1(self.cb.embedwindow, True, True)
+        p0.pack1(self.cb.embedwindow, True, True)
         
-        self.cb.gazpachwindow = gtk.VBox()
-        p3.pack2(self.cb.gazpachwindow, True, True)
+        #self.cb.gazpachwindow = gtk.VBox()
+        #p3.pack2(self.cb.gazpachwindow, True, True)
         # The plugin/terminal area
         p1 = gtk.VPaned()
         #p1.show()
@@ -308,6 +312,7 @@ class MainWindow(gdkvim.VimWindow):
         #shell_plug = create_plugin('terminal', self.cb)
         p1.pack2(shell_plug.win, True, True)
         lbox = gtk.VBox()
+        lbox.set_size_request(200, -1)
         #lbox.show()
         p2.pack1(lbox, True, True)
         # The vim plugin.
@@ -319,6 +324,7 @@ class MainWindow(gdkvim.VimWindow):
         # The optional plugin  area
         self.notebook = gtk.Notebook()
         self.notebook.set_show_border(True)
+        self.notebook.set_size_request(200, -1)
         #self.notebook.show()
         p2.pack2(self.notebook, True, True)
         # Populate with the configured plugins
@@ -330,6 +336,9 @@ class MainWindow(gdkvim.VimWindow):
             self.add_opt_plugin(plugin)
         # Show the window as late as possible.
 
+        p0.set_position(600)
+        self.resize(1000, 768)
+        
     
     def add_opt_plugin(self, plugin):
         """
@@ -389,181 +398,6 @@ class MainWindow(gdkvim.VimWindow):
         # self.save_geometry()
         self.cb.action_close()
    
-# This is multiply split into 3 Paned sections.
-class Window(gdkvim.VimWindow):
-    """ the main window """
-    def __init__(self, cb):
-        gdkvim.VimWindow.__init__(self, cb)
-        # Set the window title.
-        caption = 'PIDA %s' % __version__
-        self.set_title(caption)
-        # Connect the destroy event.
-        self.connect('destroy', self.cb_quit)
-        # Connect the keypress event.
-        self.connect('key_press_event', self.cb_key_press)
-        # The outer pane
-        p0 = gtk.HPaned()
-        #p0.show()
-        self.add(p0)
-        # Set these properties for later embedding
-        #self.cb.barholder = p0
-        p3 = gtk.VPaned()
-        p0.pack1(self.cb.embedwindow, True, True)
-        
-        self.cb.embedwindow = gtk.VBox()
-        p3.pack1(self.cb.embedwindow, True, True)
-        
-        self.cb.gazpachwindow = gtk.VBox()
-        p3.pack2(self.cb.gazpachwindow, True, True)
-        print 'set'
-        
-        
-        p1 = gtk.VPaned()
-        #p1.show()
-        p0.pack2(p1, True, True)
-        # Pane for standard and optional plugins
-        p2 = gtk.HPaned()
-        #p2.show()
-        p1.pack1(p2, True, True)
-        # The terminal plugin
-        shell_plug = create_plugin('terminal', self.cb)
-        self.cb.plugins.append(shell_plug)
-        p1.pack2(shell_plug.win, True, True)
-        lbox = gtk.VBox()
-        #lbox.show()
-        p2.pack1(lbox, True, True)
-        # The vim plugin.
-        server_plug = create_plugin('vim', self.cb)
-        lbox.pack_start(server_plug.win, expand=False)
-        self.cb.plugins.append(server_plug)
-        # The buffer explorer plugin.
-        buffer_plug = create_plugin('buffer', self.cb)
-        lbox.pack_start(buffer_plug.win)
-        self.cb.plugins.append(buffer_plug)
-        # The optional plugin  area
-        self.notebook = gtk.Notebook()
-        self.notebook.set_show_border(True)
-        #self.notebook.show()
-        p2.pack2(self.notebook, True, True)
-        # Populate with the configured plugins
-        for plugin in PLUGINS:
-            # Check the config value.
-            if self.cb.opts.get('plugins', plugin) == '1':
-                # Instantiate and add the plugin.
-                pi = create_plugin(plugin, self.cb)
-                self.add_plugin(pi)
-        # Show the window as late as possible.
-
-        self.p0 = p0
-        self.p1 = p1
-        self.p2 = p2
-       
-        # It doesn't work. Too many window managers
-        #self.connect('configure_event', self.cb_configure)
-        #self.load_geometry()
-        #self.geometry = None
-        
-        self.show_all()
-        
-    #def get_current_geometry(self):
-    #    geom = {}
-    #    (geom['x_origin'],
-    #     geom['y_origin'],
-    #     geom['width'],
-    #     geom['height']) = self.geometry
-    #    geom['vim_slider'] = self.p0.get_position()
-    #    geom['terminal_slider'] = self.p1.get_position()
-    #    geom['plugin_slider'] = self.p2.get_position()
-    #    return geom
-    
-    #def load_geometry(self):
-    #    geom = {}
-    #    for attr in ['x_origin', 'y_origin', 'width', 'height', 'vim_slider',
-    #              'terminal_slider', 'plugin_slider']:
-    #        try:
-    #            val = int(self.cb.opts.get('geometry', attr))
-    #        except ValueError:
-    #            val = -1
-    #        geom[attr] = val
-    #    self.move(geom['x_origin'], geom['y_origin'])
-    #    self.resize(geom['width'], geom['height'])
-    #    if self.cb.opts.get('vim', 'mode_embedded') == '1':
-    #        self.p0.set_position(geom['vim_slider'])
-    #    else:
-    #        self.p0.set_position(0)
-    #    self.p2.set_position(geom['plugin_slider'])
-    #    self.p1.set_position(geom['terminal_slider'])
-        
-   
-    #def save_geometry(self):
-    #    if self.cb.opts.get('geometry', 'save_on_shutdown') == '1':
-    #        geom = self.get_current_geometry()
-    #        for attr in geom:
-    #            self.cb.opts.set('geometry', attr, '%s' % geom[attr])
-    #        self.cb.opts.write()
-   
-    #def cb_configure(self, window, event):
-    #    self.geometry = [event.x, event.y, event.width, event.height]
-   
-    def cb_key_press(self, widget, event):
-        """
-        Callback to all key press events.
-
-        This method must return False for the key-press event to be propogated
-        to the child widgets.
-
-        @param widget: The widget that received the key-press event.
-        @type widget: gtk.Widget
-
-        @param event: The event received.
-        @type event: gtk.gdk.Event
-        """
-        # if <CONTROL> was pressed with the key
-        if event.state & gtk.gdk.CONTROL_MASK:
-            if event.keyval == 97:
-                print '<C-a>'
-                # returning True prevents the key event propogating
-                return False
-            elif event.keyval == 115:
-                print '<C-s>'
-                return False
-        return False
-        
-    def cb_quit(self, *a):
-        """
-        Callback for user closing the main window.
-        
-        This method is called when the main window is destroyed, wither by
-        pressing the close button, or by a window manager hint.
-        """
-        # call the close acition of the application.
-        # self.save_geometry()
-        self.cb.action_close()
-        
-    def add_plugin(self, plugin):
-        """
-        Add a plugin to the optional plugin notebook.
-        
-        @param plugin: An instance of the plugin.
-        @type plugin: pida.plugin.Plugin
-        """
-        # add the plugin to the Application's list of plugins
-        self.cb.plugins.append(plugin)
-        # create a label with a tooltip/EventBox
-        eb = gtk.EventBox()
-        tlab = gtk.HBox()
-        eb.add(tlab)
-        self.cb.tips.set_tip(eb, plugin.NAME)
-        im = self.cb.icons.get_image(plugin.ICON)
-        tlab.pack_start(im, expand=False)
-        label = gtk.Label('%s' % plugin.NAME[:2])
-        tlab.pack_start(label, expand=False, padding=2)
-        tlab.show_all()
-        # create a new notebook page
-        self.notebook.append_page(plugin.win, tab_label=eb)
-        self.notebook.show_all()
-        # Remove the toolbar label present by default on plugins
-        plugin.ctlbar.remove(plugin.label)
 
 def main(argv):
     a = Application()

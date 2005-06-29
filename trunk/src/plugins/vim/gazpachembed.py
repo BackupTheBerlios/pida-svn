@@ -28,6 +28,7 @@ try:
     from gazpacho.path import pixmaps_dir
     from gazpacho import palette, editor, project, catalog
     from gazpacho.l10n import _
+    from gazpacho.gaction import GActionsView, GAction, GActionGroup
 except ImportError:
     print "User interface design needs the installation of Gazpacho"
     gazpacho = None
@@ -44,7 +45,7 @@ class Gazpacho(object):
             if holder:
                 self.app = GazpachoEmbedded()
                 self.app._pidawindow = self.cb.cw
-                holder.add(self.app._window)
+                holder.pack_start(self.app._window)
                 self.holder = holder
             else:
                 self.app = GazpachoApplication()
@@ -107,27 +108,32 @@ class GazpachoEmbedded(GazpachoApplication):
         main_vbox = gtk.VBox()
         application_window.add(main_vbox)
 
-        main_vbox.pack_start(menubar, False)
-        main_vbox.pack_start(toolbar, False)
+        top_box = gtk.HBox()
+        main_vbox.pack_start(top_box, expand=False)
+
+        top_box.pack_start(toolbar)
+        top_box.pack_start(menubar, False)
 
         hbox = gtk.HBox(spacing=6)
         hbox.pack_start(self._palette, False, False)
 
-        vpaned = gtk.VPaned()
+        vpaned = gtk.HPaned()
         hbox.pack_start(vpaned, True, True)
 
         notebook = gtk.Notebook()
         notebook.append_page(widget_view, gtk.Label(_('Widgets')))
         notebook.append_page(self.gactions_view, gtk.Label(_('Actions')))
+        notebook.set_size_request(200, -1)
 
-        vpaned.set_position(200)
+        #vpaned.set_position(200)
 
-        vpaned.add1(notebook)
-        vpaned.add2(self._editor)
+        vpaned.pack1(notebook, True, True)
+        vpaned.pack2(self._editor, True, True)
+        self._editor.set_size_request(200, -1)
 
         main_vbox.pack_start(hbox)
         
-        main_vbox.pack_end(self._statusbar, False)
+        #main_vbox.pack_end(self._statusbar, False)
 
         self.refresh_undo_and_redo()
 
@@ -135,6 +141,7 @@ class GazpachoEmbedded(GazpachoApplication):
         
     def _construct_menu_and_toolbar(self, application_window):
         actions =(
+            ('Gazpacho', None, _('_Gazpacho')),
             ('FileMenu', None, _('_File')),
             ('New', gtk.STOCK_NEW, _('_New'), '<control>N',
              _('New Project'), self._new_cb),
@@ -191,6 +198,7 @@ class GazpachoEmbedded(GazpachoApplication):
         ui_description = """
 <ui>
   <menubar name="MainMenu">
+    <menu action="Gazpacho">
     <menu action="FileMenu">
       <menuitem action="New"/>
       <menuitem action="Open"/>
@@ -223,6 +231,7 @@ class GazpachoEmbedded(GazpachoApplication):
     </menu>
     <menu action="HelpMenu">
       <menuitem action="About"/>
+    </menu>
     </menu>
   </menubar>
   <toolbar name="MainToolbar">
@@ -260,4 +269,131 @@ class GazpachoEmbedded(GazpachoApplication):
 
         menu = self._ui_manager.get_widget('/MainMenu')
         toolbar = self._ui_manager.get_widget('/MainToolbar')
+    
+
+        toolbar.set_style(gtk.TOOLBAR_ICONS)
+        toolbar.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
+
+        #print menu, type(menu)
+        #bar = gtk.MenuBar()
+        
+        #parentmenu = gtk.MenuItem(label='Gazpacho')
+        #submenu = gtk.Menu()
+        #for child in menu.get_children():
+        #    menu.remove(child)
+        #    print child
+        #    submenu.append(child)
+        #parentmenu.set_submenu(submenu)
+        #bar.append(parentmenu)
+
         return (menu, toolbar)
+
+    def refresh_undo_and_redo(self):
+        #return
+        undo_item = redo_item = None
+        if self._project is not None:
+            pri = self._project.prev_redo_item
+            if pri != -1:
+                undo_item = self._project.undo_stack[pri]
+            if pri + 1 < len(self._project.undo_stack):
+                redo_item = self._project.undo_stack[pri + 1]
+
+        undo_action = self._ui_manager.get_action('/MainToolbar/Undo')
+        undo_group = undo_action.get_property('action-group')
+        undo_group.set_sensitive(undo_item is not None)
+        undo_widget = self._ui_manager.get_widget('/MainMenu/Gazpacho/EditMenu/Undo')
+        label = undo_widget.get_child()
+        if undo_item is not None:
+            label.set_text_with_mnemonic(_('_Undo: %s') % \
+                                         undo_item.description)
+        else:
+            label.set_text_with_mnemonic(_('_Undo: Nothing'))
+            
+        redo_action = self._ui_manager.get_action('/MainToolbar/Redo')
+        redo_group = redo_action.get_property('action-group')
+        redo_group.set_sensitive(redo_item is not None)
+        redo_widget = self._ui_manager.get_widget('/MainMenu/Gazpacho/EditMenu/Redo')
+        label = redo_widget.get_child()
+        if redo_item is not None:
+            label.set_text_with_mnemonic(_('_Redo: %s') % \
+                                         redo_item.description)
+        else:
+            label.set_text_with_mnemonic(_('_Redo: Nothing'))
+
+        if self._command_stack_window is not None:
+            command_stack_view = self._command_stack_window.get_child()
+            command_stack_view.update()
+ 
+    def _add_project(self, project):
+        # if the project was previously added, don't reload
+        for prj in self._projects:
+            if prj.path and prj.path == project.path:
+                self._set_project(prj)
+                return
+
+        self._projects.insert(0, project)
+
+        # add the project in the /Project menu
+        project_action= gtk.Action(project.name, project.name, project.name,
+                                   '')
+
+        project_action.connect('activate', self._set_project, project)
+        project_ui = """
+        <ui>
+          <menubar name="MainMenu">
+            <menu action="Gazpacho">
+            <menu action="ProjectMenu">
+              <menuitem action="%s"/>
+            </menu>
+            </menu>
+          </menubar>
+        </ui>
+        """ % project.name
+        action_group = self._ui_manager.get_action_groups()[0]
+        action_group.add_action(project_action)
+        
+        project.uim_id = self._ui_manager.add_ui_from_string(project_ui)
+
+        # connect to the project signals so that the editor can be updated
+        project.connect('widget_name_changed', self._widget_name_changed_cb)
+        project.connect('selection_changed',
+                         self._project_selection_changed_cb)
+
+        # make sure the palette is sensitive
+        self._palette.set_sensitive(True)
+
+        self._set_project(project)
+
+    def _widget_tree_view_create(self):
+        from gazpacho.widgettreeview import WidgetTreeView
+        view = WidgetTreeView(self)
+        self._project_views.insert(0, view)
+        view.set_project(self._project)
+        #view.set_size_request(150, 200)
+        view.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        return view
+
+    def _gactions_view_create(self):
+        view = GActionsView()
+        view.set_project(self._project)
+        self._project_views.insert(0, view)
+        #view.set_size_request(150, -1)
+        view.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        return view
+
+
+    def _command_stack_view_create(self):
+        view = CommandStackView()
+        self._project_views.insert(0, view)
+        view.set_project(self._project)
+        #view.set_size_request(300, 200)
+        view.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        return view
+
+    def _clipboard_view_create(self):
+        view = ClipboardView(self._clipboard)
+        view.set_size_request(300, 200)
+        view.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        return view
+
+
