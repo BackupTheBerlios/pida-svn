@@ -78,7 +78,7 @@ class RegistryItem(object):
         if self.validate(value):
             self._value = value
         else:
-            raise BadRegistryValue
+            raise BadRegistryValue, value
 
     def value(self):
         return self._value
