@@ -288,9 +288,14 @@ class MainWindow(gdkvim.VimWindow):
         #p0.show()
         self.add(p0)
         # Set these properties for later embedding
-        #self.cb.barholder = p0
+        p3 = gtk.VPaned()
+        p0.pack1(p3, True, True)
+        
         self.cb.embedwindow = gtk.VBox()
-        p0.pack1(self.cb.embedwindow, True, True)
+        p3.pack1(self.cb.embedwindow, True, True)
+        
+        self.cb.gazpachwindow = gtk.VBox()
+        p3.pack2(self.cb.gazpachwindow, True, True)
         # The plugin/terminal area
         p1 = gtk.VPaned()
         #p1.show()
@@ -402,9 +407,17 @@ class Window(gdkvim.VimWindow):
         self.add(p0)
         # Set these properties for later embedding
         #self.cb.barholder = p0
-        self.cb.embedwindow = gtk.VBox()
+        p3 = gtk.VPaned()
         p0.pack1(self.cb.embedwindow, True, True)
-        # The plugin/terminal area
+        
+        self.cb.embedwindow = gtk.VBox()
+        p3.pack1(self.cb.embedwindow, True, True)
+        
+        self.cb.gazpachwindow = gtk.VBox()
+        p3.pack2(self.cb.gazpachwindow, True, True)
+        print 'set'
+        
+        
         p1 = gtk.VPaned()
         #p1.show()
         p0.pack2(p1, True, True)
