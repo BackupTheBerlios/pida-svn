@@ -265,10 +265,10 @@ class GazpachoEmbedded(GazpachoApplication):
   <toolbar name="MainToolbar">
     <toolitem action="Open"/>
     <toolitem action="Save"/>
-    <separator name="MT1"/>
     <toolitem action="Undo"/>
     <toolitem action="Redo"/>    
-    <separator name="MT2"/>
+  </toolbar>
+  <toolbar name="EditBar">
     <toolitem action="Cut"/>
     <toolitem action="Copy"/>
     <toolitem action="Paste"/>
@@ -296,12 +296,21 @@ class GazpachoEmbedded(GazpachoApplication):
         #application_window.add_accel_group(self._ui_manager.get_accel_group())
 
         menu = self._ui_manager.get_widget('/MainMenu')
-        toolbar = self._ui_manager.get_widget('/MainToolbar')
-    
 
-        toolbar.set_style(gtk.TOOLBAR_ICONS)
-        toolbar.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
+        print menu.get_children()[0]
 
+        toolbarbox = gtk.VBox()
+        mtoolbar = self._ui_manager.get_widget('/MainToolbar')
+        toolbarbox.pack_start(mtoolbar, expand=False)
+        etoolbar = self._ui_manager.get_widget('/EditBar')
+        toolbarbox.pack_start(etoolbar, expand=False)
+
+        mtoolbar.set_style(gtk.TOOLBAR_ICONS)
+        mtoolbar.set_icon_size(gtk.ICON_SIZE_BUTTON)
+
+        etoolbar.set_style(gtk.TOOLBAR_ICONS)
+        etoolbar.set_icon_size(gtk.ICON_SIZE_BUTTON)
+        
         #print menu, type(menu)
         #bar = gtk.MenuBar()
         
@@ -314,7 +323,7 @@ class GazpachoEmbedded(GazpachoApplication):
         #parentmenu.set_submenu(submenu)
         #bar.append(parentmenu)
 
-        return (menu, toolbar)
+        return (menu, toolbarbox)
 
     def refresh_undo_and_redo(self):
         #return

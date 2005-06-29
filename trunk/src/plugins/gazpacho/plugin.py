@@ -38,12 +38,30 @@ class Plugin(plugin.Plugin):
                                        '(user interface designer)')
         self.holder.pack_start(self.button)
         self.button.connect('clicked', self.cb_alternative)
+
+
+        self.add_button('open', self.cb_gazpacho, 'Open a file',
+                                                  ['open'])
+        self.add_button('save', self.cb_gazpacho, 'Save the current file',
+                                                  ['save'])
+        self.undo_but = self.add_button('undo', self.cb_gazpacho,
+                                        'Undo the last operation',
+                                        ['undo'])
+        self.redo_but = self.add_button('redo', self.cb_gazpacho,
+                                        'Redo the last operation',
+                                        ['redo'])
+        
         self.gazpacho = None
         self.menu = None
 
 
     def cb_alternative(self, *args):
         self.launch()
+
+    def cb_gazpacho(self, button, commandname):
+        if self.gazpacho:
+            funcname = '_%s_cb' % commandname
+            getattr(self.gazpacho.app, funcname)(None)
 
     def launch(self):
         if not self.gazpacho:
