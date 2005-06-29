@@ -32,6 +32,10 @@ class Plugin(plugin.Plugin):
         
         self.holder = gtk.VBox()
         self.add(self.holder)
+        self.button = gtk.Button(label='Launch Gazpacho\n\n'
+                                       '(user interface designer)')
+        self.holder.pack_start(self.button)
+        self.button.connect('clicked', self.cb_alternative)
         self.gazpacho = None
         self.menu = None
 
@@ -41,6 +45,7 @@ class Plugin(plugin.Plugin):
 
     def launch(self):
         if not self.gazpacho:
+            self.holder.remove(self.button)
             self.gazpacho = gazpachembed.Gazpacho(self.cb)
         self.gazpacho.launch(self.holder)
         if not self.menu:
