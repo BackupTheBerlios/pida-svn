@@ -593,7 +593,10 @@ class Plugin(plugin.Plugin):
 
     def cb_alternative(self, *a):
         name = self.projects.selected(0)
-        wd = self.config.get(name, 'directory')
+        if name == CWD:
+            wd = self.current_directory
+        else:
+            wd = self.config.get(name, 'directory')
         shell = self.cb.opts.get('commands', 'shell')
         self.cb.action_newterminal(shell, ['shell'], directory=wd)
 
