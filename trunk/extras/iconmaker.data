@@ -42,3 +42,4 @@ vcs_add vcs_add
 vcs_remove vcs_remove
 vcs_resolve vcs_resolve
 vcs_diff vcs_diff
+gazpacho gazpacho

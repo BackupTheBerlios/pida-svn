@@ -27,6 +27,8 @@ import gtk
 
 class Plugin(plugin.Plugin):
     NAME = 'Gazpacho'
+    ICON = 'gazpacho'
+    DICON = 'run', 'Run Gazpacho user interface designer.'
 
     def populate_widgets(self):
         
