@@ -174,6 +174,7 @@ class Plugin(plugin.Plugin):
         if self.registry.easy_mode.value():
             vc = 'evim'
         vimcom = self.cb.opts.get('commands', vc)
+        print vc
         if self.is_embedded():
             if self.vim:
                 self.message('Only one embedded Vim allowed.')

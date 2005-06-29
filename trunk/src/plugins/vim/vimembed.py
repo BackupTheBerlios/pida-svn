@@ -53,6 +53,7 @@ class Vim(object):
             pid = os.fork()
             if pid == 0:
                 args.extend(['--socketid', '%s' % xid])
+                print self.command
                 os.execvp(self.command, args)
             else:
                 self.pid = pid

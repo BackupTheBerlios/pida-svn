@@ -354,8 +354,8 @@ class MainWindow(gdkvim.VimWindow):
         self.cb.tips.set_tip(eb, plugin.NAME)
         im = self.cb.icons.get_image(plugin.ICON)
         tlab.pack_start(im, expand=False)
-        label = gtk.Label('%s' % plugin.NAME[:2])
-        tlab.pack_start(label, expand=False, padding=2)
+        #label = gtk.Label('%s' % plugin.NAME[:2])
+        #tlab.pack_start(label, expand=False, padding=2)
         tlab.show_all()
         # create a new notebook page
         self.notebook.append_page(plugin.win, tab_label=eb)
