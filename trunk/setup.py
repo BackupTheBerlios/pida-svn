@@ -83,7 +83,7 @@ setup(name='pida',
     packages=packages,
     package_dir = {'pida': 'src'},
     scripts=['scripts/pida'],
-    data_files=[('share/pida', ['data/icons.dat'])],
+    data_files=[(os.path.join(sys.prefix, 'share', 'pida'), ['data/icons.dat'])],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: X11 Applications',
