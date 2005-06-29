@@ -55,9 +55,11 @@ def configure(reg):
                  os.path.expanduser('~/.pida'),
                  'The base per-user directory')
     # libraries
+    # This takes a bit of work
+    prefix = __file__.split('lib')[0]
     dirs_libs = dirs_group.add('shared',
                  registry.Directory,
-                 os.path.join(sys.prefix, 'share', 'pida'),
+                 os.path.join(prefix, 'share', 'pida'),
                  'The shared library directory.')
 
     dirs_sock = dirs_group.add('socket',
