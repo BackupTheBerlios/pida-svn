@@ -31,7 +31,7 @@ try:
     from gazpacho.gaction import GActionsView, GAction, GActionGroup
 except ImportError:
     print "User interface design needs the installation of Gazpacho"
-    gazpacho = None
+    application = None
 
 class Gazpacho(object):
 
@@ -41,7 +41,7 @@ class Gazpacho(object):
         self.holder = None
 
     def launch(self, holder=None):
-        if not gazpacho:
+        if not application:
             print 'gazpacho not installed'
             return
         if not self.app:
