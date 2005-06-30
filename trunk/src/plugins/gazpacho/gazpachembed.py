@@ -429,9 +429,101 @@ class GazpachoEmbedded(GazpachoApplication):
 
     def _clipboard_view_create(self):
         view = ClipboardView(self._clipboard)
-        view.set_size_request(300, 200)
+        #view.set_size_request(300, 200)
         view.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         return view
+ 
+    def _open_cb(self, action):
+        filechooser = gtk.FileChooserDialog(_('Open ...'), self.get_window(),
+                                            gtk.FILE_CHOOSER_ACTION_OPEN,
+                                            (gtk.STOCK_CANCEL,
+                                             gtk.RESPONSE_CANCEL,
+                                             gtk.STOCK_OPEN,
+                                             gtk.RESPONSE_OK))
+        file_filter = gtk.FileFilter()
+        file_filter.add_pattern("*.glade")
+        filechooser.set_filter(file_filter)
+        if filechooser.run() == gtk.RESPONSE_OK:
+            path = filechooser.get_filename()
+            if path:
+                self.open_project(path)
+
+        filechooser.destroy()
+
+    def _project_save_as(self, title, project):
+        saved = False
+        filechooser = gtk.FileChooserDialog(title, self.get_window(),
+                                            gtk.FILE_CHOOSER_ACTION_SAVE,
+                                            (gtk.STOCK_CANCEL,
+                                             gtk.RESPONSE_CANCEL,
+                                             gtk.STOCK_SAVE,
+                                             gtk.RESPONSE_OK))
+        filechooser.set_current_name("%s.glade" % project.name)
+        filechooser.set_default_response(gtk.RESPONSE_OK)
+        while True:
+            if filechooser.run() == gtk.RESPONSE_OK:
+                path = filechooser.get_filename()
+                if exists(path):
+                    msg = gtk.MessageDialog(parent=self.get_window(),
+                                            flags=gtk.DIALOG_MODAL \
+                                            | gtk.DIALOG_DESTROY_WITH_PARENT,
+                                            type=gtk.MESSAGE_WARNING,
+                                            buttons=(gtk.BUTTONS_YES_NO),
+                                            message_format=_('There is a file with that name already.\nWould you like to overwrite it?'))
+                    result = msg.run()
+                    msg.destroy()
+                    # the user want to overwrite the file
+                    if result == gtk.RESPONSE_YES:
+                        self._save(project, path)
+                        saved = True
+                        break
+
+                # the file does not exists. we can save it without worries
+                else:
+                    self._save(project, path)
+                    saved = True
+                    break
+            # maybe the user changed his/her opinion and don't want to
+            # save (by clicking cancel on the file chooser)
+            else:
+                break
+                
+        filechooser.destroy()
+        return saved
+
+    def _confirm_close_project(self, project):
+        submsg1 = _('Save changes to project \"%s\" before closing?') % \
+                  project.name
+        submsg2 = _("Your changes will be lost if you don't save them")
+        msg = "<span weight=\"bold\" size=\"larger\">%s</span>\n\n%s\n" % \
+              (submsg1, submsg2)
+        dialog = gtk.MessageDialog(self.get_window(), gtk.DIALOG_MODAL,
+                                    gtk.MESSAGE_QUESTION, gtk.BUTTONS_NONE,
+                                    msg)
+        dialog.label.set_use_markup(True)
+        dialog.add_buttons(_("Close without Saving"), gtk.RESPONSE_NO,
+                            gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                            gtk.STOCK_SAVE, gtk.RESPONSE_YES)
+        dialog.set_default_response(gtk.RESPONSE_YES)
+        while True:
+            ret = dialog.run()
+            if ret == gtk.RESPONSE_YES:
+                close = True
+                if project.path:
+                    project.save(project.path)
+                    close = True
+                else:
+                    title = _('Save as')
+                    saved = self._project_save_as(title, project)
+                    if not saved:
+                        continue
+            elif ret == gtk.RESPONSE_NO:
+                close = True
+            else:
+                close = False
+            break
+        dialog.destroy()
+        return close
 
 
 class ExpanderLabel(gtk.HBox):
