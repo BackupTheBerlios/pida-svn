@@ -27,7 +27,7 @@ try:
     from gazpacho import application, gladegtk
     from gazpacho.path import pixmaps_dir
     from gazpacho import palette, editor, project, catalog
-    from gazpacho.l10n import _
+    #from gazpacho.l10n import _
     from gazpacho.gaction import GActionsView, GAction, GActionGroup
 except ImportError:
     print "User interface design needs the installation of Gazpacho"
@@ -165,8 +165,8 @@ class GazpachoEmbedded(GazpachoApplication):
         hbox.pack_start(vpaned, True, True)
 
         notebook = gtk.Notebook()
-        notebook.append_page(widget_view, gtk.Label(_('Widgets')))
-        notebook.append_page(self.gactions_view, gtk.Label(_('Actions')))
+        notebook.append_page(widget_view, gtk.Label(('Widgets')))
+        notebook.append_page(self.gactions_view, gtk.Label(('Actions')))
         notebook.set_size_request(200, -1)
 
         #vpaned.set_position(200)
@@ -181,7 +181,19 @@ class GazpachoEmbedded(GazpachoApplication):
 
         #self.refresh_undo_and_redo()
 
+        self._editor._load_signal_page()
+        self.signals_list = self._editor._signal_editor._signals_list
+        self.signals_list.connect('row-activated', self.cb_signal_activated)
+
         return application_window
+
+    def cb_signal_activated(self, tv, path, column):
+        model = tv.get_model()
+        niter = model.get_iter(path)
+        print model.get_value(niter, 0)
+        print model.get_value(niter, 1)
+        print self._editor._loaded_widget.name
+
 
     def cb_editor_selected(self, button):
         page = self.editor_combo.get_active()
@@ -211,58 +223,58 @@ class GazpachoEmbedded(GazpachoApplication):
 
     def _construct_menu_and_toolbar(self, application_window):
         actions =(
-            ('Gazpacho', None, _('_Gaz')),
-            ('FileMenu', None, _('_File')),
-            ('New', gtk.STOCK_NEW, _('_New'), '<control>N',
-             _('New Project'), self._new_cb),
-            ('Open', gtk.STOCK_OPEN, _('_Open'), '<control>O',
-             _('Open Project'), self._open_cb),
-            ('Save', gtk.STOCK_SAVE, _('_Save'), '<control>S',
-             _('Save Project'), self._save_cb),
-            ('SaveAs', gtk.STOCK_SAVE_AS, _('_Save As...'),
-             '<shift><control>S', _('Save project with different name'),
+            ('Gazpacho', None, ('_Gaz')),
+            ('FileMenu', None, ('_File')),
+            ('New', gtk.STOCK_NEW, ('_New'), '<control>N',
+             ('New Project'), self._new_cb),
+            ('Open', gtk.STOCK_OPEN, ('_Open'), '<control>O',
+             ('Open Project'), self._open_cb),
+            ('Save', gtk.STOCK_SAVE, ('_Save'), '<control>S',
+             ('Save Project'), self._save_cb),
+            ('SaveAs', gtk.STOCK_SAVE_AS, ('_Save As...'),
+             '<shift><control>S', ('Save project with different name'),
              self._save_as_cb),
-            ('Close', gtk.STOCK_CLOSE, _('_Close'), '<control>W',
-             _('Close Project'), self._close_cb),
-            ('Quit', gtk.STOCK_QUIT, _('_Quit'), '<control>Q', _('Quit'),
+            ('Close', gtk.STOCK_CLOSE, ('_Close'), '<control>W',
+             ('Close Project'), self._close_cb),
+            ('Quit', gtk.STOCK_QUIT, ('_Quit'), '<control>Q', ('Quit'),
              self._quit_cb),
-            ('EditMenu', None, _('_Edit')),
-            ('Cut', gtk.STOCK_CUT, _('C_ut'), '<control>X', _('Cut'),
+            ('EditMenu', None, ('_Edit')),
+            ('Cut', gtk.STOCK_CUT, ('C_ut'), '<control>X', ('Cut'),
              self._cut_cb),
-            ('Copy', gtk.STOCK_COPY, _('_Copy'), '<control>C', _('Copy'),
+            ('Copy', gtk.STOCK_COPY, ('_Copy'), '<control>C', ('Copy'),
              self._copy_cb),
-            ('Paste', gtk.STOCK_PASTE, _('_Paste'), '<control>V', _('Paste'),
+            ('Paste', gtk.STOCK_PASTE, ('_Paste'), '<control>V', ('Paste'),
              self._paste_cb),
-            ('Delete', gtk.STOCK_DELETE, _('_Delete'), '<control>D',
-             _('Delete'), self._delete_cb),
-            ('ActionMenu', None, _('_Actions')),
-            ('AddAction', gtk.STOCK_ADD, _('_Add action'), '<control>A',
-             _('Add an action'), self._add_action_cb),
-            ('RemoveAction', gtk.STOCK_REMOVE, _('_Remove action'), None,
-             _('Remove action'), self._remove_action_cb),
-            ('EditAction', None, _('_Edit action'), None, _('Edit Action'),
+            ('Delete', gtk.STOCK_DELETE, ('_Delete'), '<control>D',
+             ('Delete'), self._delete_cb),
+            ('ActionMenu', None, ('_Actions')),
+            ('AddAction', gtk.STOCK_ADD, ('_Add action'), '<control>A',
+             ('Add an action'), self._add_action_cb),
+            ('RemoveAction', gtk.STOCK_REMOVE, ('_Remove action'), None,
+             ('Remove action'), self._remove_action_cb),
+            ('EditAction', None, ('_Edit action'), None, ('Edit Action'),
              self._edit_action_cb),
-            ('ProjectMenu', None, _('_Project')),
-            ('DebugMenu', None, _('_Debug')),
-            ('HelpMenu', None, _('_Help')),
-            ('About', None, _('_About'), None, _('About'), self._about_cb)
+            ('ProjectMenu', None, ('_Project')),
+            ('DebugMenu', None, ('_Debug')),
+            ('HelpMenu', None, ('_Help')),
+            ('About', None, ('_About'), None, ('About'), self._about_cb)
             )
 
         toggle_actions = (
-            ('ShowCommandStack', None, _('Show _command stack'), 'F3',
-             _('Show the command stack'), self._show_command_stack_cb, False),
-            ('ShowClipboard', None, _('Show _clipboard'), 'F4',
-             _('Show the clipboard'), self._show_clipboard_cb, False),
+            ('ShowCommandStack', None, ('Show _command stack'), 'F3',
+             ('Show the command stack'), self._show_command_stack_cb, False),
+            ('ShowClipboard', None, ('Show _clipboard'), 'F4',
+             ('Show the clipboard'), self._show_clipboard_cb, False),
             )
         
         undo_action = (
-            ('Undo', gtk.STOCK_UNDO, _('_Undo'), '<control>Z',
-             _('Undo last action'), self._undo_cb),
+            ('Undo', gtk.STOCK_UNDO, ('_Undo'), '<control>Z',
+             ('Undo last action'), self._undo_cb),
             )
 
         redo_action = (
-            ('Redo', gtk.STOCK_REDO, _('_Redo'), '<control>R',
-             _('Redo last action'), self._redo_cb),
+            ('Redo', gtk.STOCK_REDO, ('_Redo'), '<control>R',
+             ('Redo last action'), self._redo_cb),
             )
         
         ui_description = """<ui>
@@ -382,10 +394,10 @@ class GazpachoEmbedded(GazpachoApplication):
         undo_widget = self._ui_manager.get_widget('/MainMenu/Gazpacho/EditMenu/Undo')
         label = undo_widget.get_child()
         if undo_item is not None:
-            label.set_text_with_mnemonic(_('_Undo: %s') % \
+            label.set_text_with_mnemonic(('_Undo: %s') % \
                                          undo_item.description)
         else:
-            label.set_text_with_mnemonic(_('_Undo: Nothing'))
+            label.set_text_with_mnemonic(('_Undo: Nothing'))
             
         #redo_action = self._ui_manager.get_action('/MainToolbar/Redo')
         #redo_group = redo_action.get_property('action-group')
@@ -394,10 +406,10 @@ class GazpachoEmbedded(GazpachoApplication):
         redo_widget = self._ui_manager.get_widget('/MainMenu/Gazpacho/EditMenu/Redo')
         label = redo_widget.get_child()
         if redo_item is not None:
-            label.set_text_with_mnemonic(_('_Redo: %s') % \
+            label.set_text_with_mnemonic(('_Redo: %s') % \
                                          redo_item.description)
         else:
-            label.set_text_with_mnemonic(_('_Redo: Nothing'))
+            label.set_text_with_mnemonic(('_Redo: Nothing'))
 
         if self._command_stack_window is not None:
             command_stack_view = self._command_stack_window.get_child()
@@ -476,7 +488,7 @@ class GazpachoEmbedded(GazpachoApplication):
         return view
  
     def _open_cb(self, action):
-        filechooser = gtk.FileChooserDialog(_('Open ...'), self.get_window(),
+        filechooser = gtk.FileChooserDialog(('Open ...'), self.get_window(),
                                             gtk.FILE_CHOOSER_ACTION_OPEN,
                                             (gtk.STOCK_CANCEL,
                                              gtk.RESPONSE_CANCEL,
@@ -511,7 +523,7 @@ class GazpachoEmbedded(GazpachoApplication):
                                             | gtk.DIALOG_DESTROY_WITH_PARENT,
                                             type=gtk.MESSAGE_WARNING,
                                             buttons=(gtk.BUTTONS_YES_NO),
-                                            message_format=_('There is a file with that name already.\nWould you like to overwrite it?'))
+                                            message_format=('There is a file with that name already.\nWould you like to overwrite it?'))
                     result = msg.run()
                     msg.destroy()
                     # the user want to overwrite the file
@@ -534,16 +546,16 @@ class GazpachoEmbedded(GazpachoApplication):
         return saved
 
     def _confirm_close_project(self, project):
-        submsg1 = _('Save changes to project \"%s\" before closing?') % \
+        submsg1 = ('Save changes to project \"%s\" before closing?') % \
                   project.name
-        submsg2 = _("Your changes will be lost if you don't save them")
+        submsg2 = ("Your changes will be lost if you don't save them")
         msg = "<span weight=\"bold\" size=\"larger\">%s</span>\n\n%s\n" % \
               (submsg1, submsg2)
         dialog = gtk.MessageDialog(self.get_window(), gtk.DIALOG_MODAL,
                                     gtk.MESSAGE_QUESTION, gtk.BUTTONS_NONE,
                                     msg)
         dialog.label.set_use_markup(True)
-        dialog.add_buttons(_("Close without Saving"), gtk.RESPONSE_NO,
+        dialog.add_buttons(("Close without Saving"), gtk.RESPONSE_NO,
                             gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
                             gtk.STOCK_SAVE, gtk.RESPONSE_YES)
         dialog.set_default_response(gtk.RESPONSE_YES)
@@ -555,7 +567,7 @@ class GazpachoEmbedded(GazpachoApplication):
                     project.save(project.path)
                     close = True
                 else:
-                    title = _('Save as')
+                    title = ('Save as')
                     saved = self._project_save_as(title, project)
                     if not saved:
                         continue
@@ -690,7 +702,7 @@ class MiniPalette(palette.Palette):
             return
         if button == self._selector:
             self._current = None
-            self._label.set_text(_('Selector'))
+            self._label.set_text(('Selector'))
         else:
             self._current = button.get_data('user')
             self._label.set_text(self._current.name)
@@ -763,7 +775,7 @@ class MiniPalette(palette.Palette):
 
         # A label which contains the name of the class currently selected or
         # "Selector" if no widget class is selected
-        self._label = gtk.Label(_('Selector'))
+        self._label = gtk.Label(('Selector'))
         self._label.set_alignment(0.0, 0.5)
 
         #hbox.pack_start(self._selector, False, False)
@@ -771,3 +783,5 @@ class MiniPalette(palette.Palette):
         #hbox.show_all()
 
         return self._selector
+
+
