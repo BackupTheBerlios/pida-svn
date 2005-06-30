@@ -102,8 +102,21 @@ class GazpachoEmbedded(GazpachoApplication):
         self._palette = MiniPalette(self.cb, self._catalogs)
         self._palette.connect('toggled', self._palette_button_clicked)
 
+        ebox = gtk.VBox()
+        self.editor_combo = gtk.combo_box_new_text()
+        ebox.pack_start(self.editor_combo, expand=False)
+        
         self._editor = editor.Editor(self)
+        self._editor.set_show_tabs(False)
+        ebox.pack_start(self._editor)
 
+        for i in range(self._editor.get_n_pages()):
+            page = self._editor.get_nth_page(i)
+            label = self._editor.get_tab_label_text(page)
+            self.editor_combo.append_text(label)
+        self.editor_combo.set_active(0)
+        self.editor_combo.connect('changed', self.cb_editor_selected)
+        
         widget_view = self._widget_tree_view_create()
 
         self.gactions_view = self._gactions_view_create()
@@ -138,12 +151,12 @@ class GazpachoEmbedded(GazpachoApplication):
         self._palette_expander.add(self._palette)
         hbox2.pack_start(self._palette_expander)
 
-        self.selector = gtk.ToggleButton(None)
-        self.selector.set_mode(False)
-        self.selector.set_active(True)
-        self.selector.set_relief(gtk.RELIEF_NONE)
-        self.selector.add(get_resized_image_copy(self.selector_image, 14))
-        self.selector.connect('toggled', self.cb_selector)
+        self.selector = self._palette._selector
+        #self.selector.set_mode(False)
+        #self.selector.set_active(True)
+        #self.selector.set_relief(gtk.RELIEF_NONE)
+        #self.selector.add(get_resized_image_copy(self.selector_image, 14))
+        #self.selector.connect('toggled', self.cb_selector)
         hbox2.pack_start(self.selector, expand=False)
 
 
@@ -159,7 +172,7 @@ class GazpachoEmbedded(GazpachoApplication):
         #vpaned.set_position(200)
 
         vpaned.pack1(notebook, True, True)
-        vpaned.pack2(self._editor, True, True)
+        vpaned.pack2(ebox, True, True)
         self._editor.set_size_request(200, -1)
 
         main_vbox.pack_start(hbox)
@@ -169,6 +182,10 @@ class GazpachoEmbedded(GazpachoApplication):
         #self.refresh_undo_and_redo()
 
         return application_window
+
+    def cb_editor_selected(self, button):
+        page = self.editor_combo.get_active()
+        self._editor.set_current_page(page)
  
     def cb_selector(self, button):
         #if not self.selector.get_active():
@@ -585,7 +602,7 @@ class ExpanderLabel(gtk.HBox):
         for child in self.image_holder.get_children():
             self.image_holder.remove(child)
 
-        new_image = get_resized_image_copy(image, 14)
+        new_image = get_resized_image_copy(image, 18)
         self.image_holder.add(new_image)
         self.label.set_label(text)
         self.show_all()
@@ -724,3 +741,33 @@ class MiniPalette(palette.Palette):
 
         return vbox
 
+    def _selector_new(self):
+        hbox = gtk.HBox()
+        # The selector is a button that is clicked to cancel the add widget
+        # action. This sets our cursor back to the "select widget" mode. This
+        # button is part of the widgets_button_group, so that when no widget
+        # is selected, this button is pressed.
+        self._selector = gtk.RadioButton(None)
+        self._selector.set_mode(False)
+        self._selector.set_relief(gtk.RELIEF_NONE)
+        
+        # Each widget in a section has a button in the palette. This is the
+        # button group, since only one may be pressed.
+        self._widgets_button_group = self._selector.get_group()
+
+        image = gtk.Image()
+        image.set_from_file(os.path.join(pixmaps_dir, 'selector.png'))
+        image = get_resized_image_copy(image, 18)
+        self._selector.add(image)
+        self._selector.connect('toggled', self._on_button_toggled)
+
+        # A label which contains the name of the class currently selected or
+        # "Selector" if no widget class is selected
+        self._label = gtk.Label(_('Selector'))
+        self._label.set_alignment(0.0, 0.5)
+
+        #hbox.pack_start(self._selector, False, False)
+        #hbox.pack_start(self._label, padding=2)
+        #hbox.show_all()
+
+        return self._selector
