@@ -152,6 +152,13 @@ def configure(reg):
 
     log_level.adjustment = (0, 5, 1)
 
+    lay_group = reg.add_group('layout', 'Thigs to do with layout')
     
+    lay_vert = lay_group.add('vertical_split',
+               registry.Boolean,
+               0,
+               'Whether to split the view vertically (requires restart).')
+    
+   
 if __name__ == '__main__':
     pass

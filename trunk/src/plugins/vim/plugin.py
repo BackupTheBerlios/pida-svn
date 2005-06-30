@@ -106,6 +106,12 @@ class Plugin(plugin.Plugin):
                   0,
                   'Determines whether Pida will shutdown when Vim shuts down.')
 
+        self.registry.add('show_serverlist',
+               registry.Boolean,
+               False,
+               'Determines whether the server bar will be shown in embedded '
+               'mode. (embedded mode only)')
+
         shgrp = reg.add_group('vim_shortcuts', 'Shortcuts called from vim.')
 
         shgrp.add('shortcut_leader',
@@ -207,7 +213,7 @@ class Plugin(plugin.Plugin):
                             self.cb.action_connectserver(s)
                 else:
                     self.entry.append_text(s.strip())
-            self.entry.show_all()
+            #self.entry.show_all()
             if act:
                 for row in self.entry.get_model():
                     if row[0] == act:
@@ -268,8 +274,19 @@ class Plugin(plugin.Plugin):
     def cb_alternative(self, *args):
         self.cb.action_showconfig()
 
+    def show_or_hide_serverlist(self):
+        if self.is_embedded():
+            print [self.registry.show_serverlist.value()]
+            if self.registry.show_serverlist.value():
+                print 'showing'
+                self.entry.show()
+            else:
+                print 'hiding'
+                self.entry.hide()
+
     def evt_reset(self):
         self.load_shortcuts()
+        self.show_or_hide_serverlist()
 
     def evt_connectserver(self, name):
         # Actually does the connecting

@@ -78,14 +78,14 @@ class Application(object):
         #self.opts = options.Opts()
         self.opts = DummyOpts(self)
         # Icons shared
+        self.server = None
         self.startup()
         # Shortcuts
         # Communication window
         #self.cw = Window(self)
         # Ensure that there is no initial server set.
-        self.server = None
         # start
-        self.action_log('Pida', 'starting', 0)
+        self.action_log('Pida', 'started', 0)
         # fire the init event, telling plugins to initialize
         #self.cw.fetch_serverlist()
         #self.cw.feed_serverlist()
@@ -132,6 +132,7 @@ class Application(object):
         self.cw.show_all()
         self.evt('shown')
         self.evt('started')
+        self.evt('reset')
         
 
     def add_plugin(self, name):
@@ -305,7 +306,11 @@ class MainWindow(gdkvim.VimWindow):
         #p1.show()
         p0.pack2(p1, True, True)
         # Pane for standard and optional plugins
-        p2 = gtk.HPaned()
+        p2 = None
+        if self.cb.registry.layout.vertical_split.value():
+            p2 = gtk.VPaned()
+        else:
+            p2 = gtk.HPaned()
         #p2.show()
         p1.pack1(p2, True, True)
         # The terminal plugin

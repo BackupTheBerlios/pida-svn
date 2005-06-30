@@ -41,6 +41,9 @@ class Gazpacho(object):
         self.holder = None
 
     def launch(self, holder=None):
+        if not gazpacho:
+            print 'gazpacho not installed'
+            return
         if not self.app:
             if holder:
                 self.app = GazpachoEmbedded(self.cb)
@@ -96,7 +99,7 @@ class GazpachoEmbedded(GazpachoApplication):
         # Create the different widgets
         menubar = self._construct_menu_and_toolbar(application_window)
 
-        self._palette = MiniPalette(self._catalogs)
+        self._palette = MiniPalette(self.cb, self._catalogs)
         self._palette.connect('toggled', self._palette_button_clicked)
 
         self._editor = editor.Editor(self)
@@ -125,13 +128,26 @@ class GazpachoEmbedded(GazpachoApplication):
         self.selector_image.set_from_file(os.path.join(pixmaps_dir, 'selector.png'))
 
         self.expander_label = ExpanderLabel(self.cb, self.selector_image)
-        hbox.pack_start(self.expander_label, expand=False)
+        #hbox.pack_start(self.expander_label, expand=False)
         
-        self._palette_expander = gtk.Expander('Widgets')
-        self._palette_expander.add(self._palette)
-        
-        hbox.pack_start(self._palette_expander, False, False)
+        hbox2 = gtk.HBox()
 
+        hbox.pack_start(hbox2, expand=False)
+        self._palette_expander = gtk.Expander()
+        self._palette_expander.set_label_widget(self.expander_label)
+        self._palette_expander.add(self._palette)
+        hbox2.pack_start(self._palette_expander)
+
+        self.selector = gtk.ToggleButton(None)
+        self.selector.set_mode(False)
+        self.selector.set_active(True)
+        self.selector.set_relief(gtk.RELIEF_NONE)
+        self.selector.add(get_resized_image_copy(self.selector_image, 14))
+        self.selector.connect('toggled', self.cb_selector)
+        hbox2.pack_start(self.selector, expand=False)
+
+
+        
         vpaned = gtk.VPaned()
         hbox.pack_start(vpaned, True, True)
 
@@ -154,6 +170,12 @@ class GazpachoEmbedded(GazpachoApplication):
 
         return application_window
  
+    def cb_selector(self, button):
+        #if not self.selector.get_active():
+        #    self.selector.set_active(True)
+        #    return
+        self._palette._on_button_toggled(self._palette._selector, True)
+ 
     def _palette_button_clicked(self, palette):
         klass = palette.current
 
@@ -165,6 +187,9 @@ class GazpachoEmbedded(GazpachoApplication):
             self._add_class = None
         
         self.expander_label.set_label(self._add_class)
+        if self._add_class:
+            self.selector.set_active(False)
+           
             
 
     def _construct_menu_and_toolbar(self, application_window):
@@ -535,18 +560,12 @@ class ExpanderLabel(gtk.HBox):
         gtk.HBox.__init__(self)
         
         self.image_holder = gtk.EventBox()
-        self.pack_start(self.image_holder, expand=False)
+        self.pack_start(self.image_holder, expand=False, padding=4)
         
         self.label = gtk.Label()
         self.pack_start(self.label)
 
-        self.selector = gtk.RadioButton(None)
-        self.selector.set_mode(False)
-        self.selector.set_relief(gtk.RELIEF_NONE)
-        self.selector.add(get_resized_image_copy(self.selectorimage, 14))
-        self.pack_start(self.selector, expand=False)
         self.set_label(None)
-        #self.selector.connect('toggled', self._on_button_toggled)
         
 
     def _selector_toggled(self, *args):
@@ -558,9 +577,10 @@ class ExpanderLabel(gtk.HBox):
         if klass:
             image = klass.icon
             text = klass.name
-            self.selector.set_active(True)
+            #self.selector.set_active(False)
         else:
-            self.selector.set_active(True)
+            pass
+            #self.selector.set_active(True)
         
         for child in self.image_holder.get_children():
             self.image_holder.remove(child)
@@ -580,20 +600,26 @@ def get_resized_image_copy(image, size):
 
 class MiniPalette(palette.Palette):
     
-    def __init__(self, catalogs):
+    def __init__(self, cb, catalogs):
+        self.cb = cb
         gtk.VBox.__init__(self)
 
         # The GladeWidgetClass corrisponding to the selected button. NULL if
         # the selector button is pressed.
         self._current = None
 
-        self.pack_start(self._selector_new(), False)
+        #self.pack_start(self._selector_new(), False)
+        self._selector_new()
         self.pack_start(gtk.HSeparator(), False, padding=3)
 
         #The vbox that contains the titles of the sections
         self._groups_vbox = gtk.HBox()
         self.pack_start(self._groups_vbox, False)
         self.pack_start(gtk.HSeparator(), False, padding=3)
+
+        self.groups_combo = gtk.combo_box_new_text()
+        self.groups_combo.connect('changed', self.cb_catalog_combo)
+        self._groups_vbox.pack_start(self.groups_combo)
 
         #  Where we store the different catalogs
         self._notebook = gtk.Notebook()
@@ -611,4 +637,90 @@ class MiniPalette(palette.Palette):
         for catalog in catalogs:
             for group in catalog.widget_groups:
                 self.append_widget_group(group)
+        self.groups_combo.set_active(0)
+
+    def append_widget_group(self, group):
+        page = self._nb_sections
+        self._nb_sections += 1
+
+        # add the button
+        #if not self._sections_button_group:
+        #    button = gtk.RadioButton(None, group.title.split().pop())
+        #else:
+        #    button = gtk.RadioButton(self._sections_button_group[0],
+                                     #group.title.split().pop())
+        #self._sections_button_group = button.get_group()
+        #button.set_mode(False)
+        #button.set_data('page', page)
+        #button.connect('toggled', self._on_catalog_button_toggled)
+
+        #self._groups_vbox.pack_start(button, False)
+        self.groups_combo.append_text(group.title)
+
+        # add the selection
+        self._notebook.append_page(self._widget_table_create(group),
+                                   gtk.Label(''))
+        self._notebook.show()
+    
+    def cb_catalog_combo(self, button):
+        page = self.groups_combo.get_active()
+        self._notebook.set_current_page(page)
+        return True
+    
+    def _on_button_toggled(self, button, *args):
+
+        if not args and not button.get_active():
+            return
+        if button == self._selector:
+            self._current = None
+            self._label.set_text(_('Selector'))
+        else:
+            self._current = button.get_data('user')
+            self._label.set_text(self._current.name)
+
+        self.emit('toggled')
+
+
+    def _widget_table_create(self, group):
+        vbox = gtk.VBox()
+        rbox = None
+        for i, widget_class in enumerate(group):
+            if not widget_class.in_palette:
+                continue
+            
+            if i % 5 == 0:
+                if rbox:
+                    vbox.pack_start(rbox, expand=False)
+                rbox = gtk.HBox()
+                
+            radio = gtk.RadioButton(self._widgets_button_group[0])
+            radio.connect('toggled', self._on_button_toggled)
+            radio.set_data('user', widget_class)
+            radio.set_mode(False)
+            radio.set_relief(gtk.RELIEF_NONE)
+
+            self.cb.tips.set_tip(radio, widget_class.palette_name)
+
+            rbox.pack_start(radio, False, False)
+            
+
+            hbox = gtk.HBox(spacing=0)
+            image = get_resized_image_copy(widget_class.icon, 20)
+            hbox.pack_start(image, False, False)
+            radio.add(hbox)
+
+            #label = gtk.Label(widget_class.palette_name)
+            #label.set_alignment(0.0, 0.5)
+            #hbox.pack_start(label, padding=1)
+
+            self._widgets_button_group = radio.get_group()
+
+        vbox.pack_start(rbox, expand=False)
+        scrolled_window = gtk.ScrolledWindow()
+        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        #scrolled_window.add_with_viewport(vbox)
+        scrolled_window.set_shadow_type(gtk.SHADOW_NONE)
+        scrolled_window.set_size_request(-1, 200)
+
+        return vbox
 
