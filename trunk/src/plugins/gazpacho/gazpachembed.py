@@ -20,6 +20,9 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+"""stolen almost entirely from gazpacho. It is horrible It will look better one day, I just
+need to know exactly what is needed."""
+
 import gtk
 import os
 
@@ -27,10 +30,10 @@ try:
     from gazpacho import application, gladegtk
     from gazpacho.path import pixmaps_dir
     from gazpacho import palette, editor, project, catalog
-    #from gazpacho.l10n import _
+#from gazpacho.l10n import _
     from gazpacho.gaction import GActionsView, GAction, GActionGroup
-except ImportError:
-    print "User interface design needs the installation of Gazpacho"
+except ImportError, e:
+    print "User interface design needs the installation of Gazpacho", e
     application = None
 
 class Gazpacho(object):

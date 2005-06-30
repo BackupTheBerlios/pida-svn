@@ -32,7 +32,6 @@ import pida.gtkextra as gtkextra
 import pida.configuration.registry as registry
 # local imports
 import vimembed
-import gazpachembed
 
 SHORTCUTS = [('shortcut_execute',
                 'Async_event("bufferexecute,")'),
@@ -155,8 +154,6 @@ class Plugin(plugin.Plugin):
                   'The shortcut to ')
 
     def populate_widgets(self):
-        self.add_button('fullscreen', self.cb_gazpach,
-            'Start the User Interface designer')
         self.add_button('connect', self.cb_connect,
             'Connect to Vim session')
         self.add_button('editor', self.cb_run,
@@ -173,7 +170,6 @@ class Plugin(plugin.Plugin):
         #gobject.timeout_add(2000, self.cb_refresh)
         self.currentserver = None
         self.oldservers = []
-        self.gazpacho = gazpachembed.Gazpacho(self.cb)
     
     def launch(self):
         vc = 'vim'
@@ -192,9 +188,6 @@ class Plugin(plugin.Plugin):
         else:
             os.system('%s --servername pida' % vimcom)
 
-    def launchgazpacho(self):
-        self.gazpacho.launch(self.cb.gazpachwindow)
-        print 'embedded gazpach'
 
     def refresh(self, serverlist):
         if serverlist != self.oldservers:
@@ -247,9 +240,6 @@ class Plugin(plugin.Plugin):
 
     def is_embedded(self):
         return self.registry.embedded_mode.value()
-
-    def cb_gazpach(self, *args):
-        self.launchgazpacho()
 
     def cb_plugged(self):
         pass
