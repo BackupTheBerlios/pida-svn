@@ -94,9 +94,9 @@ class GazpachoEmbedded(GazpachoApplication):
         #application_window.connect('delete-event', self._delete_event)
 
         # Create the different widgets
-        menubar, toolbar = self._construct_menu_and_toolbar(application_window)
+        menubar = self._construct_menu_and_toolbar(application_window)
 
-        self._palette = palette.Palette(self._catalogs)
+        self._palette = MiniPalette(self._catalogs)
         self._palette.connect('toggled', self._palette_button_clicked)
 
         self._editor = editor.Editor(self)
@@ -114,7 +114,7 @@ class GazpachoEmbedded(GazpachoApplication):
         top_box = gtk.HBox()
         main_vbox.pack_start(top_box, expand=False)
 
-        top_box.pack_start(toolbar)
+        #top_box.pack_start(toolbar)
         #top_box.pack_start(menubar, False)
         self.menu = menubar
 
@@ -150,7 +150,7 @@ class GazpachoEmbedded(GazpachoApplication):
         
         #main_vbox.pack_end(self._statusbar, False)
 
-        self.refresh_undo_and_redo()
+        #self.refresh_undo_and_redo()
 
         return application_window
  
@@ -169,7 +169,7 @@ class GazpachoEmbedded(GazpachoApplication):
 
     def _construct_menu_and_toolbar(self, application_window):
         actions =(
-            ('Gazpacho', None, _('_Gazpacho')),
+            ('Gazpacho', None, _('_Gaz')),
             ('FileMenu', None, _('_File')),
             ('New', gtk.STOCK_NEW, _('_New'), '<control>N',
              _('New Project'), self._new_cb),
@@ -223,59 +223,58 @@ class GazpachoEmbedded(GazpachoApplication):
              _('Redo last action'), self._redo_cb),
             )
         
-        ui_description = """
-<ui>
-  <menubar name="MainMenu">
-    <menu action="Gazpacho">
-    <menu action="FileMenu">
-      <menuitem action="New"/>
-      <menuitem action="Open"/>
-      <separator name="FM1"/>
-      <menuitem action="Save"/>
-      <menuitem action="SaveAs"/>
-      <separator name="FM2"/>
-      <menuitem action="Close"/>
-      <menuitem action="Quit"/>
-    </menu>
-    <menu action="EditMenu">
-      <menuitem action="Undo"/>
-      <menuitem action="Redo"/>
-      <separator name="EM1"/>
-      <menuitem action="Cut"/>
-      <menuitem action="Copy"/>
-      <menuitem action="Paste"/>
-      <menuitem action="Delete"/>
-    </menu>
-    <menu action="ActionMenu">
-      <menuitem action="AddAction"/>
-      <menuitem action="RemoveAction"/>
-      <menuitem action="EditAction"/>
-    </menu>
-    <menu action="ProjectMenu">
-    </menu>
-    <menu action="DebugMenu">
-      <menuitem action="ShowCommandStack"/>
-      <menuitem action="ShowClipboard"/>
-    </menu>
-    <menu action="HelpMenu">
-      <menuitem action="About"/>
-    </menu>
-    </menu>
-  </menubar>
-  <toolbar name="MainToolbar">
-    <toolitem action="Open"/>
-    <toolitem action="Save"/>
-    <toolitem action="Undo"/>
-    <toolitem action="Redo"/>    
-  </toolbar>
-  <toolbar name="EditBar">
-    <toolitem action="Cut"/>
-    <toolitem action="Copy"/>
-    <toolitem action="Paste"/>
-    <toolitem action="Delete"/>
-  </toolbar>
-</ui>
-"""
+        ui_description = """<ui>
+              <menubar name="MainMenu">
+                <menu action="Gazpacho">
+                <menu action="FileMenu">
+                  <menuitem action="New"/>
+                  <menuitem action="Open"/>
+                  <separator name="FM1"/>
+                  <menuitem action="Save"/>
+                  <menuitem action="SaveAs"/>
+                  <separator name="FM2"/>
+                  <menuitem action="Close"/>
+                  <menuitem action="Quit"/>
+                </menu>
+                <menu action="EditMenu">
+                  <menuitem action="Undo"/>
+                  <menuitem action="Redo"/>
+                  <separator name="EM1"/>
+                  <menuitem action="Cut"/>
+                  <menuitem action="Copy"/>
+                  <menuitem action="Paste"/>
+                  <menuitem action="Delete"/>
+                </menu>
+                <menu action="ActionMenu">
+                  <menuitem action="AddAction"/>
+                  <menuitem action="RemoveAction"/>
+                  <menuitem action="EditAction"/>
+                </menu>
+                <menu action="ProjectMenu">
+                </menu>
+                <menu action="DebugMenu">
+                  <menuitem action="ShowCommandStack"/>
+                  <menuitem action="ShowClipboard"/>
+                </menu>
+                <menu action="HelpMenu">
+                  <menuitem action="About"/>
+                </menu>
+                </menu>
+              </menubar>
+              <toolbar name="MainToolbar">
+                <toolitem action="Open"/>
+                <toolitem action="Save"/>
+                <toolitem action="Undo"/>
+                <toolitem action="Redo"/>    
+              </toolbar>
+              <toolbar name="EditBar">
+                <toolitem action="Cut"/>
+                <toolitem action="Copy"/>
+                <toolitem action="Paste"/>
+                                <toolitem action="Delete"/>
+                              </toolbar>
+                            </ui>
+                            """
         self._ui_manager = gtk.UIManager()
 
         action_group = gtk.ActionGroup('MenuActions')
@@ -297,19 +296,18 @@ class GazpachoEmbedded(GazpachoApplication):
 
         menu = self._ui_manager.get_widget('/MainMenu')
 
-        print menu.get_children()[0]
 
-        toolbarbox = gtk.VBox()
-        mtoolbar = self._ui_manager.get_widget('/MainToolbar')
-        toolbarbox.pack_start(mtoolbar, expand=False)
-        etoolbar = self._ui_manager.get_widget('/EditBar')
-        toolbarbox.pack_start(etoolbar, expand=False)
+        #toolbarbox = gtk.VBox()
+        #mtoolbar = self._ui_manager.get_widget('/MainToolbar')
+        #toolbarbox.pack_start(mtoolbar, expand=False)
+        #etoolbar = self._ui_manager.get_widget('/EditBar')
+        #toolbarbox.pack_start(etoolbar, expand=False)
 
-        mtoolbar.set_style(gtk.TOOLBAR_ICONS)
-        mtoolbar.set_icon_size(gtk.ICON_SIZE_BUTTON)
+        #mtoolbar.set_style(gtk.TOOLBAR_ICONS)
+        #mtoolbar.set_icon_size(gtk.ICON_SIZE_BUTTON)
 
-        etoolbar.set_style(gtk.TOOLBAR_ICONS)
-        etoolbar.set_icon_size(gtk.ICON_SIZE_BUTTON)
+        #etoolbar.set_style(gtk.TOOLBAR_ICONS)
+        #etoolbar.set_icon_size(gtk.ICON_SIZE_BUTTON)
         
         #print menu, type(menu)
         #bar = gtk.MenuBar()
@@ -323,7 +321,7 @@ class GazpachoEmbedded(GazpachoApplication):
         #parentmenu.set_submenu(submenu)
         #bar.append(parentmenu)
 
-        return (menu, toolbarbox)
+        return menu
 
     def refresh_undo_and_redo(self):
         #return
@@ -335,9 +333,10 @@ class GazpachoEmbedded(GazpachoApplication):
             if pri + 1 < len(self._project.undo_stack):
                 redo_item = self._project.undo_stack[pri + 1]
 
-        undo_action = self._ui_manager.get_action('/MainToolbar/Undo')
-        undo_group = undo_action.get_property('action-group')
-        undo_group.set_sensitive(undo_item is not None)
+        #undo_action = self._ui_manager.get_action('/MainToolbar/Undo')
+        #undo_group = undo_action.get_property('action-group')
+        #undo_group.set_sensitive(undo_item is not None)
+        self.undo_button.set_sensitive(undo_item is not None)
         undo_widget = self._ui_manager.get_widget('/MainMenu/Gazpacho/EditMenu/Undo')
         label = undo_widget.get_child()
         if undo_item is not None:
@@ -346,9 +345,10 @@ class GazpachoEmbedded(GazpachoApplication):
         else:
             label.set_text_with_mnemonic(_('_Undo: Nothing'))
             
-        redo_action = self._ui_manager.get_action('/MainToolbar/Redo')
-        redo_group = redo_action.get_property('action-group')
-        redo_group.set_sensitive(redo_item is not None)
+        #redo_action = self._ui_manager.get_action('/MainToolbar/Redo')
+        #redo_group = redo_action.get_property('action-group')
+        #redo_group.set_sensitive(redo_item is not None)
+        self.redo_button.set_sensitive(redo_item is not None)
         redo_widget = self._ui_manager.get_widget('/MainMenu/Gazpacho/EditMenu/Redo')
         label = redo_widget.get_child()
         if redo_item is not None:
@@ -485,3 +485,38 @@ def get_resized_image_copy(image, size):
     new_image.set_from_pixbuf(pb)
     return new_image
     
+
+class MiniPalette(palette.Palette):
+    
+    def __init__(self, catalogs):
+        gtk.VBox.__init__(self)
+
+        # The GladeWidgetClass corrisponding to the selected button. NULL if
+        # the selector button is pressed.
+        self._current = None
+
+        self.pack_start(self._selector_new(), False)
+        self.pack_start(gtk.HSeparator(), False, padding=3)
+
+        #The vbox that contains the titles of the sections
+        self._groups_vbox = gtk.HBox()
+        self.pack_start(self._groups_vbox, False)
+        self.pack_start(gtk.HSeparator(), False, padding=3)
+
+        #  Where we store the different catalogs
+        self._notebook = gtk.Notebook()
+        self._notebook.set_show_tabs(False)
+        self._notebook.set_show_border(False)
+        self.pack_end(self._notebook)
+
+        # The number of sections in this palette
+        self._nb_sections = 0
+
+        # Each section of the palette has a button. This is the
+        # sections_button_group list
+        self._sections_button_group = []
+
+        for catalog in catalogs:
+            for group in catalog.widget_groups:
+                self.append_widget_group(group)
+

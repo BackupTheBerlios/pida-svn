@@ -43,3 +43,8 @@ vcs_remove vcs_remove
 vcs_resolve vcs_resolve
 vcs_diff vcs_diff
 gazpacho gazpacho
+stock_copy copy
+stock_paste paste
+stock_save save
+stock_redo redo
+stock_cut cut

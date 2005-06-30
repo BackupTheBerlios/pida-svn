@@ -22,6 +22,7 @@
 
 
 import pida.plugin as plugin
+import pida.gtkextra as gtkextra
 import gazpachembed
 import gtk
 
@@ -32,6 +33,25 @@ class Plugin(plugin.Plugin):
 
     def populate_widgets(self):
         
+        self.second_toolbar = gtkextra.Toolbar(self.cb)
+        self.add(self.second_toolbar.win, expand=False)
+
+        self.second_toolbar.add_button('cut', self.cb_gazpacho,
+            'Cut the selection', ['cut'])
+        self.second_toolbar.add_button('copy', self.cb_gazpacho,
+            'Copy the selection', ['copy'])
+        self.second_toolbar.add_button('paste', self.cb_gazpacho,
+            'Paste the selection', ['paste'])
+        self.second_toolbar.add_button('delete', self.cb_gazpacho,
+            'Paste the selection', ['delete'])
+        self.second_toolbar.add_separator()
+        self.undo_but = self.second_toolbar.add_button('undo', self.cb_gazpacho,
+                                        'Undo the last operation',
+                                        ['undo'])
+        self.redo_but = self.second_toolbar.add_button('redo', self.cb_gazpacho,
+                                        'Redo the last operation',
+                                        ['redo'])
+
         self.holder = gtk.VBox()
         self.add(self.holder)
         self.button = gtk.Button(label='Launch Gazpacho\n\n'
@@ -40,17 +60,14 @@ class Plugin(plugin.Plugin):
         self.button.connect('clicked', self.cb_alternative)
 
 
-        self.add_button('open', self.cb_gazpacho, 'Open a file',
-                                                  ['open'])
         self.add_button('save', self.cb_gazpacho, 'Save the current file',
                                                   ['save'])
-        self.undo_but = self.add_button('undo', self.cb_gazpacho,
-                                        'Undo the last operation',
-                                        ['undo'])
-        self.redo_but = self.add_button('redo', self.cb_gazpacho,
-                                        'Redo the last operation',
-                                        ['redo'])
+        self.add_button('open', self.cb_gazpacho, 'Open a file',
+                                                  ['open'])
         
+
+
+    def init(self):
         self.gazpacho = None
         self.menu = None
 
@@ -62,6 +79,9 @@ class Plugin(plugin.Plugin):
         if self.gazpacho:
             funcname = '_%s_cb' % commandname
             getattr(self.gazpacho.app, funcname)(None)
+        else:
+            self.message('Gazpacho is not running.\n'
+                         'Please start it.')
 
     def launch(self):
         if not self.gazpacho:
@@ -70,7 +90,10 @@ class Plugin(plugin.Plugin):
         self.gazpacho.launch(self.holder)
         if not self.menu:
             self.menu = self.gazpacho.app.menu
-            self.cusbar.win.pack_start(self.menu, expand=False)
+            self.cusbar.win.pack_end(self.menu, expand=False)
+            self.gazpacho.app.undo_button = self.undo_but
+            self.gazpacho.app.redo_button = self.redo_but
+            self.gazpacho.app.refresh_undo_and_redo()
     
 
     #def evt_started(self, *args):
