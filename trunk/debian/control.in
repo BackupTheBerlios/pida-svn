@@ -21,7 +21,9 @@ Description: Python Integrated Development Applicationr, a Python IDE.
 Package: python2.3-pida
 Cpu: any
 System: any
-Depends: ${python:Depends}, gvim, python2.3-gtk2, python-vte, bicyclerepair, python2.3-profiler
+Depends: ${python:Depends}, gvim, python2.3-gtk2, python-vte
+Recommends: bicyclerepair, python2.3-profiler
+Suggests: gazpacho
 Conflicts: python2.4-pida, pida
 Replaces: pida
 Provides: pida
@@ -35,6 +37,8 @@ Package: python2.4-pida
 Cpu: any
 System: any
 Depends: ${python:Depends}, gvim, python2.4-gtk2, python-vte, bicyclerepair, python2.4-profiler
+Recommends: bicyclerepair, python2.4-profiler
+Suggests: gazpacho
 Conflicts: python2.3-pida, pida
 Replaces: pida
 Provides: pida
