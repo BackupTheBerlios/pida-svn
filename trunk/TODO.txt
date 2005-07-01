@@ -13,3 +13,9 @@ on going
 --
 documentation
 code commented
+
+plugins
+--
+tags
+C
+make

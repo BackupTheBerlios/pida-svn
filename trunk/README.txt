@@ -12,10 +12,10 @@ Requirements
 3. Python-GTK2 (and GTK2)
 4. Python-vte (and lib-vte)
 5. Bicycle repair man (for Python features)
+6. Gazpacho (for GTK RAD)
 
 These are all commonly available in Linux distributions, but may have slightly
 different names. You do not require to use, run or have heard of Gnome.
-
 
 Installation
 --
