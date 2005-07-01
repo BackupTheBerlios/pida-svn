@@ -661,6 +661,12 @@ class Cvs(VersionControlSystem):
     def command_commit(self, **kw):
         self.launch(['commit'], **kw)
 
+    def command_add(self, **kw):
+        if kw['filename']:
+            self.launch(['add', kw['filename']], **kw)
+
+    def command_update(self, **kw):
+        self.launch(['update'], **kw)
 
 class Darcs(VersionControlSystem):
     COMMAND = '/usr/bin/darcs'
@@ -672,6 +678,9 @@ class Darcs(VersionControlSystem):
     def command_send(self, **kw):
         self.launch(['send'], **kw)
         
+    def command_update(self, **kw):
+        self.launch(['pull'], **kw)
+
 class Subversion(VersionControlSystem):
     COMMAND = '/usr/bin/svn'
     ARGS = ['svn']

@@ -1,6 +1,5 @@
 vital
 --
-fill out remaining vcs commands
 
 
 near future
