@@ -59,8 +59,6 @@ class Gazpacho(object):
                 self.holder = holder
             else:
                 self.app = GazpachoApplication()
-            
-            #gladegtk.init_gladegtk(self.app)
             self.app.reactor = self
         self.app.show_all()
         self.app.new_project()
