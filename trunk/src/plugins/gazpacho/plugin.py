@@ -84,13 +84,12 @@ class Plugin(plugin.Plugin):
         if not self.gazpacho:
             self.holder.remove(self.button)
             self.gazpacho = gazpachembed.Gazpacho(self.cb)
+        self.gazpacho.undo_button = self.undo_but
+        self.gazpacho.redo_button = self.redo_but
         self.gazpacho.launch(self.holder)
         if not self.menu:
             self.menu = self.gazpacho.app.menu
             self.cusbar.win.pack_end(self.menu, expand=False)
-            self.gazpacho.app.undo_button = self.undo_but
-            self.gazpacho.app.redo_button = self.redo_but
-            self.gazpacho.app.refresh_undo_and_redo()
     
     def evt_signaledited(self, projectpath, widgetname, signalname,
                          callbackname):

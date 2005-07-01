@@ -25,12 +25,19 @@ need to know exactly what is needed."""
 
 import gtk
 import os
+import gettext
+from gazpacho.path import languages_dir
 
+def init_l10n():
+    gettext.install('gazpacho', languages_dir, unicode=True)
+
+# we need to call this before anything else because in some Gazpacho classes
+# there are l10n strings and so they need the _ function in loading time
+init_l10n()
 from gazpacho import application, gladegtk
 from gazpacho.path import pixmaps_dir
 from gazpacho import palette, editor, project, catalog
 from gazpacho.gaction import GActionsView, GAction, GActionGroup
-
 class Gazpacho(object):
 
     def __init__(self, cb):
@@ -45,13 +52,15 @@ class Gazpacho(object):
         if not self.app:
             if holder:
                 self.app = GazpachoEmbedded(self.cb)
+                self.app.undo_button = self.undo_button
+                self.app.redo_button = self.redo_button
                 self.app._pidawindow = self.cb.cw
                 holder.pack_start(self.app._window)
                 self.holder = holder
             else:
                 self.app = GazpachoApplication()
             
-            gladegtk.init_gladegtk(self.app)
+            #gladegtk.init_gladegtk(self.app)
             self.app.reactor = self
         self.app.show_all()
         self.app.new_project()
@@ -73,7 +82,21 @@ class GazpachoEmbedded(GazpachoApplication):
     def __init__(self, cb):
         self.cb = cb
         GazpachoApplication.__init__(self)
-    
+
+    def _change_action_state(self, sensitive=[], unsensitive=[]):
+
+        """Set sensitive True for all the actions whose path is on the
+        sensitive list. Set sensitive False for all the actions whose path
+        is on the unsensitive list.
+        """
+        pass
+        #for action_path in sensitive:
+        #    action = self._ui_manager.get_action(action_path)
+        #    action.set_property('sensitive', True)
+        #for action_path in unsensitive:
+        #    action = self._ui_manager.get_action(action_path)
+        #    action.set_property('sensitive', False)            
+
     def get_window(self): return self._pidawindow
     window = property(get_window)
     
@@ -455,7 +478,8 @@ class GazpachoEmbedded(GazpachoApplication):
         project.uim_id = self._ui_manager.add_ui_from_string(project_ui)
 
         # connect to the project signals so that the editor can be updated
-        project.connect('widget_name_changed', self._widget_name_changed_cb)
+        #project.connect('widget_name_changed', self._widget_name_changed_cb)
+        project.connect('project_changed', self._project_changed_cb)
         project.connect('selection_changed',
                          self._project_selection_changed_cb)
 
@@ -640,6 +664,7 @@ class MiniPalette(palette.Palette):
     
     def __init__(self, cb, catalogs):
         self.cb = cb
+        self.persistent_mode = True
         gtk.VBox.__init__(self)
 
         # The GladeWidgetClass corrisponding to the selected button. NULL if
