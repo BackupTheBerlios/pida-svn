@@ -64,6 +64,7 @@ class Gazpacho(object):
             self.app.reactor = self
         self.app.show_all()
         self.app.new_project()
+        print dir(self.app._project)
 
 
 class GazpachoApplication(application.Application):
@@ -212,14 +213,17 @@ class GazpachoEmbedded(GazpachoApplication):
         model = tv.get_model()
         niter = model.get_iter(path)
         callbackname = model.get_value(niter, 1)
+        widgetname = self._editor._loaded_widget.name
+        signalname =  model.get_value(niter, 0)
+        if callbackname.startswith('<'):
+            callbackname = '%s_%s' % (widgetname, signalname.replace('-', '_'))
+            model.set_value(niter, 1, callbackname)
         if callbackname:
             if not self._project.path:
                 print "must save gazpahco"
                 self._save_cb(None)
             if not self._project.path:
                 return
-            signalname =  model.get_value(niter, 0)
-            widgetname = self._editor._loaded_widget.name
             self.cb.evt('signaledited', self._project.path,
                             widgetname,
                             signalname,

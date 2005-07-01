@@ -118,7 +118,7 @@ class Plugin(plugin.Plugin):
         if not foundline:
             f = open(callbackfile, 'a')
             f.write('\n')
-            f.write('    def %s():\n\n' % callbackname)
+            f.write('    def %s(self, *args):\n        pass\n' % callbackname)
             f.close()
             self.cb.action_openfile(callbackfile.replace(' ', r'\ '))
             self.cb.action_gotoline('%')
