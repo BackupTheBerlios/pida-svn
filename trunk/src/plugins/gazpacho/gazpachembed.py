@@ -26,15 +26,10 @@ need to know exactly what is needed."""
 import gtk
 import os
 
-try:
-    from gazpacho import application, gladegtk
-    from gazpacho.path import pixmaps_dir
-    from gazpacho import palette, editor, project, catalog
-#from gazpacho.l10n import _
-    from gazpacho.gaction import GActionsView, GAction, GActionGroup
-except ImportError, e:
-    print "User interface design needs the installation of Gazpacho", e
-    application = None
+from gazpacho import application, gladegtk
+from gazpacho.path import pixmaps_dir
+from gazpacho import palette, editor, project, catalog
+from gazpacho.gaction import GActionsView, GAction, GActionGroup
 
 class Gazpacho(object):
 
