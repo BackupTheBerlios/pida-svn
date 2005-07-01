@@ -25,6 +25,7 @@ import pida.plugin as plugin
 import pida.gtkextra as gtkextra
 import gazpachembed
 import gtk
+import os
 
 class Plugin(plugin.Plugin):
     NAME = 'Gazpacho'
@@ -32,7 +33,6 @@ class Plugin(plugin.Plugin):
     DICON = 'run', 'Run Gazpacho user interface designer.'
 
     def populate_widgets(self):
-        
         self.second_toolbar = gtkextra.Toolbar(self.cb)
         self.add(self.second_toolbar.win, expand=False)
 
@@ -65,12 +65,9 @@ class Plugin(plugin.Plugin):
         self.add_button('open', self.cb_gazpacho, 'Open a file',
                                                   ['open'])
         
-
-
     def init(self):
         self.gazpacho = None
         self.menu = None
-
 
     def cb_alternative(self, *args):
         self.launch()
@@ -95,6 +92,48 @@ class Plugin(plugin.Plugin):
             self.gazpacho.app.redo_button = self.redo_but
             self.gazpacho.app.refresh_undo_and_redo()
     
+    def evt_signaledited(self, projectpath, widgetname, signalname,
+                         callbackname):
+        projectdir, projectfile = os.path.split(projectpath)
+        callbackfile = projectfile.replace('.glade', '_callbacks.py')
+        callbackfile = os.path.join(projectdir, callbackfile)
+        if not os.path.exists(callbackfile):
+            print 'nofile'
+            f = open(callbackfile, 'w')
+            f.write('# pida generated ui file\n')
+            f.write('class CallbacksMixin(object):\n')
+            f.close()
+        
+        f = open(callbackfile, 'r')
+        foundline = 0
+        if callbackname.startswith('<'):
+            callbackname = '%s_%s' % (widgetname, signalname.replace('-', '_'))
+
+        for i, line in enumerate(f):
+            if line.count(callbackname):
+                foundline = i
+                break
+        f.close()
+
+        
+        if not foundline:
+            f = open(callbackfile, 'a')
+            f.write('\n')
+            f.write('    def %s():\n\n' % callbackname)
+            f.close()
+            self.cb.action_openfile(callbackfile.replace(' ', r'\ '))
+            self.cb.action_gotoline('%')
+        else:
+            if callbackfile != self.filename:
+                self.cb.action_openfile(callbackfile.replace(' ', r'\ '))
+            print foundline
+            self.cb.action_gotoline(foundline+2)
+        
+
+        print widgetname, signalname, callbackname
+
+    def evt_bufferchange(self, number, name):
+        self.filename = name
 
     #def evt_started(self, *args):
     #    self.launch()

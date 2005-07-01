@@ -188,9 +188,20 @@ class GazpachoEmbedded(GazpachoApplication):
     def cb_signal_activated(self, tv, path, column):
         model = tv.get_model()
         niter = model.get_iter(path)
-        print model.get_value(niter, 0)
-        print model.get_value(niter, 1)
-        print self._editor._loaded_widget.name
+        callbackname = model.get_value(niter, 1)
+        if callbackname:
+            if not self._project.path:
+                print "must save gazpahco"
+                self._save_cb(None)
+            if not self._project.path:
+                return
+            signalname =  model.get_value(niter, 0)
+            widgetname = self._editor._loaded_widget.name
+            self.cb.evt('signaledited', self._project.path,
+                            widgetname,
+                            signalname,
+                            callbackname)
+        #print self._project.path
 
 
     def cb_editor_selected(self, button):
@@ -515,7 +526,7 @@ class GazpachoEmbedded(GazpachoApplication):
         while True:
             if filechooser.run() == gtk.RESPONSE_OK:
                 path = filechooser.get_filename()
-                if exists(path):
+                if os.path.exists(path):
                     msg = gtk.MessageDialog(parent=self.get_window(),
                                             flags=gtk.DIALOG_MODAL \
                                             | gtk.DIALOG_DESTROY_WITH_PARENT,
