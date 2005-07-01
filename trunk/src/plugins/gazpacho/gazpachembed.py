@@ -64,7 +64,6 @@ class Gazpacho(object):
             self.app.reactor = self
         self.app.show_all()
         self.app.new_project()
-        print dir(self.app._project)
 
 
 class GazpachoApplication(application.Application):
@@ -220,7 +219,16 @@ class GazpachoEmbedded(GazpachoApplication):
             model.set_value(niter, 1, callbackname)
         if callbackname:
             if not self._project.path:
-                print "must save gazpahco"
+                mb = gtk.MessageDialog(parent=self.get_window(),
+                        flags = 0,
+                        type = gtk.MESSAGE_INFO,
+                        buttons = gtk.BUTTONS_OK,
+                        message_format='You must save your user interface '
+                                       'file before continuing.')
+                def mbok(*args):
+                    mb.destroy()
+                mb.connect('response', mbok)
+                mb.run()
                 self._save_cb(None)
             if not self._project.path:
                 return

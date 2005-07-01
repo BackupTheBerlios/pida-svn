@@ -97,7 +97,6 @@ class Plugin(plugin.Plugin):
         callbackfile = projectfile.replace('.glade', '_callbacks.py')
         callbackfile = os.path.join(projectdir, callbackfile)
         if not os.path.exists(callbackfile):
-            print 'nofile'
             f = open(callbackfile, 'w')
             f.write('# pida generated ui file\n')
             f.write('class CallbacksMixin(object):\n')
@@ -114,7 +113,6 @@ class Plugin(plugin.Plugin):
                 break
         f.close()
 
-        
         if not foundline:
             f = open(callbackfile, 'a')
             f.write('\n')
@@ -125,11 +123,7 @@ class Plugin(plugin.Plugin):
         else:
             if callbackfile != self.filename:
                 self.cb.action_openfile(callbackfile.replace(' ', r'\ '))
-            print foundline
             self.cb.action_gotoline(foundline+2)
-        
-
-        print widgetname, signalname, callbackname
 
     def evt_bufferchange(self, number, name):
         self.filename = name
