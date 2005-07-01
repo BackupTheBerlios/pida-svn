@@ -176,7 +176,6 @@ class Plugin(plugin.Plugin):
         if self.registry.easy_mode.value():
             vc = 'evim'
         vimcom = self.cb.opts.get('commands', vc)
-        print vc
         if self.is_embedded():
             if self.vim:
                 self.message('Only one embedded Vim allowed.')
@@ -266,12 +265,9 @@ class Plugin(plugin.Plugin):
 
     def show_or_hide_serverlist(self):
         if self.is_embedded():
-            print [self.registry.show_serverlist.value()]
             if self.registry.show_serverlist.value():
-                print 'showing'
                 self.entry.show()
             else:
-                print 'hiding'
                 self.entry.hide()
 
     def evt_reset(self):

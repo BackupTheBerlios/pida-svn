@@ -24,7 +24,7 @@
 import os
 import sys
 import logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 import optparse
 
 # Gtk
@@ -55,10 +55,10 @@ def create_plugin(name, cb):
         try:
             inst = mod.Plugin(cb)
         except Exception, e:
-            print 'Plugin "%s" failed to instantiation with: %s' % (name, e)
+            logging.warn('Plugin "%s" failed to instantiate: %s' % (name, e))
             inst = None
     except ImportError, e:
-        print 'Plugin "%s" failed to import with: %s' % (name, e)
+        logging.warn('Plugin "%s" failed to import with: %s' % (name, e))
         inst = None
 
     return inst
@@ -277,7 +277,8 @@ class Application(object):
                 try:
                     eventfunc(*args, **kw)
                 except Exception, e:
-                    print 'error passing event "%s" to %s %s' % (name, plugin, e)
+                    logging.warn('error passing event "%s" to %s %s' % (name,
+                                 plugin, e))
 
     def attr(self, name, callbackfunc, *args, **kw):
         attrname = 'attr_%s' % name

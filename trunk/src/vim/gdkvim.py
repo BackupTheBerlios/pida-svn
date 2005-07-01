@@ -559,5 +559,5 @@ class VimWindow(gtk.Window):
             self.cb.evt(evt, *d.split(','))
         else:
             pass
-            print 'bad async reply', data
+            self.cb.action_log('bad async reply', data, 10)
 
