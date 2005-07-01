@@ -330,7 +330,7 @@ class ConfigInteger(ConfigEntry):
         """
         Set the option database value to the widgets text.
         """
-        self.set_value(self.widget.get_value())
+        self.set_value(int(self.widget.get_value()))
 
 
 class ListTree(gtk.TreeView):

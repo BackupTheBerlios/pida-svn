@@ -147,10 +147,10 @@ def configure(reg):
 
     log_level = logs_group.add('level',
                    registry.Integer,
-                   1,
-                   'The default logging level (0=debug)')
+                   20,
+                   'The default logging level (10=debug, 50=critical)')
 
-    log_level.adjustment = (0, 5, 1)
+    log_level.adjustment = (10, 50, 10)
 
     lay_group = reg.add_group('layout', 'Thigs to do with layout')
     

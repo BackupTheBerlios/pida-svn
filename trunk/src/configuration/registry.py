@@ -65,7 +65,7 @@ class RegistryItem(object):
     def load(self, data):
         try:
             value = self.unserialize(data)
-        except:
+        except Exception, e:
             # Any unserialisation error is a failure
             return False
         try:

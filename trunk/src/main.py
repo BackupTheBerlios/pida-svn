@@ -24,7 +24,6 @@
 import os
 import sys
 import logging
-logging.basicConfig(level=logging.INFO)
 import optparse
 
 # Gtk
@@ -131,6 +130,9 @@ class Application(object):
         self.registry.load()
         self.registry.save()
       
+
+        logging.getLogger().setLevel(self.registry.log.level.value())
+
         self.shortcuts.load()
       
         self.icons = gtkextra.Icons(self)
@@ -145,6 +147,8 @@ class Application(object):
         self.evt('started')
         self.evt('reset')
         
+    def reset(self):
+        logging.getLogger().setLevel(self.registry.log.level.value())
 
     def add_plugin(self, name):
         """
@@ -268,6 +272,8 @@ class Application(object):
         # log all events except for log events
         if name != 'log':
             self.action_log('event', name)
+        if name == 'reset':
+            self.reset()
         # pass the event to every plugin
         eventname = 'evt_%s' % name
         for plugin in self.plugins:
