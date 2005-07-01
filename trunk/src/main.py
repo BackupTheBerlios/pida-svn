@@ -48,9 +48,18 @@ def create_plugin(name, cb):
     """ Find a named plugin and instantiate it. """
     # import the module
     # The last arg [True] just needs to be non-empty
-    mod = __import__('pida.plugins.%s.plugin' % name, {}, {}, [True])
-    # instantiate the plugin and return it
-    return mod.Plugin(cb)
+    try:
+        mod = __import__('pida.plugins.%s.plugin' % name, {}, {}, [True])
+        try:
+            inst = mod.Plugin(cb)
+        except Exception, e:
+            print 'Plugin "%s" failed to instantiation with: %s' % (name, e)
+            inst = None
+    except ImportError, e:
+        print 'Plugin "%s" failed to import with: %s' % (name, e)
+        inst = None
+
+    return inst
 
 
 class DummyOpts(object):
@@ -107,7 +116,7 @@ class Application(object):
         opt_plugs = []
         for plugname in PLUGINS:
             plugin = self.add_plugin(plugname)
-            if plugin.VISIBLE:
+            if plugin and plugin.VISIBLE:
                 opt_plugs.append(plugin)
         
         self.shortcuts = self.add_plugin('shortcuts')
@@ -140,8 +149,9 @@ class Application(object):
         Create and return the plugin
         """
         plugin = create_plugin(name, self)
-        plugin.configure(self.registry)
-        self.plugins.append(plugin)
+        if plugin:
+            plugin.configure(self.registry)
+            self.plugins.append(plugin)
         return plugin
 
     def action_showconfig(self):
