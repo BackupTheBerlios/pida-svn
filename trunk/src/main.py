@@ -23,6 +23,8 @@
 # System imports
 import os
 import sys
+import logging
+logging.basicConfig(level=logging.DEBUG)
 import optparse
 
 # Gtk
@@ -168,10 +170,11 @@ class Application(object):
         self.shortcuts.evt_init()
         self.shortcuts.show()
 
-    def action_log(self, message, details, level=0):
+    def action_log(self, message, details, level=10):
         """ called to make log entry """
         # Call the log event, the log itself will respond.
-        self.evt('log', message, details, level)
+        # self.evt('log', message, details, level)
+        logging.log(level, '%s: %s' % (message, details))
 
     def action_close(self):
         """ Quit Pida. """
