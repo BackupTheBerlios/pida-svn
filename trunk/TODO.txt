@@ -1,6 +1,5 @@
 vital
 --
-make plugins not fail on loading, even if they fail
 fill out remaining vcs commands
 
 
