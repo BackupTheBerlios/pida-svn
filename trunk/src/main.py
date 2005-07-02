@@ -178,7 +178,7 @@ class Application(object):
         """ called to make log entry """
         # Call the log event, the log itself will respond.
         # self.evt('log', message, details, level)
-        logging.log(level, '%s: %s' % (message, details))
+        logging.getLogger().log(level, '%s: %s' % (message, details))
 
     def action_close(self):
         """ Quit Pida. """
