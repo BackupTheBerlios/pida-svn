@@ -446,7 +446,6 @@ class VimWindow(gtk.Window):
         Parse a received message and return the message atributes as a
         dictionary.
         """
-        print message
         messageattrs = {}
         for t in [s.split(' ') for s in message.split('\0')]:
             if t and len(t[0]):
@@ -552,7 +551,6 @@ class VimWindow(gtk.Window):
             if mdict['s'] in self.callbacks:
                 self.callbacks[mdict['s']](mdict['r'])
         else:
-            print mdict
             self.cb_reply_async(mdict['n'])
 
     def cb_reply_async(self, data):
