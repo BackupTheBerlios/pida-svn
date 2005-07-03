@@ -79,7 +79,7 @@ endfunction
 '''
 
 class Plugin(plugin.Plugin):
-    NAME = "Server"
+    NAME = 'Vim'
     RESIZABLE = False
     DICON = 'configure', 'Configure Pida'
 
