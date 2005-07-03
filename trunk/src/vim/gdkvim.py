@@ -138,12 +138,12 @@ class VimHidden(object):
         """
         if not self.pid:
             # Get the console vim executable path
-            command = self.cb.opts.get('commands', 'console_vim')
+            command = self.cb.opts.get('commands', 'vim')
             # Fork using pty.fork to prevent Vim taking the terminal
             pid, fd = pty.fork()
             if pid == 0:
                 # Child, execute Vim with the correct servername argument
-                os.execvp(command, ['vim', '--servername', self.name])
+                os.execvp(command, ['vim', '-v', '--servername', self.name])
             else:
                 # Parent, store the pid, and file descriptor for later.
                 self.pid = pid
