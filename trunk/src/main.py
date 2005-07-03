@@ -310,10 +310,6 @@ class MainWindow(gdkvim.VimWindow):
 
     def set_plugins(self, server_plug, buffer_plug, shell_plug, opt_plugs):
         p0 = gtk.HPaned()
-        #p0.show()
-        # Set these properties for later embedding
-        #p3 = gtk.VPaned()
-        #p0.pack1(p3, True, True)
         
         self.cb.embedwindow = gtk.VBox()
         self.cb.embedslider = p0
@@ -322,9 +318,12 @@ class MainWindow(gdkvim.VimWindow):
         p1 = gtk.VPaned()
 
         if self.cb.registry.vim.embedded_mode.value():
+            self.resize(1000, 768)
             self.add(p0)
             p0.pack2(p1, True, True)
+            p0.set_position(600)
         else:
+            self.resize(400, 768)
             self.add(p1)
         # Pane for standard and optional plugins
         p2 = None
@@ -332,38 +331,23 @@ class MainWindow(gdkvim.VimWindow):
             p2 = gtk.VPaned()
         else:
             p2 = gtk.HPaned()
-        #p2.show()
         p1.pack1(p2, True, True)
-        # The terminal plugin
-        #shell_plug = create_plugin('terminal', self.cb)
         p1.pack2(shell_plug.win, True, True)
         lbox = gtk.VBox()
         lbox.set_size_request(200, -1)
-        #lbox.show()
         p2.pack1(lbox, True, True)
-        # The vim plugin.
-        #server_plug = create_plugin('vim', self.cb)
         lbox.pack_start(server_plug.win, expand=False)
-        # The buffer explorer plugin.
-        #buffer_plug = create_plugin('buffer', self.cb)
         lbox.pack_start(buffer_plug.win)
         # The optional plugin  area
         self.notebook = gtk.Notebook()
         self.notebook.set_show_border(True)
         self.notebook.set_size_request(200, -1)
-        #self.notebook.show()
         p2.pack2(self.notebook, True, True)
         # Populate with the configured plugins
         for plugin in opt_plugs:
-            # Check the config value.
-            # if self.cb.opts.get('plugins', plugin) == '1':
-            # Instantiate and add the plugin.
-            #pi = create_plugin(plugin, self.cb)
             self.add_opt_plugin(plugin)
         # Show the window as late as possible.
 
-        p0.set_position(600)
-        self.resize(1000, 768)
         
     
     def add_opt_plugin(self, plugin):
