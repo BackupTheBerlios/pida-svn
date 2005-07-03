@@ -275,8 +275,13 @@ class Plugin(plugin.Plugin):
                 self.entry.hide()
 
     def evt_reset(self):
+        if self.embedded_value != self.registry.embedded_mode.value():
+            self.message('Embedded mode setting has changed.\n'
+                         'You must restart Pida.')
+            return
         self.load_shortcuts()
         self.show_or_hide_serverlist()
+        
 
     def evt_connectserver(self, name):
         # Actually does the connecting
@@ -291,6 +296,7 @@ class Plugin(plugin.Plugin):
             self.cb.evt('disconnected', name)
 
     def evt_started(self, *args):
+        self.embedded_value = self.registry.embedded_mode.value()
         if self.is_embedded():
             self.launch()
 
