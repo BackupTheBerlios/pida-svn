@@ -389,7 +389,9 @@ class Plugin(plugin.Plugin):
     def new_command(self, command, args, icon, **kw):
         child = self.add_terminal(PidaTerminal, icon, False)
         child.run_command(command, args, **kw)
-        return child 
+        if self.detach_window:
+            self.detach_window.present()
+        return child
 
     def new_shell(self):
         shell = self.cb.opts.get('commands', 'shell')

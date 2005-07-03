@@ -58,6 +58,7 @@ class Plugin(object):
         """
         # Instance of the Application class.
         self.cb = cb
+        self.detach_window = None
 
     def init(self):
         pass
@@ -213,14 +214,15 @@ class Plugin(object):
         Reparent the plugin in the original parent.
         """
         self.win.reparent(self.oldparent)
-        self.dwin.destroy()
+        self.detach_window.destroy()
+        self.detach_window = None
     
     def detatch(self):
         """
         Reparent the plugin in a top-level window.
         """
         self.oldparent = self.win.get_parent()
-        self.dwin = gtkextra.Winparent(self.cb, self)
+        self.detach_window = gtkextra.Winparent(self.cb, self)
 
     def log(self, message, level):
         """
