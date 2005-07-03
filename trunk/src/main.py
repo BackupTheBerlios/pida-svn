@@ -311,7 +311,6 @@ class MainWindow(gdkvim.VimWindow):
     def set_plugins(self, server_plug, buffer_plug, shell_plug, opt_plugs):
         p0 = gtk.HPaned()
         #p0.show()
-        self.add(p0)
         # Set these properties for later embedding
         #p3 = gtk.VPaned()
         #p0.pack1(p3, True, True)
@@ -320,12 +319,13 @@ class MainWindow(gdkvim.VimWindow):
         self.cb.embedslider = p0
         p0.pack1(self.cb.embedwindow, True, True)
         
-        #self.cb.gazpachwindow = gtk.VBox()
-        #p3.pack2(self.cb.gazpachwindow, True, True)
-        # The plugin/terminal area
         p1 = gtk.VPaned()
-        #p1.show()
-        p0.pack2(p1, True, True)
+
+        if self.cb.registry.vim.embedded_mode.value():
+            self.add(p0)
+            p0.pack2(p1, True, True)
+        else:
+            self.add(p1)
         # Pane for standard and optional plugins
         p2 = None
         if self.cb.registry.layout.vertical_split.value():
