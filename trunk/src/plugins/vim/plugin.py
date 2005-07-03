@@ -167,6 +167,7 @@ class Plugin(plugin.Plugin):
         self.old_shortcuts = {}
         self.vim = None
         self.embedname = None
+        self.last_pane_position = 600
         #gobject.timeout_add(2000, self.cb_refresh)
         self.currentserver = None
         self.oldservers = []
@@ -241,9 +242,13 @@ class Plugin(plugin.Plugin):
         return self.registry.embedded_mode.value()
 
     def cb_plugged(self):
-        pass
+        print 'plugged'
+        self.cb.embedslider.set_position(self.last_pane_position)
 
     def cb_unplugged(self):
+        print 'unplugged'
+        self.last_pane_position = self.cb.embedslider.get_position()
+        self.cb.embedslider.set_position(0)
         self.vim = None
 
     def cb_connect(self, *a):

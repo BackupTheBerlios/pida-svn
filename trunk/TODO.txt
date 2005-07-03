@@ -1,6 +1,6 @@
 vital
 --
-
+vim pane says big when vim is closed
 
 near future
 --

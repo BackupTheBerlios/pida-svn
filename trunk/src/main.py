@@ -317,6 +317,7 @@ class MainWindow(gdkvim.VimWindow):
         #p0.pack1(p3, True, True)
         
         self.cb.embedwindow = gtk.VBox()
+        self.cb.embedslider = p0
         p0.pack1(self.cb.embedwindow, True, True)
         
         #self.cb.gazpachwindow = gtk.VBox()
