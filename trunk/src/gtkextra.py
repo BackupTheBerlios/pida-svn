@@ -242,7 +242,12 @@ class Winparent(gtk.Window):
     def __init__(self, cb, child):
         self.cb = cb
         gtk.Window.__init__(self)
-        self.set_transient_for(self.cb.cw)
+# Only set transient if on_top is true, or not defined.
+        try:
+            if child.registry.on_top.value():
+                self.set_transient_for(self.cb.cw)
+        except AttributeError:
+            self.set_transient_for(self.cb.cw)
         child.win.reparent(self)
         self.show()
         self.connect('destroy', child.attach)

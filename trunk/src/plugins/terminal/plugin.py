@@ -333,6 +333,12 @@ class Plugin(plugin.Plugin):
                 registry.Color,
                 '#d0d0d0',
                 'The foreground colour for terminals')
+        
+        self.registry.add('on_top',
+                registry.Boolean,
+                1,
+                'Is the detached window on top of main PIDA window? (Transient'
+                ' window)')
     
     def populate_widgets(self):
         self.notebook = gtk.Notebook()
