@@ -24,8 +24,12 @@
 import pida.plugin as plugin
 import pida.gtkextra as gtkextra
 import gazpachembed
+import gobject
 import gtk
 import os
+
+def argname_from_gtype(gtype):
+    return ('%s' % gtype).split()[1].lower().replace('gtk','',1)
 
 class Plugin(plugin.Plugin):
     NAME = 'Gazpacho'
@@ -91,7 +95,7 @@ class Plugin(plugin.Plugin):
             self.menu = self.gazpacho.app.menu
             self.cusbar.win.pack_end(self.menu, expand=False)
     
-    def evt_signaledited(self, projectpath, widgetname, signalname,
+    def evt_signaledited(self, projectpath, widgetname, widgettype, signalname,
                          callbackname):
         projectdir, projectfile = os.path.split(projectpath)
         callbackfile = projectfile.replace('.glade', '_callbacks.py')
@@ -114,9 +118,15 @@ class Plugin(plugin.Plugin):
         f.close()
 
         if not foundline:
+            argtypes = gobject.signal_query(signalname, widgettype)[-1]
+            widgetarg = widgettype.__class__.__name__.lower()
+            extraargs = [argname_from_gtype(typ) for typ in argtypes]
+            cbargs = ['self', widgetarg] + extraargs
+            print cbargs
             f = open(callbackfile, 'a')
             f.write('\n')
-            f.write('    def %s(self, *args):\n        pass\n' % callbackname)
+            f.write('%sdef %s(%s):\n%spass\n' % (' ' * 4, callbackname,
+                                                 ', '.join(cbargs), ' ' * 8))
             f.close()
             self.cb.action_openfile(callbackfile.replace(' ', r'\ '))
             self.cb.action_gotoline('%')

@@ -211,6 +211,7 @@ class GazpachoEmbedded(GazpachoApplication):
         niter = model.get_iter(path)
         callbackname = model.get_value(niter, 1)
         widgetname = self._editor._loaded_widget.name
+        widgettype =  self._editor._loaded_widget.gtk_widget
         signalname =  model.get_value(niter, 0)
         if callbackname.startswith('<'):
             callbackname = '%s_%s' % (widgetname, signalname.replace('-', '_'))
@@ -232,6 +233,7 @@ class GazpachoEmbedded(GazpachoApplication):
                 return
             self.cb.evt('signaledited', self._project.path,
                             widgetname,
+                            widgettype,
                             signalname,
                             callbackname)
         #print self._project.path
