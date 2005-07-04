@@ -1,0 +1,37 @@
+# Everyone, thank-you so much!
+# Every single person/entity here has provided a service free of charge.
+
+(general all round uberclue, developer, debian maintainer, adviser)
+Cristi (cheers mate!) gcbirzan at wolfheart to ro
+
+(people helpful and willing to test stuff)
+garduletz   #pida
+iphithus    #pida
+mawimawi    #pida
+housetier   #pida
+
+(for hosting the project)
+Berlios.de
+
+(for providing an irc channel and being just plain useful)
+Freenode
+
+(genreal advice and inspiration)
+Seba
+Jemfinch
+Steg
+
+(the team from #vim)
+jamessan
+p0g
+
+(other packagers)
+Archlinux
+
+(authors of integrated tools)
+Vim
+Python
+GTK
+PyGTK
+Gazpacho
+
