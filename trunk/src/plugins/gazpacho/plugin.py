@@ -132,7 +132,7 @@ class Plugin(plugin.Plugin):
             self.cb.action_gotoline('%')
         else:
             if callbackfile != self.filename:
-                self.cb.action_openfile(callbackfile.replace(' ', r'\ '))
+                self.cb.action_openfile(callbackfile)
             self.cb.action_gotoline(foundline+2)
 
     def evt_bufferchange(self, number, name):
