@@ -5,21 +5,21 @@
 Cristi (cheers mate!) gcbirzan at wolfheart to ro
 
 (general advice and inspiration)
-Seba
-Jemfinch
-Steg
+Seba		
+Jemfinch	
+Steg		Steven Holmes <steg at linuxops dot net>
 
 (people helpful and willing to test stuff)
-garduletz   #pida
-iphithus    #pida
-mawimawi    #pida
-housetier   #pida
+garduletz	Lucian Stănescu <luci at wolfheart dot ro>
+iphithus	
+mawimawi    
+housetier	
 
 (for hosting the project)
 Berlios.de
 
 (for providing an irc channel and being just plain useful)
-Freenode
+Freenode and the squeaky wheel system. :-)
 
 (the team from #vim)
 jamessan
