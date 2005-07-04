@@ -2,8 +2,49 @@ change log
 --
 version 0.2.1
 
-project browser: file list now has optional regular expression exclude mask
+User Interface Designer integration:
 
+    Create Glade files from within Pida using Gazpacho embedding.
+    Automatic signal handler callback function creation and editing.
+
+Project browser: 
+    
+    File list now has optional regular expression exclude mask
+    Version control system commands per Version control system
+    New version control icons
+
+Vim integration:
+    Server list only updated when it has changed.
+    Recognition of Vim shutting down.
+    More Accurate server list mechanism.
+    Never attempts to connect to a non-exitent Vim.
+    Added option to shut pida down on shutting down Vim.
+    Recognition of there zero available Vim servers.
+
+Subversion support:
+    Added svn diff.
+    Added svn resolve.    
+
+General:
+    Added option for detached terminal to remain behind Pida.
+    Added option to pass config values from the command line.
+    Terminal tab icons reflect run command.
+    Moved to the standard Python logging format.
+    Fixed icon installation path to be local.
+    Added Python source code encoding tag (PEP 0263)
+
+Fixed:
+    "Open terminal in project" in correct directory.
+    Buffer list refreshes when help files are closed.
+    Support for pygtk 2.4 unscriptable atom hints.
+    Buffer execute from Vim fixed.
+    Main pain is not added in non-embedded mode.
+
+Debugger:
+    Refactored to use unix domain sockets rather than X window properties.
+
+Profiler:
+    Refactored to use unix domain sockets rather than X window properties.
 
 version 0.2.0
 
