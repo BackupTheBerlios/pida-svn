@@ -5,14 +5,14 @@
 Cristi (cheers mate!) gcbirzan at wolfheart to ro
 
 (general advice and inspiration)
-Seba		
-Jemfinch	
-Steg		Steven Holmes <steg at linuxops dot net>
+solarwind	Seba V. Tiponut <>
+jemfinch	Jeremy Fincher <jemfinch@supybot.com>
+steg		Steven Holmes <steg at linuxops dot net>
 
 (people helpful and willing to test stuff)
 garduletz	Lucian Stănescu <luci at wolfheart dot ro>
 iphithus	
-mawimawi    
+mawimawi    	Martin Winkler <>
 housetier	
 
 (for hosting the project)
