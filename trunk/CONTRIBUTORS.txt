@@ -4,6 +4,11 @@
 (general all round uberclue, developer, debian maintainer, adviser)
 Cristi (cheers mate!) gcbirzan at wolfheart to ro
 
+(general advice and inspiration)
+Seba
+Jemfinch
+Steg
+
 (people helpful and willing to test stuff)
 garduletz   #pida
 iphithus    #pida
@@ -16,17 +21,13 @@ Berlios.de
 (for providing an irc channel and being just plain useful)
 Freenode
 
-(genreal advice and inspiration)
-Seba
-Jemfinch
-Steg
-
 (the team from #vim)
 jamessan
 p0g
+(and everyone else for putting up with my ridiculous questions)
 
 (other packagers)
-Archlinux
+Archlinux packager angeloth at tin dot it
 
 (authors of integrated tools)
 Vim
@@ -35,3 +36,6 @@ GTK
 PyGTK
 Gazpacho
 
+And frankly, any user!
+
+Ali (aafshar@gmail.com)
