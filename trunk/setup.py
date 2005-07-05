@@ -85,7 +85,7 @@ setup(name='pida',
     scripts=['scripts/pida'],
     data_files=[(os.path.join('share', 'pida'), ['data/icons.dat'])],
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Environment :: X11 Applications',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
