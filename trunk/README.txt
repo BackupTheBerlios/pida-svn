@@ -68,7 +68,7 @@ On running Pida, you may see this warning repeatedly:
 Gdk-WARNING **: gdk_property_get(): length value has wrapped in calculation
 (did you pass G_MAXLONG?)
 
-This is caused by the VTE terminal widget, to test it, open a Pytho terminal
+This is caused by the VTE terminal widget, to test it, open a Python terminal
 and execute:
 
 >>> import vte
