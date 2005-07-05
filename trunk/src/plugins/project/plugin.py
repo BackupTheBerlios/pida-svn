@@ -345,10 +345,11 @@ class FileTree(gtkextra.Tree):
         self.update()
     
     def up(self):
-        self.clear()
-        parent = os.path.split(self.root)[0]
-        self.set_root(parent)
-        self.update()
+        if self.root != '/':
+            self.clear()
+            parent = os.path.split(self.root)[0]
+            self.set_root(parent)
+            self.update()
     
     def get_selected_root(self, fn):
         root = self.root
