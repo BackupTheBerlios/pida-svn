@@ -275,6 +275,8 @@ class FileTree(gtkextra.Tree):
 
         ctrls.add_button('up', self.cb_but,
             'Go to the parent directory', ['up'])
+        ctrls.add_button('refresh', self.cb_but,
+            'Refresh the current directory.', ['refresh'])
         ctrls.add_button('new', self.cb_but,
             'Create a new file, and edit it in vim.', ['new'])
         ctrls.add_button('open', self.cb_but,
@@ -331,12 +333,15 @@ class FileTree(gtkextra.Tree):
         self.update()
         return len(dirs + files)
    
-    def refresh(self):
-        self.clear()
-        if self.projects.selected(0) == CWD:
+    def refresh(self, force=False):
+        root = self.root
+        if force:
+            self.clear()
+            self.root = None
+        if self.selected(0) == CWD:
             self.set_root(self.config.get(CWD, 'directory'))
         else:
-            self.set_root(self.root)
+            self.set_root(root)
         self.update()
     
     def up(self):
@@ -410,10 +415,13 @@ class FileTree(gtkextra.Tree):
     def cb_but_delete(self, fn):
         if fn:
             os.remove(fn)
-            self.refresh()
+            self.refresh(force=True)
 
     def cb_but_up(self, fn):
         self.up()
+
+    def cb_but_refresh(self, fn):
+        self.refresh(force=True)
 
     def cb_but_terminal(self, fn):
         root = self.get_selected_root(fn)
