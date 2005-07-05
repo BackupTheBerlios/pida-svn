@@ -511,7 +511,7 @@ class VimWindow(gtk.Window):
         return name
 
     def open_file(self, server, name):
-        self.send_ex(server, 'confirm e %s' % name)
+        self.send_ex(server, 'confirm e %s' % self.escape_filename(name))
 
     def preview_file(self, server, fn):
         self.send_ex(server, 'pc')
