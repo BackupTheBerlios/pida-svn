@@ -159,9 +159,11 @@ class Plugin(plugin.Plugin):
 
     def refresh_defs(self, fn):
         self.fn = fn
+        if not os.path.exists(fn):
+            return
         f = open(fn)
         root = fastparser.fastparser(f.read())
-        f.close()       
+        f.close()
         self.defs.clear()
         self.defs.populate(root.getChildNodes())
    
