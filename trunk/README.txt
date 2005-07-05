@@ -47,6 +47,38 @@ Execute the command
     pida
 
 
+Known Issues
+--
+
+1. Metacity
+
+For unknown reasons, when using the Metacity window manager, with Vim
+configured to use graphical dialog boxes, Vim appears to freeze with the
+message ":confirm e /file/path". In fact, what has happened is that the
+graphical dialog box has been sent to the very back of all the windows on your
+current desktop, and is waiting to be clicked.
+
+There s an easy fix, and that is to configure Vim to use console dialogs ":set
+guioptions+=c".
+
+2. Gdk-WARNING 
+
+On running Pida, you may see this warning repeatedly:
+
+Gdk-WARNING **: gdk_property_get(): length value has wrapped in calculation
+(did you pass G_MAXLONG?)
+
+This is caused by the VTE terminal widget, to test it, open a Pytho terminal
+and execute:
+
+>>> import vte
+>>> vte.Terminal()
+
+You will see the same warnings.
+
+Note that these warnings appear to be harmless, and the terminal emulator
+functions as normal. We have filed a bug with the VTE team.
+
 Bugs
 --
 
