@@ -505,6 +505,11 @@ class VimWindow(gtk.Window):
     def save_session(self, name):
         self.send_ex('mks %s' % name)
 
+    def escape_filename(self, name):
+        for s in ['\\', '?', '*', ' ', "'", '"', '[', '	', '$']:
+            name = name.replace (s, '\\%s' % s)
+        return name
+
     def open_file(self, server, name):
         self.send_ex(server, 'confirm e %s' % name)
 
