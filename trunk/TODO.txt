@@ -1,7 +1,5 @@
 vital
 --
-project browser refresh button
-project browser disappears directories when you click up from /
 
 near future
 --

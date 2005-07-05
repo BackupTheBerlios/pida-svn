@@ -169,6 +169,7 @@ class GazpachoEmbedded(GazpachoApplication):
         self._palette_expander.set_label_widget(self.expander_label)
         self._palette_expander.add(self._palette)
         hbox2.pack_start(self._palette_expander)
+        self._palette_expander.set_expanded(True)
 
         self.selector = self._palette._selector
         #self.selector.set_mode(False)
