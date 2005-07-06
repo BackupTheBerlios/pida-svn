@@ -267,7 +267,7 @@ class Plugin(plugin.Plugin):
         f = open(self.lfn, 'w')
         f.write(s)
         f.close()
-        self.cb.action_preview(self.lfn)
+        self.cb.edit('preview', self.lfn)
 
     def do_eval(self, s, *args):
         com, val = s.split('\n', 1)
@@ -331,8 +331,8 @@ class Plugin(plugin.Plugin):
         fn = frame.filename
         line = frame.lineno
         if fn != self.fn:
-            self.cb.action_openfile(fn)
-        self.cb.action_gotoline(line)
+            self.cb.edit('openfile', fn)
+        self.cb.edit('gotoline', line)
         #self.send('list')
 
     def set_breakpoint(self, fn, line):

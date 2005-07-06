@@ -108,9 +108,12 @@ class Application(object):
         self.registry = registry.Registry(os.path.expanduser('~/.pida/pida.conf'))
        
         options.configure(self.registry)
+
+        # The editor 
+        self.set_editor('vim')
+
         # now the plugins
         shell_plug = self.add_plugin('terminal')
-        server_plug = self.add_plugin('vim')
         buffer_plug = self.add_plugin('buffer')
         
       
@@ -139,10 +142,13 @@ class Application(object):
         # Tooltips shared
         self.tips = gtk.Tooltips()
         self.tips.enable()
-        self.cw = MainWindow(self)
+
+        self.mainwindow = MainWindow(self)
+
         self.evt('populate')
-        self.cw.set_plugins(server_plug, buffer_plug, shell_plug, opt_plugs)
-        self.cw.show_all()
+        self.mainwindow.set_plugins(self.editor, buffer_plug, shell_plug, opt_plugs)
+        self.mainwindow.show_all()
+
         self.evt('shown')
         self.evt('started')
         self.evt('reset')
@@ -159,6 +165,13 @@ class Application(object):
             plugin.configure(self.registry)
             self.plugins.append(plugin)
         return plugin
+
+    def set_editor(self, name):
+        """
+        Set the editor plugin
+        """
+        self.editor = self.add_plugin(name)
+        return self.editor
 
     def action_showconfig(self):
         """ called to show the config editor """
@@ -187,85 +200,22 @@ class Application(object):
         # Fin
         gtk.main_quit()
 
-    def action_connectserver(self, servername):
-        """ Connect to the named server. """
-        self.action_log('action', 'connectserver', 0)
-        self.server = servername
-        # Send the server change event with the appropriate server
-        # The vim plugin (or others) will respond to this event
-        self.evt('connectserver', servername)
-
-    def action_closebuffer(self):
-        """ Close the current buffer. """
-        self.action_log('action', 'closebuffer', 0)
-        # Call the method of the vim communication window.
-        self.cw.close_buffer(self.server)
-
-    def action_gotoline(self, line):
-        self.action_log('action', 'gotoline', 0)
-        # Call the method of the vim communication window.
-        self.cw.change_cursor(self.server, 1, line)
-        # Optionally foreground Vim.
-        self.action_foreground()
-
-    def action_getbufferlist(self):
-        """ Get the buffer list. """
-        self.action_log('action', 'getbufferlist', 0)
-        # Call the method of the vim communication window.
-        self.cw.get_bufferlist(self.server)
-
-    def action_getcurrentbuffer(self):
-        """ Ask Vim to return the current buffer number. """
-        # Call the method of the vim communication window.
-        self.cw.get_current_buffer(self.server)
-
-    def action_changebuffer(self, number):
-        """Change buffer in the active vim"""
-        self.action_log('action', 'changebuffer', 0)
-        # Call the method of the vim communication window.
-        self.cw.change_buffer(self.server, number)
-        # Optionally foreground Vim.
-        self.action_foreground()
-   
-    def action_foreground(self):
-        """ Put vim into the foreground """
-        # Check the configuration option.
-        if int(self.opts.get('vim', 'foreground_jump')):
-            # Call the method of the vim communication window.
-            self.cw.foreground(self.server)
- 
-    def action_openfile(self, filename):
-        """open a new file in the connected vim"""
-        self.action_log('action', 'openfile', 0)
-        # Call the method of the vim communication window.
-        self.cw.open_file(self.server, filename)
-
-    def action_preview(self, filename):
-        self.cw.preview_file(self.server, filename)
-
     def action_newterminal(self, command, args, **kw):
         """Open a new terminal, by issuing an event"""
         self.action_log('action', 'newterminal', 0)
         # Fire the newterm event, the terminal plugin will respond.
         self.evt('newterm', command, args, **kw)
 
-    def action_quitvim(self):
-        """
-        Quit Vim.
-        """
-        self.cw.quit(self.server)
+    def edit(self, name, *args, **kw):
+        funcname = 'edit_%s' % name
+        if hasattr(self.editor, funcname):
+            try:
+                getattr(self.editor, funcname)(*args, **kw)
+            except Exception, e:
+                logging.warn('error passing event "%s" to editor %s' % (name, e))
+        else:
+            logging.warn('Edtor does not support %s.' % name)
 
-    def send_ex(self, ex):
-        """ Send a normal mode command. """
-        # Call the method of the vim communication window.
-        if self.server:
-            self.cw.send_ex(self.server, ex)
-
-    def get_serverlist(self):
-        """Get the list of servers"""
-        # Call the method of the vim communication window.
-        # return self.cw.serverlist()
-        self.cw.fetch_serverlist()
 
     def evt(self, name, *args, **kw):
         """Callback for events from vim client, propogates them to plugins"""
@@ -295,10 +245,11 @@ class Application(object):
                 callbackfunc(result)
     
 # The main application window.
-class MainWindow(gdkvim.VimWindow):
+class MainWindow(gtk.Window):
     """ the main window """
     def __init__(self, cb):
-        gdkvim.VimWindow.__init__(self, cb)
+        self.cb =cb
+        gtk.Window.__init__(self)
         # Set the window title.
         caption = 'PIDA %s' % __version__
         self.set_title(caption)

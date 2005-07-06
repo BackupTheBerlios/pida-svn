@@ -184,13 +184,13 @@ class Plugin(plugin.Plugin):
         self.question('Search Pydoc for:', ans)
 
     def cb_defs_select(self, tv):
-        self.cb.action_gotoline(self.defs.selected(2))
+        self.cb.edit('gotoline', self.defs.selected(2))
 
     def cb_refs_select(self, tv):
         fn, line, col = [self.refs.selected(i) for i in [0, 2, 3]]
         if fn != self.fn:
-            self.cb.action_openfile(fn)
-        self.cb.action_gotoline(line)
+            self.cb.edit('openfile', fn)
+        self.cb.edit('gotoline', line)
 
     def cb_defs_rclick(self, ite, time):
         line = self.defs.get(ite, 2)

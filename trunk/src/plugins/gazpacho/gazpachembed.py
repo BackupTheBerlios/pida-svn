@@ -54,7 +54,7 @@ class Gazpacho(object):
                 self.app = GazpachoEmbedded(self.cb)
                 self.app.undo_button = self.undo_button
                 self.app.redo_button = self.redo_button
-                self.app._pidawindow = self.cb.cw
+                self.app._pidawindow = self.cb.mainwindow
                 holder.pack_start(self.app._window)
                 self.holder = holder
             else:

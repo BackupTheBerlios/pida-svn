@@ -392,7 +392,7 @@ class ConfigEditor(object):
         # main window
         self.win = gtk.Window()
         self.win.set_title('PIDA Configuration Editor')
-        self.win.set_transient_for(self.cb.cw)
+        self.win.set_transient_for(self.cb.mainwindow)
         self.win.connect('destroy', self.cb_cancel)
         # top container
         hbox = gtk.HBox()

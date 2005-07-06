@@ -130,7 +130,7 @@ class Plugin(plugin.Plugin):
 
     def delayed_get_buffer(self, delay=1000):
         def get():
-            self.cb.action_getbufferlist()
+            self.cb.edit('getbufferlist')
             return False
         # would grab it immediately, but it pays to wait.
         gobject.timeout_add(delay, get)
@@ -141,7 +141,7 @@ class Plugin(plugin.Plugin):
         Called when the detach button is clicked.
         '''
         # In our case the reload button.
-        self.cb.action_getbufferlist()
+        self.cb.edit('getbufferlist')
 
     def cb_bufs_selected(self, tv):
         '''
@@ -151,7 +151,7 @@ class Plugin(plugin.Plugin):
         sel = self.buffers.selected(3)
         # If it is not our current buffer, change to it
         if not self.cbuf or self.cbuf != sel:
-            self.cb.action_changebuffer(sel)
+            self.cb.edit('changebuffer', sel)
 
     def cb_open(self, *args):
         '''
@@ -175,7 +175,7 @@ class Plugin(plugin.Plugin):
         if response == gtk.RESPONSE_ACCEPT:
             # Get the name and open the file in Vim
             fn = self.odialog.get_filename()
-            self.cb.action_openfile(fn)
+            self.cb.edit('openfile', fn)
 
     def cb_open_destroy(self, *args):
         '''
@@ -189,7 +189,7 @@ class Plugin(plugin.Plugin):
         Called when the close buffer button is clicked.
         '''
         # Close the active buffer.
-        self.cb.action_closebuffer()
+        self.cb.edit('closebuffer')
         self.delayed_get_buffer()
 
     def evt_bufferlist(self, bufferlist):
@@ -201,7 +201,7 @@ class Plugin(plugin.Plugin):
         '''
         self.refresh(bufferlist)
         # New bufferlist may have new buffer
-        self.cb.action_getcurrentbuffer()
+        self.cb.edit('getcurrentbuffer')
 
     def evt_bufferchange(self, buffernumber, name):
         '''
@@ -215,6 +215,7 @@ class Plugin(plugin.Plugin):
 
         @param: 
         '''
+        print 'bc', name, buffernumber
         self.cbuf = int(buffernumber)
         # the new buffer may not be in our list
         if not self.buffers.set_active(self.cbuf):
@@ -224,7 +225,7 @@ class Plugin(plugin.Plugin):
         '''
         Event: Called when a buffer is unloaded
         '''
-        self.cb.action_getbufferlist()
+        self.cb.edit('getbufferlist')
     
     def evt_serverchange(self, server):
         '''
@@ -233,8 +234,7 @@ class Plugin(plugin.Plugin):
         @param server: The name of the server
         @type server: str
         '''
-        self.cb.action_getbufferlist()
-
+        self.cb.edit('getbufferlist')
 
     def evt_disconnected(self, *args):
         self.buffers.clear()

@@ -402,7 +402,7 @@ class FileTree(gtkextra.Tree):
     def cb_but_open(self, fn):
         if fn:
             if not os.path.isdir(fn):
-                self.cb.action_openfile(fn)
+                self.cb.edit('openfile', fn)
 
     def cb_but_new(self, fn):
         root = self.get_selected_root(fn)
@@ -410,7 +410,7 @@ class FileTree(gtkextra.Tree):
             newfn = os.path.join(root, nn)
             open(newfn, 'w').close()
             self.refresh()
-            self.cb.action_openfile(newfn)
+            self.cb.edit('openfile', fn)
         self.pcb.question('Name of the file?', create)
 
     def cb_but_delete(self, fn):
@@ -591,7 +591,7 @@ class Plugin(plugin.Plugin):
 
     def cb_files_activate(self, tv, path, niter):
         fn = self.files.selected(1)
-        self.cb.action_openfile(fn)
+        self.cb.edit('openfile', fn)
        
     def cb_project_new(self, *args):
         self.show_editor()

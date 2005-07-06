@@ -32,51 +32,8 @@ import pida.gtkextra as gtkextra
 import pida.configuration.registry as registry
 # local imports
 import vimembed
+import gdkvim
 
-SHORTCUTS = [('shortcut_execute',
-                'Async_event("bufferexecute,")'),
-             ('shortcut_project_execute',
-                'Async_event("projectexecute,")'),
-             ('shortcut_breakpoint_set',
-                'Async_event("breakpointset,".line("."))'),
-             ('shortcut_breakpoint_clear',
-                'Async_event("breakpointclear,".line("."))'),
-             ('shortcut_pydoc_yanked',
-                '''Async_event("pydoc,".expand('<cword>'))'''),
-             ('shortcut_pydoc_cursor',
-                'Async_event("pydoc,".@")')]
-
-NMAP_COM = 'nmap %s :call %s<lt>CR>'
-
-UNMAP_COM = 'nun %s'
-
-VIMSCRIPT = ''':silent function! Bufferlist()
-let i = 1
-    let max = bufnr('$') + 1
-    let lis = ""
-    while i < max
-        if bufexists(i)
-            let lis = lis.";".i.":".bufname(i)
-        endif
-        let i = i + 1
-    endwhile
-    return lis
-endfunction
-:silent function! Async_event(e)
-    let c = "call server2client('".expand('<client>')."', '".a:e."')"
-    try
-        exec c
-    catch /.*/
-        echo c
-    endtry
-endfunction
-:silent augroup pida
-:silent au! pida
-:silent au pida BufEnter * call Async_event("bufferchange,".bufnr('%').",".bufname('%'))
-:silent au pida BufDelete * call Async_event("bufferunload,")
-:silent au pida VimLeave * call Async_event("vimshutdown,")
-:echo "PIDA connected"
-'''
 
 class Plugin(plugin.Plugin):
     NAME = 'Vim'
@@ -164,7 +121,6 @@ class Plugin(plugin.Plugin):
         self.add(self.entry, False)
         self.last_pane_position = 600
         
-
     def init(self):
         self.old_shortcuts = {}
         self.vim = None
@@ -189,7 +145,6 @@ class Plugin(plugin.Plugin):
         else:
             os.system('%s --servername pida' % vimcom)
 
-
     def refresh(self, serverlist):
         if serverlist != self.oldservers:
             self.oldservers = serverlist
@@ -204,10 +159,9 @@ class Plugin(plugin.Plugin):
                     if s == self.embedname:
                         self.entry.append_text(s.strip())
                         if self.currentserver != s:
-                            self.cb.action_connectserver(s)
+                            self.connectserver(s)
                 else:
                     self.entry.append_text(s.strip())
-            #self.entry.show_all()
             if act:
                 for row in self.entry.get_model():
                     if row[0] == act:
@@ -219,12 +173,31 @@ class Plugin(plugin.Plugin):
                 if not self.is_embedded():
                     if serverlist:
                         server = serverlist[0]
-                self.cb.action_connectserver(server)
+                self.connectserver(server)
+
+    def connectserver(self, name):
+        # Actually does the connecting
+        if name:
+            print 'connecting to', name
+            self.currentserver = name
+            self.load_shortcuts()
+            self.cw.send_ex(self.currentserver, '%s' % VIMSCRIPT)
+            self.cb.evt('serverchange', name)
+        else:
+            # Being asked to connect to None is the same as having nothing
+            # to connect to.
+            self.cb.evt('disconnected', name)
+
+    def fetchserverlist(self):
+        """Get the list of servers"""
+        # Call the method of the vim communication window.
+        # return self.cw.serverlist()
+        self.cw.fetch_serverlist()
 
     def load_shortcuts(self):
         if self.old_shortcuts.setdefault(self.currentserver, []):
             for sc in self.old_shortcuts[self.currentserver]:
-                self.cb.send_ex(UNMAP_COM % sc)
+                self.cw.send_ex(self.currentserver, UNMAP_COM % sc)
         self.old_shortcuts[self.currentserver] = []
 
         l = self.cb.opts.get('vim_shortcuts', 'shortcut_leader')
@@ -233,7 +206,7 @@ class Plugin(plugin.Plugin):
             c = self.cb.opts.get('vim_shortcuts', name)
             sc = ''.join([l, c])
             self.old_shortcuts[self.currentserver].append(sc)
-            self.cb.send_ex(NMAP_COM % (sc, command))
+            self.cw.send_ex(self.currentserver, NMAP_COM % (sc, command))
 
     def generate_embedname(self):
         self.embedname = 'PIDA_EMBED_%s' % time.time()
@@ -254,11 +227,11 @@ class Plugin(plugin.Plugin):
         iter = self.entry.get_active_iter()
         if iter:
             name = self.entry.get_model().get_value(iter, 0)
-            self.cb.action_connectserver(name)
+            self.connectserver(name)
    
     def cb_refresh(self, *args):
         #self.refresh(self.cb.get_serverlist())
-        self.cb.get_serverlist()
+        self.fetchserverlist()
         return True
 
     def cb_run(self, *args):
@@ -281,24 +254,12 @@ class Plugin(plugin.Plugin):
             return
         self.load_shortcuts()
         self.show_or_hide_serverlist()
-        
-
-    def evt_connectserver(self, name):
-        # Actually does the connecting
-        if name:
-            self.currentserver = name
-            self.load_shortcuts()
-            self.cb.send_ex('%s' % VIMSCRIPT)
-            self.cb.evt('serverchange', name)
-        else:
-            # Being asked to connect to None is the same as having nothing
-            # to connect to.
-            self.cb.evt('disconnected', name)
 
     def evt_started(self, *args):
         self.embedded_value = self.registry.embedded_mode.value()
         if self.is_embedded():
             self.launch()
+        self.cw = gdkvim.VimWindow(self.cb)
 
     def evt_serverlist(self, serverlist):
         self.refresh(serverlist)
@@ -316,3 +277,121 @@ class Plugin(plugin.Plugin):
 
     def evt_serverchange(self, name):
         self.currentserver = name
+
+
+    # editor interface
+
+    def edit_openfile(self, filename):
+        pass
+
+#    def action_connectserver(self, servername):
+#        """ Connect to the named server. """
+#        self.action_log('action', 'connectserver', 0)
+#        self.server = servername
+#        # Send the server change event with the appropriate server
+#        # The vim plugin (or others) will respond to this event
+#        self.evt('connectserver', servername)
+
+    def edit_closebuffer(self):
+        """ Close the current buffer. """
+        # Call the method of the vim communication window.
+        self.cw.close_buffer(self.currentserver)
+
+    def edit_gotoline(self, line):
+        # Call the method of the vim communication window.
+        self.cw.change_cursor(self.currentserver, 1, line)
+        # Optionally foreground Vim.
+        self.edit_foreground()
+
+    def edit_getbufferlist(self):
+        """ Get the buffer list. """
+        # Call the method of the vim communication window.
+        self.cw.get_bufferlist(self.currentserver)
+
+    def edit_getcurrentbuffer(self):
+        """ Ask Vim to return the current buffer number. """
+        # Call the method of the vim communication window.
+        self.cw.get_current_buffer(self.currentserver)
+
+    def edit_changebuffer(self, number):
+        """Change buffer in the active vim"""
+        self.cb.action_log('action', 'changebuffer', 0)
+        # Call the method of the vim communication window.
+        self.cw.change_buffer(self.currentserver, number)
+        # Optionally foreground Vim.
+        self.action_foreground()
+   
+    def edit_foreground(self):
+        """ Put vim into the foreground """
+        # Check the configuration option.
+        if int(self.opts.get('vim', 'foreground_jump')):
+            # Call the method of the vim communication window.
+            self.cw.foreground(self.currentserver)
+ 
+    def edit_openfile(self, filename):
+        """open a new file in the connected vim"""
+        self.cb.action_log('action', 'openfile', 0)
+        # Call the method of the vim communication window.
+        self.cw.open_file(self.currentserver, filename)
+
+    def edit_preview(self, filename):
+        self.cw.preview_file(self.currentserver, filename)
+
+    def edit_newterminal(self, command, args, **kw):
+        """Open a new terminal, by issuing an event"""
+        self.cb.action_log('action', 'newterminal', 0)
+        # Fire the newterm event, the terminal plugin will respond.
+        self.evt('newterm', command, args, **kw)
+
+    def edit_quitvim(self):
+        """
+        Quit Vim.
+        """
+        self.cw.quit(self.currentserver)
+
+
+
+SHORTCUTS = [('shortcut_execute',
+                'Async_event("bufferexecute,")'),
+             ('shortcut_project_execute',
+                'Async_event("projectexecute,")'),
+             ('shortcut_breakpoint_set',
+                'Async_event("breakpointset,".line("."))'),
+             ('shortcut_breakpoint_clear',
+                'Async_event("breakpointclear,".line("."))'),
+             ('shortcut_pydoc_yanked',
+                '''Async_event("pydoc,".expand('<cword>'))'''),
+             ('shortcut_pydoc_cursor',
+                'Async_event("pydoc,".@")')]
+
+NMAP_COM = 'nmap %s :call %s<lt>CR>'
+
+UNMAP_COM = 'nun %s'
+
+VIMSCRIPT = ''':silent function! Bufferlist()
+let i = 1
+    let max = bufnr('$') + 1
+    let lis = ""
+    while i < max
+        if bufexists(i)
+            let lis = lis.";".i.":".bufname(i)
+        endif
+        let i = i + 1
+    endwhile
+    return lis
+endfunction
+:silent function! Async_event(e)
+    let c = "call server2client('".expand('<client>')."', '".a:e."')"
+    try
+        exec c
+    catch /.*/
+        echo c
+    endtry
+endfunction
+:silent augroup pida
+:silent au! pida
+:silent au pida BufEnter * call Async_event("bufferchange,".bufnr('%').",".bufname('%'))
+:silent au pida BufDelete * call Async_event("bufferunload,")
+:silent au pida VimLeave * call Async_event("vimshutdown,")
+:echo "PIDA connected"
+'''
