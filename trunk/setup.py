@@ -59,7 +59,6 @@ if sys.argv[-1] == 'upgrade':
 
 log('Preparing core')
 packages = ['pida',
-            'pida.vim',
             'pida.configuration',
             'pida.plugins']
 
