@@ -32,7 +32,6 @@ import gobject
 
 # Pida
 import gtkextra
-import vim.gdkvim as gdkvim
 import configuration.options as options
 import configuration.config as config
 import configuration.registry as registry

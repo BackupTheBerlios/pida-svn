@@ -31,9 +31,8 @@ import pida.plugin as plugin
 import pida.gtkextra as gtkextra
 import pida.configuration.registry as registry
 # local imports
-import vimembed
 import gdkvim
-
+import vimembed
 
 class Plugin(plugin.Plugin):
     NAME = 'Vim'
@@ -178,7 +177,6 @@ class Plugin(plugin.Plugin):
     def connectserver(self, name):
         # Actually does the connecting
         if name:
-            print 'connecting to', name
             self.currentserver = name
             self.load_shortcuts()
             self.cw.send_ex(self.currentserver, '%s' % VIMSCRIPT)
@@ -191,7 +189,6 @@ class Plugin(plugin.Plugin):
     def fetchserverlist(self):
         """Get the list of servers"""
         # Call the method of the vim communication window.
-        # return self.cw.serverlist()
         self.cw.fetch_serverlist()
 
     def load_shortcuts(self):
@@ -230,7 +227,6 @@ class Plugin(plugin.Plugin):
             self.connectserver(name)
    
     def cb_refresh(self, *args):
-        #self.refresh(self.cb.get_serverlist())
         self.fetchserverlist()
         return True
 
@@ -256,10 +252,10 @@ class Plugin(plugin.Plugin):
         self.show_or_hide_serverlist()
 
     def evt_started(self, *args):
+        self.cw = gdkvim.VimWindow(self.cb)
         self.embedded_value = self.registry.embedded_mode.value()
         if self.is_embedded():
             self.launch()
-        self.cw = gdkvim.VimWindow(self.cb)
 
     def evt_serverlist(self, serverlist):
         self.refresh(serverlist)
@@ -280,17 +276,8 @@ class Plugin(plugin.Plugin):
 
 
     # editor interface
-
     def edit_openfile(self, filename):
         pass
-
-#    def action_connectserver(self, servername):
-#        """ Connect to the named server. """
-#        self.action_log('action', 'connectserver', 0)
-#        self.server = servername
-#        # Send the server change event with the appropriate server
-#        # The vim plugin (or others) will respond to this event
-#        self.evt('connectserver', servername)
 
     def edit_closebuffer(self):
         """ Close the current buffer. """
@@ -349,8 +336,6 @@ class Plugin(plugin.Plugin):
         """
         self.cw.quit(self.currentserver)
 
-
-
 SHORTCUTS = [('shortcut_execute',
                 'Async_event("bufferexecute,")'),
              ('shortcut_project_execute',
@@ -395,3 +380,4 @@ endfunction
 :silent au pida VimLeave * call Async_event("vimshutdown,")
 :echo "PIDA connected"
 '''
+
