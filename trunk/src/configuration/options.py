@@ -107,6 +107,11 @@ def configure(reg):
                 'evim',
                 'Path to the modeless (easy) Vim version.')
 
+    coms_emacs = coms_group.add('xemacs',
+                registry.WhichFile,
+                'xemacs',
+                'Path to XEmacs.')
+
     coms_pyth = coms_group.add('python',
                 registry.WhichFile,
                 'python',
@@ -151,6 +156,13 @@ def configure(reg):
                    'The default logging level (10=debug, 50=critical)')
 
     log_level.adjustment = (10, 50, 10)
+
+
+    gen_group = reg.add_group('general', 'General Options')
+
+    gen_group.add('emacsmode', registry.Boolean, 0,
+                  'Whether Pida will use XEmacs integration '
+                  '(Experimental)')
 
     lay_group = reg.add_group('layout', 'Thigs to do with layout')
     

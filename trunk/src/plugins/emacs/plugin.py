@@ -57,6 +57,9 @@ class Plugin(plugin.Plugin):
     def edit_changebuffer(self, buffernum):
         self.emacs.change_buffer(buffernum)
 
+    def edit_gotoline(self, line):
+        self.emacs.gotoline(line)
+    
     #def edit_getcurrentbuffer(self):
     #    """ Ask Vim to return the current buffer number. """
     #    # Call the method of the vim communication window.

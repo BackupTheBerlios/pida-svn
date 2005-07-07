@@ -106,6 +106,12 @@ class Plugin(plugin.Plugin):
                   'The shortcut to ')
 
     def populate_widgets(self):
+        self.old_shortcuts = {}
+        self.vim = None
+        self.embedname = None
+        #gobject.timeout_add(2000, self.cb_refresh)
+        self.currentserver = None
+        self.oldservers = []
         self.add_button('connect', self.cb_connect,
             'Connect to Vim session')
         self.add_button('editor', self.cb_run,
@@ -115,14 +121,6 @@ class Plugin(plugin.Plugin):
         self.entry = gtk.combo_box_new_text()
         self.add(self.entry, False)
         self.last_pane_position = 600
-        
-    def init(self):
-        self.old_shortcuts = {}
-        self.vim = None
-        self.embedname = None
-        #gobject.timeout_add(2000, self.cb_refresh)
-        self.currentserver = None
-        self.oldservers = []
     
     def launch(self):
         vc = 'vim'
@@ -142,6 +140,7 @@ class Plugin(plugin.Plugin):
 
     def refresh(self, serverlist):
         if serverlist != self.oldservers:
+            print 'new serverlist'
             self.oldservers = serverlist
             actiter = self.entry.get_active_iter()
             act = None
@@ -173,6 +172,7 @@ class Plugin(plugin.Plugin):
     def connectserver(self, name):
         # Actually does the connecting
         if name:
+            print name
             self.currentserver = name
             self.load_shortcuts()
             self.cw.send_ex(self.currentserver, '%s' % VIMSCRIPT)
@@ -194,7 +194,7 @@ class Plugin(plugin.Plugin):
         self.old_shortcuts[self.currentserver] = []
 
         l = self.cb.opts.get('vim_shortcuts', 'shortcut_leader')
-        
+        print l 
         for name, command in SHORTCUTS:
             c = self.cb.opts.get('vim_shortcuts', name)
             sc = ''.join([l, c])
@@ -240,7 +240,7 @@ class Plugin(plugin.Plugin):
                 self.entry.hide()
 
     def evt_reset(self):
-        if self.embedded_value != self.registry.embedded_mode.value():
+        if self.embedded_value != self.cb.registry.layout.embedded_mode.value():
             self.message('Embedded mode setting has changed.\n'
                          'You must restart Pida.')
             return
@@ -254,6 +254,7 @@ class Plugin(plugin.Plugin):
             self.launch()
 
     def evt_serverlist(self, serverlist):
+        print serverlist
         self.refresh(serverlist)
 
     def evt_vimshutdown(self, *args):

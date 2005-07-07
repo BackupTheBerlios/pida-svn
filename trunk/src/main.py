@@ -108,8 +108,6 @@ class Application(object):
        
         options.configure(self.registry)
 
-        # The editor 
-        self.set_editor('vim')
         #self.add_plugin('vim')
 
         # now the plugins
@@ -123,10 +121,22 @@ class Application(object):
             if plugin and plugin.VISIBLE:
                 opt_plugs.append(plugin)
         
+        # The editor 
+        editorname = 'vim'
+        
+        # using the registry can't ever work
+        #if self.registry.general.emacsmode.value():
+        if len(sys.argv) > 1:
+            if sys.argv[1] == 'emacs':
+                print 'emacsmode'
+                editorname = 'emacs'
+        self.set_editor(editorname)
+
+
         self.shortcuts = self.add_plugin('shortcuts')
 
-        self.evt('init')
        
+        self.evt('init')
        
         self.registry.prime_optparser(self.optparser)
         self.optparser.parse_args()
@@ -233,7 +243,7 @@ class Application(object):
             if eventfunc:
                 try:
                     eventfunc(*args, **kw)
-                except Exception, e:
+                except OSError, e:
                     logging.warn('error passing event "%s" to %s %s' % (name,
                                  plugin, e))
 
@@ -269,7 +279,8 @@ class MainWindow(gtk.Window):
         
         p1 = gtk.VPaned()
 
-        if self.cb.registry.layout.embedded_mode.value():
+        if self.cb.registry.layout.embedded_mode.value() and \
+                                        self.cb.editor.NAME == 'Vim':
             self.resize(1000, 768)
             self.add(p0)
             p0.pack2(p1, True, True)

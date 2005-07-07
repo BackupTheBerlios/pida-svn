@@ -102,7 +102,7 @@ class EmacsClient(object):
             bn = bn.strip()
             for num, name, fn in self.bufferlist:
                 if name == bn:
-                    self.cb.evt('bufferchange', num, name)
+                    self.cb.evt('bufferchange', num, fn)
                     break
         self.func('window-buffer', reply)
 
@@ -115,6 +115,9 @@ class EmacsClient(object):
     def feed_bufferlist(self):
         sendlist = [[l[0], l[2]] for l in self.bufferlist if l[2]]
         self.cb.evt('bufferlist', sendlist)
+
+    def gotoline(self, line):
+        self.func('goto-line %s' % line, None)
 
 def main():
     ec = EmacsClient(None)
