@@ -159,6 +159,10 @@ def configure(reg):
                0,
                'Whether to split the view vertically (requires restart).')
     
+    lay_embd = lay_group.add('embedded_mode',
+                  registry.Boolean,
+                  1,
+                  'Determines whether Pida will start Vim embedded.')
    
 if __name__ == '__main__':
     pass

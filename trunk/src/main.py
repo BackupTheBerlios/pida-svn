@@ -109,7 +109,8 @@ class Application(object):
         options.configure(self.registry)
 
         # The editor 
-        self.set_editor('vim')
+        self.set_editor('emacs')
+        #self.add_plugin('vim')
 
         # now the plugins
         shell_plug = self.add_plugin('terminal')
@@ -207,6 +208,7 @@ class Application(object):
 
     def edit(self, name, *args, **kw):
         funcname = 'edit_%s' % name
+        print funcname
         if hasattr(self.editor, funcname):
             try:
                 getattr(self.editor, funcname)(*args, **kw)
@@ -267,7 +269,7 @@ class MainWindow(gtk.Window):
         
         p1 = gtk.VPaned()
 
-        if self.cb.registry.vim.embedded_mode.value():
+        if self.cb.registry.layout.embedded_mode.value():
             self.resize(1000, 768)
             self.add(p0)
             p0.pack2(p1, True, True)

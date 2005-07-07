@@ -51,10 +51,6 @@ class Plugin(plugin.Plugin):
                   0,
                   'Determines whether Pida start Vim in Evim (easy mode).')
                   
-        self.registry.add('embedded_mode',
-                  registry.Boolean,
-                  1,
-                  'Determines whether Pida will start Vim embedded.')
                   
         self.registry.add('shutdown_with_vim',
                   registry.Boolean,
@@ -210,7 +206,7 @@ class Plugin(plugin.Plugin):
         return self.embedname
 
     def is_embedded(self):
-        return self.registry.embedded_mode.value()
+        return self.cb.registry.layout.embedded_mode.value()
 
     def cb_plugged(self):
         self.cb.embedslider.set_position(self.last_pane_position)
@@ -273,11 +269,6 @@ class Plugin(plugin.Plugin):
 
     def evt_serverchange(self, name):
         self.currentserver = name
-
-
-    # editor interface
-    def edit_openfile(self, filename):
-        pass
 
     def edit_closebuffer(self):
         """ Close the current buffer. """

@@ -197,7 +197,7 @@ class Plugin(plugin.Plugin):
         Event: Called when a new buffer list is received.
         
         @param bufferlist: The list of buffers
-        @type bufferlist: A list of (number, filename) pairs
+      @type bufferlist: A list of (number, filename) pairs
         '''
         self.refresh(bufferlist)
         # New bufferlist may have new buffer
