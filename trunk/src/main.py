@@ -109,7 +109,7 @@ class Application(object):
         options.configure(self.registry)
 
         # The editor 
-        self.set_editor('emacs')
+        self.set_editor('vim')
         #self.add_plugin('vim')
 
         # now the plugins

@@ -249,7 +249,7 @@ class Plugin(plugin.Plugin):
 
     def evt_started(self, *args):
         self.cw = gdkvim.VimWindow(self.cb)
-        self.embedded_value = self.registry.embedded_mode.value()
+        self.embedded_value = self.cb.registry.layout.embedded_mode.value()
         if self.is_embedded():
             self.launch()
 
