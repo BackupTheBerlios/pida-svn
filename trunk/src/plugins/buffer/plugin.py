@@ -215,7 +215,6 @@ class Plugin(plugin.Plugin):
 
         @param: 
         '''
-        print 'bc', name, buffernumber
         self.cbuf = int(buffernumber)
         # the new buffer may not be in our list
         if not self.buffers.set_active(self.cbuf):

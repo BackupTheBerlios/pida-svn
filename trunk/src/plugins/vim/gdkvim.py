@@ -520,7 +520,6 @@ class VimWindow(gtk.Window):
 
     def get_bufferlist(self, server):
         def cb(bl):
-            print bl
             if bl:
                 l = [i.split(':') for i in bl.strip(';').split(';')]
                 L = []

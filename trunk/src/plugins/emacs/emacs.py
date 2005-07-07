@@ -126,7 +126,6 @@ class EmacsClient(object):
     def change_buffer(self, buffernumber):
         for num, name, fn in self.bufferlist:
             if num == buffernumber:
-                print 'changing'
                 self.func('switch-to-buffer "%s"' % name, None)
                 break
     def feed_bufferlist(self):
@@ -139,12 +138,3 @@ class EmacsClient(object):
     def close_buffer(self):
         self.func('kill-buffer nil', None)
 
-def main():
-    ec = EmacsClient(None)
-    ec.get_buffer_list()
-    ec.editfile('/home/ali/goo.py')
-    gtk.main()
- 
-
-if __name__ == '__main__':
-    main()

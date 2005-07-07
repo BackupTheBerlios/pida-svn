@@ -217,7 +217,6 @@ class Application(object):
 
     def edit(self, name, *args, **kw):
         funcname = 'edit_%s' % name
-        print funcname
         if hasattr(self.editor, funcname):
             try:
                 getattr(self.editor, funcname)(*args, **kw)
