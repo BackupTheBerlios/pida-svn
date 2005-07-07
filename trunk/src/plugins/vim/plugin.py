@@ -299,7 +299,7 @@ class Plugin(plugin.Plugin):
     def edit_foreground(self):
         """ Put vim into the foreground """
         # Check the configuration option.
-        if int(self.opts.get('vim', 'foreground_jump')):
+        if self.registry.foreground_jump.value():
             # Call the method of the vim communication window.
             self.cw.foreground(self.currentserver)
  
