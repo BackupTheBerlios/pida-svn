@@ -129,6 +129,8 @@ class Application(object):
         if len(sys.argv) > 1:
             if sys.argv[1] == 'emacs':
                 editorname = 'emacs'
+            elif sys.argv[1] == 'culebra':
+                editorname = 'culebra'
         self.set_editor(editorname)
 
 
@@ -277,8 +279,8 @@ class MainWindow(gtk.Window):
         
         p1 = gtk.VPaned()
 
-        if self.cb.registry.layout.embedded_mode.value() and \
-                                        self.cb.editor.NAME == 'Vim':
+        if (self.cb.registry.layout.embedded_mode.value() and \
+            self.cb.editor.NAME == 'Vim') or self.cb.editor.NAME == 'Culebra':
             self.resize(1000, 768)
             self.add(p0)
             p0.pack2(p1, True, True)
