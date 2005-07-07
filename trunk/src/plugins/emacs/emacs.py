@@ -37,6 +37,8 @@ class EmacsClient(object):
         self.cb = cb
         self.rbuf = ''
         self.bufferlist = None
+        self.currentbuffer = None
+        self.lastfirst = None
         self.callbacks = {}
         gobject.timeout_add(1000, self.poll_emacs)
 
@@ -86,7 +88,8 @@ class EmacsClient(object):
         def reply(bl):
             newlist =  [[i] + [n.strip() for n in b.split('\5')] for i, b in \
                   enumerate(bl.split('\6'))]
-            if newlist != self.bufferlist:
+            #if newlist != self.bufferlist:
+            if not self.bufferlist or self.check_newlist(newlist):
                 self.bufferlist = newlist
                 self.feed_bufferlist()
 
@@ -96,6 +99,20 @@ class EmacsClient(object):
                 '''(buffer-list) '''
                 '''"\6"''')
         self.func(s, reply)
+
+    def check_newlist(self, newlist):
+        old = [[i[2], None] for i in self.bufferlist]
+        new = [[i[2], None] for i in newlist]
+        
+        if self.lastfirst != new[0]:
+            self.get_currentbuffer()
+        self.lastfirst = new[0]
+        if len(old) == len(new):
+            return dict(old) != dict(new)
+        else:
+            return True
+        
+        
 
     def get_currentbuffer(self):
         def reply(bn):
