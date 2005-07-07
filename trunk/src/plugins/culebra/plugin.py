@@ -38,12 +38,14 @@ class Plugin(plugin.Plugin):
 
     def init(self):
         self.editor = None
+        self.bufferlist = None
 
     def launch(self):
         if not self.editor:
             self.editor = edit.EditWindow(self.cb)
             self.cb.embedwindow.add(self.editor)
             self.editor.show_all()
+        self.edit_getbufferlist()
 
     def populate_widgets(self):
         pass
@@ -54,3 +56,16 @@ class Plugin(plugin.Plugin):
     def evt_started(self):
         self.launch()
         
+    def edit_getbufferlist(self):
+        bl = [t for t in enumerate([self.abspath(n) for n in \
+                                    self.editor.wins.keys()])]
+        self.bufferlist = bl
+        self.cb.evt('bufferlist', bl)
+
+    def abspath(self, filename):
+        if not filename.startswith('/'):
+            filename = os.path.join(os.getcwd(), filename)
+        return filename
+
+    def edit_getcurrentbuffer(self):
+        return self.abspath(self.editor.get_current()[0])
