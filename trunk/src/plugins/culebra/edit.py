@@ -18,6 +18,9 @@ special_chars = (" ", "\n", ".", ":", ",", "'",
 RESPONSE_FORWARD = 0
 RESPONSE_BACKWARD = 1
 
+global newnumber
+newnumber = 1
+
 class EditWindow(gtk.EventBox):
 
     def __init__(self, cb, quit_cb=None):
@@ -84,7 +87,7 @@ class EditWindow(gtk.EventBox):
         self.hpaned.set_position(200)
 
         self.notebook.show()
-        self.notebook.connect('switch-page', self.switch_page_cb)        
+        self.notebook.connect('switch-page', self.switch_page_cb)
         
         self.dirty = 0
         self.file_new()
@@ -99,6 +102,9 @@ class EditWindow(gtk.EventBox):
         refresh_item.connect("activate", self.refresh_browser)
         return
     
+    def set_title(self, title):
+        pass
+
     def get_parent_window(self):
         return self.cb.mainwindow
 
@@ -194,11 +200,17 @@ class EditWindow(gtk.EventBox):
             text.grab_focus()
             self.wins[f] = (buffer, text, None)
             #~ print f, self.wins[f]
+            scrolledwin2.set_data('filename', f)
 
+            p = len(self.wins) - 1
 
-        p = len(self.wins) - 1
+            self.notebook.set_current_page(-1)
 
-        self.notebook.set_current_page(-1)
+        else:
+            for i in range(self.notebook.get_n_pages()):
+                if self.notebook.get_nth_page(i).get_data('filename') == f:
+                    self.notebook.set_current_page(i)
+                    break
 
         return p
 
@@ -315,7 +327,8 @@ class EditWindow(gtk.EventBox):
             
         except:
             print sys.exc_info()[1]
-            dlg = gtk.MessageDialog(self, gtk.DIALOG_DESTROY_WITH_PARENT,
+            dlg = gtk.MessageDialog(self.get_parent_window(),
+                    gtk.DIALOG_DESTROY_WITH_PARENT,
                     gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
                     "Can't open " + fname)
             resp = dlg.run()
@@ -370,7 +383,8 @@ class EditWindow(gtk.EventBox):
         #~ print "running ", fname
 
         if not fname or not os.path.exists(fname):
-            dlg = gtk.MessageDialog(self, gtk.DIALOG_DESTROY_WITH_PARENT,
+            dlg = gtk.MessageDialog(self.get_parent_window(),
+                  gtk.DIALOG_DESTROY_WITH_PARENT,
                                 gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
                                 "Invalid filename "+fname)
             dlg.run()
@@ -464,7 +478,7 @@ class EditWindow(gtk.EventBox):
             return 0
 
         if buffer.get_modified():
-            dlg = gtk.Dialog('Unsaved File', self,
+            dlg = gtk.Dialog('Unsaved File', self.get_parent_window(),
                     gtk.DIALOG_DESTROY_WITH_PARENT,
                          (gtk.STOCK_YES, gtk.RESPONSE_YES,
                           gtk.STOCK_NO, gtk.RESPONSE_NO,
@@ -487,7 +501,9 @@ class EditWindow(gtk.EventBox):
     def file_new(self, mi=None):
         if self.chk_save(): return
 
-        self._new_tab("untitled.py")
+        global newnumber
+        self._new_tab("untitled%s.py" % newnumber)
+        newnumber += 1
 
         fname, buffer, text, model = self.get_current()
 
@@ -505,7 +521,8 @@ class EditWindow(gtk.EventBox):
 
     def file_open(self, mi=None):
 
-        fname = dialogs.OpenFile('Open File', self, None, None, "*")
+        fname = dialogs.OpenFile('Open File', self.get_parent_window(),
+                                  None, None, "*")
         if not fname: return
         self.load_file(fname)
         return
@@ -545,7 +562,8 @@ class EditWindow(gtk.EventBox):
             self.notebook.set_tab_label_text(self.notebook.get_nth_page(page), fname)
 
         except:
-            dlg = gtk.MessageDialog(self, gtk.DIALOG_DESTROY_WITH_PARENT,
+            dlg = gtk.MessageDialog(self.get_parent_window(),
+                                gtk.DIALOG_DESTROY_WITH_PARENT,
                                 gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
                                 "Error saving file " + fname)
             resp = dlg.run()
@@ -557,8 +575,8 @@ class EditWindow(gtk.EventBox):
 
     def file_saveas(self, mi=None):
         f, buffer, text, model = self.get_current()
-        f = dialogs.SaveFile('Save File As', self, self.dirname,
-                                  fname)
+        f = dialogs.SaveFile('Save File As', self.get_parent_window(), self.dirname,
+                                  f)
         if not f: return False
 
         self.dirname = os.path.dirname(f)
@@ -620,7 +638,7 @@ class EditWindow(gtk.EventBox):
         s = buffer.get_selection_bounds()
         if len(s) > 0:
             search_text.set_text(buffer.get_slice(s[0], s[1]))
-        dialog = gtk.Dialog("Search", self,
+        dialog = gtk.Dialog("Search", self.get_parent_window(),
                             gtk.DIALOG_DESTROY_WITH_PARENT,
                             (gtk.STOCK_FIND, RESPONSE_FORWARD,
                              gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE))
