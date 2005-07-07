@@ -119,6 +119,9 @@ class EmacsClient(object):
     def gotoline(self, line):
         self.func('goto-line %s' % line, None)
 
+    def close_buffer(self):
+        self.func('kill-buffer nil', None)
+
 def main():
     ec = EmacsClient(None)
     ec.get_buffer_list()

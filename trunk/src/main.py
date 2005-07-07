@@ -128,7 +128,6 @@ class Application(object):
         #if self.registry.general.emacsmode.value():
         if len(sys.argv) > 1:
             if sys.argv[1] == 'emacs':
-                print 'emacsmode'
                 editorname = 'emacs'
         self.set_editor(editorname)
 
