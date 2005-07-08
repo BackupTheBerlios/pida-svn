@@ -106,8 +106,10 @@ class Plugin(plugin.Plugin):
 
     def edit_gotoline(self, line):
         tv = self.editor.get_current()[2]
+        buf = self.editor.get_current()[1]
         titer = tv.get_iter_at_location(1, line)
         tv.scroll_to_iter(titer, 0)
+        buf.place_cursor(titer)
 
     def edit_openfile(self, filename):
         self.editor.load_file(filename)
