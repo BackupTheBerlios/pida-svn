@@ -1,9 +1,25 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# edit.py -- Plugin editor for PIDA
 
-# This is based on pygtk2 examples and idle
+# This file is part of Culebra project.
+#
+# Culebra is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# Culebra is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Foobar; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-#import pygtk
-#pygtk.require('2.0')
+# Copyright Fernando San Martín Woerner <fsmw@gnome.org>
+
 import gtk
 import sys, os
 import pango
@@ -25,7 +41,6 @@ class EditWindow(gtk.EventBox):
 
     def __init__(self, cb, quit_cb=None):
         self.cb = cb
-        #gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
         gtk.EventBox.__init__(self)
         self.search_string = None
         self.last_search_iter = None
@@ -127,29 +142,19 @@ class EditWindow(gtk.EventBox):
     def switch_page_cb(self, notebook, page, pagenum):
 
         f, b, text, model  = self.get_current(pagenum)
-
         if not f is None and not b is None:
-
             if b.get_data("save"):
                 model = self.listclasses(fname = f)
-
             self.set_title(f)
 
     def get_current(self, page = None):
 
         if len(self.wins) > 0:
             if page is None:
-
                 page = self.notebook.get_current_page()
-
             child = self.notebook.get_nth_page(page)
-            
-            #~ print page, child
-
             if not child is None:
                 name = self.notebook.get_tab_label_text(child)
-                #~ print name
-                
                 if self.wins.has_key(name):
                     buffer, text, model = self.wins[name]
                     return name, buffer, text, model
@@ -157,20 +162,14 @@ class EditWindow(gtk.EventBox):
         return None, None, None, None
 
     def _new_tab(self, f, buffer = None):
-
         p = -1
-
         if not self.wins.has_key(f):
-
             lm = gtksourceview.SourceLanguagesManager()
-
             if buffer is None:
                 buffer = gtksourceview.SourceBuffer()
-
             buffer.set_data('languages-manager', lm)
             text = gtksourceview.SourceView(buffer)
             font_desc = pango.FontDescription('monospace 10')
-
             if font_desc:
                 text.modify_font(font_desc)
 
@@ -179,11 +178,8 @@ class EditWindow(gtk.EventBox):
             #~ buffer.connect('insert-text', self.insert_at_cursor_cb)
             #~ buffer.connect('delete-range', self.delete_range_cb)
             buffer.set_data("save", False)
-
             scrolledwin2 = gtk.ScrolledWindow()
-
             scrolledwin2.add(text)
-
             text.set_auto_indent(True)
             text.set_show_line_numbers(True)
             #~ text.set_show_line_markers(True)
@@ -191,51 +187,36 @@ class EditWindow(gtk.EventBox):
             #~ text.connect("grab-focus", self.grab_focus_cb)
             #~ text.connect('delete-from-cursor', self.delete_from_cursor_cb)
             text.show()
-
             l = gtk.Label(f)
-            
             self.notebook.append_page(scrolledwin2, l)
-
             scrolledwin2.show()
             text.grab_focus()
             self.wins[f] = (buffer, text, None)
-            #~ print f, self.wins[f]
             scrolledwin2.set_data('filename', f)
-
             p = len(self.wins) - 1
-
             self.notebook.set_current_page(-1)
-
         else:
             for i in range(self.notebook.get_n_pages()):
                 if self.notebook.get_nth_page(i).get_data('filename') == f:
                     self.notebook.set_current_page(i)
                     break
-
         return p
 
     def move_cursor_cb (self, buffer, cursoriter, mark, view):
         self.update_cursor_position(buffer, view)
 
     def update_cursor_position(self, buffer, view):
-
         name, buff, text, model = self.get_current()
-        
         if text is None:
             return
-            
-        tabwidth = text.get_tabs_width()
 
+        tabwidth = text.get_tabs_width()
         iter = buffer.get_iter_at_mark(buffer.get_insert())
         nchars = iter.get_offset()
-
         row = iter.get_line() + 1
-
         start = iter
         start.set_line_offset(0)
         col = 0
-
-
         while not start.equal(iter):
             if start.get_char == '\t':
                 col += (tabwidth - (col % tabwidth))
@@ -244,26 +225,18 @@ class EditWindow(gtk.EventBox):
                 start = start.forward_char()
         
     def console_move_cursor_cb(self, buffer, cursoriter, mark, view=None):
-        
         s = buffer.get_iter_at_line(cursoriter.get_line())
         e = cursoriter.copy()
-        
         e.forward_to_line_end()
-        
         line = buffer.get_text(s, e)
-        
         if "line" in line:
             lsplit = line.split(",")
-            
             f = lsplit[0]
             l = lsplit[1]
-            
             lineno = l.strip().split(" ")[1]
             file = f.strip().split(" ")[1].replace('"', "")
-            
             if not self.wins.has_key(file):
                 self.load_file(file)
-                
             pages = self.notebook.get_n_pages()
             n = 0
             child = self.notebook.get_nth_page(n)
@@ -281,10 +254,7 @@ class EditWindow(gtk.EventBox):
             b.place_cursor(iter)
             t.grab_focus()
 
-        len
-
     def insert_at_cursor_cb(self, textbuffer, iter, text, length):
-        
         return 
         if text in special_chars:
             self.current_word = ""
@@ -295,38 +265,26 @@ class EditWindow(gtk.EventBox):
             if ord(text) == 9: self.current_word = ""
         
         name, buff, t_v, model = self.get_current()
-
-        
         if len(self.wl):
             w = AutoCompletionWindow(self.wl, t_v, iter)
         return
 
     def load_file(self, fname):
-
-
         try:
             fd = open(fname)
-
             self._new_tab(fname)
-
             buffer, text, model = self.wins[fname]
-
             buffer.set_text('')
             buf = fd.read(BLOCK_SIZE)
-
             while buf != '':
                 buffer.insert_at_cursor(buf)
                 buf = fd.read(BLOCK_SIZE)
-
             text.queue_draw()
             self.set_title(os.path.basename(fname))
-
             self.dirname = os.path.dirname(fname)
             buffer.set_modified(False)
             self.new = 0
-            
         except:
-            print sys.exc_info()[1]
             dlg = gtk.MessageDialog(self.get_parent_window(),
                     gtk.DIALOG_DESTROY_WITH_PARENT,
                     gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
@@ -334,25 +292,17 @@ class EditWindow(gtk.EventBox):
             resp = dlg.run()
             dlg.hide()
             return
-
-        #~ print "check mime"
         self.check_mime(fname)
 
     def check_mime(self, fname):
-
         buffer, text, model = self.wins[fname]
-
         manager = buffer.get_data('languages-manager')
-
         if os.path.isabs(fname):
             path = fname
         else:
             path = os.path.abspath(fname)
-
         uri = gnomevfs.URI(path)
-
         mime_type = gnomevfs.get_mime_type(path) # needs ASCII filename, not URI
-
         if mime_type:
             language = manager.get_language_from_mime_type(mime_type)
             if language:
@@ -364,43 +314,8 @@ class EditWindow(gtk.EventBox):
         else:
             print 'Couldn\'t get mime type for file "%s"' % fname
             buffer.set_highlight(False)
-
         buffer.place_cursor(buffer.get_start_iter())
         buffer.set_data("save", False)
-
-    def view_console(self, action):
-        #~ print "console ", param
-        pass
-
-    def clear_console(self, action):
-        
-        self.console.buffer.set_text('')
-
-    def run_script(self, action):
-
-        fname, buffer, text, model = self.get_current()
-
-        #~ print "running ", fname
-
-        if not fname or not os.path.exists(fname):
-            dlg = gtk.MessageDialog(self.get_parent_window(),
-                  gtk.DIALOG_DESTROY_WITH_PARENT,
-                                gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
-                                "Invalid filename "+fname)
-            dlg.run()
-            return
-
-        args = ""
-
-        self.file_save(fname)
-        fname, buffer, text, model = self.get_current()
-
-
-        #self.console.buffer.disconnect(self.console_hid)
-        out = self.console.run("execfile('%s')" % fname)
-        self.console_hid = self.console.buffer.connect('mark_set', self.console_move_cursor_cb)
-        #traceback.print_stack(file=out)
-        return
 
     def create_menu(self):
         ui_string = """<ui>
@@ -422,9 +337,6 @@ class EditWindow(gtk.EventBox):
                         <separator/>
                         <menuitem action='EditFind'/>
                         <menuitem action='EditFindNext'/>
-                </menu>
-                <menu name='View' action='View'>
-                        <menuitem action='ViewConsole'/>
                 </menu>
         </menubar>
         <toolbar>
@@ -459,8 +371,6 @@ class EditWindow(gtk.EventBox):
             ('EditFind', gtk.STOCK_FIND, None, None, None, self.edit_find),
             ('EditFindNext', None, 'Find _Next', None, None,
              self.edit_find_next),
-            ('View', None, "_View"),
-            ('ViewConsole', None, '_View Console', None, None, self.view_console),
             ]
         self.ag = gtk.ActionGroup('edit')
         self.ag.add_actions(actions)
@@ -471,12 +381,9 @@ class EditWindow(gtk.EventBox):
         return (self.ui.get_widget('/menubar'), self.ui.get_widget('/toolbar'))
 
     def chk_save(self):
-
         fname, buffer, text, model = self.get_current()
-
         if buffer is None:
             return 0
-
         if buffer.get_modified():
             dlg = gtk.Dialog('Unsaved File', self.get_parent_window(),
                     gtk.DIALOG_DESTROY_WITH_PARENT,
@@ -504,13 +411,9 @@ class EditWindow(gtk.EventBox):
         global newnumber
         self._new_tab("untitled%s.py" % newnumber)
         newnumber += 1
-
         fname, buffer, text, model = self.get_current()
-
         buffer.set_text("")
         buffer.set_modified(False)
-
-        #self.set_title(fname)
         self.new = 1
         manager = buffer.get_data('languages-manager')
         language = manager.get_language_from_mime_type("text/x-python")
@@ -588,13 +491,7 @@ class EditWindow(gtk.EventBox):
 
         page = self.notebook.get_current_page()
         child = self.notebook.get_nth_page(page)
-        
-        #~ print child
         f=self.notebook.get_tab_label_text(child)
-        #~ print f
-        
-        #~ print "cerrando ", f
-
         del self.wins[f]
         self.notebook.remove(child)
 
