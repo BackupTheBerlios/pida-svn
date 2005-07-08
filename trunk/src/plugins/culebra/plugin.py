@@ -75,18 +75,18 @@ class Plugin(plugin.Plugin):
         self.launch()
         
     def edit_getbufferlist(self):
-        bl = [t for t in enumerate([self.abspath(n) for n in \
-                                    self.editor.wins.keys()])]
         bl = []
         for i in range(self.editor.notebook.get_n_pages()):
             page = self.editor.notebook.get_nth_page(i)
-            bl.append([i, self.abspath(page.get_data('filename'))])
-            
+            label = self.editor.notebook.get_tab_label_text(page)
+            path = self.abspath(label)
+            if path:
+                bl.append([i, path])
         self.bufferlist = bl
         self.cb.evt('bufferlist', bl)
 
     def abspath(self, filename):
-        if not filename.startswith('/'):
+        if filename and not filename.startswith('/'):
             filename = os.path.join(os.getcwd(), filename)
         return filename
 
@@ -98,8 +98,16 @@ class Plugin(plugin.Plugin):
                 break
 
     def edit_changebuffer(self, num):
-        print num, self.editor.notebook.get_current_page()
-        
         if self.editor.notebook.get_current_page() != num:
-            print 'setting'
             self.editor.notebook.set_current_page(num)
+
+    def edit_closebuffer(self):
+        self.editor.file_close()
+
+    def edit_gotoline(self, line):
+        tv = self.editor.get_current()[2]
+        titer = tv.get_iter_at_location(1, line)
+        tv.scroll_to_iter(titer, 0)
+
+    def edit_openfile(self, filename):
+        self.editor.load_file(filename)

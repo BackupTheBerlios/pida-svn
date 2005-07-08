@@ -81,7 +81,7 @@ class EditWindow(gtk.EventBox):
         self.scrolledwin2 = gtk.ScrolledWindow()
         self.scrolledwin2.show()
         self.notebook = gtk.Notebook()
-        self.notebook.set_show_tabs(True)
+        self.notebook.set_show_tabs(False)
         self.notebook.set_scrollable(True)
         self.hpaned.add2(self.notebook)
         self.hpaned.set_position(200)
