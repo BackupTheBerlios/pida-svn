@@ -74,9 +74,9 @@ class EmacsClient(object):
         except socket.error, e:
             ecode = e.args[0]
             if ecode == 111:
-                self.launch()
+                #self.launch()
                 self.cb.evt('disconnected')
-            print ecode
+            #print ecode
 
     def func(self, expression, callback):
         s = "(gnuserv-eval '(progn (%s)))" % expression
