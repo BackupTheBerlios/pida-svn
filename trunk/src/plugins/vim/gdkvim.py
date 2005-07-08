@@ -487,6 +487,10 @@ class VimWindow(gtk.Window):
         self.send_keys(server, ':%s' % message)
         self.send_ret(server)
 
+    def get_option(self, server, option, callbackfunc):
+        self.send_expr(server, '&%s' % option, callbackfunc)
+    
+
     def foreground(self, server):
         def cb(*args):
             pass

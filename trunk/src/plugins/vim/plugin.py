@@ -294,7 +294,7 @@ class Plugin(plugin.Plugin):
         # Call the method of the vim communication window.
         self.cw.change_buffer(self.currentserver, number)
         # Optionally foreground Vim.
-        self.action_foreground()
+        self.cw.foreground(self.currentserver)
    
     def edit_foreground(self):
         """ Put vim into the foreground """
