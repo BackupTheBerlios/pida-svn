@@ -44,8 +44,6 @@ class Plugin(plugin.Plugin):
     def launch(self):
         self.create_editor()
         self.edit_getbufferlist()
-        
-
 
     def create_editor(self):
         if not self.editor:
@@ -54,7 +52,6 @@ class Plugin(plugin.Plugin):
             self.editor.show_all()
             self.editor.notebook.connect('switch-page', self.cb_switchbuffer)
         
-
     def populate_widgets(self):
         pass
 

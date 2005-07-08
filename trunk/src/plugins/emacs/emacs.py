@@ -54,7 +54,6 @@ class EmacsClient(object):
         if self.pid:
             if os.waitpid(self.pid, os.WNOHANG)[0]:
                 self.pid = None
-                print 'dead'
         else:
             pid = os.fork()
             if pid == 0:
@@ -76,7 +75,7 @@ class EmacsClient(object):
             ecode = e.args[0]
             if ecode == 111:
                 self.launch()
-            self.cb.evt('disconnected')
+                self.cb.evt('disconnected')
 
     def func(self, expression, callback):
         s = "(gnuserv-eval '(progn (%s)))" % expression

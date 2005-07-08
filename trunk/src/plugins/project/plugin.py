@@ -143,7 +143,7 @@ class ProjectEditor(object):
         self.win = gtk.Window()
         self.win.set_title('PIDA Project Editor')
         self.win.set_size_request(600,480)
-        self.win.set_transient_for(self.cb.cw)
+        self.win.set_transient_for(self.cb.mainwindow)
 
         mainbox = gtk.HBox()
         self.win.add(mainbox)
