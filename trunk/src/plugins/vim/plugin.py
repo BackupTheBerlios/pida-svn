@@ -95,12 +95,12 @@ class Plugin(plugin.Plugin):
                   'p',
                   'The shortcut to ')
 
-        shgrp.add('shortcut_pydoc_yanked',
+        shgrp.add('shortcut_doc_yanked',
                   registry.RegistryItem,
                   '/',
                   'The shortcut to ')
 
-        shgrp.add('shortcut_pydoc_cursor',
+        shgrp.add('shortcut_doc_cursor',
                   registry.RegistryItem,
                   '?',
                   'The shortcut to ')
@@ -332,10 +332,10 @@ SHORTCUTS = [('shortcut_execute',
                 'Async_event("breakpointset,".line("."))'),
              ('shortcut_breakpoint_clear',
                 'Async_event("breakpointclear,".line("."))'),
-             ('shortcut_pydoc_yanked',
-                '''Async_event("pydoc,".expand('<cword>'))'''),
-             ('shortcut_pydoc_cursor',
-                'Async_event("pydoc,".@")')]
+             ('shortcut_doc_yanked',
+                '''Async_event("doc,".expand('<cword>'))'''),
+             ('shortcut_doc_cursor',
+                'Async_event("doc,".@")')]
 
 NMAP_COM = 'nmap %s :call %s<lt>CR>'
 

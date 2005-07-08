@@ -506,11 +506,11 @@ class CommonEvents(object):
         """  
         pass
 
-    def evt_pydoc(self, text):
+    def evt_doc(self, text):
         """
-        Called to perform a pydoc lookup.
+        Called to perform a doc lookup.
 
-        @param text: The text to lookup in pydoc.
+        @param text: The text to lookup in doc.
         @type text: string
         """
         pass

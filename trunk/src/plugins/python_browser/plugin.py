@@ -180,7 +180,7 @@ class Plugin(plugin.Plugin):
         
     def cb_but_pydoc(self, *args):
         def ans(text):
-            self.evt_pydoc(text)
+            self.evt_doc(text)
         self.question('Search Pydoc for:', ans)
 
     def cb_defs_select(self, tv):
@@ -233,7 +233,7 @@ class Plugin(plugin.Plugin):
         brm()
         self.refwin.hide()
 
-    def evt_pydoc(self, text):
+    def evt_doc(self, text):
         pydoc = self.cb.opts.get('commands', 'pydoc')
         self.cb.action_newterminal(pydoc, ['pydoc', text])
 
