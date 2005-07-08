@@ -20,6 +20,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+#
 
 import gtk
 import gobject
@@ -29,6 +30,7 @@ import os
 #    s.send('''(gnuserv-edit-files '(x ":0.0") '((1 . "/home/ali/goo.py")))\4''')
 #(gnuserv-eval '(progn (EXPR)))
 #gnuserv-edit-file
+
 
 
 
