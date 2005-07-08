@@ -37,20 +37,12 @@ class Plugin(plugin.Plugin):
     def populate_widgets(self):
         self.add_button('editor', self.cb_launch, 'Run XEmacs', [])
 
-    def launch(self):
-        pid = os.fork()
-        if pid == 0:
-            command = self.cb.registry.commands.xemacs.value()
-            args = ['pida-emacs', '-f', 'gnuserv-start']
-            os.execvp(command, args)
-        else:
-            self.pid = pid
 
     def cb_alternative(self, *args):
         self.cb.action_showconfig()
 
     def cb_launch(self, *args):
-        self.launch()
+        self.emacs.launch()
 
     def edit_getbufferlist(self):
         """ Get the buffer list. """

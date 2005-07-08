@@ -24,6 +24,7 @@
 import gtk
 import gobject
 import socket
+import os
 #
 #    s.send('''(gnuserv-edit-files '(x ":0.0") '((1 . "/home/ali/goo.py")))\4''')
 #(gnuserv-eval '(progn (EXPR)))
@@ -40,14 +41,25 @@ class EmacsClient(object):
         self.currentbuffer = None
         self.lastfirst = None
         self.callbacks = {}
+        self.connected = False
         gobject.timeout_add(1000, self.poll_emacs)
-
+        self.pid = None
     def received(self, data, sock):
         sockno = sock.fileno()
         if sockno in self.callbacks:
             self.callbacks[sockno](data)
             del self.callbacks[sockno]
         
+    def launch(self):
+        if not self.pid:
+            pid = os.fork()
+            if pid == 0:
+                command = self.cb.registry.commands.xemacs.value()
+                args = ['pida-emacs', '-f', 'gnuserv-start']
+                os.execvp(command, args)
+            else:
+                self.pid = pid
+
     def send(self, message, callback=None):
         self._socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
@@ -57,7 +69,9 @@ class EmacsClient(object):
                 self.callbacks[self._socket.fileno()] = callback
                 gobject.io_add_watch(self._socket, gobject.IO_IN, self.cb_readable)
         except socket.error, e:
-            print 'socket error', e
+            ecode = e.args[0]
+            if ecode == 111:
+                self.launch()
             self.cb.evt('disconnected')
 
     def func(self, expression, callback):
