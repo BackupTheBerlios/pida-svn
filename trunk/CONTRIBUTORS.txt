@@ -4,6 +4,9 @@
 (general all round uberclue, developer, debian maintainer, adviser)
 Cristi (cheers mate!) gcbirzan at wolfheart to ro
 
+(plugin authors)
+Culebra text editor Fernando San Martín Woerner
+
 (general advice and inspiration)
 solarwind	Seba V. Tiponut
 jemfinch	Jeremy Fincher <jemfinch at supybot dot com>
