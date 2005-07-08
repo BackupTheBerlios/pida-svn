@@ -51,7 +51,11 @@ class EmacsClient(object):
             del self.callbacks[sockno]
         
     def launch(self):
-        if not self.pid:
+        if self.pid:
+            if os.waitpid(self.pid, os.WNOHANG)[0]:
+                self.pid = None
+                print 'dead'
+        else:
             pid = os.fork()
             if pid == 0:
                 command = self.cb.registry.commands.xemacs.value()
