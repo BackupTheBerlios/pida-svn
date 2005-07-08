@@ -245,7 +245,7 @@ class Winparent(gtk.Window):
 # Only set transient if on_top is true, or not defined.
         try:
             if child.registry.on_top.value():
-                self.set_transient_for(self.cb.cw)
+                self.set_transient_for(self.cb.mainwindow)
         except AttributeError:
             self.set_transient_for(self.cb.cw)
         child.win.reparent(self)
