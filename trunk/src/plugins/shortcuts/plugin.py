@@ -49,7 +49,7 @@ class Window(gtk.Window):
         self.cb = cb
         gtk.Window.__init__(self)
         self.set_title('PIDA Shortcut Editor')
-        self.set_transient_for(self.cb.cw)
+        self.set_transient_for(self.cb.mainwindow)
 
 
 
