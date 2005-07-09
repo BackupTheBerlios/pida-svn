@@ -44,6 +44,14 @@ class Plugin(plugin.Plugin):
         self.model = gtk.TextBuffer()
         self.view = gtk.TextView(self.model)
 
+        self.sitelist = gtk.combo_box_new_text()
+        L = BINS.keys()
+        L.sort()
+        for k in L:
+            self.sitelist.append_text(k)
+        self.sitelist.set_active(0)
+        self.add(self.sitelist, expand=False)
+        
 
         self.resmodel = gtk.TextBuffer()
         self.restag = self.resmodel.create_tag(foreground='#0000FF',
@@ -52,7 +60,9 @@ class Plugin(plugin.Plugin):
         self.resview = gtk.TextView(self.resmodel)
         self.resview.set_wrap_mode(gtk.WRAP_CHAR)
         self.resview.set_sensitive(False)
-        self.resmodel.insert(self.resmodel.get_end_iter(), 'No results yet.\n')
+        self.resmodel.insert_with_tags(self.resmodel.get_end_iter(),
+                                    'Enter text to paste', self.restag)
+        #self.resview.hide()
     
         ressw = gtk.ScrolledWindow()
         ressw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -67,10 +77,7 @@ class Plugin(plugin.Plugin):
         scrolledwindow.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.add(scrolledwindow)
         
-        self.sitelist = gtk.combo_box_new_text()
-        
 
-        self.add(self.sitelist, expand=False)
 
         self.poslabel = gtk.Label()
         self.cusbar.pack_start(self.poslabel)
@@ -90,7 +97,7 @@ class Plugin(plugin.Plugin):
 
 
     def paste(self, text):
-        paster = RafbPaster(self.cb, self)
+        paster = BINS[self.sitelist.get_active_text()](self.cb, self)
         paster.paste(text)
 
     def cb_history(self, button, amount):
@@ -186,6 +193,23 @@ class RafbPaster(Paster):
                     ('submit', 'Paste')]
         self.post(dataopts, text)
 
+class PidaPaster(Paster):
+    URL = 'http://forty-two.wolfheart.ro:8080/freenode/pida/PasteBin'
+
+    def paste(self, text):
+        dataopts = [('nick', 'Pida'),
+                    ('text', text)]
+        self.post(dataopts, text)
+
+    def parse(self, url, page):
+        for s in page.split():
+            if s.startswith('href'):
+                if s.count('view='):
+                    for t in s.split('"'):
+                        if t.startswith('/'):
+                            url = t
+        return 'http://forty-two.wolfheart.ro:8080%s' % url
         
 
+BINS = {'#pida pastebin':PidaPaster, 'rafb.net':RafbPaster}
 
