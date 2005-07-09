@@ -11,6 +11,8 @@ stock_dialog_question question
 stock_dialog_warning warning
 stock_go-up up
 stock_go-down down
+stock_go-forward right
+stock_go-back left
 stock_import import
 stock_refresh refresh
 python2.4-16 python

@@ -41,7 +41,7 @@ __version__ = pida.__init__.__version__
 
 # Available plugins, could be automatically generated
 PLUGINS = ['project', 'python_browser', 'python_debugger', 'python_profiler',
-'gazpacho']
+'gazpacho', 'pastebin']
 
 # Convenience method to ease importing plugin modules by name.
 def create_plugin(name, cb):
@@ -374,6 +374,7 @@ class MainWindow(gtk.Window):
 
 def main(argv):
     a = Application()
+    gtk.threads_init()
     gtk.main()
 
 if __name__ == '__main__':
