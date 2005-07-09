@@ -500,7 +500,7 @@ class VimWindow(gtk.Window):
         self.send_ex(server, 'b!%s' % nr)
 
     def close_buffer(self, server):
-        self.send_ex(server, 'bw')
+        self.send_ex(server, 'confirm bw')
 
     def change_cursor(self, server, x, y):
         self.send_message(server, 'cursor(%s, %s)' % (y, x), True, False)
