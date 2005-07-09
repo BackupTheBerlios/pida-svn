@@ -561,17 +561,13 @@ class VimWindow(gtk.Window):
             if mdict['s'] in self.callbacks:
                 self.callbacks[mdict['s']](mdict['r'])
         else:
-            s = [i for i in data.split('\0') if i.startswith('-n')].pop()
-            
-            self.cb_reply_async(s[3:])
+            s = [t for t in data.split('\0') if t.startswith('-n')].pop()[3:]
+            self.cb_reply_async(s)
 
     def cb_reply_async(self, data):
-        print data
         if data.count(','):
             evt, d = data.split(',', 1)
-            print d
             self.cb.evt(evt, *d.split(','))
         else:
-            pass
             self.cb.action_log('bad async reply', data, 10)
 

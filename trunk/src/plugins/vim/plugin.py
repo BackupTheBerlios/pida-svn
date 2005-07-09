@@ -111,7 +111,7 @@ class Plugin(plugin.Plugin):
                   'The shortcut to paste the yanked text to a pastebin.')
 
     def populate_widgets(self):
-        self.old_shortcuts = {}
+        self.old_shortcuts = {'n':{}, 'v':{}}
         self.vim = None
         self.embedname = None
         #gobject.timeout_add(2000, self.cb_refresh)
@@ -191,17 +191,18 @@ class Plugin(plugin.Plugin):
         self.cw.fetch_serverlist()
 
     def load_shortcuts(self):
-        if self.old_shortcuts.setdefault(self.currentserver, []):
-            for sc in self.old_shortcuts[self.currentserver]:
-                self.cw.send_ex(self.currentserver, UNMAP_COM % sc)
-        self.old_shortcuts[self.currentserver] = []
+        for mapc in ['n', 'v']:
+            if self.old_shortcuts[mapc].setdefault(self.currentserver, []):
+                for sc in self.old_shortcuts[self.currentserver]:
+                    self.cw.send_ex(self.currentserver, UNMAP_COM % (mapc, sc))
+            self.old_shortcuts[mapc][self.currentserver] = []
 
-        l = self.cb.opts.get('vim_shortcuts', 'shortcut_leader')
-        for name, command in SHORTCUTS:
-            c = self.cb.opts.get('vim_shortcuts', name)
-            sc = ''.join([l, c])
-            self.old_shortcuts[self.currentserver].append(sc)
-            self.cw.send_ex(self.currentserver, NMAP_COM % (sc, command))
+            l = self.cb.opts.get('vim_shortcuts', 'shortcut_leader')
+            for name, command in SHORTCUTS:
+                c = self.cb.opts.get('vim_shortcuts', name)
+                sc = ''.join([l, c])
+                self.old_shortcuts[mapc][self.currentserver].append(sc)
+                self.cw.send_ex(self.currentserver, NMAP_COM % (mapc, sc, command))
 
     def generate_embedname(self):
         self.embedname = 'PIDA_EMBED_%s' % time.time()
@@ -344,9 +345,9 @@ SHORTCUTS = [('shortcut_execute',
              ('shortcut_pastebin_yanked',
                 '''Async_event("pastebin,".@")''')]
 
-NMAP_COM = 'nmap %s :call %s<lt>CR>'
+NMAP_COM = '%smap %s :call %s<lt>CR>'
 
-UNMAP_COM = 'nun %s'
+UNMAP_COM = '%sun %s'
 
 VIMSCRIPT = ''':silent function! Bufferlist()
 let i = 1
@@ -359,6 +360,10 @@ let i = 1
         let i = i + 1
     endwhile
     return lis
+endfunction
+:silent function! Yank_visual()
+    y
+    return @"
 endfunction
 :silent function! Async_event(e)
     let c = "call server2client('".expand('<client>')."', '".a:e."')"
