@@ -104,6 +104,11 @@ class Plugin(plugin.Plugin):
                   registry.RegistryItem,
                   '?',
                   'The shortcut to ')
+        
+        shgrp.add('shortcut_pastebin_yanked',
+                  registry.RegistryItem,
+                  'm',
+                  'The shortcut to paste the yanked text to a pastebin.')
 
     def populate_widgets(self):
         self.old_shortcuts = {}
@@ -335,7 +340,9 @@ SHORTCUTS = [('shortcut_execute',
              ('shortcut_doc_yanked',
                 '''Async_event("doc,".expand('<cword>'))'''),
              ('shortcut_doc_cursor',
-                'Async_event("doc,".@")')]
+                'Async_event("doc,".@")'),
+             ('shortcut_pastebin_yanked',
+                '''Async_event("pastebin,".@")''')]
 
 NMAP_COM = 'nmap %s :call %s<lt>CR>'
 

@@ -149,6 +149,10 @@ class Plugin(plugin.Plugin):
         self.poslabel.set_markup('<small>%s of %s</small>' % (pos, tot))
 
 
+    def evt_pastebin(self, text):
+        print text
+        self.paste(text)
+
 import urllib
 import threading
 class Paster(object):

@@ -457,6 +457,7 @@ class VimWindow(gtk.Window):
                     messageattrs['t'] = t[0]
         return messageattrs
 
+
     def send_message(self, servername, message, asexpr, callback):
         wid = self.get_server_wid(servername)
         if wid:
@@ -560,11 +561,15 @@ class VimWindow(gtk.Window):
             if mdict['s'] in self.callbacks:
                 self.callbacks[mdict['s']](mdict['r'])
         else:
-            self.cb_reply_async(mdict['n'])
+            s = [i for i in data.split('\0') if i.startswith('-n')].pop()
+            
+            self.cb_reply_async(s[3:])
 
     def cb_reply_async(self, data):
+        print data
         if data.count(','):
             evt, d = data.split(',', 1)
+            print d
             self.cb.evt(evt, *d.split(','))
         else:
             pass
