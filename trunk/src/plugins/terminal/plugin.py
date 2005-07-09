@@ -298,7 +298,34 @@ class Logterminal(PidaTerminal):
     def truncate(self, message):
         return message[:36]
 
+class PidaBrowser(gtk.VBox):
 
+    def __init__(self, cb, notebook, icon, immortal=False):
+        self.cb = cb
+        # the parent notebook
+        self.notebook = notebook
+        # generate widgets
+        gtk.VBox.__init__(self)
+        self.show()
+        # terminal widget
+        # tab label
+        self.label = Tablabel(self.cb, icon)
+        # can we be killed?
+        self.immortal=immortal
+        # the PID of the child process
+        self.pid = -1
+        import gtkmozembed
+        self.moz = gtkmozembed.MozEmbed()
+        self.moz.set_size_request(400, 200)
+        self.pack_start(self.moz)
+
+    def gourl(self, url):
+        self.moz.load_url(url)
+
+    def remove(self):
+        ''' Remove own page from parent notebook '''
+        index = self.notebook.page_num(self)
+        self.notebook.remove_page(index)
         
 class Plugin(plugin.Plugin):
     ''' The terminal emulator plugin '''
@@ -386,7 +413,20 @@ class Plugin(plugin.Plugin):
         removed =  child.remove()
         return removed
 
+    def new_browser(self, url):
+        child = self.add_terminal(PidaBrowser, 'browser', False)
+        child.gourl(url)
+        #child.run_command(command, args, **kw)
+        if self.detach_window:
+            self.detach_window.present()
+        return child
+
     def new_command(self, command, args, icon, **kw):
+        if command == 'browseurl':
+            url = 'http://www.google.com/'
+            if len(args) > 1:
+                url = args.pop()
+            return self.new_browser(url)
         child = self.add_terminal(PidaTerminal, icon, False)
         child.run_command(command, args, **kw)
         if self.detach_window:
