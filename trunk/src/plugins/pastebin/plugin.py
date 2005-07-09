@@ -78,12 +78,15 @@ class Plugin(plugin.Plugin):
         self.add(scrolledwindow)
         
 
+        self.add_button('new', self.cb_clear,
+                        'Clear the paste area', [])
 
         self.poslabel = gtk.Label()
         self.cusbar.pack_start(self.poslabel)
 
+
         self.back_but = self.add_button('left', self.cb_history,
-                        'Go to the last paste in the history', [-1])
+                        'Go to the previous paste in the history', [-1])
 
         self.forw_but = self.add_button('right', self.cb_history,
                         'Go to the next paste in the history', [1])
@@ -99,6 +102,9 @@ class Plugin(plugin.Plugin):
     def paste(self, text):
         paster = BINS[self.sitelist.get_active_text()](self.cb, self)
         paster.paste(text)
+
+    def cb_clear(self, text):
+        self.model.set_text('')
 
     def cb_history(self, button, amount):
         self.historyposition = self.historyposition + amount
