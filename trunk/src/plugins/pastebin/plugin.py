@@ -155,14 +155,12 @@ class Paster(object):
             gtk.threads_enter()
             gobject.io_add_watch(page, gobject.IO_IN, self.readable, text)
             gtk.threads_leave()
-            print 'tried'
         t = threading.Thread(target=t)
         t.start()
 
     def readable(self, fd, cond, text):
         data = fd.read(16)
         if not data:
-            print fd.geturl()
             self.received(fd.geturl(), ''.join(self.readbuffer), text)
             self.readbuffer = []
             return False
