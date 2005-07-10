@@ -211,7 +211,8 @@ class Plugin(plugin.Plugin):
         '''
         self.refresh(bufferlist)
         # New bufferlist may have new buffer
-        self.cb.edit('getcurrentbuffer')
+        if not self.buffers.set_active(self.cbuf):
+            self.cb.edit('getcurrentbuffer')
 
     def evt_bufferchange(self, buffernumber, name):
         '''

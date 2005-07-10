@@ -205,6 +205,7 @@ class Application(object):
         # Call the log event, the log itself will respond.
         # self.evt('log', message, details, level)
         logging.getLogger().log(level, '%s: %s' % (message, details))
+        print message, details
 
     def action_close(self):
         """ Quit Pida. """
