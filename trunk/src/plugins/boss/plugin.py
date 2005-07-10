@@ -36,17 +36,17 @@ class Plugin(plugin.Plugin):
     VISIBLE = False
     
     def configure(self, reg):
-        self.registry = reg.add_group('boss',
+        self.ftregistry = reg.add_group('filetypes',
             'Boss configuration options.')
-        self.registry.add('all',
+        self.ftregistry.add('all',
             registry.RegistryItem,
             'project, pastebin',
             'What plugins to always use (comma separated)')
-        self.registry.add('python',
+        self.ftregistry.add('python',
             registry.RegistryItem,
             'python_browser, python_debugger, python_profiler',
             'What plugins to use only for python files (comma separated)')
-        self.registry.add('None',
+        self.ftregistry.add('None',
             registry.RegistryItem,
             'gazpacho',
             'What plugins to use on unknown files (comma separated)')
@@ -78,9 +78,9 @@ class Plugin(plugin.Plugin):
         return [self.cb.plugins[plugins.index(plugin)] for plugin in generic + file]
 
     def get_pluginnames(self, filetype):
-        genplugins = [s.strip() for s in self.registry.all.value().split(',')]
+        genplugins = [s.strip() for s in self.ftregistry.all.value().split(',')]
         try:
-            ftplugins = [s.strip() for s in self.cb.opts.get('boss', filetype).split(',')]
+            ftplugins = [s.strip() for s in self.cb.opts.get('filetypes', filetype).split(',')]
         except AttributeError:
             # No filetypes for the plugin
             ftplugins = []
