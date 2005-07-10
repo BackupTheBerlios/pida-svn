@@ -135,7 +135,7 @@ class Application(object):
 
 
         self.shortcuts = self.add_plugin('shortcuts')
-
+        self.boss = self.add_plugin('boss')
        
         self.evt('init')
        
@@ -238,8 +238,17 @@ class Application(object):
             self.action_log('event', name)
         if name == 'reset':
             self.reset()
-        # pass the event to every plugin
         eventname = 'evt_%s' % name
+        # pass the event to the boss plugin first
+        eventfunc = getattr(self.boss, eventname, None)
+        if eventfunc:
+            try:
+                eventfunc(*args, **kw)
+            except OSError, e:
+                logging.warn('error passing event "%s" to boss %s' % (name,
+                             plugin, e))
+        
+        # pass the event to every plugin
         for plugin in self.plugins:
             # call the instance method, or an empty lambda
             eventfunc = getattr(plugin, eventname, None)

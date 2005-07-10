@@ -464,6 +464,18 @@ class CommonEvents(object):
         """
         pass
 
+    def evt_filetype (self, buffernumber, filetype):
+        """
+        Event: called when the filetype is detected
+
+        @param buffernumber: The number of the buffer
+        @type buffernumber: string
+
+        @param filetype: The fieltype of file
+        @type filetype: string
+        """
+        pass
+
     def evt_bufferexecute(self):
         """
         Called to execute the contents of a buffer.

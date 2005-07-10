@@ -379,6 +379,7 @@ endfunction
 :silent au pida BufEnter * call Async_event("bufferchange,".bufnr('%').",".bufname('%'))
 :silent au pida BufDelete * call Async_event("bufferunload,")
 :silent au pida VimLeave * call Async_event("vimshutdown,")
+:silent au pida FileType * call Async_event("filetype,".bufnr('%').",".expand('<amatch>'))
 :echo "PIDA connected"
 '''
 

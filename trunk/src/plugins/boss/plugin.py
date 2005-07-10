@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*- 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
-#Copyright (c) 2005 Ali Afshar aafshar@gmail.com
+#Copyright (c) 2005 George Cristian Bîrzan gcbirzan@wolfheart.ro
 
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -20,4 +20,29 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-__version__ = '0.3.0pre'
+import os
+import gtk
+import pango
+import gobject
+import pida.plugin as plugin
+import pida.gtkextra as gtkextra
+
+
+class Plugin(plugin.Plugin):
+    NAME = "Boss"
+    VISIBLE = False
+
+    def init(self):
+        self.filetype_triggered = False
+        self.filetypes = dict()
+
+    def evt_bufferchange(self, buffernumber, buffername):
+        if not self.filetype_triggered:
+            self.filetypes[buffernumber] = None
+        self.filetype_triggered = False
+        print self.filetypes[buffernumber]
+
+        
+    def evt_filetype(self, buffernumber, filetype):
+        self.filetype_triggered = True
+        self.filetypes[buffernumber] = filetype
