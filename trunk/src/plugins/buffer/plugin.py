@@ -49,7 +49,7 @@ class BufferTree(gtkextra.Tree):
     COLUMNS = [('icon', gtk.gdk.Pixbuf, gtk.CellRendererPixbuf, True,
                 'pixbuf'),
                ('name', gobject.TYPE_STRING, gtk.CellRendererText, True,
-                'text'),
+                'markup'),
                ('file', gobject.TYPE_STRING, None, False, None),
                ('number', gobject.TYPE_INT, None, False, None)]
 
@@ -67,18 +67,28 @@ class BufferTree(gtkextra.Tree):
                 path = '%s' % buf[1]
             try:
                 nr = int(buf[0])
-                name = os.path.split(path)[-1]
+                dirn, name = os.path.split(path)
                 mtype = mimetypes.guess_type(path)[0]
             except ValueError:
                 nr = 0
-                name = ''
+                name, dirn = ''
                 mtype = None
             if mtype:
                 mtype = mtype.replace('/','-')
                 im = self.cb.icons.get_image(mtype).get_pixbuf()
             else:
                 im = self.cb.icons.get_image('text-plain').get_pixbuf()
-            self.add_item([im, name, path, nr])
+            markup = self.beautify(name, dirn, path)
+            self.add_item([im, markup, path, nr])
+
+    def beautify(self, name, dirn, path):
+        if not name:
+            name = 'untitled'
+        MU = ('<span size="small"><b>%s</b>\n'
+              '%s</span>')
+        dirn = dirn.replace(os.path.expanduser('~'), '~')
+        return MU % (name, dirn)
+
 
     def set_active(self, buffernumber):
         '''
