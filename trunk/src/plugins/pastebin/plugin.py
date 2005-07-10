@@ -29,6 +29,7 @@ import pida.gtkextra as gtkextra
 
 
 class Plugin(plugin.Plugin):
+    NAME = 'pastebin'
     ICON = 'paste'
     DICON = 'paste', 'Make a paste to a pastebin site'
     

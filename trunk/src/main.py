@@ -40,7 +40,7 @@ import pida.__init__
 __version__ = pida.__init__.__version__
 
 # Available plugins, could be automatically generated
-PLUGINS = ['project', 'python_browser', 'python_debugger', 'python_profiler',
+OPTPLUGINS = ['project', 'python_browser', 'python_debugger', 'python_profiler',
 'gazpacho', 'pastebin']
 
 # Convenience method to ease importing plugin modules by name.
@@ -113,10 +113,13 @@ class Application(object):
         # now the plugins
         shell_plug = self.add_plugin('terminal')
         buffer_plug = self.add_plugin('buffer')
-        
+        self.boss = create_plugin('boss', self)
+        if self.boss:
+            self.boss.configure(self.registry)
+
       
         opt_plugs = []
-        for plugname in PLUGINS:
+        for plugname in OPTPLUGINS:
             plugin = self.add_plugin(plugname)
             if plugin and plugin.VISIBLE:
                 opt_plugs.append(plugin)
@@ -135,7 +138,6 @@ class Application(object):
 
 
         self.shortcuts = self.add_plugin('shortcuts')
-        self.boss = self.add_plugin('boss')
        
         self.evt('init')
        
@@ -205,7 +207,6 @@ class Application(object):
         # Call the log event, the log itself will respond.
         # self.evt('log', message, details, level)
         logging.getLogger().log(level, '%s: %s' % (message, details))
-        print message, details
 
     def action_close(self):
         """ Quit Pida. """
@@ -319,8 +320,7 @@ class MainWindow(gtk.Window):
         self.notebook.set_size_request(200, -1)
         p2.pack2(self.notebook, True, True)
         # Populate with the configured plugins
-        for plugin in opt_plugs:
-            self.add_opt_plugin(plugin)
+        self.cb.boss.add_pages(self.cb.boss.get_plugins('None'))
         # Show the window as late as possible.
 
         
@@ -344,7 +344,8 @@ class MainWindow(gtk.Window):
         tlab.show_all()
         # create a new notebook page
         self.notebook.append_page(plugin.win, tab_label=eb)
-        self.notebook.show_all()
+        
+#        self.notebook.show_all()
         # Remove the toolbar label present by default on plugins
         plugin.ctlbar.remove(plugin.label)
 

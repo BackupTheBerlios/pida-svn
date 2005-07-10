@@ -108,7 +108,7 @@ class RefWin(gtkextra.Transient):
 class Plugin(plugin.Plugin):
     ICON = 'python'
     DICON = 'run', 'Execute Python script'
-    NAME = "Python"
+    NAME = "python_browser"
 
     def configure(self, reg):
         self.registry = reg.add_group('python_browser',

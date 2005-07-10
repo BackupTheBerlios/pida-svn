@@ -102,7 +102,7 @@ class Plugin(object):
         self.bar.pack_start(self.cusbar.win, expand=False)
         # The holder for transient windows.
         self.transwin = gtk.VBox()
-        self.transwin.show()
+#        self.transwin.show()
         self.win.pack_start(self.transwin, expand=False)
         #message dialog
         self.msgbox = gtkextra.Messagebox(self.cb)

@@ -32,7 +32,7 @@ def argname_from_gtype(gtype):
     return ('%s' % gtype).split()[1].lower().replace('gtk','',1)
 
 class Plugin(plugin.Plugin):
-    NAME = 'Gazpacho'
+    NAME = 'gazpacho'
     ICON = 'gazpacho'
     DICON = 'run', 'Run Gazpacho user interface designer.'
 

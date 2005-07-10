@@ -194,7 +194,7 @@ class DumpWindow(gtkextra.Transient):
         
 
 class Plugin(plugin.Plugin):
-    NAME = 'Debugger'
+    NAME = 'python_debugger'
     ICON = 'debug'
     DICON = 'debug', 'Load current buffer into debugger.'
 

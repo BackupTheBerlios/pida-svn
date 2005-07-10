@@ -473,7 +473,7 @@ class ProjectTree(gtkextra.Tree):
                 self.cb_selected()
 
 class Plugin(plugin.Plugin):
-    NAME = 'Projects'
+    NAME = 'project'
     ICON = 'project'
     DICON = 'terminal', 'Open a terminal in this directory.'
 
@@ -482,7 +482,7 @@ class Plugin(plugin.Plugin):
                                       'Options for the project browser.')
 
         self.registry.add('color_directory',
-                          registry.RegistryItem,
+                          registry.Color,
                           '#0000c0',
                           'Colour used for directories in file list')
         

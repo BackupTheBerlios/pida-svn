@@ -93,7 +93,7 @@ class PstatsTree(gtkextra.Tree):
                 
 
 class Plugin(plugin.Plugin):
-    NAME = 'Profiler'
+    NAME = 'python_profiler'
     DICON = 'profile', 'Profile the current buffer.'
     ICON = 'profile'
     
