@@ -25,7 +25,8 @@ def set_application_instance(application):
     pidaobject._application = application
 
 class pidaobject(object):
-    
+    NAME = 'pidaobject'
+
     def __init__(self, *args, **kw):
         self.pida = pidaobject._application
         self.cb = self.pida
@@ -37,16 +38,18 @@ class pidaobject(object):
         self.prop_main_registry = self.pida.registry
         self.prop_loaded_plugins = self.pida.plugins
         self.prop_optional_pluginlist = self.pida.OPTPLUGINS
-        self.prop_classname = self.__class__.__name__
+        self.prop_class_name = self.__class__.__name__
+        self.prop_display_name = self.NAME
         
         self.do_init(*args, **kw)
 
     def do_init(self, *args, **kw):
         pass
 
-    def log(self, message, level):
-        self.action('log', self.classname, message, level)
+    def do_log(self, message, level):
+        name = '%s;%s' % (self.prop_display_name, self.prop_class_name)
+        self.do_action('log', name, message, level)
 
-    def debug(self, message):
-        self.log(message, 20)
+    def do_log_debug(self, message):
+        self.do_log(message, 20)
 

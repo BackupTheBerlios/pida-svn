@@ -32,6 +32,7 @@ import gobject
 
 # Pida
 import base
+import mainwindow
 import gtkextra
 import configuration.options as options
 import configuration.config as config
@@ -168,7 +169,7 @@ class Application(object):
         self.tips = gtk.Tooltips()
         self.tips.enable()
 
-        self.mainwindow = MainWindow(self)
+        self.mainwindow = mainwindow.MainWindow(self)
 
         self.evt('populate')
         self.mainwindow.set_plugins(self.editor, buffer_plug, shell_plug, opt_plugs)
@@ -232,13 +233,17 @@ class Application(object):
         self.evt('newterm', command, args, **kw)
 
     def action(self, name, *args, **kw):
-        self.signal_to_plugin(self.boss, 'sction', name, *args, **kw)
+        if name != 'log':
+            self.debug('action: %s' % name)
+        self.signal_to_plugin(self.boss, 'action', name, *args, **kw)
 
     def edit(self, name, *args, **kw):
+        self.debug('edit: %s' % name)
         self.signal_to_plugin(self.editor, 'edit', name, *args, **kw)
 
     def evt(self, name, *args, **kw):
         """Callback for events from vim client, propogates them to plugins"""
+        self.debug('evt: %s' % name)
         self.signal_to_plugin(self.boss, 'evt', name, *args, **kw)
         # pass the event to every plugin
         for plugin in self.plugins:
@@ -250,9 +255,12 @@ class Application(object):
         if hasattr(plugin, funcname):
             try:
                 getattr(plugin, funcname)(*args, **kw)
+                return True
             except Exception, e:
                 print ('error passing %s "%s" to %s, %s' % (sigtype, signame,
                                                             plugin, e))
+                return False
+        return False
 
     def log(self, message, level):
         self.action('log', 'Pida', message, level)
@@ -260,140 +268,6 @@ class Application(object):
     def debug(self, message):
         self.log(message, 20)
                 
-
-# The main application window.
-class MainWindow(gtk.Window):
-    """ the main window """
-    def __init__(self, cb):
-        self.cb =cb
-        gtk.Window.__init__(self)
-        # Set the window title.
-        caption = 'PIDA %s' % __version__
-        self.set_title(caption)
-        # Connect the destroy event.
-        self.connect('destroy', self.cb_quit)
-        # Connect the keypress event.
-        self.connect('key_press_event', self.cb_key_press)
-        # The outer pane
-
-    def set_plugins(self, server_plug, buffer_plug, shell_plug, opt_plugs):
-        p0 = gtk.HPaned()
-        
-        self.cb.embedwindow = gtk.VBox()
-        self.cb.embedslider = p0
-        p0.pack1(self.cb.embedwindow, True, True)
-        
-        p1 = gtk.VPaned()
-
-        if (self.cb.registry.layout.embedded_mode.value() and \
-            self.cb.editor.NAME == 'Vim') or self.cb.editor.NAME == 'Culebra':
-            self.resize(1000, 768)
-            self.add(p0)
-            p0.pack2(p1, True, True)
-            p0.set_position(600)
-        else:
-            self.resize(400, 768)
-            self.add(p1)
-        # Pane for standard and optional plugins
-        p2 = None
-        if self.cb.registry.layout.vertical_split.value():
-            p2 = gtk.VPaned()
-        else:
-            p2 = gtk.HPaned()
-        p1.pack1(p2, True, True)
-        p1.pack2(shell_plug.win, True, True)
-        lbox = gtk.VBox()
-        lbox.set_size_request(200, -1)
-        p2.pack1(lbox, True, True)
-        lbox.pack_start(server_plug.win, expand=False)
-        lbox.pack_start(buffer_plug.win)
-        # The optional plugin  area
-        self.notebook = gtk.Notebook()
-        self.notebook.set_show_border(True)
-        self.notebook.set_size_request(200, -1)
-        p2.pack2(self.notebook, True, True)
-        # Populate with the configured plugins
-        self.opt_plugins = opt_plugs
-        self.opt_windows = {}
-        for plug in opt_plugs:
-            self.add_opt_plugin(plug)
-        self.add_pages(self.cb.boss.get_pluginnames('None'))
-        # Show the window as late as possible.
-
-        
-    def add_pages(self, pluginnames):
-        for plugin in self.opt_plugins:
-            pluginname = plugin.NAME
-            pagenum = self.notebook.page_num(plugin.win)
-            if pluginname in pluginnames:
-                if pagenum < 0:
-                    self.display_plugin(pluginname)
-            else:
-                if pagenum > -1:
-                    self.notebook.remove_page(pagenum)
-                
-    
-    def add_opt_plugin(self, plugin):
-        """
-        Add a plugin to the optional plugin notebook.
-        
-        @param plugin: An instance of the plugin.
-        @type plugin: pida.plugin.Plugin
-        """
-        # Remove the toolbar label present by default on plugins
-        plugin.ctlbar.remove(plugin.label)
-        # create a label with a tooltip/EventBox
-        label = gtk.EventBox()
-        self.cb.tips.set_tip(label, plugin.NAME)
-        im = self.cb.icons.get_image(plugin.ICON)
-        im.show()
-        label.add(im)
-        
-        # store the page fand label for later use
-        self.opt_windows[plugin.NAME] = (plugin.win, label)
-
-
-    def display_plugin(self, pluginname):
-        if pluginname in self.opt_windows:
-            win, label = self.opt_windows[pluginname]
-            self.notebook.append_page(win, tab_label=label)
-
-
-    def cb_key_press(self, widget, event):
-        """
-        Callback to all key press events.
-
-        This method must return False for the key-press event to be propogated
-        to the child widgets.
-
-        @param widget: The widget that received the key-press event.
-        @type widget: gtk.Widget
-
-        @param event: The event received.
-        @type event: gtk.gdk.Event
-        """
-        # if <CONTROL> was pressed with the key
-        if event.state & gtk.gdk.CONTROL_MASK:
-            if event.keyval == 97:
-                print '<C-a>'
-                # returning True prevents the key event propogating
-                return False
-            elif event.keyval == 115:
-                print '<C-s>'
-                return False
-        return False
-        
-    def cb_quit(self, *a):
-        """
-        Callback for user closing the main window.
-        
-        This method is called when the main window is destroyed, wither by
-        pressing the close button, or by a window manager hint.
-        """
-        # call the close acition of the application.
-        # self.save_geometry()
-        self.cb.action_close()
-   
 
 def main(argv):
     a = Application()

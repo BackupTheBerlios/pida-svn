@@ -64,6 +64,7 @@ class Plugin(plugin.Plugin):
         self.filetype_current = 'None'
 
         self.log = logging.getLogger()
+        logging.basicConfig()
 
     def evt_reset(self):
         self.log.setLevel(self.prop_main_registry.log.level.value())
@@ -77,6 +78,7 @@ class Plugin(plugin.Plugin):
         self.filetype_triggered = False
         
     def evt_filetype(self, buffernumber, filetype):
+        self.do_log_debug('filetype')
         self.filetype_triggered = True
         self.filetypes[buffernumber] = filetype
 
@@ -98,8 +100,8 @@ class Plugin(plugin.Plugin):
         """
         Log a message.
         """
-        msg = '%s: %s' % source, message
-        self.log.log(msg, level)
+        msg = '%s: %s' % (source, message)
+        self.log.log(level, msg)
 
     def action_newterminal(self, command, args, icon, **kw):
         """
