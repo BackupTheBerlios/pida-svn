@@ -193,7 +193,7 @@ class FolderButton(gtk.HBox):
         gtk.HBox.__init__(self)
         self.entry = gtk.Entry()
         self.pack_start(self.entry)
-        self.but = self.cb.icons.get_button('open')
+        self.but = self.cb.boss.icons.get_button('open')
         self.but.connect('clicked', self.cb_open)
         self.pack_start(self.but, expand=False)
         self.dialog = None
@@ -253,15 +253,15 @@ class Winparent(gtk.Window):
         child.win.reparent(self)
         self.connect('destroy', child.attach)
 
-class Transient(object):
-    def __init__(self, cb):
-        self.cb = cb
+class Transient(base.pidaobject):
+
+    def do_init(self):
         self.win = gtk.VBox()
 
         self.tb = gtk.HBox()
         self.win.pack_start(self.tb, expand=False)
         
-        self.close_but = self.cb.icons.get_button('close', 12)
+        self.close_but = self.do_get_button('close')
         eb = gtk.EventBox()
         eb.add(self.close_but)
         self.tb.pack_start(eb, expand=False)
@@ -314,7 +314,7 @@ class Questionbox(Messagebox):
         self.hbar.pack_start(self.entry)
         eb = gtk.EventBox()
         self.tb.pack_start(eb, expand=False)
-        self.submit = self.cb.icons.get_button('apply', 12)
+        self.submit = self.do_get_button('apply')
         eb.add(self.submit)
         self.cb.tips.set_tip(eb, 'ok')
 
@@ -357,7 +357,7 @@ class Toolbar(base.pidaobject):
 
     def add_button(self, stock, callback, tooltip='None Set!', cbargs=[]):
         evt = gtk.EventBox()
-        but = self.cb.icons.get_button(stock)
+        but = self.do_get_button(stock)
         evt.add(but)
         self.do_set_tooltip(evt, tooltip)
         but.connect('clicked', callback, *cbargs)
@@ -398,9 +398,9 @@ class Sepbar(object):
         self.cb_rclick = rclick
         self.cb_dclick = dclick
 
-class Popup(object):
-    def __init__(self, cb, *args):
-        self.cb = cb
+class Popup(base.pidaobject):
+
+    def do_init(self, *args):
         self.menu = gtk.Menu(*args)
         self.init()
     
@@ -410,7 +410,7 @@ class Popup(object):
         mi.connect('activate', cb, cbargs)
         hb = gtk.HBox()
         mi.add(hb)
-        im = self.cb.icons.get_image(icon)
+        im = self.do_get_image(icon)
         hb.pack_start(im, expand=False, padding=4)
         lb = gtk.Label(text)
         hb.pack_start(lb, expand=False)
@@ -541,10 +541,12 @@ class ContextToolbar(ContextGenerator, Toolbar):
         for i in self.win.get_children():
             self.win.remove(i)
 
-class Icons(object):
-    def __init__(self, cb):
-        self.cb = cb
-        icon_file = self.cb.opts.get('files','icon_data')
+class Icons(base.pidaobject):
+
+    def do_init(self):
+        #icon_file = self.cb.opts.get('files','icon_data')
+        icon_file = self.prop_main_registry.files.icon_data.value()
+        print icon_file
         self.d = shelve.open(icon_file, 'r')
         self.cs = gtk.gdk.COLORSPACE_RGB
     

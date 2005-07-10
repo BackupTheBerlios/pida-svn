@@ -84,7 +84,7 @@ class Plugin(base.pidaobject):
         self.dtbut = gtk.ToggleToolButton(stock_id=None)
         eb.add(self.dtbut)
         self.ctlbar.pack_start(eb, expand=False)
-        ic = self.cb.icons.get_image(self.DICON[0], 10)
+        ic = self.do_get_image(self.DICON[0])
         self.dtbut.set_icon_widget(ic)
         self.dtbut.connect('toggled', self.cb_toggledetatch)
         self.do_set_tooltip(eb, self.DICON[1])
@@ -99,23 +99,23 @@ class Plugin(base.pidaobject):
         self.shortbar = gtk.HBox()
         self.bar.pack_start(self.shortbar, expand=False)
         # The custom tool bar.
-        self.cusbar = gtkextra.Toolbar(self.cb)
+        self.cusbar = gtkextra.Toolbar()
         self.bar.pack_start(self.cusbar.win, expand=False)
         # The holder for transient windows.
         self.transwin = gtk.VBox()
 #        self.transwin.show()
         self.win.pack_start(self.transwin, expand=False)
         #message dialog
-        self.msgbox = gtkextra.Messagebox(self.cb)
+        self.msgbox = gtkextra.Messagebox()
         self.transwin.pack_start(self.msgbox.win, expand=False)
         #question dialog
-        self.qstbox = gtkextra.Questionbox(self.cb)
+        self.qstbox = gtkextra.Questionbox()
         self.transwin.pack_start(self.qstbox.win, expand=False)
         # The content area.
         self.frame = gtk.VBox()
         self.win.pack_start(self.frame)
         # The toolbar popup menu.
-        self.toolbar_popup = gtkextra.Popup(self.cb)
+        self.toolbar_popup = gtkextra.Popup()
         #self.populate_widgets()
         #self.connect_widgets()
         #self.frame.show_all()

@@ -69,6 +69,12 @@ class Plugin(plugin.Plugin):
         self.tips = gtk.Tooltips()
         self.tips.enable()
 
+    def evt_populate(self):
+        self.icons = gtkextra.Icons()
+
+    def evt_shown(self):
+        pass
+
     def evt_reset(self):
         self.log.setLevel(self.prop_main_registry.log.level.value())
         

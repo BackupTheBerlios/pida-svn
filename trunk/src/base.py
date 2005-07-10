@@ -56,3 +56,9 @@ class pidaobject(object):
     def do_set_tooltip(self, widget, tiptext):
         self.do_action('settip', widget, tiptext)
 
+    def do_get_image(self, stockname):
+        return self.pida.boss.icons.get_image(stockname)
+
+    def do_get_button(self, stockname):
+        return self.pida.boss.icons.get_button(stockname)
+

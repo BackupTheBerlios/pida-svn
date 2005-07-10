@@ -164,7 +164,7 @@ class Application(object):
 
         self.shortcuts.load()
       
-        self.icons = gtkextra.Icons(self)
+        #self.icons = gtkextra.Icons(self)
         # Tooltips shared
         self.tips = gtk.Tooltips()
         #self.tips.enable()
