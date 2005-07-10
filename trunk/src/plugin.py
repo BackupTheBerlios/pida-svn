@@ -237,7 +237,7 @@ class Plugin(object):
         # Add plugin name to message.
         text = '%s: %s' % (self.NAME, message)
         # Call the main log event.
-        self.cb.action_log(self.NAME, message, level)
+        self.cb.action('log', self.NAME, message, level)
 
     def debug(self, message):
         """

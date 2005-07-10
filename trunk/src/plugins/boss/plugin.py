@@ -22,15 +22,10 @@
 
 import os
 import gtk
-# doubt you need this (these)
-import pango
-# or this
-import gobject
+
 import pida.plugin as plugin
 import pida.gtkextra as gtkextra
 import pida.configuration.registry as registry
-
-import pida
 
 class Plugin(plugin.Plugin):
     NAME = "Boss"
@@ -87,4 +82,20 @@ class Plugin(plugin.Plugin):
             # No filetypes for the plugin
             ftplugins = []
         return genplugins + ftplugins
+
+    def action_log(self, source, message, level):
+        """
+        Log a message.
+        """
+
+    def action_newterminal(self, command, args, icon, **kw):
+        """
+        Start a new terminal
+        """
+
+    def action_newbrowser(self, url):
+        """
+        Start a new browser
+        """
+
 
