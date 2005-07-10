@@ -401,8 +401,8 @@ class Sepbar(object):
 class Popup(base.pidaobject):
 
     def do_init(self, *args):
-        self.menu = gtk.Menu(*args)
-        self.init()
+        self.menu = gtk.Menu()
+        self.init(*args)
     
     def add_item(self, icon, text, cb, cbargs):
         mi = gtk.MenuItem()
@@ -433,8 +433,8 @@ class Popup(base.pidaobject):
 
 
 class ContextGenerator(object):
-    def __init__(self, cb, name):
-        self.cb = cb
+
+    def do_init(self, name):
         self.name = name
         self.aargs = []
 
@@ -464,9 +464,11 @@ class ContextGenerator(object):
         pass
 
 class ContextPopup(ContextGenerator, Popup):
-    def __init__(self, cb, name):
-        Popup.__init__(self, cb)
-        ContextGenerator.__init__(self, cb, name)
+
+    def do_init(self, name):
+        Popup.do_init(self, name)
+        ContextGenerator.do_init(self, name)
+        
 
     def popup(self, filename, time):
         self.aargs = [filename]
@@ -519,9 +521,13 @@ class PositionPopup(ContextPopup):
         self.cb.evt('breakpointclear', line, filename)
 
 class ContextToolbar(ContextGenerator, Toolbar):
-    def __init__(self, cb, name):
-        Toolbar.__init__(self, cb)
-        ContextGenerator.__init__(self, cb, name)
+    #def __init__(self, cb, name):
+    #    Toolbar.__init__(self, cb)
+    #    ContextGenerator.__init__(self, cb, name)
+    
+    def do_init(self, name):
+        Toolbar.do_init(self, name)
+        ContextGenerator.do_init(self, name)
         self.generate()
 
     def add_item(self, stock, name, cb, cbargs):

@@ -252,14 +252,14 @@ class Plugin(plugin.Plugin):
         self.globs.connect_activate(self.cb_globs_activate)
         nb.append_page(self.globs.win, tab_label=gllb)
 
-        self.dumpwin = DumpWindow(self.cb)
+        self.dumpwin = DumpWindow()
         self.add(self.dumpwin.win, expand=False)
 
         self.term = DebugTerminal(self.cb)
         self.add(self.term, expand=False)
 
         self.curindex = 0
-        self.menu = gtkextra.PositionPopup(self.cb, 'position')
+        self.menu = gtkextra.PositionPopup('position')
         self.lfn = tempfile.mktemp('.py', 'pidatmp')
         self.debugger_loaded = False
 

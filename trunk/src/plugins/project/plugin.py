@@ -289,8 +289,8 @@ class FileTree(gtkextra.Tree):
         #self.view.connect('row-expanded', self.cb_expand)
         self.view.connect('test-expand-row', self.cb_expand)
         
-        self.filemenu = gtkextra.ContextPopup(self.cb, 'file')
-        self.dirmenu = gtkextra.ContextPopup(self.cb, 'dir')
+        self.filemenu = gtkextra.ContextPopup('file')
+        self.dirmenu = gtkextra.ContextPopup('dir')
 
         self.root = None
         
@@ -504,12 +504,12 @@ class Plugin(plugin.Plugin):
         vp = gtk.VPaned()
         self.add(vp)
 
-        self.projects = ProjectTree(self.cb)
+        self.projects = ProjectTree()
         self.projects.connect_select(self.cb_project_select)
         self.projects.connect_rightclick(self.cb_project_rclick)
         vp.pack1(self.projects.win, resize=True, shrink=True)
 
-        self.files = FileTree(self.cb)
+        self.files = FileTree()
         self.files.pcb = self
 
         self.files.connect_activate(self.cb_files_activate)
@@ -523,7 +523,7 @@ class Plugin(plugin.Plugin):
         self.add_button('editor', self.cb_project_edit,
                         'Edit projects on workbench.')
    
-        self.dirmenu = gtkextra.ContextPopup(self.cb, 'dir')
+        self.dirmenu = gtkextra.ContextPopup('dir')
 
         self.current_directory = os.getcwd()
     

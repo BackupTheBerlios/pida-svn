@@ -75,9 +75,9 @@ class BufferTree(gtkextra.Tree):
                 mtype = None
             if mtype:
                 mtype = mtype.replace('/','-')
-                im = self.cb.icons.get_image(mtype).get_pixbuf()
+                im = self.do_get_image(mtype).get_pixbuf()
             else:
-                im = self.cb.icons.get_image('text-plain').get_pixbuf()
+                im = self.do_get_image('text-plain').get_pixbuf()
             markup = self.beautify(name, dirn, path)
             self.add_item([im, markup, path, nr])
 
@@ -210,7 +210,7 @@ class Plugin(plugin.Plugin):
         Event: Called when a new buffer list is received.
         
         @param bufferlist: The list of buffers
-      @type bufferlist: A list of (number, filename) pairs
+        @type bufferlist: A list of (number, filename) pairs
         '''
         self.refresh(bufferlist)
         # New bufferlist may have new buffer

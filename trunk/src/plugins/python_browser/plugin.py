@@ -124,10 +124,10 @@ class Plugin(plugin.Plugin):
         vp = gtk.VPaned()
         self.add(vp)
 
-        self.defs = DefTree(self.cb)
+        self.defs = DefTree()
         vp.pack1(self.defs.win, resize=True, shrink=True)
 
-        self.refwin = RefWin(self.cb)
+        self.refwin = RefWin()
         vp.pack2(self.refwin.win, resize=True, shrink=True)
 
         self.refs = self.refwin.tree
@@ -140,7 +140,7 @@ class Plugin(plugin.Plugin):
         self.add_button('rename', self.cb_but_rename, 'Rename class or method')
         self.add_button('find', self.cb_but_references, 'List references.')
 
-        self.menu = gtkextra.PositionPopup(self.cb, 'position')
+        self.menu = gtkextra.PositionPopup('position')
 
     def connect_widgets(self):
         self.defs.connect_select(self.cb_defs_select)
