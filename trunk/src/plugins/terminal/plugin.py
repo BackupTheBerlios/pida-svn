@@ -24,6 +24,8 @@
 import os
 import re
 
+import threading
+
 # gtk
 import gtk
 
@@ -327,16 +329,19 @@ class PidaBrowser(gtk.VBox):
         self.urlentry.connect('activate', self.cb_urlentered)
         self.toolbar.win.pack_start(self.urlentry)
 
+        self.progresslabel = gtk.Label()
+        self.toolbar.win.pack_start(self.progresslabel, expand=False)
+
         self.next_but.set_sensitive(False)
         self.back_but.set_sensitive(False)
 
-        import gtkmozembed
-        gtkmozembed.pop_startup()
-        gtkmozembed.push_startup()
-        self.moz = gtkmozembed.MozEmbed()
-        self.moz.set_size_request(400, 200)
-        self.pack_start(self.moz)
+        self.socket = gtk.Socket()
+        self.pack_start(self.socket)
+        self.socket.realize()
 
+
+    def cb_moz_progress(self, moz, cur, max):
+        self.progresslabel.set_markup('<span size="x-small">%s</span>' % cur)
 
     def cb_moz_location(self, moz):
         self.back_but.set_sensitive(self.moz.can_go_back())
@@ -360,7 +365,8 @@ class PidaBrowser(gtk.VBox):
         self.moz.stop_load()
 
     def gourl(self, url):
-        self.moz.load_url(url)
+        if not os.fork():
+            os.execvp('dillo', ['dillo', '-f', '-x', '%s' % self.socket.get_id()])
 
     def kill(self):
         self.remove()
@@ -437,6 +443,23 @@ class Plugin(plugin.Plugin):
         self.shortbar.pack_start(self.ctxbar.win)
 
         #self.logterm = self.new_log()
+        #try:
+        #    import gtkmozembed
+        #    global gtkmozembed
+        #    gtkmozembed.pop_startup()
+        #    gtkmozembed.push_startup()
+        #    pdir = self.cb.registry.directories.user.value()
+        #    mozdir = os.path.join(pdir, 'pida_mozembed')
+        #    if not os.path.exists(mozdir):
+        #        os.mkdir(mozdir)
+        #        f = open(os.path.join(mozdir, 'prefs.js'), 'w')
+        #        f.write(DEFMOZ)
+        #        f.close()
+        #    gtkmozembed.gtk_moz_embed_set_profile_path(pdir, 'pida_mozembed')
+        #    
+        #    self.gtkmoz = gtkmozembed
+        #except ImportError:
+        #    self.gtkmoz = None            
 
     def cb_conf_clicked(self, *args):
         self.cb.action_showshortcuts()
@@ -461,13 +484,17 @@ class Plugin(plugin.Plugin):
 
     def new_browser(self, url):
         if not url:
-            url = 'http://www.google.com/xhtml'
+            url = 'http://www.google.com/'
+        #com, args = self.cb.registry.commands.browser.value().split(' ', 1)
+        #pid = os.fork()
+        #if not pid:
+        #    os.execvp(com, ['PIDA'] + [args] + [url])
         child = self.add_terminal(PidaBrowser, 'internet', False)
         child.gourl(url)
         #child.run_command(command, args, **kw)
-        if self.detach_window:
-            self.detach_window.present()
-        return child
+        #if self.detach_window:
+        #    self.detach_window.present()
+        #return child
 
     def new_command(self, command, args, icon, **kw):
         if command == 'browseurl':
