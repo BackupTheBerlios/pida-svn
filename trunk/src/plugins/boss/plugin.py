@@ -22,6 +22,7 @@
 
 import os
 import gtk
+import logging
 
 import pida.plugin as plugin
 import pida.gtkextra as gtkextra
@@ -58,10 +59,15 @@ class Plugin(plugin.Plugin):
                     pluginname)
 
     def init(self):
+        self.filetypes = {}
         self.filetype_triggered = False
-        self.filetypes = dict()
         self.filetype_current = 'None'
 
+        self.log = logging.getLogger()
+
+    def evt_reset(self):
+        self.log.setLevel(self.registry.log.level.value())
+        
     def evt_bufferchange(self, buffernumber, buffername):
         if not self.filetype_triggered:
             self.filetypes[buffernumber] = 'None'
@@ -83,10 +89,17 @@ class Plugin(plugin.Plugin):
             ftplugins = []
         return genplugins + ftplugins
 
+    def get_named_plugin(self, name):
+        for plugin in self.plugins:
+            if plugin.NAME == name:
+                return plugin
+
     def action_log(self, source, message, level):
         """
         Log a message.
         """
+        msg = '%s: %s' % source, message
+        self.log.log(msg, level)
 
     def action_newterminal(self, command, args, icon, **kw):
         """

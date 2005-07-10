@@ -176,8 +176,6 @@ class Application(object):
         self.evt('started')
         self.evt('reset')
         
-    def reset(self):
-        logging.getLogger().setLevel(self.registry.log.level.value())
 
     def add_plugin(self, name):
         """
@@ -239,11 +237,6 @@ class Application(object):
 
     def evt(self, name, *args, **kw):
         """Callback for events from vim client, propogates them to plugins"""
-        # log all events except for log events
-        # need to be in the boss or something
-        if name == 'reset':
-            self.reset()
-        
         self.signal_to_plugin(self.boss, 'evt', name, *args, **kw)
         # pass the event to every plugin
         for plugin in self.plugins:
@@ -256,10 +249,14 @@ class Application(object):
             try:
                 getattr(plugin, funcname)(*args, **kw)
             except Exception, e:
-                print ('error passing %s "%s" to %s, %s' % \
-                            (sigtype, signame,  plugin, e))
-        else:
-            print 'no event', signame, plugin.NAME
+                print ('error passing %s "%s" to %s, %s' % (sigtype, signame,
+                                                            plugin, e))
+
+    def log(self, message, level):
+        self.action('log', 'Pida', message, level)
+
+    def debug(self, message):
+        self.log(message, 20)
                 
 
 # The main application window.
