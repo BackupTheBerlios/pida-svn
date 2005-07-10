@@ -1,5 +1,7 @@
 vital
 --
+process accounting
+cleaner shutdown
 
 near future
 --

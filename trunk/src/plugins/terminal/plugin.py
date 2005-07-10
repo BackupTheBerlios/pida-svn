@@ -331,15 +331,16 @@ class PidaBrowser(gtk.VBox):
         self.back_but.set_sensitive(False)
 
         import gtkmozembed
+        gtkmozembed.gtk_moz_embed_set_profile_path('/home/ali/.mozilla/firefox/',
+                                                   'kugkudv1.default')
+        gtkmozembed.push_startup()
         self.moz = gtkmozembed.MozEmbed()
+        print self.moz.get_chrome_mask()
+        self.moz.set_chrome_mask(long(gtkmozembed.FLAG_ALLCHROME))
+        print self.moz.get_chrome_mask()
         self.moz.set_size_request(400, 200)
-        self.moz.connect('location', self.cb_moz_location)
-        self.moz.connect('hierarchy-changed', self.cb_reparent)
         self.pack_start(self.moz)
 
-    def cb_reparent(self, window, *args):
-        print 'hi changed'
-        self.moz.unmap()
 
     def cb_moz_location(self, moz):
         self.back_but.set_sensitive(self.moz.can_go_back())
