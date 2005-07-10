@@ -33,7 +33,7 @@ class Plugin(plugin.Plugin):
     ICON = 'paste'
     DICON = 'paste', 'Make a paste to a pastebin site'
     
-    def init(self):
+    def do_init(self):
         self.pastes = []
         self.historyposition = 0
 

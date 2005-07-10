@@ -26,6 +26,7 @@ import gtk
 import pida.plugin as plugin
 import ConfigParser
 import os
+import pida.base as base
 #import tree
 import gobject
 import pida.gtkextra as gtkextra
@@ -169,8 +170,8 @@ class Plugin(plugin.Plugin):
         cb.pack_start(save_b, expand=False)
         save_b.connect('clicked', self.cb_save)
 
-    def init(self):
-        self.shortcuts = Shortcuts(self.cb)
+    def do_init(self):
+        self.shortcuts = Shortcuts(self.pida)
 
 
     def makewin(self):
@@ -259,7 +260,7 @@ class Plugin(plugin.Plugin):
             yield l
 
 
-class Shortcuts(object):
+class Shortcuts(base.pidaobject):
 
     def __init__(self, cb):
         self.cb = cb

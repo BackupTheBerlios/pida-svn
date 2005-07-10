@@ -51,14 +51,14 @@ class Plugin(plugin.Plugin):
         self.plugregistry = reg.add_group('plugins',
             'Determines which plugins are loaded at startup.')
     
-        for pluginname in self.cb.OPTPLUGINS:
+        for pluginname in self.prop_optional_pluginlist:
             self.plugregistry.add(pluginname,
                 registry.Boolean,
                 True,
                 'Whether %s wil be loaded at startup (requires restart).' % \
                     pluginname)
 
-    def init(self):
+    def do_init(self):
         self.filetypes = {}
         self.filetype_triggered = False
         self.filetype_current = 'None'
@@ -66,7 +66,7 @@ class Plugin(plugin.Plugin):
         self.log = logging.getLogger()
 
     def evt_reset(self):
-        self.log.setLevel(self.registry.log.level.value())
+        self.log.setLevel(self.prop_main_registry.log.level.value())
         
     def evt_bufferchange(self, buffernumber, buffername):
         if not self.filetype_triggered:

@@ -31,6 +31,7 @@ import gtk
 import gobject
 
 # Pida
+import base
 import gtkextra
 import configuration.options as options
 import configuration.config as config
@@ -51,7 +52,7 @@ def create_plugin(name, cb):
     try:
         mod = __import__('pida.plugins.%s.plugin' % name, {}, {}, [True])
         try:
-            inst = mod.Plugin(cb)
+            inst = mod.Plugin()
         except Exception, e:
             logging.warn('Plugin "%s" failed to instantiate: %s' % (name, e))
             inst = None
@@ -81,6 +82,7 @@ class DummyOpts(object):
 class Application(object):
     """ The application class, a glue for everything """
     def __init__(self):
+        base.set_application_instance(self)
         # List of plugins loaded used for event passing
         self.plugins = []
         # convenience

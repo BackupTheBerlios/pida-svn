@@ -24,10 +24,11 @@ import gtk
 import shelve
 import fnmatch
 import gobject
+import base
 
 POPUP_CONTEXTS = ['file', 'dir', 'terminal', 'position', 'string', 'url']
 
-class Tree(object):
+class Tree(base.pidaobject):
     """
     A custom treeview subclass that is used throughout Pida.
     
@@ -44,8 +45,7 @@ class Tree(object):
     XPAD = 0
     YPAD = 1
 
-    def __init__(self, cb):
-        self.cb = cb
+    def do_init(self, *args):
         self.model = gtk.TreeStore(*[l[1] for l in self.COLUMNS])
         self.view = gtk.TreeView(self.model)
         self.view.set_headers_visible(False)

@@ -21,15 +21,28 @@
 #SOFTWARE.
 
 
+def set_application_instance(application):
+    pidaobject._application = application
+
 class pidaobject(object):
     
-    def __init__(self):
-        self.application = application
-        self.classname = self.__class__.__name__
-        self.action = application.action
-        self.evt = application.evt
-        self.edit = application.edit
-        self.registry = self.application.registry
+    def __init__(self, *args, **kw):
+        self.pida = pidaobject._application
+        self.cb = self.pida
+        
+        self.do_action = self.pida.action
+        self.do_evt = self.pida.evt
+        self.do_edit = self.pida.edit
+        
+        self.prop_main_registry = self.pida.registry
+        self.prop_loaded_plugins = self.pida.plugins
+        self.prop_optional_pluginlist = self.pida.OPTPLUGINS
+        self.prop_classname = self.__class__.__name__
+        
+        self.do_init(*args, **kw)
+
+    def do_init(self, *args, **kw):
+        pass
 
     def log(self, message, level):
         self.action('log', self.classname, message, level)

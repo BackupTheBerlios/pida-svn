@@ -26,8 +26,9 @@
 import gtk
 # Pida import
 import gtkextra
+import base
 
-class Plugin(object):
+class Plugin(base.pidaobject):
     """ The base plugin class. 
     
         This class is to be overriden for any object that wishes to have a
@@ -45,22 +46,22 @@ class Plugin(object):
     DETACHABLE = False
     VISIBLE = True
 
-    def __init__(self, cb):
-        """ 
-        Constructor
-        
-        @param cb: An instance of the main application class.
-        @type cb: C{pida.main.Application}
-
-        @note: It is recommended that to add additional widgets to the plugin,
-        that the populate_widgets method is overriden instead of this
-        constructor.
-        """
+    #def __init__(self, cb):
+    #    """ 
+    #    Constructor
+    #    
+    #    @param cb: An instance of the main application class.
+    #    @type cb: C{pida.main.Application}
+#
+#        @note: It is recommended that to add additional widgets to the plugin,
+#        that the populate_widgets method is overriden instead of this
+#        constructor.
+#        """
         # Instance of the Application class.
-        self.cb = cb
-        self.detach_window = None
+#        self.cb = cb
 
-    def init(self):
+    def do_init(self):
+        self.detach_window = None
         pass
 
     def configure(self, reg):
@@ -326,11 +327,11 @@ class Plugin(object):
             if self.DETACHABLE:
                 self.attach()
 
-    def evt_init(self):
-        """
-        Event: called on initializing the plugin.
-        """
-        self.init()
+    #def evt_init(self):
+    #    """
+    #    Event: called on initializing the plugin.
+    #    """
+    #    self.init()
 
     def evt_populate(self):
         self.__populate__()
