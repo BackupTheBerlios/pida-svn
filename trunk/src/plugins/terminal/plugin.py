@@ -422,6 +422,8 @@ class Plugin(plugin.Plugin):
         self.add(self.notebook)
 
         self.add_separator()
+        self.add_button('internet', self.cb_new_browser,
+                        'Open a new browser')
         self.add_button('terminal', self.cb_new,
                         'Open a new shell')
         self.add_button('close', self.cb_close,
@@ -459,6 +461,8 @@ class Plugin(plugin.Plugin):
         return removed
 
     def new_browser(self, url):
+        if not url:
+            url = 'http://www.google.com/xhtml'
         child = self.add_terminal(PidaBrowser, 'internet', False)
         child.gourl(url)
         #child.run_command(command, args, **kw)
@@ -468,7 +472,7 @@ class Plugin(plugin.Plugin):
 
     def new_command(self, command, args, icon, **kw):
         if command == 'browseurl':
-            url = 'http://www.google.com/'
+            url = None
             if len(args) > 1:
                 url = args.pop()
             return self.new_browser(url)
@@ -506,6 +510,9 @@ class Plugin(plugin.Plugin):
 
     def cb_new(self, *args):
         self.new_shell()
+
+    def cb_new_browser(self, *args):
+        self.new_browser(None)
 
     def cb_close(self, *args):
         if not self.remove_terminal(self.notebook.get_current_page()):

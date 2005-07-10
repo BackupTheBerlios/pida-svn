@@ -193,7 +193,7 @@ class Plugin(plugin.Plugin):
     def load_shortcuts(self):
         for mapc in ['n', 'v']:
             if self.old_shortcuts[mapc].setdefault(self.currentserver, []):
-                for sc in self.old_shortcuts[self.currentserver]:
+                for sc in self.old_shortcuts[mapc][self.currentserver]:
                     self.cw.send_ex(self.currentserver, UNMAP_COM % (mapc, sc))
             self.old_shortcuts[mapc][self.currentserver] = []
 
