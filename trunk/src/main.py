@@ -320,10 +320,25 @@ class MainWindow(gtk.Window):
         self.notebook.set_size_request(200, -1)
         p2.pack2(self.notebook, True, True)
         # Populate with the configured plugins
-        self.cb.boss.add_pages(self.cb.boss.get_plugins('None'))
+        self.opt_plugins = opt_plugs
+        self.opt_windows = {}
+        for plug in opt_plugs:
+            self.add_opt_plugin(plug)
+        self.add_pages(self.cb.boss.get_pluginnames('None'))
         # Show the window as late as possible.
 
         
+    def add_pages(self, pluginnames):
+        for plugin in self.opt_plugins:
+            pluginname = plugin.NAME
+            pagenum = self.notebook.page_num(plugin.win)
+            if pluginname in pluginnames:
+                if pagenum < 0:
+                    self.display_plugin(pluginname)
+            else:
+                if pagenum > -1:
+                    self.notebook.remove_page(pagenum)
+                
     
     def add_opt_plugin(self, plugin):
         """
@@ -332,22 +347,24 @@ class MainWindow(gtk.Window):
         @param plugin: An instance of the plugin.
         @type plugin: pida.plugin.Plugin
         """
-        # create a label with a tooltip/EventBox
-        eb = gtk.EventBox()
-        tlab = gtk.HBox()
-        eb.add(tlab)
-        self.cb.tips.set_tip(eb, plugin.NAME)
-        im = self.cb.icons.get_image(plugin.ICON)
-        tlab.pack_start(im, expand=False)
-        #label = gtk.Label('%s' % plugin.NAME[:2])
-        #tlab.pack_start(label, expand=False, padding=2)
-        tlab.show_all()
-        # create a new notebook page
-        self.notebook.append_page(plugin.win, tab_label=eb)
-        
-#        self.notebook.show_all()
         # Remove the toolbar label present by default on plugins
         plugin.ctlbar.remove(plugin.label)
+        # create a label with a tooltip/EventBox
+        label = gtk.EventBox()
+        self.cb.tips.set_tip(label, plugin.NAME)
+        im = self.cb.icons.get_image(plugin.ICON)
+        im.show()
+        label.add(im)
+        
+        # store the page fand label for later use
+        self.opt_windows[plugin.NAME] = (plugin.win, label)
+
+
+    def display_plugin(self, pluginname):
+        if pluginname in self.opt_windows:
+            win, label = self.opt_windows[pluginname]
+            self.notebook.append_page(win, tab_label=label)
+
 
     def cb_key_press(self, widget, event):
         """
