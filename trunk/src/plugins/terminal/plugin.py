@@ -331,13 +331,9 @@ class PidaBrowser(gtk.VBox):
         self.back_but.set_sensitive(False)
 
         import gtkmozembed
-        gtkmozembed.gtk_moz_embed_set_profile_path('/home/ali/.mozilla/firefox/',
-                                                   'kugkudv1.default')
+        gtkmozembed.pop_startup()
         gtkmozembed.push_startup()
         self.moz = gtkmozembed.MozEmbed()
-        print self.moz.get_chrome_mask()
-        self.moz.set_chrome_mask(long(gtkmozembed.FLAG_ALLCHROME))
-        print self.moz.get_chrome_mask()
         self.moz.set_size_request(400, 200)
         self.pack_start(self.moz)
 
