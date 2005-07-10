@@ -143,6 +143,7 @@ class Application(object):
        
         self.evt('init')
        
+       
         self.registry.prime_optparser(self.optparser)
         self.optparser.parse_args()
         self.registry.load()
@@ -230,53 +231,37 @@ class Application(object):
         # Fire the newterm event, the terminal plugin will respond.
         self.evt('newterm', command, args, **kw)
 
-    def edit(self, name, *args, **kw):
-        funcname = 'edit_%s' % name
-        if hasattr(self.editor, funcname):
-            try:
-                getattr(self.editor, funcname)(*args, **kw)
-            except Exception, e:
-                logging.warn('error passing event "%s" to editor %s' % (name, e))
-        else:
-            logging.warn('Edtor does not support %s.' % name)
+    def action(self, name, *args, **kw):
+        self.signal_to_plugin(self.boss, 'sction', name, *args, **kw)
 
+    def edit(self, name, *args, **kw):
+        self.signal_to_plugin(self.editor, 'edit', name, *args, **kw)
 
     def evt(self, name, *args, **kw):
         """Callback for events from vim client, propogates them to plugins"""
         # log all events except for log events
-        if name != 'log':
-            self.action_log('event', name)
+        # need to be in the boss or something
         if name == 'reset':
             self.reset()
-        eventname = 'evt_%s' % name
-        # pass the event to the boss plugin first
-        eventfunc = getattr(self.boss, eventname, None)
-        if eventfunc:
-            try:
-                eventfunc(*args, **kw)
-            except OSError, e:
-                logging.warn('error passing event "%s" to boss %s' % (name,
-                             plugin, e))
         
+        self.signal_to_plugin(self.boss, 'evt', name, *args, **kw)
         # pass the event to every plugin
         for plugin in self.plugins:
             # call the instance method, or an empty lambda
-            eventfunc = getattr(plugin, eventname, None)
-            if eventfunc:
-                try:
-                    eventfunc(*args, **kw)
-                except OSError, e:
-                    logging.warn('error passing event "%s" to %s %s' % (name,
-                                 plugin, e))
+            self.signal_to_plugin(plugin, 'evt', name, *args, **kw)
 
-    def attr(self, name, callbackfunc, *args, **kw):
-        attrname = 'attr_%s' % name
-        for plugin in self.plugins:
-            attrfunc = getattr(plugin, attrname, None)
-            if attrfunc:
-                result = attrfunc(*args, **kw)
-                callbackfunc(result)
-    
+    def signal_to_plugin(self, plugin, sigtype, signame, *args, **kw):
+        funcname = '%s_%s' % (sigtype, signame)
+        if hasattr(plugin, funcname):
+            try:
+                getattr(plugin, funcname)(*args, **kw)
+            except Exception, e:
+                print ('error passing %s "%s" to %s, %s' % \
+                            (sigtype, signame,  plugin, e))
+        else:
+            print 'no event', signame, plugin.NAME
+                
+
 # The main application window.
 class MainWindow(gtk.Window):
     """ the main window """

@@ -170,6 +170,7 @@ class Plugin(plugin.Plugin):
         save_b.connect('clicked', self.cb_save)
 
     def init(self):
+        print 'innnit'
         self.shortcuts = Shortcuts(self.cb)
 
 
