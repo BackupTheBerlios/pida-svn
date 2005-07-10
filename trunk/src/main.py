@@ -83,6 +83,8 @@ class Application(object):
     def __init__(self):
         # List of plugins loaded used for event passing
         self.plugins = []
+        # convenience
+        self.OPTPLUGINS = OPTPLUGINS
         # Main config options
         #self.opts = options.Opts()
         self.opts = DummyOpts(self)
@@ -146,6 +148,13 @@ class Application(object):
         self.registry.load()
         self.registry.save()
       
+        for pluginname in self.OPTPLUGINS:
+            if not self.opts.get('plugins', pluginname):
+                # slow but only once
+                for plugin in self.plugins:
+                    if plugin.NAME == pluginname:
+                        self.plugins.remove(plugin)
+                        opt_plugs.remove(plugin)
 
         logging.getLogger().setLevel(self.registry.log.level.value())
 

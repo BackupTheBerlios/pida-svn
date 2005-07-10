@@ -30,6 +30,7 @@ import pida.plugin as plugin
 import pida.gtkextra as gtkextra
 import pida.configuration.registry as registry
 
+import pida
 
 class Plugin(plugin.Plugin):
     NAME = "Boss"
@@ -37,7 +38,7 @@ class Plugin(plugin.Plugin):
     
     def configure(self, reg):
         self.ftregistry = reg.add_group('filetypes',
-            'Boss configuration options.')
+            'Determines which plugins are displayed for which filetypes.')
         self.ftregistry.add('all',
             registry.RegistryItem,
             'project, pastebin',
@@ -50,6 +51,18 @@ class Plugin(plugin.Plugin):
             registry.RegistryItem,
             'gazpacho',
             'What plugins to use on unknown files (comma separated)')
+
+        self.plugregistry = reg.add_group('plugins',
+            'Determines which plugins are loaded at startup.')
+    
+        for pluginname in self.cb.OPTPLUGINS:
+            self.plugregistry.add(pluginname,
+                registry.Boolean,
+                True,
+                'Whether %s wil be loaded at startup (requires restart).' % \
+                    pluginname)
+            
+                
 
     def init(self):
         self.filetype_triggered = False
