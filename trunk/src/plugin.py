@@ -87,7 +87,7 @@ class Plugin(base.pidaobject):
         ic = self.cb.icons.get_image(self.DICON[0], 10)
         self.dtbut.set_icon_widget(ic)
         self.dtbut.connect('toggled', self.cb_toggledetatch)
-        self.cb.tips.set_tip(eb, self.DICON[1])
+        self.do_set_tooltip(eb, self.DICON[1])
         # The main title label.
         self.label = gtk.Label(self.NAME)
         self.ctlbar.pack_start(self.label, expand=False)
