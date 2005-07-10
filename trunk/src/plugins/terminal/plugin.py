@@ -306,7 +306,6 @@ class PidaBrowser(gtk.VBox):
         self.notebook = notebook
         # generate widgets
         gtk.VBox.__init__(self)
-        self.show()
         # terminal widget
         # tab label
         self.label = Tablabel(self.cb, icon)
@@ -314,10 +313,53 @@ class PidaBrowser(gtk.VBox):
         self.immortal=immortal
         # the PID of the child process
         self.pid = -1
+
+        self.toolbar = gtkextra.Toolbar(self.cb)
+        
+        self.pack_start(self.toolbar.win, expand=False)
+
+        self.back_but = self.toolbar.add_button('left', self.cb_back, 'Go back')
+        self.next_but = self.toolbar.add_button('right', self.cb_forw, 'Go Forwards')
+        self.toolbar.add_button('close', self.cb_stop, 'Stop loading')
+        self.toolbar.add_button('refresh', self.cb_reload, 'Reload Page')
+
+        self.urlentry = gtk.Entry()
+        self.urlentry.connect('activate', self.cb_urlentered)
+        self.toolbar.win.pack_start(self.urlentry)
+
+        self.next_but.set_sensitive(False)
+        self.back_but.set_sensitive(False)
+
         import gtkmozembed
         self.moz = gtkmozembed.MozEmbed()
         self.moz.set_size_request(400, 200)
+        self.moz.connect('location', self.cb_moz_location)
+        self.moz.connect('hierarchy-changed', self.cb_reparent)
         self.pack_start(self.moz)
+
+    def cb_reparent(self, window, *args):
+        self.moz.queue_draw()
+
+    def cb_moz_location(self, moz):
+        self.back_but.set_sensitive(self.moz.can_go_back())
+        self.next_but.set_sensitive(self.moz.can_go_forward())
+        self.urlentry.set_text(self.moz.get_location())
+
+    def cb_urlentered(self, entry):
+        url = self.urlentry.get_text()
+        self.gourl(url)
+
+    def cb_back(self, button):
+        self.moz.go_back()
+
+    def cb_forw(self, button):
+        self.moz.go_forward()
+
+    def cb_reload(self, button):
+        self.moz.reload(0)
+
+    def cb_stop(self, button):
+        self.moz.stop_load()
 
     def gourl(self, url):
         self.moz.load_url(url)
@@ -414,7 +456,7 @@ class Plugin(plugin.Plugin):
         return removed
 
     def new_browser(self, url):
-        child = self.add_terminal(PidaBrowser, 'browser', False)
+        child = self.add_terminal(PidaBrowser, 'internet', False)
         child.gourl(url)
         #child.run_command(command, args, **kw)
         if self.detach_window:
