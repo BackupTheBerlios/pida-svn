@@ -343,6 +343,15 @@ class Plugin(object):
         self.msgbox.hide()
         self.qstbox.hide()
 
+    def get_window(self):
+        return self.win
+
+    def get_main_toolbar(self):
+        return self.cusbar
+
+    def get_extra_toolbar(self):
+        return self.shortbar
+
 class CommonEvents(object):
     """ Just for reference """
     def evt_started(self, serverlist):
