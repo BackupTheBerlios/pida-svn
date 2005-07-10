@@ -266,7 +266,8 @@ class Plugin(plugin.Plugin):
                 # Quit pida
                 self.cb.action_close()
                 # The application never gets here
-        del self.old_shortcuts[self.currentserver]
+        del self.old_shortcuts['n'][self.currentserver]
+        del self.old_shortcuts['v'][self.currentserver]
         self.currentserver = None
         self.cb_refresh()
 

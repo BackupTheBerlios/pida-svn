@@ -338,7 +338,8 @@ class PidaBrowser(gtk.VBox):
         self.pack_start(self.moz)
 
     def cb_reparent(self, window, *args):
-        self.moz.queue_draw()
+        print 'hi changed'
+        self.moz.unmap()
 
     def cb_moz_location(self, moz):
         self.back_but.set_sensitive(self.moz.can_go_back())
