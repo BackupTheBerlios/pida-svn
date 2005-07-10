@@ -46,7 +46,7 @@ class BufferTree(gtkextra.Tree):
     '''
     YPAD = 2
     XPAD = 2
-    COLUMNS = [('icon', gtk.gdk.Pixbuf, gtk.CellRendererPixbuf, True,
+    COLUMNS = [('icon', gtk.gdk.Pixbuf, gtk.CellRendererPixbuf, False,
                 'pixbuf'),
                ('name', gobject.TYPE_STRING, gtk.CellRendererText, True,
                 'markup'),
@@ -84,10 +84,13 @@ class BufferTree(gtkextra.Tree):
     def beautify(self, name, dirn, path):
         if not name:
             name = 'untitled'
-        MU = ('<span size="small"><b>%s</b>\n'
+        pdir = os.path.split(dirn)[-1]
+        MU = ('<span size="small">'
+              '<span foreground="#0000c0">%s/</span>'
+              '<b>%s</b>\n'
               '%s</span>')
         dirn = dirn.replace(os.path.expanduser('~'), '~')
-        return MU % (name, dirn)
+        return MU % (pdir, name, dirn)
 
 
     def set_active(self, buffernumber):
