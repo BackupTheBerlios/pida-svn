@@ -61,8 +61,6 @@ class Plugin(plugin.Plugin):
                 True,
                 'Whether %s wil be loaded at startup (requires restart).' % \
                     pluginname)
-            
-                
 
     def init(self):
         self.filetype_triggered = False
@@ -77,18 +75,9 @@ class Plugin(plugin.Plugin):
             self.cb.mainwindow.add_pages(self.get_pluginnames(self.filetype_current))
         self.filetype_triggered = False
         
-    # replaced this with get_pluginnames, boss only needs names.
-    def get_plugins(self, filetype):
-        plugins = list()
-        active_plugins = list()
-        # fails on empty string 
-        generic = map(str.strip, self.cb.registry.boss.all.value().split(','))
-        try:
-            file = map(str.strip, self.cb.opts.get('boss', filetype).split(','))
-        except AttributeError:
-            file = []
-        plugins = [plugin.NAME for plugin in self.cb.plugins]
-        return [self.cb.plugins[plugins.index(plugin)] for plugin in generic + file]
+    def evt_filetype(self, buffernumber, filetype):
+        self.filetype_triggered = True
+        self.filetypes[buffernumber] = filetype
 
     def get_pluginnames(self, filetype):
         genplugins = [s.strip() for s in self.ftregistry.all.value().split(',')]
@@ -98,15 +87,4 @@ class Plugin(plugin.Plugin):
             # No filetypes for the plugin
             ftplugins = []
         return genplugins + ftplugins
-
-    # moved this to Application.MainWindow (since every call is on that object)
-    def add_pages(self, plugins):
-        for i in xrange(self.cb.mainwindow.notebook.get_n_pages()):
-            self.cb.mainwindow.notebook.remove_page(-1)
-        for plugin in plugins:
-            self.cb.mainwindow.add_opt_plugin(plugin)
-        
-    def evt_filetype(self, buffernumber, filetype):
-        self.filetype_triggered = True
-        self.filetypes[buffernumber] = filetype
 
