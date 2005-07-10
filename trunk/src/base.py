@@ -53,3 +53,6 @@ class pidaobject(object):
     def do_log_debug(self, message):
         self.do_log(message, 20)
 
+    def do_set_tooltip(self, widget, tiptext):
+        self.do_action('settip', widget, tiptext)
+

@@ -66,6 +66,9 @@ class Plugin(plugin.Plugin):
         self.log = logging.getLogger()
         logging.basicConfig()
 
+        self.tips = gtk.Tooltips()
+        self.tips.enable()
+
     def evt_reset(self):
         self.log.setLevel(self.prop_main_registry.log.level.value())
         
@@ -95,6 +98,9 @@ class Plugin(plugin.Plugin):
         for plugin in self.plugins:
             if plugin.NAME == name:
                 return plugin
+
+    def action_settip(self, widget, tiptext):
+        self.tips.set_tip(widget, tiptext)
 
     def action_log(self, source, message, level):
         """

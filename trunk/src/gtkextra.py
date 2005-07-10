@@ -350,16 +350,16 @@ class Optionbox(Messagebox):
         self.display_label.set_label(msg)
         self.show('Option (%s)' % self.id)
  
-class Toolbar(object):
-    def  __init__(self, cb):
-        self.cb = cb
+class Toolbar(base.pidaobject):
+
+    def do_init(self, *args):
         self.win = gtk.HBox()
 
     def add_button(self, stock, callback, tooltip='None Set!', cbargs=[]):
         evt = gtk.EventBox()
         but = self.cb.icons.get_button(stock)
         evt.add(but)
-        self.cb.tips.set_tip(evt, tooltip)
+        self.do_set_tooltip(evt, tooltip)
         but.connect('clicked', callback, *cbargs)
         self.win.pack_start(evt, expand=False, padding=0)
         return but

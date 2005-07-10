@@ -144,7 +144,7 @@ class Application(object):
 
         self.shortcuts = self.add_plugin('shortcuts')
        
-        self.evt('init')
+        #self.evt('init')
        
        
         self.registry.prime_optparser(self.optparser)
@@ -167,7 +167,7 @@ class Application(object):
         self.icons = gtkextra.Icons(self)
         # Tooltips shared
         self.tips = gtk.Tooltips()
-        self.tips.enable()
+        #self.tips.enable()
 
         self.mainwindow = mainwindow.MainWindow(self)
 
