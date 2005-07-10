@@ -196,6 +196,8 @@ class Application(object):
         self.shortcuts = create_plugin('shortcuts', self)
         # is a plugin, so must fire its init event.
         self.shortcuts.evt_init()
+        self.shortcuts.evt_populate()
+        self.shortcuts.evt_shown()
         self.shortcuts.show()
 
     def action_log(self, message, details, level=10):

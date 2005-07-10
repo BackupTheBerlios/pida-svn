@@ -364,6 +364,9 @@ class PidaBrowser(gtk.VBox):
     def gourl(self, url):
         self.moz.load_url(url)
 
+    def kill(self):
+        self.remove()
+
     def remove(self):
         ''' Remove own page from parent notebook '''
         index = self.notebook.page_num(self)

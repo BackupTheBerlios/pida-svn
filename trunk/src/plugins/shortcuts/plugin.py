@@ -172,6 +172,7 @@ class Plugin(plugin.Plugin):
     def init(self):
         self.shortcuts = Shortcuts(self.cb)
 
+
     def makewin(self):
         self.parent = None
         self.parent = Window(self.cb)
