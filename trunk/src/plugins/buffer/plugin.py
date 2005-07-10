@@ -46,7 +46,7 @@ class BufferTree(gtkextra.Tree):
     '''
     YPAD = 2
     XPAD = 2
-    COLUMNS = [('icon', gtk.gdk.Pixbuf, gtk.CellRendererPixbuf, False,
+    COLUMNS = [('icon', gtk.gdk.Pixbuf, gtk.CellRendererPixbuf, True,
                 'pixbuf'),
                ('name', gobject.TYPE_STRING, gtk.CellRendererText, True,
                 'markup'),
