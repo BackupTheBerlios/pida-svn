@@ -451,8 +451,9 @@ class Plugin(plugin.Plugin):
         child = ttype(self.cb, self.notebook, icon, immortal)
         child.show_all()
         self.notebook.append_page(child, tab_label=child.label)
-        self.notebook.set_current_page(-1)
-        self.notebook.show_all()
+        for i in range(self.notebook.get_n_pages()):
+            self.notebook.set_current_page(i)
+        #self.notebook.show_all()
         return child
 
     def remove_terminal(self, index):

@@ -249,9 +249,8 @@ class Winparent(gtk.Window):
         except AttributeError:
             self.set_transient_for(self.cb.cw)
         self.childplug = child
+        self.show()
         child.win.reparent(self)
-        self.show_all()
-        child.evt_shown()
         self.connect('destroy', child.attach)
 
 class Transient(object):
