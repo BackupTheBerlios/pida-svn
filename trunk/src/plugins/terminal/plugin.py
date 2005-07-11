@@ -485,12 +485,12 @@ class Plugin(plugin.Plugin):
     def new_browser(self, url):
         if not url:
             url = 'http://www.google.com/'
-        #com, args = self.cb.registry.commands.browser.value().split(' ', 1)
-        #pid = os.fork()
-        #if not pid:
-        #    os.execvp(com, ['PIDA'] + [args] + [url])
-        child = self.add_terminal(PidaBrowser, 'internet', False)
-        child.gourl(url)
+        com, args = self.cb.registry.commands.browser.value().split(' ', 1)
+        pid = os.fork()
+        if not pid:
+            os.execvp(com, ['PIDA'] + [args] + [url])
+        #child = self.add_terminal(PidaBrowser, 'internet', False)
+        #child.gourl(url)
         #child.run_command(command, args, **kw)
         #if self.detach_window:
         #    self.detach_window.present()
