@@ -36,7 +36,7 @@ import edit
 class Plugin(plugin.Plugin):
     NAME = 'Culebra'    
 
-    def init(self):
+    def do_init(self):
         self.editor = None
         self.bufferlist = None
         self.currentbufnum = None
