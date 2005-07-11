@@ -233,8 +233,7 @@ class Application(object):
         self.evt('newterm', command, args, **kw)
 
     def action(self, name, *args, **kw):
-        if name != 'log':
-            self.debug('action: %s' % name)
+        self.debug('action: %s' % name)
         self.signal_to_plugin(self.boss, 'action', name, *args, **kw)
 
     def edit(self, name, *args, **kw):
@@ -263,10 +262,10 @@ class Application(object):
         return False
 
     def log(self, message, level):
-        self.action('log', 'Pida', message, level)
+        self.boss.do_log('Pida', message, level)
 
     def debug(self, message):
-        self.log(message, 20)
+        self.log(message, 10)
                 
 
 def main(argv):
