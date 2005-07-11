@@ -87,10 +87,10 @@ class BufferTree(gtkextra.Tree):
         pdir = os.path.split(dirn)[-1]
         MU = ('<span size="small">'
               '<span foreground="#0000c0">%s/</span>'
-              '<b>%s</b>\n'
-              '%s</span>')
+              '<b>%s</b>'
+              '</span>')
         dirn = dirn.replace(os.path.expanduser('~'), '~')
-        return MU % (pdir, name, dirn)
+        return MU % (pdir, name)
 
 
     def set_active(self, buffernumber):
