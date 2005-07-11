@@ -31,6 +31,7 @@ import ConfigParser
 import pida.configuration.registry as registry
 import pida.plugin as plugin
 import pida.gtkextra as gtkextra
+import pida.base as base
 
 VCS_NONE = 0
 VCS_DARCS = 1
@@ -135,15 +136,15 @@ class ProjectRegistry(ConfigParser.ConfigParser):
         self.write(f)
         f.close()
 
-class ProjectEditor(object):
-    def __init__(self, cb, project_registry):
-        self.cb = cb
+class ProjectEditor(base.pidaobject):
+    
+    def do_init(self, project_registry):
         self.project_registry = project_registry
         
         self.win = gtk.Window()
         self.win.set_title('PIDA Project Editor')
         self.win.set_size_request(600,480)
-        self.win.set_transient_for(self.cb.mainwindow)
+        self.win.set_transient_for(self.pida.mainwindow)
 
         mainbox = gtk.HBox()
         self.win.add(mainbox)
@@ -229,7 +230,7 @@ class ProjectEditor(object):
     def projects_changed(self):
         self.project_registry.save()
         self.projects.populate(self.project_registry)
-        self.cb.evt('projectschanged')
+        self.do_evt('projectschanged')
             
     def cb_project_select(self, *args):
         projname = self.projects.selected(0)
@@ -300,7 +301,7 @@ class FileTree(gtkextra.Tree):
         def small(s):
             return '<span size="small">%s</span>' % s
         def smallblue(s):
-            dircol = self.cb.opts.get('project browser', 'color_directory')
+            dircol = self.prop_main_registry.project_browser.color_directory.value()
             return '<span size="small" foreground="%s">%s</span>' % (dircol,s)
         if path == 'None':
             return
@@ -310,8 +311,9 @@ class FileTree(gtkextra.Tree):
             flist = os.listdir(path)
         except OSError:
             flist = []
-        if self.cb.opts.get('project browser', 'tree_exclude'):
-            pattern = re.compile(self.cb.opts.get('project browser', 'pattern_exclude'))
+        if self.prop_main_registry.project_browser.tree_exclude.value():
+            r = self.prop_main_registry.project_browser.pattern_exclude.value()
+            pattern = re.compile(r)
             flist = [fn for fn in flist if not pattern.match(fn)]
         for fn in flist:
             fp = os.path.join(path, fn)
@@ -402,7 +404,7 @@ class FileTree(gtkextra.Tree):
     def cb_but_open(self, fn):
         if fn:
             if not os.path.isdir(fn):
-                self.cb.edit('openfile', fn)
+                self.do_edit('openfile', fn)
 
     def cb_but_new(self, fn):
         root = self.get_selected_root(fn)
@@ -410,7 +412,7 @@ class FileTree(gtkextra.Tree):
             newfn = os.path.join(root, nn)
             open(newfn, 'w').close()
             self.refresh()
-            self.cb.edit('openfile', fn)
+            self.do_edit('openfile', fn)
         self.pcb.question('Name of the file?', create)
 
     def cb_but_delete(self, fn):
@@ -426,8 +428,11 @@ class FileTree(gtkextra.Tree):
 
     def cb_but_terminal(self, fn):
         root = self.get_selected_root(fn)
-        shell = self.cb.opts.get('commands', 'shell')
-        self.cb.action_newterminal(shell, ['shell'], directory=root)
+        if not root:
+            root = os.path.expanduser('~')
+        print root
+        shell = self.prop_main_registry.commands.shell.value()
+        self.do_action('newterminal', shell, ['shell'], directory=root)
 
 class ProjectTree(gtkextra.Tree):
     COLUMNS = [('Name', gobject.TYPE_STRING, gtk.CellRendererText, False,
@@ -478,7 +483,7 @@ class Plugin(plugin.Plugin):
     DICON = 'terminal', 'Open a terminal in this directory.'
 
     def configure(self, reg):
-        self.registry = reg.add_group('project browser',
+        self.registry = reg.add_group('project_browser',
                                       'Options for the project browser.')
 
         self.registry.add('color_directory',
@@ -527,7 +532,7 @@ class Plugin(plugin.Plugin):
 
         self.current_directory = os.getcwd()
     
-        conffile = fn = self.cb.opts.get('files', 'project_data')
+        conffile = fn = self.prop_main_registry.files.project_data.value()
         
         self.config = ProjectRegistry(self.cb, conffile)
         self.config.load()
@@ -558,7 +563,7 @@ class Plugin(plugin.Plugin):
     def show_editor(self):
         if self.editor:
             del self.editor
-        self.editor = ProjectEditor(self.cb, self.config)
+        self.editor = ProjectEditor(self.config)
         self.editor.show()
        
     def cb_vcs_command(self, but, vcsmap, command):
@@ -591,7 +596,7 @@ class Plugin(plugin.Plugin):
 
     def cb_files_activate(self, tv, path, niter):
         fn = self.files.selected(1)
-        self.cb.edit('openfile', fn)
+        self.do_edit('openfile', fn)
        
     def cb_project_new(self, *args):
         self.show_editor()
@@ -602,12 +607,14 @@ class Plugin(plugin.Plugin):
 
     def cb_alternative(self, *a):
         name = self.projects.selected(0)
+        if not name:
+            return
         if name == CWD:
             wd = self.current_directory
         else:
             wd = self.config.get(name, 'directory')
-        shell = self.cb.opts.get('commands', 'shell')
-        self.cb.action_newterminal(shell, ['shell'], directory=wd)
+        shell = self.prop_main_registry.commands.shell.value()
+        self.do_action('newterminal', shell, ['shell'], directory=wd)
 
     def evt_projectschanged(self, *a):
         self.config.load()
@@ -622,20 +629,19 @@ class Plugin(plugin.Plugin):
         name = self.projects.selected(0)
         if self.config.has_option(name, 'project_executable'):
             ex = self.config.get(name, 'project_executable')
-            py = self.cb.opts.get('commands', 'python')
-            self.cb.action_newterminal(py, ['python', ex])
+            py = self.prop_main_registry.commands.python.value()
+            self.do_action('newterminal', py, ['python', ex])
         else:
-            self.cb.action_log('Execution Failed',
-            'No main file defined for project.', 3)
+            self.do_log('Execution Failed',
+            'No main file defined for project.', 40)
 
-class VersionControlSystem(object):
+class VersionControlSystem(base.pidaobject):
     COMMAND = ''
     ARGS = []
 
-    def __init__(self, cb, callbackfunc):
-        self.cb = cb
+    def do_init(self, callbackfunc):
         self.callbackfunc = callbackfunc
-        self.toolbar = gtkextra.Toolbar(self.cb)
+        self.toolbar = gtkextra.Toolbar()
         self.add_default_buttons()
         self.add_custom_buttons()
 
@@ -659,7 +665,7 @@ class VersionControlSystem(object):
     def launch(self, args, **kw):
         args = self.ARGS + args
         icon = 'vcs_%s' % args[1]
-        self.cb.action_newterminal(self.COMMAND, args, icon=icon,
+        self.do_action('newterminal', self.COMMAND, args, icon=icon,
                                    directory=kw['dir'], envv=kw['env'])
 
 
@@ -719,8 +725,8 @@ class Subversion(VersionControlSystem):
 
 
 def create_vcs_maps(cb, callbackfunc):
-    return {VCS_DARCS: Darcs(cb, callbackfunc),
-            VCS_SVN: Subversion(cb, callbackfunc)}
+    return {VCS_DARCS: Darcs(callbackfunc),
+            VCS_SVN: Subversion(callbackfunc)}
 
 def get_vcs_for_directory(dirname):
     vcs = 0

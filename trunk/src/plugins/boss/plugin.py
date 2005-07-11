@@ -116,11 +116,6 @@ class Plugin(plugin.Plugin):
         msg = '%s: %s' % (source, message)
         self.log.log(level, msg)
 
-    def action_newterminal(self, command, args, icon, **kw):
-        """
-        Start a new terminal
-        """
-
     def action_newbrowser(self, url):
         """
         Start a new browser
@@ -138,3 +133,8 @@ class Plugin(plugin.Plugin):
         self.do_evt('die')
         # Fin
         gtk.main_quit()
+
+    def action_newterminal(self, command, args, **kw):
+        """Open a new terminal, by issuing an event"""
+        # Fire the newterm event, the terminal plugin will respond.
+        self.do_evt('newterm', command, args, **kw)
