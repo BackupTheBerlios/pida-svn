@@ -22,7 +22,9 @@
 
 
 import gtk
-
+import gobject
+import base
+import os
 # The main application window.
 class MainWindow(gtk.Window):
     """ the main window """
@@ -156,3 +158,43 @@ class MainWindow(gtk.Window):
         # self.save_geometry()
         self.cb.action('quit')
    
+class SplashScreen(base.pidaobject):
+
+    def do_init(self):
+        self.win = gtk.Window()
+
+        vbox = gtk.VBox()
+        self.win.add(vbox)
+
+        hbox = gtk.HBox()
+        vbox.pack_start(hbox)
+
+        logo = gtk.Image()
+        libdir = self.prop_main_registry.directories.shared.value()
+        logofile = os.path.join(libdir, 'pidalogo.png')
+        logo.set_from_file(logofile)
+        hbox.pack_start(logo)
+
+        self.label = gtk.Label()
+        vbox.pack_start(self.label, expand=False)
+
+        self.progress = gtk.ProgressBar()
+        vbox.pack_start(self.progress, expand=False)
+        self.win.set_position(gtk.WIN_POS_CENTER)
+        self.win.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_SPLASHSCREEN)
+
+    def start(self):
+        self.win.show_all()
+
+    def update(self, message, fraction):
+        self.label.set_text(message)
+        self.progress.set_fraction(fraction)
+
+    def stop(self):
+        def stop():
+            self.win.hide_all()
+            self.win.destroy()
+        gobject.timeout_add(1500, stop)
+
+
+

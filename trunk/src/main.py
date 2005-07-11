@@ -110,19 +110,26 @@ class Application(object):
     def startup(self):
         self.optparser = optparse.OptionParser()
         self.registry = registry.Registry(os.path.expanduser('~/.pida/pida.conf'))
+
        
         options.configure(self.registry)
 
         #self.add_plugin('vim')
 
         # now the plugins
-        shell_plug = self.add_plugin('terminal')
-        buffer_plug = self.add_plugin('buffer')
+
+
         self.boss = create_plugin('boss', self)
         if self.boss:
             self.boss.configure(self.registry)
 
-      
+
+        shell_plug = self.add_plugin('terminal')
+
+
+        buffer_plug = self.add_plugin('buffer')
+
+
         opt_plugs = []
         for plugname in OPTPLUGINS:
             plugin = self.add_plugin(plugname)
@@ -152,6 +159,11 @@ class Application(object):
         self.registry.load()
         self.registry.save()
       
+        self.splash = mainwindow.SplashScreen()
+        self.splash.start()
+        self.splash.update('Parsing command line options.', 0.5)
+        self.splash.update('Loading optional plugins', 0.6)
+
         for pluginname in self.OPTPLUGINS:
             if not self.opts.get('plugins', pluginname):
                 # slow but only once
@@ -160,8 +172,6 @@ class Application(object):
                         self.plugins.remove(plugin)
                         opt_plugs.remove(plugin)
 
-        logging.getLogger().setLevel(self.registry.log.level.value())
-
         self.shortcuts.load()
       
         #self.icons = gtkextra.Icons(self)
@@ -169,16 +179,28 @@ class Application(object):
         self.tips = gtk.Tooltips()
         #self.tips.enable()
 
+
+        self.splash.update('Drawing main window.', 0.7)
+
         self.mainwindow = mainwindow.MainWindow(self)
+
+
+
+        self.splash.update('Drawing plugins.', 0.8)
 
         self.evt('populate')
         self.mainwindow.set_plugins(self.editor, buffer_plug, shell_plug, opt_plugs)
         self.mainwindow.show_all()
 
+
+        self.splash.update('Startup events.', 0.9)
+
         self.evt('shown')
         self.evt('started')
         self.evt('reset')
         
+        self.splash.update('PIDA Started.', 1.0)
+        self.splash.stop()
 
     def add_plugin(self, name):
         """
