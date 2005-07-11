@@ -30,12 +30,14 @@ import gobject
 # Pida imports
 import pida.plugin as plugin
 import pida.gtkextra as gtkextra
+import pida.configuration.config as config
 import pida.configuration.registry as registry
 
 import edit
 
 class Plugin(plugin.Plugin):
     NAME = 'Culebra'    
+    DICON = 'configure', 'Configure Pida'
 
     def do_init(self):
         self.editor = None
@@ -57,7 +59,7 @@ class Plugin(plugin.Plugin):
         pass
 
     def cb_alternative(self, *args):
-        self.cb.action_showconfig()
+        self.do_action('showconfig')
     
     def cb_switchbuffer(self, notebook, page, number):
         nuber = int(number)

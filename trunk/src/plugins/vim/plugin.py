@@ -233,7 +233,7 @@ class Plugin(plugin.Plugin):
         self.launch()
 
     def cb_alternative(self, *args):
-        self.cb.action_showconfig()
+        self.do_action('showconfig')
 
     def show_or_hide_serverlist(self):
         if self.is_embedded():

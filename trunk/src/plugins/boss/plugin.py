@@ -27,6 +27,7 @@ import logging
 import pida.plugin as plugin
 import pida.gtkextra as gtkextra
 import pida.configuration.registry as registry
+import pida.configuration.config as config
 
 class Plugin(plugin.Plugin):
     NAME = "Boss"
@@ -125,4 +126,9 @@ class Plugin(plugin.Plugin):
         Start a new browser
         """
 
+    def action_showconfig(self):
+        """ called to show the config editor """
+        # Create a new configuration editor, and show it.
+        self.configeditor = config.ConfigEditor(self.pida)
+        self.configeditor.show()
 

@@ -197,11 +197,6 @@ class Application(object):
         self.editor = self.add_plugin(name)
         return self.editor
 
-    def action_showconfig(self):
-        """ called to show the config editor """
-        # Create a new configuration editor, and show it.
-        self.configeditor = config.ConfigEditor(self)
-        self.configeditor.show()
 
     def action_showshortcuts(self):
         """ called to show the shortcut editor """
