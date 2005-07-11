@@ -259,7 +259,7 @@ class Tablabel(gtk.EventBox):
         gtk.EventBox.__init__(self)
         self.set_visible_window(True)
         # Get the requested icon
-        self.image = self.cb.icons.get_image(stockid, 14)
+        self.image = self.cb.boss.icons.get_image(stockid, 14)
         self.add(self.image)
         # Different styles for highligting labels
         self.hst = self.style.copy()
