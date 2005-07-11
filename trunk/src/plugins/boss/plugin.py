@@ -85,6 +85,7 @@ class Plugin(plugin.Plugin):
             self.filetype_current = self.filetypes[buffernumber]
             self.cb.mainwindow.add_pages(self.get_pluginnames(self.filetype_current))
         self.filetype_triggered = False
+        self.pida.mainwindow.set_title('PIDA %s' % buffername)
         
     def evt_filetype(self, buffernumber, filetype):
         self.do_log_debug('filetype')
