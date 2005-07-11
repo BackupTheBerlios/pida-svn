@@ -88,7 +88,6 @@ class Plugin(plugin.Plugin):
         self.pida.mainwindow.set_title('PIDA %s' % buffername)
         
     def evt_filetype(self, buffernumber, filetype):
-        self.do_log_debug('filetype')
         self.filetype_triggered = True
         self.filetypes[buffernumber] = filetype
 
@@ -109,7 +108,7 @@ class Plugin(plugin.Plugin):
     def action_settip(self, widget, tiptext):
         self.tips.set_tip(widget, tiptext)
 
-    def action_log(self, source, message, level):
+    def do_log(self, source, message, level):
         """
         Log a message.
         """

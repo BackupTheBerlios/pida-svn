@@ -25,6 +25,7 @@ import os
 import time
 # GTK imports
 import gtk
+import gnomevfs
 import gobject
 # Pida imports
 import pida.plugin as plugin
@@ -59,14 +60,31 @@ class Plugin(plugin.Plugin):
         self.cb.action_showconfig()
     
     def cb_switchbuffer(self, notebook, page, number):
+        nuber = int(number)
         if len(self.editor.wins) != len(self.bufferlist):
             self.edit_getbufferlist()
         for i, name in self.bufferlist:
             if i == number:
                 if i != self.currentbufnum:
                     self.currentbufnum = i
+                    self.cb.evt('filetype', number, self.check_mime(name))
                     self.cb.evt('bufferchange', number, name)
                 break
+    
+    def check_mime(self, fname):
+        buffer, text, model = self.editor.wins[fname]
+        manager = buffer.get_data('languages-manager')
+        if os.path.isabs(fname):
+            path = fname
+        else:
+            path = os.path.abspath(fname)
+        uri = gnomevfs.URI(path)
+        mime_type = gnomevfs.get_mime_type(path) # needs ASCII filename, not URI
+        if mime_type:
+            language = manager.get_language_from_mime_type(mime_type)
+            if language:
+                return language.get_name().lower()
+        return 'None'
 
     def evt_started(self):
         self.launch()

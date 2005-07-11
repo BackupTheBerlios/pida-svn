@@ -48,7 +48,7 @@ class pidaobject(object):
 
     def do_log(self, message, level):
         name = '%s;%s' % (self.prop_display_name, self.prop_class_name)
-        self.do_action('log', name, message, level)
+        self.pida.boss.do_log('log', name, message, level)
 
     def do_log_debug(self, message):
         self.do_log(message, 20)

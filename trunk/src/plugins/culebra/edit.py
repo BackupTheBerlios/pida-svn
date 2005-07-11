@@ -115,6 +115,9 @@ class EditWindow(gtk.EventBox):
         self.browser_menu.append(refresh_item)
         refresh_item.show()
         refresh_item.connect("activate", self.refresh_browser)
+        
+        # sorry, ugly
+        self.filetypes = {}
         return
     
     def set_title(self, title):
@@ -303,11 +306,14 @@ class EditWindow(gtk.EventBox):
             path = os.path.abspath(fname)
         uri = gnomevfs.URI(path)
         mime_type = gnomevfs.get_mime_type(path) # needs ASCII filename, not URI
+        pagenum = self.notebook.get_current_page()
+        self.filetypes[pagenum] = 'None'
         if mime_type:
             language = manager.get_language_from_mime_type(mime_type)
             if language:
                 buffer.set_highlight(True)
                 buffer.set_language(language)
+                self.filetypes[pagenum] = language.get_name().lower()
             else:
                 print 'No language found for mime type "%s"' % mime_type
                 buffer.set_highlight(False)
