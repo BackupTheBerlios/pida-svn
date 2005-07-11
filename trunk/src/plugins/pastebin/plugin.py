@@ -26,7 +26,7 @@ import pango
 import gobject
 import pida.plugin as plugin
 import pida.gtkextra as gtkextra
-
+import pida.base as base
 
 class Plugin(plugin.Plugin):
     NAME = 'pastebin'
@@ -101,7 +101,7 @@ class Plugin(plugin.Plugin):
 
 
     def paste(self, text):
-        paster = BINS[self.sitelist.get_active_text()](self.cb, self)
+        paster = BINS[self.sitelist.get_active_text()](self)
         paster.paste(text)
 
     def cb_clear(self, text):
@@ -156,10 +156,10 @@ class Plugin(plugin.Plugin):
 
 import urllib
 import threading
-class Paster(object):
+class Paster(base.pidaobject):
     URL = None
-    def __init__(self, cb, plugin):
-        self.cb = cb
+
+    def do_init(self, plugin):
         self.plugin = plugin
         self.readbuffer = []
 
