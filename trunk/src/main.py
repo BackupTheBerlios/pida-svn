@@ -214,12 +214,6 @@ class Application(object):
         # self.evt('log', message, details, level)
         logging.getLogger().log(level, '%s: %s' % (message, details))
 
-    def action_close(self):
-        """ Quit Pida. """
-        # Tell plugins to die
-        self.evt('die')
-        # Fin
-        gtk.main_quit()
 
     def action_newterminal(self, command, args, **kw):
         """Open a new terminal, by issuing an event"""

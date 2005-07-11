@@ -154,5 +154,5 @@ class MainWindow(gtk.Window):
         """
         # call the close acition of the application.
         # self.save_geometry()
-        self.cb.action_close()
+        self.cb.action('quit')
    

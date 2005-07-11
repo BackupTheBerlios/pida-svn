@@ -132,3 +132,9 @@ class Plugin(plugin.Plugin):
         self.configeditor = config.ConfigEditor(self.pida)
         self.configeditor.show()
 
+    def action_quit(self):
+        """ Quit Pida. """
+        # Tell plugins to die
+        self.do_evt('die')
+        # Fin
+        gtk.main_quit()

@@ -131,14 +131,14 @@ class Plugin(plugin.Plugin):
         vc = 'vim'
         if self.registry.easy_mode.value():
             vc = 'evim'
-        vimcom = self.cb.opts.get('commands', vc)
+        vimcom = getattr(self.prop_main_registry.commands, vc).value()
         if self.is_embedded():
             if self.vim:
                 self.message('Only one embedded Vim allowed.')
             else:
                 name = self.generate_embedname()
                 self.vim = vimembed.PidaVim(self.cb,
-                                            self.cb.embedwindow, vimcom, name)
+                                            self.pida.embedwindow, vimcom, name)
                 self.vim.connect(self.cb_plugged, self.cb_unplugged)
         else:
             os.system('%s --servername pida' % vimcom)
@@ -179,11 +179,11 @@ class Plugin(plugin.Plugin):
             self.currentserver = name
             self.load_shortcuts()
             self.cw.send_ex(self.currentserver, '%s' % VIMSCRIPT)
-            self.cb.evt('serverchange', name)
+            self.do_evt('serverchange', name)
         else:
             # Being asked to connect to None is the same as having nothing
             # to connect to.
-            self.cb.evt('disconnected', name)
+            self.do_evt('disconnected', name)
 
     def fetchserverlist(self):
         """Get the list of servers"""
@@ -196,10 +196,9 @@ class Plugin(plugin.Plugin):
                 for sc in self.old_shortcuts[mapc][self.currentserver]:
                     self.cw.send_ex(self.currentserver, UNMAP_COM % (mapc, sc))
             self.old_shortcuts[mapc][self.currentserver] = []
-
-            l = self.cb.opts.get('vim_shortcuts', 'shortcut_leader')
+            l = self.prop_main_registry.vim_shortcuts.shortcut_leader.value()
             for name, command in SHORTCUTS:
-                c = self.cb.opts.get('vim_shortcuts', name)
+                c = getattr(self.prop_main_registry.vim_shortcuts, name).value()
                 sc = ''.join([l, c])
                 self.old_shortcuts[mapc][self.currentserver].append(sc)
                 self.cw.send_ex(self.currentserver, NMAP_COM % (mapc, sc, command))
@@ -209,14 +208,14 @@ class Plugin(plugin.Plugin):
         return self.embedname
 
     def is_embedded(self):
-        return self.cb.registry.layout.embedded_mode.value()
+        return self.prop_main_registry.layout.embedded_mode.value()
 
     def cb_plugged(self):
-        self.cb.embedslider.set_position(self.last_pane_position)
+        self.pida.embedslider.set_position(self.last_pane_position)
 
     def cb_unplugged(self):
-        self.last_pane_position = self.cb.embedslider.get_position()
-        self.cb.embedslider.set_position(0)
+        self.last_pane_position = self.pida.embedslider.get_position()
+        self.pida.embedslider.set_position(0)
         self.vim = None
 
     def cb_connect(self, *a):
@@ -243,7 +242,7 @@ class Plugin(plugin.Plugin):
                 self.entry.hide()
 
     def evt_reset(self):
-        if self.embedded_value != self.cb.registry.layout.embedded_mode.value():
+        if self.embedded_value != self.prop_main_registry.layout.embedded_mode.value():
             self.message('Embedded mode setting has changed.\n'
                          'You must restart Pida.')
             return
@@ -252,7 +251,7 @@ class Plugin(plugin.Plugin):
 
     def evt_started(self, *args):
         self.cw = gdkvim.VimWindow(self.cb)
-        self.embedded_value = self.cb.registry.layout.embedded_mode.value()
+        self.embedded_value = self.prop_main_registry.layout.embedded_mode.value()
         if self.is_embedded():
             self.launch()
 
@@ -264,7 +263,7 @@ class Plugin(plugin.Plugin):
             # Check if users want shutdown with Vim
             if self.registry.shutdown_with_vim.value():
                 # Quit pida
-                self.cb.action_close()
+                self.do_action('quit')
                 # The application never gets here
         del self.old_shortcuts['n'][self.currentserver]
         del self.old_shortcuts['v'][self.currentserver]
@@ -297,7 +296,6 @@ class Plugin(plugin.Plugin):
 
     def edit_changebuffer(self, number):
         """Change buffer in the active vim"""
-        self.cb.action_log('action', 'changebuffer', 0)
         # Call the method of the vim communication window.
         self.cw.change_buffer(self.currentserver, number)
         # Optionally foreground Vim.
@@ -312,7 +310,6 @@ class Plugin(plugin.Plugin):
  
     def edit_openfile(self, filename):
         """open a new file in the connected vim"""
-        self.cb.action_log('action', 'openfile', 0)
         # Call the method of the vim communication window.
         self.cw.open_file(self.currentserver, filename)
 
@@ -321,7 +318,6 @@ class Plugin(plugin.Plugin):
 
     def edit_newterminal(self, command, args, **kw):
         """Open a new terminal, by issuing an event"""
-        self.cb.action_log('action', 'newterminal', 0)
         # Fire the newterm event, the terminal plugin will respond.
         self.evt('newterm', command, args, **kw)
 
