@@ -278,8 +278,8 @@ class FileTree(gtkextra.Tree):
             'Go to the parent directory', ['up'])
         ctrls.add_button('refresh', self.cb_but,
             'Refresh the current directory.', ['refresh'])
-        ctrls.add_button('new', self.cb_but,
-            'Create a new file, and edit it in vim.', ['new'])
+        #ctrls.add_button('new', self.cb_but,
+        #    'Create a new file, and edit it in vim.', ['new'])
         ctrls.add_button('open', self.cb_but,
             'Open the file in vim.', ['open'])
         ctrls.add_button('delete', self.cb_but,
