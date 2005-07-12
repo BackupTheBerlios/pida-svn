@@ -149,7 +149,6 @@ class Application(object):
         self.set_editor(editorname)
 
 
-        self.shortcuts = self.add_plugin('shortcuts')
        
         #self.evt('init')
        
@@ -170,7 +169,6 @@ class Application(object):
                         self.plugins.remove(plugin)
                         opt_plugs.remove(plugin)
 
-        self.shortcuts.load()
       
         #self.icons = gtkextra.Icons(self)
         # Tooltips shared

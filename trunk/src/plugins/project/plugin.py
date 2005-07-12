@@ -290,8 +290,6 @@ class FileTree(gtkextra.Tree):
         #self.view.connect('row-expanded', self.cb_expand)
         self.view.connect('test-expand-row', self.cb_expand)
         
-        self.filemenu = gtkextra.ContextPopup('file')
-        self.dirmenu = gtkextra.ContextPopup('dir')
 
         self.root = None
         
@@ -389,11 +387,7 @@ class FileTree(gtkextra.Tree):
             return True
 
     def l_cb_rightclick(self, ite, time):
-        fn = self.get(ite, 1)
-        if os.path.isdir(fn):
-            self.dirmenu.popup(fn, time)
-        else:
-            self.filemenu.popup(fn, time)
+        pass
 
     def cb_but(self, but, command):
         fn = self.selected(1)
@@ -432,7 +426,7 @@ class FileTree(gtkextra.Tree):
             root = os.path.expanduser('~')
         print root
         shell = self.prop_main_registry.commands.shell.value()
-        self.do_action('newterminal', shell, ['shell'], directory=root)
+        self.do_action('newterminal', shell, directory=root)
 
 class ProjectTree(gtkextra.Tree):
     COLUMNS = [('Name', gobject.TYPE_STRING, gtk.CellRendererText, False,
@@ -528,7 +522,6 @@ class Plugin(plugin.Plugin):
         self.add_button('editor', self.cb_project_edit,
                         'Edit projects on workbench.')
    
-        self.dirmenu = gtkextra.ContextPopup('dir')
 
         self.current_directory = os.getcwd()
     
@@ -590,9 +583,7 @@ class Plugin(plugin.Plugin):
             self.vcsbar.show_all()
 
     def cb_project_rclick(self, ite, time):
-        n = self.projects.get(ite, 0)
-        wd = self.config.get(n, 'directory')
-        self.dirmenu.popup(wd, time)
+        pass
 
     def cb_files_activate(self, tv, path, niter):
         fn = self.files.selected(1)
@@ -614,7 +605,7 @@ class Plugin(plugin.Plugin):
         else:
             wd = self.config.get(name, 'directory')
         shell = self.prop_main_registry.commands.shell.value()
-        self.do_action('newterminal', shell, ['shell'], directory=wd)
+        self.do_action('newterminal', shell, directory=wd)
 
     def evt_projectschanged(self, *a):
         self.config.load()
@@ -630,7 +621,7 @@ class Plugin(plugin.Plugin):
         if self.config.has_option(name, 'project_executable'):
             ex = self.config.get(name, 'project_executable')
             py = self.prop_main_registry.commands.python.value()
-            self.do_action('newterminal', py, ['python', ex])
+            self.do_action('newterminal', '%s %s' % ('python', ex))
         else:
             self.do_log('Execution Failed',
             'No main file defined for project.', 40)
