@@ -26,6 +26,7 @@ import pango
 import dialogs
 import gtksourceview
 import gnomevfs
+import importsTipper
 
 BLOCK_SIZE = 2048
 
@@ -178,7 +179,7 @@ class EditWindow(gtk.EventBox):
 
             #~ buffer.connect('mark_set', self.move_cursor_cb, text)
             #~ buffer.connect('changed', self.update_cursor_position, text)
-            #~ buffer.connect('insert-text', self.insert_at_cursor_cb)
+            buffer.connect('insert-text', self.insert_at_cursor_cb)
             #~ buffer.connect('delete-range', self.delete_range_cb)
             buffer.set_data("save", False)
             scrolledwin2 = gtk.ScrolledWindow()
@@ -227,50 +228,23 @@ class EditWindow(gtk.EventBox):
                 col += 1
                 start = start.forward_char()
         
-    def console_move_cursor_cb(self, buffer, cursoriter, mark, view=None):
-        s = buffer.get_iter_at_line(cursoriter.get_line())
-        e = cursoriter.copy()
-        e.forward_to_line_end()
-        line = buffer.get_text(s, e)
-        if "line" in line:
-            lsplit = line.split(",")
-            f = lsplit[0]
-            l = lsplit[1]
-            lineno = l.strip().split(" ")[1]
-            file = f.strip().split(" ")[1].replace('"', "")
-            if not self.wins.has_key(file):
-                self.load_file(file)
-            pages = self.notebook.get_n_pages()
-            n = 0
-            child = self.notebook.get_nth_page(n)
-            
-            while self.notebook.get_tab_label_text(child) != file and n < pages:
-                    n += 1
-                    child = self.notebook.get_nth_page(n)
-                    
-            self.notebook.set_current_page(n)
-            
-            b, t, m = self.wins[file]
-            iter = b.get_iter_at_line(int(lineno)-1)
-
-            t.scroll_to_iter(iter, 0.0)
-            b.place_cursor(iter)
-            t.grab_focus()
 
     def insert_at_cursor_cb(self, textbuffer, iter, text, length):
-        return 
+        complete = ""
         if text in special_chars:
-            self.current_word = ""
-        else:
-            self.current_word += text
-        
-        if len(text) == 1: 
-            if ord(text) == 9: self.current_word = ""
-        
-        name, buff, t_v, model = self.get_current()
-        if len(self.wl):
-            w = AutoCompletionWindow(self.wl, t_v, iter)
+            name, buffer, text, model = self.get_current()
+            iter = buffer.get_iter_at_mark(buffer.get_insert())
+            iter2 = buffer.get_iter_at_mark(buffer.get_insert())
+            iter.backward_word_starts(1)
+            complete = iter.get_text(iter2)
+        if len(complete) > 0:
+            try:
+                list = importsTipper.GenerateTip(complete)
+                w = AutoCompletionWindow(text, iter2, complete, list, self.cb.mainwindow)
+            except:
+                print sys.exc_info()[1]            
         return
+        
 
     def load_file(self, fname):
         try:
@@ -575,6 +549,62 @@ class EditWindow(gtk.EventBox):
     
     def edit_find_next(self, mi):
         self._search(self.search_string, self.last_search_iter)
+        
+class AutoCompletionWindow(gtk.Window):
+    
+    def __init__(self,  source_view, trig_iter, text, list, parent):
+        
+        gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
+        
+        self.set_decorated(False)
+        self.store = gtk.ListStore(str)
+        self.source = source_view
+        self.iter = trig_iter
+        frame = gtk.Frame()
+        
+        for i in list:
+            self.store.append((i[0],))
+        self.tree = gtk.TreeView(self.store)
+        
+        col = gtk.TreeViewColumn()
+        render = gtk.CellRendererText()
+        column = gtk.TreeViewColumn('', render, text=0)
+        self.tree.append_column(column)
+        
+        rect = source_view.get_iter_location(trig_iter)
+        wx, wy = source_view.buffer_to_window_coords(gtk.TEXT_WINDOW_WIDGET, rect.x, rect.y + rect.height)
+
+        tx, ty = source_view.get_window(gtk.TEXT_WINDOW_WIDGET).get_origin()
+        
+        self.move(wx+tx, wy+ty)
+        self.add(frame)
+        frame.add(self.tree)
+        self.tree.set_size_request(200,400)
+        self.tree.connect('row-activated', self.row_activated_cb)
+        self.tree.connect('focus-out-event', self.focus_out_event_cb)
+        self.tree.connect('key-press-event', self.key_press_event_cb)
+        self.tree.set_search_equal_func(self.search_func)
+        self.tree.set_headers_visible(False)
+        self.set_transient_for(parent)
+        self.show_all()
+        self.tree.grab_focus()
+        
+    def row_activated_cb(self, tree, path, view_column, data = None):
+        complete = self.store[path][0]
+        buff = self.source.get_buffer()
+        
+        buff.insert_at_cursor(complete)
+        self.hide()
+        
+    def focus_out_event_cb(self, widget, event):
+        self.hide()
+
+    def key_press_event_cb(self, widget, event):
+        if event.keyval == gtk.keysyms.Escape:
+            self.hide()
+            
+    def search_func(self, model, column, key, iter):
+        return not model.get_value(iter, column).startswith(key)
         
 def edit(fname, mainwin=False):
     if mainwin: quit_cb = lambda w: gtk.main_quit()
