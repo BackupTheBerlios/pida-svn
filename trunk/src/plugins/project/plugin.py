@@ -663,9 +663,9 @@ class VersionControlSystem(base.pidaobject):
         return self.toolbar.add_button(icon, self.callbackfunc, tooltip, cargs)
 
     def launch(self, args, **kw):
-        args = self.ARGS + args
-        icon = 'vcs_%s' % args[1]
-        self.do_action('newterminal', self.COMMAND, args, icon=icon,
+        icon = 'vcs_%s' % self.ARGS[0]
+        commandargs = ' '.join([self.COMMAND] + args)
+        self.do_action('newterminal', commandargs, icon=icon,
                                    directory=kw['dir'], envv=kw['env'])
 
 
@@ -697,7 +697,7 @@ class Darcs(VersionControlSystem):
         self.launch(['pull'], **kw)
 
 class Subversion(VersionControlSystem):
-    COMMAND = '/usr/bin/svn'
+    COMMAND = 'svn'
     ARGS = ['svn']
 
     def command_update(self, **kw):

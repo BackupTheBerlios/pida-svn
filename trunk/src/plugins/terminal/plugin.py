@@ -389,6 +389,12 @@ class Plugin(plugin.Plugin):
         
         self.registry = reg.add_group('terminal',
             'Options for the built in terminal emulator.')
+
+        self.registry.add('internal',
+            registry.Boolean,
+            True,
+            'Determines whether Pida will use its builtin terminal emulator '
+            '(otherwise will use Xterm).')
         
         self.registry.add('font',
                        registry.Font,
@@ -442,25 +448,6 @@ class Plugin(plugin.Plugin):
         self.ctxbar = gtkextra.ContextToolbar('terminal')
         self.shortbar.pack_start(self.ctxbar.win)
 
-        #self.logterm = self.new_log()
-        #try:
-        #    import gtkmozembed
-        #    global gtkmozembed
-        #    gtkmozembed.pop_startup()
-        #    gtkmozembed.push_startup()
-        #    pdir = self.cb.registry.directories.user.value()
-        #    mozdir = os.path.join(pdir, 'pida_mozembed')
-        #    if not os.path.exists(mozdir):
-        #        os.mkdir(mozdir)
-        #        f = open(os.path.join(mozdir, 'prefs.js'), 'w')
-        #        f.write(DEFMOZ)
-        #        f.close()
-        #    gtkmozembed.gtk_moz_embed_set_profile_path(pdir, 'pida_mozembed')
-        #    
-        #    self.gtkmoz = gtkmozembed
-        #except ImportError:
-        #    self.gtkmoz = None            
-
     def cb_conf_clicked(self, *args):
         self.cb.action_showshortcuts()
 
@@ -508,34 +495,21 @@ class Plugin(plugin.Plugin):
             self.detach_window.present()
         return child
 
-    def new_shell(self):
-        shell = self.cb.opts.get('commands', 'shell')
-        self.new_command(shell, ['shell'], 'terminal')
+    def evt_terminal(self, commandline, **kw):
+        if self.registry.internal.value():
+            self.termmap_internal(commandline, **kw)
+        else:
+            self.termmap_xterm(commandline, **kw)
 
-    def new_log(self):
-        icon = 'warning'
-        return self.add_terminal(Logterminal, icon, True)
 
-    def evt_newterm(self, command, args, **kw):
-        icon = 'terminal'
-        if 'icon' in kw:
-            icon = kw['icon']
-            del kw['icon']
-        self.new_command(command, args, icon, **kw)
-
-    def evt_log(self, message, details, level=0):
-        #self.logterm.write_log(message, details, level)
-        print level, message, details
-
-    def evt_question(self, prompt, callback):
-        self.new_question(prompt, callback)
 
     def evt_shortcutschanged(self):
         self.ctxbar.refresh()
         self.ctxbar.show()
 
     def cb_new(self, *args):
-        self.new_shell()
+        shell = self.prop_main_registry.commands.shell.value()
+        self.do_action('newterminal', 'bash', icon='terminal')
 
     def cb_new_browser(self, *args):
         self.new_browser(None)
@@ -555,10 +529,27 @@ class Plugin(plugin.Plugin):
     def cb_browser(self, *args):
         self.new_browser('http://www.google.com/palm/')
 
-    def attr_test(self, *args, **kw):
-        # Example of how to call, from any plugin
-        #def cb(attr):
-        #    print attr
-        #self.cb.attr('test', cb)
-        return 'hello'
+    def termmap_internal(self, commandline, **kw):
+        icon = 'terminal'
+        if 'icon' in kw:
+            icon = kw['icon']
+            del kw['icon']
+        child = PidaTerminal(self.cb, self.notebook, icon)
+        args = commandline.split()
+        command = args.pop(0)
+        args.insert(0, 'PIDA')
+        child.run_command(command, args, **kw)
+        if self.detach_window:
+            self.detach_window.present()
+        self.notebook.append_page(child, tab_label=child.label)
+        self.notebook.set_current_page(self.notebook.get_n_pages() - 1)
+        child.show_all()
+        return child
 
+    def termmap_xterm(self, commandline, **kw):
+        xterm = 'xterm'
+        self.termmap_external(xterm, commandline, **kw)
+
+    def termmap_external(self, termpath, commandline, **kw):
+        commandargs = [termpath, '-hold', '-e', commandline]
+        self.do_action('fork', commandargs)

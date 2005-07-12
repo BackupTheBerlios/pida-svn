@@ -141,15 +141,19 @@ class Plugin(plugin.Plugin):
                 pass
         gtk.main_quit()
 
-    def action_newterminal(self, command, args, **kw):
+    def action_newterminal(self, commandline, **kw):
         """Open a new terminal, by issuing an event"""
         # Fire the newterm event, the terminal plugin will respond.
-        self.do_evt('newterm', command, args, **kw)
+        self.do_evt('terminal', commandline, **kw)
 
-    def action_fork(self, command, args):
+    def action_fork(self, commandargs):
+        print commandargs
         pid = os.fork()
         if pid == 0:
-            os.execvp(command, args)
+            try:
+                os.execlp(commandargs[0], *commandargs)
+            except Exception:
+                pass
         else:
             self.child_processes.append(pid)
 

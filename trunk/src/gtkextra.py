@@ -432,7 +432,7 @@ class Popup(base.pidaobject):
         pass
 
 
-class ContextGenerator(object):
+class ContextGenerator(base.pidaobject):
 
     def do_init(self, name):
         self.name = name
