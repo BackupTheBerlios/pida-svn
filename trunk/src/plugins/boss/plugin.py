@@ -70,6 +70,8 @@ class Plugin(plugin.Plugin):
         self.tips = gtk.Tooltips()
         self.tips.enable()
 
+        self.child_processes = []
+
     def evt_populate(self):
         self.icons = gtkextra.Icons()
 
@@ -132,9 +134,26 @@ class Plugin(plugin.Plugin):
         # Tell plugins to die
         self.do_evt('die')
         # Fin
+        for pid in self.child_processes:
+            try:
+                os.kill(pid, 15)
+            except OSError:
+                pass
         gtk.main_quit()
 
     def action_newterminal(self, command, args, **kw):
         """Open a new terminal, by issuing an event"""
         # Fire the newterm event, the terminal plugin will respond.
         self.do_evt('newterm', command, args, **kw)
+
+    def action_fork(self, command, args):
+        pid = os.fork()
+        if pid == 0:
+            os.execvp(command, args)
+        else:
+            self.child_processes.append(pid)
+
+    def action_accountfork(self, pid):
+        self.child_processes.append(pid)
+
+

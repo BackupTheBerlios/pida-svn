@@ -28,11 +28,11 @@ import os
 import pty
 import gobject
 
+import pida.base as base
 
+class Vim(base.pidaobject):
 
-class Vim(object):
-
-    def __init__(self, command, args):
+    def do_init(self, command, args):
         self.win = gtk.EventBox()
         self.socket = gtk.Socket()
         self.socket.connect('plug-added', self.cb_plugged)
@@ -56,6 +56,7 @@ class Vim(object):
                 os.execvp(self.command, args)
             else:
                 self.pid = pid
+                self.do_action('accountfork', self.pid)
 
     def stop(self):
         try:

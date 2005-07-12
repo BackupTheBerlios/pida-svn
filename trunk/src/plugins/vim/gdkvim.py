@@ -96,8 +96,9 @@ import os
 import pty
 import sys
 import time
+import pida.base as base
 
-class VimHidden(object):
+class VimHidden(base.pidaobject):
     """
     An instance of Vim on a pseudoterminal which can be reliably polled.
 
@@ -112,7 +113,7 @@ class VimHidden(object):
     whether a window is alive.
     """
 
-    def __init__(self, cb):
+    def do_init(self):
         """
         Constructor.
         
@@ -122,7 +123,6 @@ class VimHidden(object):
         @param cb: An instance of the main application class.
         @type cb: pida.main.Application.
         """
-        self.cb = cb
         # Prefacing with '__' means it will be ignored in the internal server
         # list.
         self.name = '__%s_PIDA_HIDDEN' % time.time()
@@ -148,6 +148,7 @@ class VimHidden(object):
                 # Parent, store the pid, and file descriptor for later.
                 self.pid = pid
                 self.childfd = fd
+                self.do_action('accountfork', self.pid)
 
     def is_alive(self):
         """
@@ -225,7 +226,7 @@ class VimWindow(gtk.Window):
         self.root_window = gdk.get_default_root_window()
         # Instantiate and start the hidden communication window, used for
         # fetching accurate and reliable server lists. 
-        self.vim_hidden = VimHidden(self.cb)
+        self.vim_hidden = VimHidden()
         self.vim_hidden.start()
         # Start the timer for fetching the server list at the specified number
         # of milliseconds (500).

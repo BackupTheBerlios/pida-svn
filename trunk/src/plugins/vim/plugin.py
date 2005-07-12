@@ -241,6 +241,11 @@ class Plugin(plugin.Plugin):
             else:
                 self.entry.hide()
 
+    def evt_die(self):
+        if self.is_embedded():
+            pass
+            #self.cw.quit(self.currentserver)
+
     def evt_reset(self):
         if self.embedded_value != self.prop_main_registry.layout.embedded_mode.value():
             self.message('Embedded mode setting has changed.\n'
