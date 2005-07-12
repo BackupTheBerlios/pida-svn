@@ -498,7 +498,11 @@ class ContextPopup(ContextGenerator, Popup):
             args[args.index('<fn>')] = fn
         else:
             args.append(fn)
-        self.cb.action_newterminal(command, args, icon=menu.stock_icon)
+        print command, args, aargs 
+        args.pop(0)
+        args.insert(0, command)
+        commandline = ' '.join(args)
+        self.do_action('newterminal', commandline, icon=menu.stock_icon)
 
 class PositionPopup(ContextPopup):
     def popup(self, filename, line, time):
