@@ -88,7 +88,7 @@ You will see the same warnings.
 
 Note that these warnings appear to be harmless, and the terminal emulator
 functions as normal. This happens in Debian Sid/Etch and you can find further
-at the bugreport of the issue: http://bugs.debian.org/316940
+information at the bugreport of the issue: http://bugs.debian.org/316940
 
 Bugs
 --
