@@ -52,8 +52,9 @@ Extra Platform Notes
 FBSD
 
 To install the Python bindings for the vte library, please modify or override the
-variable "CONFIGURE_ARGS= --disable-python" in the ports makefile for vte, and
-make the port.
+variable "CONFIGURE_ARGS= --disable-python" to something more like
+--enable-python and make the port. (If you are a FBSD user please tell us if
+this works, and provide us with better instructions. Thanks.)
 
 
 Known Issues
