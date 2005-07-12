@@ -172,8 +172,8 @@ class Plugin(plugin.Plugin):
         self.refwin.show(s)
 
     def execute(self):
-        py = self.cb.opts.get('commands', 'python')
-        self.cb.action_newterminal(py, ['python', self.fn])
+        py = self.prop_main_registry.commands.python.value()
+        self.do_action('newterminal', '%s %s' % (py, self.fn))
 
     def cb_alternative(self):
         self.execute()
