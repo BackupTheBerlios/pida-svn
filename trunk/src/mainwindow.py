@@ -108,7 +108,7 @@ class MainWindow(gtk.Window):
         plugin.ctlbar.remove(plugin.label)
         # create a label with a tooltip/EventBox
         label = gtk.EventBox()
-        self.cb.tips.set_tip(label, plugin.NAME)
+        self.cb.boss.tips.set_tip(label, plugin.NAME)
         im = self.cb.boss.icons.get_image(plugin.ICON)
         im.show()
         label.add(im)

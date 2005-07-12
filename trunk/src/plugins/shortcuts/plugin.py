@@ -334,15 +334,7 @@ class Shortcuts(base.pidaobject):
                ('Pager',
                 self.cb.opts.get('commands', 'pager'),
                 '*', 'stock:list',
-                ['1', '0', '0', '0', '0', '0']),
-               ('Browser',
-                self.cb.opts.get('commands', 'browser'),
-                '*', 'stock:internet',
-                ['1', '1', '1', '0', '0', '0']),
-               ('Midnight Commander',
-                self.cb.opts.get('commands', 'mc'),
-                '*', 'stock:filemanager',
-                ['0', '1', '1', '0', '0', '0'])]
+                ['1', '0', '0', '0', '0', '0'])]
         
         self.config = ConfigParser.ConfigParser()
         for d in DEF:

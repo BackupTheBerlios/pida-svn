@@ -265,7 +265,7 @@ class Transient(base.pidaobject):
         eb = gtk.EventBox()
         eb.add(self.close_but)
         self.tb.pack_start(eb, expand=False)
-        self.cb.tips.set_tip(eb, 'Close mini window')
+        self.do_set_tooltip(eb, 'Close mini window')
         self.close_but.connect('clicked', self.cb_close_but)
 
         self.label = gtk.Label()
@@ -316,7 +316,7 @@ class Questionbox(Messagebox):
         self.tb.pack_start(eb, expand=False)
         self.submit = self.do_get_button('apply')
         eb.add(self.submit)
-        self.cb.tips.set_tip(eb, 'ok')
+        self.do_set_tooltip(eb, 'ok')
 
     def question(self, msg, callback):
         def cb(*args):
