@@ -46,6 +46,15 @@ Execute the command
 
     pida
 
+Extra Platform Notes
+--
+
+FBSD
+
+To install the Python bindings for the vte library, please modify or override the
+variable "CONFIGURE_ARGS= --disable-python" in the ports makefile for vte, and
+make the port.
+
 
 Known Issues
 --
