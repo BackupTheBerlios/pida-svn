@@ -30,8 +30,7 @@ import importsTipper
 
 BLOCK_SIZE = 2048
 
-special_chars = (" ", "\n", ".", ":", ",", "'", 
-                '"', "(", ")", "{", "}", "[", "]")
+special_chars = (".",)
 RESPONSE_FORWARD = 0
 RESPONSE_BACKWARD = 1
 
@@ -206,27 +205,27 @@ class EditWindow(gtk.EventBox):
                     break
         return p
 
-    def move_cursor_cb (self, buffer, cursoriter, mark, view):
-        self.update_cursor_position(buffer, view)
+    #~ def move_cursor_cb (self, buffer, cursoriter, mark, view):
+        #~ self.update_cursor_position(buffer, view)
 
-    def update_cursor_position(self, buffer, view):
-        name, buff, text, model = self.get_current()
-        if text is None:
-            return
+    #~ def update_cursor_position(self, buffer, view):
+        #~ name, buff, text, model = self.get_current()
+        #~ if text is None:
+            #~ return
 
-        tabwidth = text.get_tabs_width()
-        iter = buffer.get_iter_at_mark(buffer.get_insert())
-        nchars = iter.get_offset()
-        row = iter.get_line() + 1
-        start = iter
-        start.set_line_offset(0)
-        col = 0
-        while not start.equal(iter):
-            if start.get_char == '\t':
-                col += (tabwidth - (col % tabwidth))
-            else:
-                col += 1
-                start = start.forward_char()
+        #~ tabwidth = text.get_tabs_width()
+        #~ iter = buffer.get_iter_at_mark(buffer.get_insert())
+        #~ nchars = iter.get_offset()
+        #~ row = iter.get_line() + 1
+        #~ start = iter
+        #~ start.set_line_offset(0)
+        #~ col = 0
+        #~ while not start.equal(iter):
+            #~ if start.get_char == '\t':
+                #~ col += (tabwidth - (col % tabwidth))
+            #~ else:
+                #~ col += 1
+                #~ start = start.forward_char()
         
 
     def insert_at_cursor_cb(self, textbuffer, iter, text, length):
@@ -237,7 +236,8 @@ class EditWindow(gtk.EventBox):
             iter2 = buffer.get_iter_at_mark(buffer.get_insert())
             iter.backward_word_starts(1)
             complete = iter.get_text(iter2)
-        if len(complete) > 0:
+        
+        if len(complete.strip()) > 0:
             try:
                 list = importsTipper.GenerateTip(complete)
                 w = AutoCompletionWindow(text, iter2, complete, list, self.cb.mainwindow)
