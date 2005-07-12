@@ -69,7 +69,7 @@ class Plugin(plugin.Plugin):
         self.add_button('open', self.cb_gazpacho, 'Open a file',
                                                   ['open'])
         
-    def init(self):
+    def do_init(self):
         self.gazpacho = None
         self.menu = None
 
