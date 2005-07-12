@@ -38,7 +38,7 @@ class Plugin(plugin.Plugin):
             'Determines which plugins are displayed for which filetypes.')
         self.ftregistry.add('all',
             registry.RegistryItem,
-            'project, pastebin',
+            'project, pastebin, gazpacho',
             'What plugins to always use (comma separated)')
         self.ftregistry.add('python',
             registry.RegistryItem,
@@ -46,7 +46,7 @@ class Plugin(plugin.Plugin):
             'What plugins to use only for python files (comma separated)')
         self.ftregistry.add('None',
             registry.RegistryItem,
-            'gazpacho',
+            '',
             'What plugins to use on unknown files (comma separated)')
 
         self.plugregistry = reg.add_group('plugins',
