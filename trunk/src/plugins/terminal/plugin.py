@@ -30,8 +30,13 @@ import threading
 import gtk
 
 # vte terminal emulator widget
-import vte
-
+try:
+    import vte
+except ImportError:
+    class Dummy(object):
+        Terminal = object
+        bad = True
+    vte = Dummy
 # Pida plug in base
 import pida.plugin as plugin
 import pida.gtkextra as gtkextra
@@ -496,7 +501,7 @@ class Plugin(plugin.Plugin):
         return child
 
     def evt_terminal(self, commandline, **kw):
-        if self.registry.internal.value():
+        if not hasattr(vte, 'bad') and self.registry.internal.value():
             self.termmap_internal(commandline, **kw)
         else:
             self.termmap_xterm(commandline, **kw)
