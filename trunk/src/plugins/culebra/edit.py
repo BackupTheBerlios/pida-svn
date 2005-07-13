@@ -185,8 +185,13 @@ class EditWindow(gtk.EventBox):
             scrolledwin2.add(text)
             text.set_auto_indent(True)
             text.set_show_line_numbers(True)
-            #~ text.set_show_line_markers(True)
-            #text.set_tabs_width(4)
+            text.set_show_line_markers(True)
+            text.set_tabs_width(4)
+            text.set_insert_spaces_instead_of_tabs(True)
+            text.set_margin(80)
+            text.set_show_margin(True)
+            text.set_smart_home_end(True)
+            text.set_highlight_current_line(True)
             #~ text.connect("grab-focus", self.grab_focus_cb)
             #~ text.connect('delete-from-cursor', self.delete_from_cursor_cb)
             text.show()
@@ -232,19 +237,14 @@ class EditWindow(gtk.EventBox):
         complete = ""
         if text in special_chars:
             name, buffer, text, model = self.get_current()
-            #~ iter = buffer.get_iter_at_mark(buffer.get_insert())
             iter2 = buffer.get_iter_at_mark(buffer.get_insert())
-            #~ iter.backward_word_starts(1)
-            #~ iter3 = iter.copy()
-            #~ iter3.backward_chars(1)
-            
             complete = self.get_context(buffer, buffer.get_iter_at_mark(buffer.get_insert()))
         if len(complete.strip()) > 0:
-            try:
-                list = importsTipper.GenerateTip(complete)
-                w = AutoCompletionWindow(text, iter2, complete, list, self.cb.mainwindow)
-            except:
-                print sys.exc_info()[1]            
+            #~ try:
+            list = importsTipper.GenerateTip(complete)
+            w = AutoCompletionWindow(text, iter2, complete, list, self.cb.mainwindow)
+            #~ except:
+                #~ print sys.exc_info()[1]            
         return
         
     def get_context(self, buffer, iter):
@@ -260,7 +260,6 @@ class EditWindow(gtk.EventBox):
         else:
             count = 0
             return complete
-        
 
     def load_file(self, fname):
         try:
@@ -573,20 +572,23 @@ class AutoCompletionWindow(gtk.Window):
         gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
         
         self.set_decorated(False)
-        self.store = gtk.ListStore(str)
+        self.store = gtk.ListStore(str, str)
         self.source = source_view
         self.iter = trig_iter
         frame = gtk.Frame()
         
         for i in list:
-            self.store.append((i[0],))
+            self.store.append((i[0],i[2]))
         self.tree = gtk.TreeView(self.store)
         
         col = gtk.TreeViewColumn()
         render = gtk.CellRendererText()
         column = gtk.TreeViewColumn('', render, text=0)
         self.tree.append_column(column)
-        
+        col = gtk.TreeViewColumn()
+        render = gtk.CellRendererText()
+        column = gtk.TreeViewColumn('', render, text=1)
+        self.tree.append_column(column)
         rect = source_view.get_iter_location(trig_iter)
         wx, wy = source_view.buffer_to_window_coords(gtk.TEXT_WINDOW_WIDGET, rect.x, rect.y + rect.height)
 
@@ -606,7 +608,7 @@ class AutoCompletionWindow(gtk.Window):
         self.tree.grab_focus()
         
     def row_activated_cb(self, tree, path, view_column, data = None):
-        complete = self.store[path][0]
+        complete = self.store[path][0] + self.store[path][1]
         buff = self.source.get_buffer()
         
         buff.insert_at_cursor(complete)
