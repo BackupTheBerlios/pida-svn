@@ -128,7 +128,6 @@ class EditWindow(gtk.EventBox):
 
     def refresh_browser(self, item):
         name, buffer, text, model = self.get_current()
-        
         buffer.place_cursor(buffer.get_start_iter())
         model = self.listclasses(fname=name)
         self.treeClass.set_model(model)
@@ -143,7 +142,6 @@ class EditWindow(gtk.EventBox):
             return
    
     def switch_page_cb(self, notebook, page, pagenum):
-
         f, b, text, model  = self.get_current(pagenum)
         if not f is None and not b is None:
             if b.get_data("save"):
@@ -151,7 +149,6 @@ class EditWindow(gtk.EventBox):
             self.set_title(f)
 
     def get_current(self, page = None):
-
         if len(self.wins) > 0:
             if page is None:
                 page = self.notebook.get_current_page()
@@ -209,29 +206,6 @@ class EditWindow(gtk.EventBox):
                     self.notebook.set_current_page(i)
                     break
         return p
-
-    #~ def move_cursor_cb (self, buffer, cursoriter, mark, view):
-        #~ self.update_cursor_position(buffer, view)
-
-    #~ def update_cursor_position(self, buffer, view):
-        #~ name, buff, text, model = self.get_current()
-        #~ if text is None:
-            #~ return
-
-        #~ tabwidth = text.get_tabs_width()
-        #~ iter = buffer.get_iter_at_mark(buffer.get_insert())
-        #~ nchars = iter.get_offset()
-        #~ row = iter.get_line() + 1
-        #~ start = iter
-        #~ start.set_line_offset(0)
-        #~ col = 0
-        #~ while not start.equal(iter):
-            #~ if start.get_char == '\t':
-                #~ col += (tabwidth - (col % tabwidth))
-            #~ else:
-                #~ col += 1
-                #~ start = start.forward_char()
-        
 
     def insert_at_cursor_cb(self, textbuffer, iter, text, length):
         complete = ""
@@ -489,6 +463,7 @@ class EditWindow(gtk.EventBox):
         f=self.notebook.get_tab_label_text(child)
         del self.wins[f]
         self.notebook.remove(child)
+        self.cb.edit('getbufferlist')
 
         return
 
