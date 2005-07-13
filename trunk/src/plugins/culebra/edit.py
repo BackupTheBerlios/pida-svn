@@ -232,11 +232,13 @@ class EditWindow(gtk.EventBox):
         complete = ""
         if text in special_chars:
             name, buffer, text, model = self.get_current()
-            iter = buffer.get_iter_at_mark(buffer.get_insert())
+            #~ iter = buffer.get_iter_at_mark(buffer.get_insert())
             iter2 = buffer.get_iter_at_mark(buffer.get_insert())
-            iter.backward_word_starts(1)
-            complete = iter.get_text(iter2)
-        
+            #~ iter.backward_word_starts(1)
+            #~ iter3 = iter.copy()
+            #~ iter3.backward_chars(1)
+            
+            complete = self.get_context(buffer, buffer.get_iter_at_mark(buffer.get_insert()))
         if len(complete.strip()) > 0:
             try:
                 list = importsTipper.GenerateTip(complete)
@@ -244,6 +246,20 @@ class EditWindow(gtk.EventBox):
             except:
                 print sys.exc_info()[1]            
         return
+        
+    def get_context(self, buffer, iter):
+        iter2 = iter.copy()
+        iter.backward_word_starts(1)
+        iter3 = iter.copy()
+        iter3.backward_chars(1)
+        prev = iter3.get_text(iter)
+        complete = iter.get_text(iter2)
+        if prev == ".":
+            t = self.get_context(buffer, iter)
+            return t + complete
+        else:
+            count = 0
+            return complete
         
 
     def load_file(self, fname):
