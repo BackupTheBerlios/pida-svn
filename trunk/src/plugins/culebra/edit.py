@@ -254,7 +254,7 @@ class EditWindow(gtk.EventBox):
         iter3.backward_chars(1)
         prev = iter3.get_text(iter)
         complete = iter.get_text(iter2)
-        if prev == ".":
+        if prev in (".", "_"):
             t = self.get_context(buffer, iter)
             return t + complete
         else:
