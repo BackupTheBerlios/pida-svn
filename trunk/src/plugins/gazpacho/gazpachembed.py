@@ -775,7 +775,7 @@ class MiniPalette(palette.Palette):
             radio.set_mode(False)
             radio.set_relief(gtk.RELIEF_NONE)
 
-            self.cb.tips.set_tip(radio, widget_class.palette_name)
+            self.cb.boss.do_set_tooltip(radio, widget_class.palette_name)
 
             rbox.pack_start(radio, False, False)
             

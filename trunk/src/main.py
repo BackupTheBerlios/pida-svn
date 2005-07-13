@@ -94,18 +94,8 @@ class Application(object):
         # Icons shared
         self.server = None
         self.startup()
-        # Shortcuts
-        # Communication window
-        #self.cw = Window(self)
-        # Ensure that there is no initial server set.
         # start
-        self.action_log('Pida', 'started', 0)
-        # fire the init event, telling plugins to initialize
-        #self.cw.fetch_serverlist()
-        #self.cw.feed_serverlist()
-        #self.evt('init')
-        # fire the started event with the initial server list
-        #self.evt('started', None)
+        self.log('started', 20)
 
     def startup(self):
         self.optparser = optparse.OptionParser()
@@ -114,7 +104,6 @@ class Application(object):
        
         options.configure(self.registry)
 
-        #self.add_plugin('vim')
 
         # now the plugins
 
@@ -169,12 +158,6 @@ class Application(object):
                         self.plugins.remove(plugin)
                         opt_plugs.remove(plugin)
 
-      
-        #self.icons = gtkextra.Icons(self)
-        # Tooltips shared
-        #self.tips = gtk.Tooltips()
-        #self.tips.enable()
-
         self.mainwindow = mainwindow.MainWindow(self)
 
         self.evt('populate')
@@ -203,30 +186,6 @@ class Application(object):
         """
         self.editor = self.add_plugin(name)
         return self.editor
-
-
-    def action_showshortcuts(self):
-        """ called to show the shortcut editor """
-        # create a new shortcut editor and show it.
-        self.shortcuts = create_plugin('shortcuts', self)
-        # is a plugin, so must fire its init event.
-        self.shortcuts.evt_init()
-        self.shortcuts.evt_populate()
-        self.shortcuts.evt_shown()
-        self.shortcuts.show()
-
-    def action_log(self, message, details, level=10):
-        """ called to make log entry """
-        # Call the log event, the log itself will respond.
-        # self.evt('log', message, details, level)
-        logging.getLogger().log(level, '%s: %s' % (message, details))
-
-
-    def action_newterminal(self, command, args, **kw):
-        """Open a new terminal, by issuing an event"""
-        self.action_log('action', 'newterminal', 0)
-        # Fire the newterm event, the terminal plugin will respond.
-        self.evt('newterm', command, args, **kw)
 
     def action(self, name, *args, **kw):
         self.debug('action: %s' % name)
