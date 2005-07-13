@@ -572,22 +572,30 @@ class AutoCompletionWindow(gtk.Window):
         gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
         
         self.set_decorated(False)
-        self.store = gtk.ListStore(str, str)
+        self.store = gtk.ListStore(str, str, str)
         self.source = source_view
         self.iter = trig_iter
         frame = gtk.Frame()
         
         for i in list:
-            self.store.append((i[0],i[2]))
+            if i[3] == importsTipper.TYPE_UNKNOWN:
+                stock = gtk.STOCK_NEW
+            else:
+                stock = gtk.STOCK_CONVERT
+                
+            self.store.append((stock, i[0], i[2]))
         self.tree = gtk.TreeView(self.store)
         
-        col = gtk.TreeViewColumn()
-        render = gtk.CellRendererText()
-        column = gtk.TreeViewColumn('', render, text=0)
+        render = gtk.CellRendererPixbuf()
+        column = gtk.TreeViewColumn('', render, stock_id=0)
         self.tree.append_column(column)
         col = gtk.TreeViewColumn()
         render = gtk.CellRendererText()
         column = gtk.TreeViewColumn('', render, text=1)
+        self.tree.append_column(column)
+        col = gtk.TreeViewColumn()
+        render = gtk.CellRendererText()
+        column = gtk.TreeViewColumn('', render, text=2)
         self.tree.append_column(column)
         rect = source_view.get_iter_location(trig_iter)
         wx, wy = source_view.buffer_to_window_coords(gtk.TEXT_WINDOW_WIDGET, rect.x, rect.y + rect.height)
@@ -595,12 +603,14 @@ class AutoCompletionWindow(gtk.Window):
         tx, ty = source_view.get_window(gtk.TEXT_WINDOW_WIDGET).get_origin()
         
         self.move(wx+tx, wy+ty)
+        #~ print wx+tx, wy+ty
         self.add(frame)
         frame.add(self.tree)
-        self.tree.set_size_request(200,400)
+        self.tree.set_size_request(200,200)
         self.tree.connect('row-activated', self.row_activated_cb)
         self.tree.connect('focus-out-event', self.focus_out_event_cb)
         self.tree.connect('key-press-event', self.key_press_event_cb)
+        self.tree.set_search_column(1)
         self.tree.set_search_equal_func(self.search_func)
         self.tree.set_headers_visible(False)
         self.set_transient_for(parent)
@@ -608,7 +618,7 @@ class AutoCompletionWindow(gtk.Window):
         self.tree.grab_focus()
         
     def row_activated_cb(self, tree, path, view_column, data = None):
-        complete = self.store[path][0] + self.store[path][1]
+        complete = self.store[path][1] + self.store[path][2]
         buff = self.source.get_buffer()
         
         buff.insert_at_cursor(complete)
