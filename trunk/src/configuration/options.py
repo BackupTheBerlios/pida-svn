@@ -166,7 +166,12 @@ def configure(reg):
                   '(Experimental)')
 
     lay_group = reg.add_group('layout', 'Thigs to do with layout')
-    
+
+    lay_max = lay_group.add('start_maximised',
+        registry.Boolean,
+        False,
+        'Whether Pida will start Maximized')
+
     lay_vert = lay_group.add('vertical_split',
                registry.Boolean,
                0,

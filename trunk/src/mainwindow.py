@@ -83,6 +83,9 @@ class MainWindow(gtk.Window):
         for plug in opt_plugs:
             self.add_opt_plugin(plug)
         self.add_pages(self.cb.boss.get_pluginnames('None'))
+
+        if self.cb.registry.layout.start_maximised.value():
+            self.maximize()
         # Show the window as late as possible.
 
         
