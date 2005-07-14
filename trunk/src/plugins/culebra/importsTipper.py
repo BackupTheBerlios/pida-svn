@@ -1,7 +1,7 @@
  # -*- coding: utf-8 -*-
  # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
  # $Id$
- # Copyright Fernando San Martín Woerner <fsmw@gnome.org>
+ # Copyright pyDev project, http://pydev.sourceforge.net/
 
 import inspect
 import sys
@@ -68,7 +68,10 @@ def ImportMod(name):
 
 
 
-def GenerateTip( data ):
+def GenerateTip( data, path ):
+    if not path in sys.path:
+        sys.path.append(path)
+        print "added ", path
     data = data.replace( '\n', '' )
     if data.endswith( '.' ):
         data = data.rstrip( '.' )

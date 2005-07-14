@@ -51,6 +51,7 @@ class EditWindow(gtk.EventBox):
         self.wins = {}
         self.current_word = ""
         self.wl = []
+        self.ac_w = None
 
         self.set_size_request(470, 300)
         self.connect("delete_event", self.file_exit)
@@ -210,14 +211,23 @@ class EditWindow(gtk.EventBox):
 
     def insert_at_cursor_cb(self, textbuffer, iter, text, length):
         complete = ""
+        name, a,b,c = self.get_current()
+        if self.ac_w is not None:
+            self.ac_w.hide()
         if text in special_chars:
             name, buffer, text, model = self.get_current()
             iter2 = buffer.get_iter_at_mark(buffer.get_insert())
-            complete = self.get_context(buffer, buffer.get_iter_at_mark(buffer.get_insert()))
+            complete = self.get_context(buffer, iter2)
+            print complete
         if len(complete.strip()) > 0:
             #~ try:
-            list = importsTipper.GenerateTip(complete)
-            w = AutoCompletionWindow(text, iter2, complete, list, self.cb.mainwindow)
+            list = importsTipper.GenerateTip(complete, os.path.dirname(name))
+            if self.ac_w is None:
+                self.ac_w = AutoCompletionWindow(text, iter2, complete, 
+                                                list, self.cb.mainwindow)
+            else:
+                self.ac_w.set_list(text, iter2, complete, 
+                                   list, self.cb.mainwindow)
             #~ except:
                 #~ print sys.exc_info()[1]            
         return
@@ -574,7 +584,8 @@ class AutoCompletionWindow(gtk.Window):
         column = gtk.TreeViewColumn('', render, text=2)
         self.tree.append_column(column)
         rect = source_view.get_iter_location(trig_iter)
-        wx, wy = source_view.buffer_to_window_coords(gtk.TEXT_WINDOW_WIDGET, rect.x, rect.y + rect.height)
+        wx, wy = source_view.buffer_to_window_coords(gtk.TEXT_WINDOW_WIDGET, 
+                                rect.x, rect.y + rect.height)
 
         tx, ty = source_view.get_window(gtk.TEXT_WINDOW_WIDGET).get_origin()
         
@@ -593,10 +604,30 @@ class AutoCompletionWindow(gtk.Window):
         self.show_all()
         self.tree.grab_focus()
         
+    def set_list(self, source_view, trig_iter, text, list, parent):
+        self.store = gtk.ListStore(str, str, str)
+        self.source = source_view
+        self.iter = trig_iter
+        for i in list:
+            if i[3] == importsTipper.TYPE_UNKNOWN:
+                stock = gtk.STOCK_NEW
+            else:
+                stock = gtk.STOCK_CONVERT
+            self.store.append((stock, i[0], i[2]))
+        self.tree.set_model(self.store)
+        self.tree.set_search_column(1)
+        self.tree.set_search_equal_func(self.search_func)
+        rect = source_view.get_iter_location(trig_iter)
+        wx, wy = source_view.buffer_to_window_coords(gtk.TEXT_WINDOW_WIDGET, 
+                                rect.x, rect.y + rect.height)
+        tx, ty = source_view.get_window(gtk.TEXT_WINDOW_WIDGET).get_origin()
+        self.move(wx+tx, wy+ty)
+        self.show_all()
+        self.tree.grab_focus()
+        
     def row_activated_cb(self, tree, path, view_column, data = None):
         complete = self.store[path][1] + self.store[path][2]
         buff = self.source.get_buffer()
-        
         buff.insert_at_cursor(complete)
         self.hide()
         
