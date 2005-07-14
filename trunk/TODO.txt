@@ -2,6 +2,7 @@ vital
 --
 process accounting
 cleaner shutdown
+give editor startup on focus
 
 near future
 --

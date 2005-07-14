@@ -148,8 +148,6 @@ class Application(object):
         self.registry.load()
         self.registry.save()
       
-        self.splash = mainwindow.SplashScreen()
-        self.splash.start()
 
         for pluginname in self.OPTPLUGINS:
             if not self.opts.get('plugins', pluginname):
@@ -169,7 +167,6 @@ class Application(object):
         self.evt('started')
         self.evt('reset')
         
-        self.splash.stop()
 
     def add_plugin(self, name):
         """
