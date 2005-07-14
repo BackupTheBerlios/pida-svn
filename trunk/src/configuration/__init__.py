@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*- 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
+# $Id$
 #copyright (c) 2005 ali afshar aafshar@gmail.com
 
 #permission is hereby granted, free of charge, to any person obtaining a copy

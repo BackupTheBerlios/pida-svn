@@ -1,3 +1,8 @@
+ # -*- coding: utf-8 -*-
+ # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
+ # $Id$
+ # Copyright Fernando San Martín Woerner <fsmw@gnome.org>
+
 import inspect
 import sys
 
