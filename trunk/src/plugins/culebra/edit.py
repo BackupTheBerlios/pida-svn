@@ -320,6 +320,7 @@ class EditWindow(gtk.EventBox):
             dlg.hide()
             return
         self.check_mime(fname)
+        text.grab_focus()
 
     def check_mime(self, fname):
         buffer, text, model = self.wins[fname]

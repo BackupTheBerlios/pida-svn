@@ -125,9 +125,12 @@ class Plugin(plugin.Plugin):
     def edit_gotoline(self, line):
         tv = self.editor.get_current()[2]
         buf = self.editor.get_current()[1]
-        titer = tv.get_iter_at_location(1, line)
-        tv.scroll_to_iter(titer, 0)
+        titer = buf.get_iter_at_line(line)
+        tv.scroll_to_iter(titer, 0.4)
         buf.place_cursor(titer)
+        tv.grab_focus()
 
     def edit_openfile(self, filename):
         self.editor.load_file(filename)
+        tv = self.editor.get_current()[2]
+        tv.grab_focus()
