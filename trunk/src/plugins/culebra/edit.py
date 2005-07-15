@@ -117,6 +117,7 @@ class EditWindow(gtk.EventBox):
         self.browser_menu.append(refresh_item)
         refresh_item.show()
         refresh_item.connect("activate", self.refresh_browser)
+        #self.connect('key-press-event', self.text_key_press_event_cb)
         
         # sorry, ugly
         self.filetypes = {}
@@ -186,13 +187,16 @@ class EditWindow(gtk.EventBox):
             text.set_show_line_numbers(True)
             text.set_show_line_markers(True)
             text.set_tabs_width(4)
-            text.set_insert_spaces_instead_of_tabs(True)
+            text.connect('key-press-event', self.text_key_press_event_cb)
+            #text.connect('key-release-event', self.text_key_press_event_cb)
+            #text.set_insert_spaces_instead_of_tabs(True)
             text.set_margin(80)
             text.set_show_margin(True)
             text.set_smart_home_end(True)
             text.set_highlight_current_line(True)
             #~ text.connect("grab-focus", self.grab_focus_cb)
             #~ text.connect('delete-from-cursor', self.delete_from_cursor_cb)
+            
             text.show()
             l = gtk.Label(f)
             self.notebook.append_page(scrolledwin2, l)
@@ -215,19 +219,19 @@ class EditWindow(gtk.EventBox):
         if self.ac_w is not None:
             self.ac_w.hide()
         if text in special_chars:
-            name, buffer, text, model = self.get_current()
-            iter2 = buffer.get_iter_at_mark(buffer.get_insert())
-            complete = self.get_context(buffer, iter2)
+            name, buff, text, model = self.get_current()
+            iter2 = buff.get_iter_at_mark(buff.get_insert())
+            complete = self.get_context(buff, iter2)
             print complete
         if len(complete.strip()) > 0:
             #~ try:
-            list = importsTipper.GenerateTip(complete, os.path.dirname(name))
+            lst = importsTipper.GenerateTip(complete, os.path.dirname(name))
             if self.ac_w is None:
                 self.ac_w = AutoCompletionWindow(text, iter2, complete, 
-                                                list, self.cb.mainwindow)
+                                                lst, self.cb.mainwindow)
             else:
                 self.ac_w.set_list(text, iter2, complete, 
-                                   list, self.cb.mainwindow)
+                                   lst, self.cb.mainwindow)
             #~ except:
                 #~ print sys.exc_info()[1]            
         return
@@ -245,6 +249,52 @@ class EditWindow(gtk.EventBox):
         else:
             count = 0
             return complete
+
+    def text_key_press_event_cb(self, widget, event):
+        buf = widget.get_buffer()
+        bound = buf.get_selection_bounds()
+        space = " ".center(widget.get_tabs_width())
+        if event.state == gtk.gdk.SHIFT_MASK and event.keyval == 65056:
+            if len(bound) == 0:
+                it = buf.get_iter_at_mark(buf.get_insert())
+                start = buf.get_iter_at_line(it.get_line())
+                end = buf.get_iter_at_line(it.get_line())
+                count = 0
+                while end.get_char() == " " and count < 4:
+                    end.forward_char()
+                    count += 1
+                buf.delete(start, end)
+            else:
+                print "selection"
+                start, end = bound
+                start_line = start.get_line()
+                end_line = end.get_line()
+                while start_line <= end_line:
+                    insert_iter = buf.get_iter_at_line(start_line)
+                    if not insert_iter.ends_line():
+                        s_it = buf.get_iter_at_line(start_line)
+                        e_it = buf.get_iter_at_line(start_line)
+                        count = 0
+                        while e_it.get_char() == " " and count < 4:
+                            e_it.forward_char()
+                            count += 1
+                        buf.delete(s_it, e_it)        
+                    start_line += 1
+            return True
+        elif event.keyval == gtk.keysyms.Tab:
+            
+            if len(bound) == 0:
+                buf.insert_at_cursor(space)
+            else:
+                start, end = bound
+                start_line = start.get_line()
+                end_line = end.get_line()
+                while start_line <= end_line:
+                    insert_iter = buf.get_iter_at_line(start_line)
+                    if not insert_iter.ends_line():
+                        buf.insert(insert_iter, space)
+                    start_line += 1
+            return True
 
     def load_file(self, fname):
         try:
@@ -294,7 +344,7 @@ class EditWindow(gtk.EventBox):
         else:
             print 'Couldn\'t get mime type for file "%s"' % fname
             buffer.set_highlight(False)
-        buffer.place_cursor(buffer.get_start_iter())
+        #buffer.place_cursor(buffer.get_start_iter())
         buffer.set_data("save", False)
 
     def create_menu(self):
@@ -414,7 +464,8 @@ class EditWindow(gtk.EventBox):
         if self.new:
             return self.file_saveas()
 
-        f, buffer, text, model = self.get_current()
+        f, buff, text, model = self.get_current()
+        curr_mark = buff.get_iter_at_mark(buff.get_insert())
 
         ret = False
 
@@ -423,36 +474,40 @@ class EditWindow(gtk.EventBox):
 
         try:
 
-            start, end = buffer.get_bounds()
+            start, end = buff.get_bounds()
             blockend = start.copy()
             fd = open(fname, "w")
 
             while blockend.forward_chars(BLOCK_SIZE):
-                buf = buffer.get_text(start, blockend)
+                buf = buff.get_text(start, blockend)
                 fd.write(buf)
                 start = blockend.copy()
 
-            buf = buffer.get_text(start, blockend)
+            buf = buff.get_text(start, blockend)
             fd.write(buf)
             fd.close()
-            buffer.set_modified(False)
-            buffer.set_data("save", True)
+            buff.set_modified(False)
+            buff.set_data("save", True)
             ret = True
 
             del self.wins[f]
-            self.wins[fname] = buffer, text, model
+            self.wins[fname] = buff, text, model
             page = self.notebook.get_current_page()
             self.notebook.set_tab_label_text(self.notebook.get_nth_page(page), fname)
+            
 
         except:
             dlg = gtk.MessageDialog(self.get_parent_window(),
                                 gtk.DIALOG_DESTROY_WITH_PARENT,
                                 gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
                                 "Error saving file " + fname)
+            print sys.exc_info()[1]
             resp = dlg.run()
             dlg.hide()
 
         self.check_mime(fname)
+        buff.place_cursor(curr_mark)
+        text.grab_focus()
 
         return ret
 
