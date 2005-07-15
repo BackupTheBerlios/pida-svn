@@ -107,7 +107,6 @@ class EditWindow(gtk.EventBox):
         self.notebook.connect('switch-page', self.switch_page_cb)
         
         self.dirty = 0
-        self.file_new()
 
         self.clipboard = gtk.Clipboard(selection='CLIPBOARD')
         self.dirname = "."
@@ -117,12 +116,81 @@ class EditWindow(gtk.EventBox):
         self.browser_menu.append(refresh_item)
         refresh_item.show()
         refresh_item.connect("activate", self.refresh_browser)
-        #self.connect('key-press-event', self.text_key_press_event_cb)
         
         # sorry, ugly
         self.filetypes = {}
         return
-    
+        
+    def create_menu(self):
+        ui_string = """<ui>
+        <menubar>
+                <menu name='FileMenu' action='FileMenu'>
+                        <menuitem action='FileNew'/>
+                        <menuitem action='FileOpen'/>
+                        <menuitem action='FileSave'/>
+                        <menuitem action='FileSaveAs'/>
+                        <menuitem action='Close'/>
+                        <separator/>
+                        <menuitem action='FileExit'/>
+                </menu>
+                <menu name='EditMenu' action='EditMenu'>
+                        <menuitem action='EditCut'/>
+                        <menuitem action='EditCopy'/>
+                        <menuitem action='EditPaste'/>
+                        <menuitem action='EditClear'/>
+                        <separator/>
+                        <menuitem action='EditFind'/>
+                        <menuitem action='EditFindNext'/>
+                        <separator/>
+                        <menuitem action='GotoLine'/>
+                        <menuitem action='CommentBlock'/>
+                        <menuitem action='UncommentBlock'/>
+                </menu>
+        </menubar>
+        <toolbar>
+                <toolitem action='FileNew'/>
+                <toolitem action='FileOpen'/>
+                <toolitem action='FileSave'/>
+                <toolitem action='FileSaveAs'/>
+                <toolitem action='Close'/>
+                <separator/>
+                <toolitem action='EditCut'/>
+                <toolitem action='EditCopy'/>
+                <toolitem action='EditPaste'/>
+                <separator/>
+        </toolbar>
+        </ui>
+        """
+        actions = [
+            ('FileMenu', None, '_File'),
+            ('FileNew', gtk.STOCK_NEW, None, None, None, self.file_new),
+            ('FileOpen', gtk.STOCK_OPEN, None, None, None, self.file_open),
+            ('FileSave', gtk.STOCK_SAVE, None, None, None, self.file_save),
+            ('FileSaveAs', gtk.STOCK_SAVE_AS, None, None, None,
+             self.file_saveas),
+            ('Close', gtk.STOCK_CLOSE, None, None, None, self.file_close),
+            ('FileExit', gtk.STOCK_QUIT, None, None, None, self.file_exit),
+            ('EditMenu', None, '_Edit'),
+            ('EditCut', gtk.STOCK_CUT, None, None, None, self.edit_cut),
+            ('EditCopy', gtk.STOCK_COPY, None, None, None, self.edit_copy),
+            ('EditPaste', gtk.STOCK_PASTE, None, None, None, self.edit_paste),
+            ('EditClear', gtk.STOCK_REMOVE, 'C_lear', None, None,
+             self.edit_clear),
+            ('EditFind', gtk.STOCK_FIND, None, None, None, self.edit_find),
+            ('EditFindNext', None, 'Find _Next', None, None,
+             self.edit_find_next),
+             ('GotoLine', None, 'Goto Line', '<control>G', None, self.goto_line),
+             ('CommentBlock', None, 'Comment Block', None, None, self.comment_block),
+            ('UncommentBlock', None, 'Uncomment Block', None, None,
+             self.uncomment_block),
+            ]
+        self.ag = gtk.ActionGroup('edit')
+        self.ag.add_actions(actions)
+        self.ui = gtk.UIManager()
+        self.ui.insert_action_group(self.ag, 0)
+        self.ui.add_ui_from_string(ui_string)
+        self.get_parent_window().add_accel_group(self.ui.get_accel_group())
+        return (self.ui.get_widget('/menubar'), self.ui.get_widget('/toolbar'))
     def set_title(self, title):
         pass
 
@@ -159,28 +227,28 @@ class EditWindow(gtk.EventBox):
             if not child is None:
                 name = self.notebook.get_tab_label_text(child)
                 if self.wins.has_key(name):
-                    buffer, text, model = self.wins[name]
-                    return name, buffer, text, model
+                    buff, text, model = self.wins[name]
+                    return name, buff, text, model
             
         return None, None, None, None
 
-    def _new_tab(self, f, buffer = None):
+    def _new_tab(self, f, buff = None):
         p = -1
         if not self.wins.has_key(f):
             lm = gtksourceview.SourceLanguagesManager()
-            if buffer is None:
-                buffer = gtksourceview.SourceBuffer()
-            buffer.set_data('languages-manager', lm)
-            text = gtksourceview.SourceView(buffer)
+            if buff is None:
+                buff = gtksourceview.SourceBuffer()
+            buff.set_data('languages-manager', lm)
+            text = gtksourceview.SourceView(buff)
             font_desc = pango.FontDescription('monospace 10')
             if font_desc:
                 text.modify_font(font_desc)
 
             #~ buffer.connect('mark_set', self.move_cursor_cb, text)
             #~ buffer.connect('changed', self.update_cursor_position, text)
-            buffer.connect('insert-text', self.insert_at_cursor_cb)
+            buff.connect('insert-text', self.insert_at_cursor_cb)
             #~ buffer.connect('delete-range', self.delete_range_cb)
-            buffer.set_data("save", False)
+            buff.set_data("save", False)
             scrolledwin2 = gtk.ScrolledWindow()
             scrolledwin2.add(text)
             text.set_auto_indent(True)
@@ -202,7 +270,7 @@ class EditWindow(gtk.EventBox):
             self.notebook.append_page(scrolledwin2, l)
             scrolledwin2.show()
             text.grab_focus()
-            self.wins[f] = (buffer, text, None)
+            self.wins[f] = (buff, text, None)
             scrolledwin2.set_data('filename', f)
             p = len(self.wins) - 1
             self.notebook.set_current_page(-1)
@@ -222,9 +290,10 @@ class EditWindow(gtk.EventBox):
             name, buff, text, model = self.get_current()
             iter2 = buff.get_iter_at_mark(buff.get_insert())
             complete = self.get_context(buff, iter2)
-            print complete
+            if complete.isdigit():
+                # to avoid problems with float point.
+                return
         if len(complete.strip()) > 0:
-            #~ try:
             lst = importsTipper.GenerateTip(complete, os.path.dirname(name))
             if self.ac_w is None:
                 self.ac_w = AutoCompletionWindow(text, iter2, complete, 
@@ -232,8 +301,6 @@ class EditWindow(gtk.EventBox):
             else:
                 self.ac_w.set_list(text, iter2, complete, 
                                    lst, self.cb.mainwindow)
-            #~ except:
-                #~ print sys.exc_info()[1]            
         return
         
     def get_context(self, buffer, iter):
@@ -251,21 +318,24 @@ class EditWindow(gtk.EventBox):
             return complete
 
     def text_key_press_event_cb(self, widget, event):
+        #print event.state, event.keyval
+        keyname = gtk.gdk.keyval_name(event.keyval)
         buf = widget.get_buffer()
         bound = buf.get_selection_bounds()
-        space = " ".center(widget.get_tabs_width())
-        if event.state == gtk.gdk.SHIFT_MASK and event.keyval == 65056:
+        tabs = widget.get_tabs_width()
+        space = " ".center(tabs)
+        # shift-tab unindent
+        if event.state & gtk.gdk.SHIFT_MASK and keyname == "ISO_Left_Tab":
             if len(bound) == 0:
                 it = buf.get_iter_at_mark(buf.get_insert())
                 start = buf.get_iter_at_line(it.get_line())
                 end = buf.get_iter_at_line(it.get_line())
                 count = 0
-                while end.get_char() == " " and count < 4:
+                while end.get_char() == " " and count < tabs:
                     end.forward_char()
                     count += 1
                 buf.delete(start, end)
             else:
-                print "selection"
                 start, end = bound
                 start_line = start.get_line()
                 end_line = end.get_line()
@@ -275,14 +345,14 @@ class EditWindow(gtk.EventBox):
                         s_it = buf.get_iter_at_line(start_line)
                         e_it = buf.get_iter_at_line(start_line)
                         count = 0
-                        while e_it.get_char() == " " and count < 4:
+                        while e_it.get_char() == " " and count < tabs:
                             e_it.forward_char()
                             count += 1
                         buf.delete(s_it, e_it)        
                     start_line += 1
             return True
+        #tab indent
         elif event.keyval == gtk.keysyms.Tab:
-            
             if len(bound) == 0:
                 buf.insert_at_cursor(space)
             else:
@@ -295,27 +365,71 @@ class EditWindow(gtk.EventBox):
                         buf.insert(insert_iter, space)
                     start_line += 1
             return True
+        elif event.state & gtk.gdk.CONTROL_MASK and keyname == "k":
+            comment = "#"
+            if len(bound) == 0:
+                buf.insert_at_cursor(comment)
+            else:
+                start, end = bound
+                start_line = start.get_line()
+                end_line = end.get_line()
+                while start_line <= end_line:
+                    insert_iter = buf.get_iter_at_line(start_line)
+                    if not insert_iter.ends_line():
+                        buf.insert(insert_iter, comment)
+                    start_line += 1
+            return True
+        elif event.state & gtk.gdk.CONTROL_MASK and \
+            event.state & gtk.gdk.SHIFT_MASK and \
+            keyname == "K":
+            if len(bound) == 0:
+                it = buf.get_iter_at_mark(buf.get_insert())
+                start = buf.get_iter_at_line(it.get_line())
+                end = buf.get_iter_at_line(it.get_line())
+                count = 0
+                while end.get_char() == "#":
+                    end.forward_char()
+                    count += 1
+                buf.delete(start, end)
+            else:
+                start, end = bound
+                start_line = start.get_line()
+                end_line = end.get_line()
+                while start_line <= end_line:
+                    insert_iter = buf.get_iter_at_line(start_line)
+                    if not insert_iter.ends_line():
+                        s_it = buf.get_iter_at_line(start_line)
+                        e_it = buf.get_iter_at_line(start_line)
+                        count = 0
+                        while e_it.get_char() == "#":
+                            e_it.forward_char()
+                            count += 1
+                        buf.delete(s_it, e_it)        
+                    start_line += 1
+            return True
+    
 
     def load_file(self, fname):
         try:
             fd = open(fname)
             self._new_tab(fname)
-            buffer, text, model = self.wins[fname]
-            buffer.set_text('')
+            buff, text, model = self.wins[fname]
+            buff.set_text('')
             buf = fd.read(BLOCK_SIZE)
             while buf != '':
-                buffer.insert_at_cursor(buf)
+                buff.insert_at_cursor(buf)
                 buf = fd.read(BLOCK_SIZE)
             text.queue_draw()
             self.set_title(os.path.basename(fname))
             self.dirname = os.path.dirname(fname)
-            buffer.set_modified(False)
+            buff.set_modified(False)
             self.new = 0
         except:
             dlg = gtk.MessageDialog(self.get_parent_window(),
                     gtk.DIALOG_DESTROY_WITH_PARENT,
                     gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
                     "Can't open " + fname)
+            print sys.exc_info()[1]
             resp = dlg.run()
             dlg.hide()
             return
@@ -323,8 +437,8 @@ class EditWindow(gtk.EventBox):
         text.grab_focus()
 
     def check_mime(self, fname):
-        buffer, text, model = self.wins[fname]
-        manager = buffer.get_data('languages-manager')
+        buff, text, model = self.wins[fname]
+        manager = buff.get_data('languages-manager')
         if os.path.isabs(fname):
             path = fname
         else:
@@ -336,80 +450,24 @@ class EditWindow(gtk.EventBox):
         if mime_type:
             language = manager.get_language_from_mime_type(mime_type)
             if language:
-                buffer.set_highlight(True)
-                buffer.set_language(language)
+                buff.set_highlight(True)
+                buff.set_language(language)
                 self.filetypes[pagenum] = language.get_name().lower()
             else:
-                print 'No language found for mime type "%s"' % mime_type
-                buffer.set_highlight(False)
+                dlg = gtk.MessageDialog(self.get_parent_window(),
+                    gtk.DIALOG_DESTROY_WITH_PARENT,
+                    gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+                    'No language found for mime type "%s"' % mime_type)
+                buff.set_highlight(False)
         else:
-            print 'Couldn\'t get mime type for file "%s"' % fname
-            buffer.set_highlight(False)
-        #buffer.place_cursor(buffer.get_start_iter())
-        buffer.set_data("save", False)
+            dlg = gtk.MessageDialog(self.get_parent_window(),
+                    gtk.DIALOG_DESTROY_WITH_PARENT,
+                    gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+                    'Couldn\'t get mime type for file "%s"' % fname)
+            buff.set_highlight(False)
+        buff.set_data("save", False)
 
-    def create_menu(self):
-        ui_string = """<ui>
-        <menubar>
-                <menu name='FileMenu' action='FileMenu'>
-                        <menuitem action='FileNew'/>
-                        <menuitem action='FileOpen'/>
-                        <menuitem action='FileSave'/>
-                        <menuitem action='FileSaveAs'/>
-                        <menuitem action='Close'/>
-                        <separator/>
-                        <menuitem action='FileExit'/>
-                </menu>
-                <menu name='EditMenu' action='EditMenu'>
-                        <menuitem action='EditCut'/>
-                        <menuitem action='EditCopy'/>
-                        <menuitem action='EditPaste'/>
-                        <menuitem action='EditClear'/>
-                        <separator/>
-                        <menuitem action='EditFind'/>
-                        <menuitem action='EditFindNext'/>
-                </menu>
-        </menubar>
-        <toolbar>
-                <toolitem action='FileNew'/>
-                <toolitem action='FileOpen'/>
-                <toolitem action='FileSave'/>
-                <toolitem action='FileSaveAs'/>
-                <toolitem action='Close'/>
-                <separator/>
-                <toolitem action='EditCut'/>
-                <toolitem action='EditCopy'/>
-                <toolitem action='EditPaste'/>
-                <separator/>
-        </toolbar>
-        </ui>
-        """
-        actions = [
-            ('FileMenu', None, '_File'),
-            ('FileNew', gtk.STOCK_NEW, None, None, None, self.file_new),
-            ('FileOpen', gtk.STOCK_OPEN, None, None, None, self.file_open),
-            ('FileSave', gtk.STOCK_SAVE, None, None, None, self.file_save),
-            ('FileSaveAs', gtk.STOCK_SAVE_AS, None, None, None,
-             self.file_saveas),
-            ('Close', gtk.STOCK_CLOSE, None, None, None, self.file_close),
-            ('FileExit', gtk.STOCK_QUIT, None, None, None, self.file_exit),
-            ('EditMenu', None, '_Edit'),
-            ('EditCut', gtk.STOCK_CUT, None, None, None, self.edit_cut),
-            ('EditCopy', gtk.STOCK_COPY, None, None, None, self.edit_copy),
-            ('EditPaste', gtk.STOCK_PASTE, None, None, None, self.edit_paste),
-            ('EditClear', gtk.STOCK_REMOVE, 'C_lear', None, None,
-             self.edit_clear),
-            ('EditFind', gtk.STOCK_FIND, None, None, None, self.edit_find),
-            ('EditFindNext', None, 'Find _Next', None, None,
-             self.edit_find_next),
-            ]
-        self.ag = gtk.ActionGroup('edit')
-        self.ag.add_actions(actions)
-        self.ui = gtk.UIManager()
-        self.ui.insert_action_group(self.ag, 0)
-        self.ui.add_ui_from_string(ui_string)
-        self.get_parent_window().add_accel_group(self.ui.get_accel_group())
-        return (self.ui.get_widget('/menubar'), self.ui.get_widget('/toolbar'))
+    
 
     def chk_save(self):
         fname, buffer, text, model = self.get_current()
@@ -567,11 +625,11 @@ class EditWindow(gtk.EventBox):
                 dialog.destroy()
                 return
             self._search(search_text.get_text(), self.last_search_iter)
-        f, buffer, text, model = self.get_current()
+        f, buff, text, model = self.get_current()
         search_text = gtk.Entry()
-        s = buffer.get_selection_bounds()
+        s = buff.get_selection_bounds()
         if len(s) > 0:
-            search_text.set_text(buffer.get_slice(s[0], s[1]))
+            search_text.set_text(buff.get_slice(s[0], s[1]))
         dialog = gtk.Dialog("Search", self.get_parent_window(),
                             gtk.DIALOG_DESTROY_WITH_PARENT,
                             (gtk.STOCK_FIND, RESPONSE_FORWARD,
@@ -584,9 +642,9 @@ class EditWindow(gtk.EventBox):
         response_id = dialog.run()
     
     def _search(self, search_string, iter = None):
-        f, buffer, text, model = self.get_current()
+        f, buff, text, model = self.get_current()
         if iter is None:
-            start = buffer.get_start_iter()
+            start = buff.get_start_iter()
         else:
             start = iter
         i = 0
@@ -595,8 +653,8 @@ class EditWindow(gtk.EventBox):
             res = start.forward_search(search_string, gtk.TEXT_SEARCH_TEXT_ONLY)
             if res:
                 match_start, match_end = res
-                buffer.place_cursor(match_start)
-                buffer.select_range(match_start, match_end)
+                buff.place_cursor(match_start)
+                buff.select_range(match_start, match_end)
                 text.scroll_to_iter(match_start, 0.0)
                 self.last_search_iter = match_end
                 #~ print res
@@ -606,6 +664,40 @@ class EditWindow(gtk.EventBox):
     
     def edit_find_next(self, mi):
         self._search(self.search_string, self.last_search_iter)
+    
+    def goto_line(self, mi=None):
+        def dialog_response_callback(dialog, response_id):
+            if response_id == gtk.RESPONSE_CLOSE:
+                dialog.destroy()
+                return
+            line = line_text.get_text()
+            if line.isdigit():
+                f, buff, tv, model = self.get_current()
+                titer = buff.get_iter_at_line(int(line)-1)
+                tv.scroll_to_iter(titer, 0.4)
+                buff.place_cursor(titer)
+                tv.grab_focus()
+                dialog.destroy()
+        
+        line_text = gtk.Entry()
+        dialog = gtk.Dialog("Goto Line", self.get_parent_window(),
+                            gtk.DIALOG_DESTROY_WITH_PARENT,
+                            (gtk.STOCK_GO_FORWARD, RESPONSE_FORWARD,
+                             gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE))
+        dialog.vbox.pack_end(line_text, True, True, 0)
+        dialog.connect("response", dialog_response_callback)
+        dialog.set_default_response(RESPONSE_FORWARD)
+        line_text.set_activates_default(True)
+        line_text.show()
+        line_text.grab_focus()
+        dialog.show_all()
+        response_id = dialog.run()
+
+    def comment_block(self, mi=None):
+        print "comment"
+    
+    def uncomment_block(self, mi=None):
+        print "uncomment"        
         
 class AutoCompletionWindow(gtk.Window):
     
