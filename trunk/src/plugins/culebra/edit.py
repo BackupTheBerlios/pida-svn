@@ -142,6 +142,8 @@ class EditWindow(gtk.EventBox):
                         <menuitem action='EditFind'/>
                         <menuitem action='EditFindNext'/>
                         <separator/>
+                        <menuitem action='DuplicateLine'/>
+                        <menuitem action='DeleteLine'/>
                         <menuitem action='GotoLine'/>
                         <menuitem action='CommentBlock'/>
                         <menuitem action='UncommentBlock'/>
@@ -179,9 +181,11 @@ class EditWindow(gtk.EventBox):
             ('EditFind', gtk.STOCK_FIND, None, None, None, self.edit_find),
             ('EditFindNext', None, 'Find _Next', None, None,
              self.edit_find_next),
-             ('GotoLine', None, 'Goto Line', '<control>G', None, self.goto_line),
-             ('CommentBlock', None, 'Comment Block', None, None, self.comment_block),
-            ('UncommentBlock', None, 'Uncomment Block', None, None,
+             ('DuplicateLine', None, 'Duplicate Line', '<control>d', None, self.duplicate_line),
+             ('DeleteLine', None, 'Delete Line', '<control>y', None, self.delete_line),
+             ('GotoLine', None, 'Goto Line', '<control>g', None, self.goto_line),
+             ('CommentBlock', None, 'Comment Block', '<control>k', None, self.comment_block),
+            ('UncommentBlock', None, 'Uncomment Block', '<control><shift>k', None,
              self.uncomment_block),
             ]
         self.ag = gtk.ActionGroup('edit')
@@ -281,7 +285,7 @@ class EditWindow(gtk.EventBox):
                     break
         return p
 
-    def insert_at_cursor_cb(self, textbuffer, iter, text, length):
+    def insert_at_cursor_cb(self, buff, iter, text, length):
         complete = ""
         name, a,b,c = self.get_current()
         if self.ac_w is not None:
@@ -303,7 +307,7 @@ class EditWindow(gtk.EventBox):
                                    lst, self.cb.mainwindow)
         return
         
-    def get_context(self, buffer, iter):
+    def get_context(self, buff, iter):
         iter2 = iter.copy()
         iter.backward_word_starts(1)
         iter3 = iter.copy()
@@ -311,7 +315,7 @@ class EditWindow(gtk.EventBox):
         prev = iter3.get_text(iter)
         complete = iter.get_text(iter2)
         if prev in (".", "_"):
-            t = self.get_context(buffer, iter)
+            t = self.get_context(buff, iter)
             return t + complete
         else:
             count = 0
@@ -365,49 +369,6 @@ class EditWindow(gtk.EventBox):
                         buf.insert(insert_iter, space)
                     start_line += 1
             return True
-        elif event.state & gtk.gdk.CONTROL_MASK and keyname == "k":
-            comment = "#"
-            if len(bound) == 0:
-                buf.insert_at_cursor(comment)
-            else:
-                start, end = bound
-                start_line = start.get_line()
-                end_line = end.get_line()
-                while start_line <= end_line:
-                    insert_iter = buf.get_iter_at_line(start_line)
-                    if not insert_iter.ends_line():
-                        buf.insert(insert_iter, comment)
-                    start_line += 1
-            return True
-        elif event.state & gtk.gdk.CONTROL_MASK and \
-            event.state & gtk.gdk.SHIFT_MASK and \
-            keyname == "K":
-            if len(bound) == 0:
-                it = buf.get_iter_at_mark(buf.get_insert())
-                start = buf.get_iter_at_line(it.get_line())
-                end = buf.get_iter_at_line(it.get_line())
-                count = 0
-                while end.get_char() == "#":
-                    end.forward_char()
-                    count += 1
-                buf.delete(start, end)
-            else:
-                start, end = bound
-                start_line = start.get_line()
-                end_line = end.get_line()
-                while start_line <= end_line:
-                    insert_iter = buf.get_iter_at_line(start_line)
-                    if not insert_iter.ends_line():
-                        s_it = buf.get_iter_at_line(start_line)
-                        e_it = buf.get_iter_at_line(start_line)
-                        count = 0
-                        while e_it.get_char() == "#":
-                            e_it.forward_char()
-                            count += 1
-                        buf.delete(s_it, e_it)        
-                    start_line += 1
-            return True
-    
 
     def load_file(self, fname):
         try:
@@ -466,8 +427,6 @@ class EditWindow(gtk.EventBox):
                     'Couldn\'t get mime type for file "%s"' % fname)
             buff.set_highlight(False)
         buff.set_data("save", False)
-
-    
 
     def chk_save(self):
         fname, buffer, text, model = self.get_current()
@@ -600,23 +559,23 @@ class EditWindow(gtk.EventBox):
         return False
 
     def edit_cut(self, mi):
-        fname, buffer, text, model = self.get_current()
-        buffer.cut_clipboard(self.clipboard, True)
+        buff = self.get_current()[1]
+        buff.cut_clipboard(self.clipboard, True)
         return
 
     def edit_copy(self, mi):
-        fname, buffer, text, model = self.get_current()
-        buffer.copy_clipboard(self.clipboard)
+        buff = self.get_current()[1]
+        buff.copy_clipboard(self.clipboard)
         return
 
     def edit_paste(self, mi):
-        fname, buffer, text, model = self.get_current()
-        buffer.paste_clipboard(self.clipboard, None, True)
+        buff = self.get_current()[1]
+        buff.paste_clipboard(self.clipboard, None, True)
         return
 
     def edit_clear(self, mi):
-        fname, buffer, text, model = self.get_current()
-        buffer.delete_selection(True, True)
+        buff = self.get_current()[1]
+        buff.delete_selection(True, True)
         return
 
     def edit_find(self, mi): 
@@ -625,7 +584,7 @@ class EditWindow(gtk.EventBox):
                 dialog.destroy()
                 return
             self._search(search_text.get_text(), self.last_search_iter)
-        f, buff, text, model = self.get_current()
+        buff = self.get_current()[1]
         search_text = gtk.Entry()
         s = buff.get_selection_bounds()
         if len(s) > 0:
@@ -636,6 +595,8 @@ class EditWindow(gtk.EventBox):
                              gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE))
         dialog.vbox.pack_end(search_text, True, True, 0)
         dialog.connect("response", dialog_response_callback)
+        dialog.set_default_response(RESPONSE_FORWARD)
+        search_text.set_activates_default(True)
         search_text.show()
         search_text.grab_focus()
         dialog.show_all()
@@ -694,10 +655,72 @@ class EditWindow(gtk.EventBox):
         response_id = dialog.run()
 
     def comment_block(self, mi=None):
-        print "comment"
-    
+        comment = "#"
+        buf = self.get_current()[1]
+        bound = buf.get_selection_bounds()
+        if len(bound) == 0:
+            buf.insert_at_cursor(comment)
+        else:
+            start, end = bound
+            start_line = start.get_line()
+            end_line = end.get_line()
+            while start_line <= end_line:
+                insert_iter = buf.get_iter_at_line(start_line)
+                if not insert_iter.ends_line():
+                    buf.insert(insert_iter, comment)
+                start_line += 1
+   
     def uncomment_block(self, mi=None):
-        print "uncomment"        
+        buf = self.get_current()[1]
+        bound = buf.get_selection_bounds()
+        if len(bound) == 0:
+            it = buf.get_iter_at_mark(buf.get_insert())
+            start = buf.get_iter_at_line(it.get_line())
+            end = buf.get_iter_at_line(it.get_line())
+            count = 0
+            while end.get_char() == "#":
+                end.forward_char()
+                count += 1
+            buf.delete(start, end)
+        else:
+            start, end = bound
+            start_line = start.get_line()
+            end_line = end.get_line()
+            while start_line <= end_line:
+                insert_iter = buf.get_iter_at_line(start_line)
+                if not insert_iter.ends_line():
+                    s_it = buf.get_iter_at_line(start_line)
+                    e_it = buf.get_iter_at_line(start_line)
+                    count = 0
+                    while e_it.get_char() == "#":
+                        e_it.forward_char()
+                        count += 1
+                    buf.delete(s_it, e_it)        
+                start_line += 1
+                
+    def delete_line(self, mi):
+        buf = self.get_current()[1]
+        it = buf.get_iter_at_mark(buf.get_insert())
+        line = it.get_line()
+        start = buf.get_iter_at_line(line)
+        end = buf.get_iter_at_line(line+1)
+        if start.get_line() == end.get_line():
+            end.forward_to_end()
+        buf.delete(start, end)
+            
+    def duplicate_line(self, mi):
+        buf = self.get_current()[1]
+        it = buf.get_iter_at_mark(buf.get_insert())
+        line = it.get_line()
+        start = buf.get_iter_at_line(line)
+        end = buf.get_iter_at_line(line+1)
+        ret = ""
+        if start.get_line() == end.get_line():
+            end.forward_to_end()
+            ret = "\n"
+        text = buf.get_text(start, end)
+        buf.insert(end, ret+text)
+                    
         
 class AutoCompletionWindow(gtk.Window):
     
