@@ -436,8 +436,9 @@ class Plugin(plugin.Plugin):
         self.notebook.set_property('tab-border', 2)
         self.notebook.set_property('enable-popup', True)
         self.add(self.notebook)
-
         self.add_separator()
+        self.add_button('python', self.cb_python,
+                        'Open a python shell')
         self.add_button('internet', self.cb_new_browser,
                         'Open a new browser')
         self.add_button('terminal', self.cb_new,
@@ -451,6 +452,8 @@ class Plugin(plugin.Plugin):
                             'Configure this shortcut bar',
                             self.cb_conf_clicked, [])
 
+    def cb_python(self, *args):
+        self.do_action('newterminal', 'python')
 
     def cb_conf_clicked(self, *args):
         self.cb.action_showshortcuts()
