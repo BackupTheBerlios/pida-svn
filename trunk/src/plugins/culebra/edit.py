@@ -42,7 +42,7 @@ newnumber = 1
 
 class EditWindow(gtk.EventBox):
 
-    def __init__(self, cb, quit_cb=None):
+    def __init__(self, cb, plugin=None, quit_cb=None):
         self.cb = cb
         gtk.EventBox.__init__(self)
         self.search_string = None
@@ -50,48 +50,35 @@ class EditWindow(gtk.EventBox):
         self.completion_win = None
         self.insert_string = None
         self.cursor_iter = None
+        self.plugin = plugin
         self.wins = {}
         self.current_word = ""
         self.wl = []
         self.ac_w = None
-
         self.set_size_request(470, 300)
         self.connect("delete_event", self.file_exit)
-
         self.quit_cb = quit_cb
         self.vbox = gtk.VBox()
-        
         self.add(self.vbox)
         self.vbox.show()
-
         self.menubar, self.toolbar = self.create_menu()
-
         hdlbox = gtk.HandleBox()
-
         self.vbox.pack_start(hdlbox, expand=False)
         hdlbox.show()
-        
         hdlbox.add(self.menubar)
         self.menubar.show()
-        
         hdlbox = gtk.HandleBox()
         self.vbox.pack_start(hdlbox, expand=False)
         hdlbox.show()
-        
         hdlbox.add(self.toolbar)
         self.toolbar.show()
-
         self.vpaned = gtk.VPaned()
-        
         self.vbox.pack_start(self.vpaned, expand=True, fill = True)
         self.vpaned.show()
-        
         self.vbox1 = gtk.VBox()
         self.vpaned.add1(self.vbox1)
         self.vbox.show()
-        
         self.vbox1.show()
-        
         self.hpaned = gtk.HPaned()
         self.vbox1.pack_start(self.hpaned, True, True)
         self.hpaned.set_border_width(5)
@@ -99,7 +86,6 @@ class EditWindow(gtk.EventBox):
         self.statusbar = gtk.Statusbar()
         self.vbox1.pack_start(self.statusbar, False, True)
         self.statusbar.show()
-
         self.scrolledwin2 = gtk.ScrolledWindow()
         self.scrolledwin2.show()
         self.notebook = gtk.Notebook()
@@ -107,21 +93,16 @@ class EditWindow(gtk.EventBox):
         self.notebook.set_scrollable(True)
         self.hpaned.add2(self.notebook)
         self.hpaned.set_position(200)
-
         self.notebook.show()
         self.notebook.connect('switch-page', self.switch_page_cb)
-        
         self.dirty = 0
-
         self.clipboard = gtk.Clipboard(selection='CLIPBOARD')
         self.dirname = "."
-
         self.browser_menu = gtk.Menu()
         refresh_item = gtk.MenuItem("Refresh")
         self.browser_menu.append(refresh_item)
         refresh_item.show()
         refresh_item.connect("activate", self.refresh_browser)
-        
         # sorry, ugly
         self.filetypes = {}
         return
@@ -156,6 +137,9 @@ class EditWindow(gtk.EventBox):
                         <menuitem action='UpperSelection'/>
                         <menuitem action='LowerSelection'/>
                 </menu>
+                <menu name='RunMenu' action='RunMenu'>
+                        <menuitem action='RunScript'/>
+                </menu>
         </menubar>
         <toolbar>
                 <toolitem action='FileNew'/>
@@ -168,6 +152,10 @@ class EditWindow(gtk.EventBox):
                 <toolitem action='EditCopy'/>
                 <toolitem action='EditPaste'/>
                 <separator/>
+                <toolitem action='EditFind'/>
+                <toolitem action='EditReplace'/>
+                <separator/>
+                <toolitem action='RunScript'/>
         </toolbar>
         </ui>
         """
@@ -204,6 +192,8 @@ class EditWindow(gtk.EventBox):
                  None, self.upper_selection),
              ('LowerSelection', None, 'Lower Selection', '<control><shift>u', 
                  None, self.lower_selection),
+            ('RunMenu', None, '_Run'),
+            ('RunScript', gtk.STOCK_EXECUTE, None, "F5",None, self.run_script),
             ]
         self.ag = gtk.ActionGroup('edit')
         self.ag.add_actions(actions)
@@ -817,7 +807,10 @@ class EditWindow(gtk.EventBox):
             start, end = bound
             text = buf.get_text(start, end)
             buf.delete(start, end)
-            buf.insert(start, text.lower())            
+            buf.insert(start, text.lower())
+    
+    def run_script(self, mi):
+        self.plugin.do_evt("bufferexecute") 
         
 class AutoCompletionWindow(gtk.Window):
     
@@ -922,6 +915,8 @@ class AutoCompletionWindow(gtk.Window):
             
     def search_func(self, model, column, key, iter):
         return not model.get_value(iter, column).startswith(key)
+        
+
 
 class Cb:
     def __init__(self):

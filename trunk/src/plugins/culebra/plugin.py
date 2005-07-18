@@ -51,7 +51,7 @@ class Plugin(plugin.Plugin):
 
     def create_editor(self):
         if not self.editor:
-            self.editor = edit.EditWindow(self.cb)
+            self.editor = edit.EditWindow(self.cb, self)
             self.cb.embedwindow.add(self.editor)
             self.editor.show_all()
             self.editor.notebook.connect('switch-page', self.cb_switchbuffer)
