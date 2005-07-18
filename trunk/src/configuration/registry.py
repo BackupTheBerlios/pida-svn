@@ -173,6 +173,9 @@ class Integer(RegistryItem):
             raise BadRegistryData
         return val
 
+class List(RegistryItem):
+    DISPLAY_WIDGET = config.ConfigList
+
 class Color(RegistryItem):
     DISPLAY_WIDGET = config.ConfigColor
 

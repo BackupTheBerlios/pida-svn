@@ -333,6 +333,22 @@ class ConfigInteger(ConfigEntry):
         """
         self.set_value(int(self.widget.get_value()))
 
+class ConfigList(ConfigEntry):
+    def __init__(self, cb, option):
+        widget = gtk.combo_box_new_text()
+        if hasattr(option, 'choices'):
+            for choice in getattr(option, 'choices'):
+                widget.append_text(choice)
+        ConfigWidget.__init__(self, cb, widget, option)
+                
+    def load(self):
+        for i, row in enumerate(self.widget.get_model()):
+            if row[0] == self.value():
+                self.widget.set_active(i)
+                break
+
+    def save(self):
+        self.set_value(self.widget.get_active_text())
 
 class ListTree(gtk.TreeView):
     """

@@ -185,10 +185,12 @@ def configure(reg):
     core_group = reg.add_group('components',
         'Choose which components to use.')
 
-    core_group.add('editor',
-        registry.RegistryItem,
+    core_editor = core_group.add('editor',
+        registry.List,
         'vim',
         'The editor Pida will use')
+    
+    core_editor.choices = ['vim', 'culebra']
 
 if __name__ == '__main__':
     pass
