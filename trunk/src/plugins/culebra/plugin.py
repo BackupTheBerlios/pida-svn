@@ -75,8 +75,8 @@ class Plugin(plugin.Plugin):
                 break
     
     def check_mime(self, fname):
-        buffer, text, model = self.editor.wins[fname]
-        manager = buffer.get_data('languages-manager')
+        buff, text, model = self.editor.wins[fname]
+        manager = buff.get_data('languages-manager')
         if os.path.isabs(fname):
             path = fname
         else:
@@ -126,7 +126,7 @@ class Plugin(plugin.Plugin):
         tv = self.editor.get_current()[2]
         buf = self.editor.get_current()[1]
         titer = buf.get_iter_at_line(line)
-        tv.scroll_to_iter(titer, 0.4)
+        tv.scroll_to_iter(titer, 0.25)
         buf.place_cursor(titer)
         tv.grab_focus()
 

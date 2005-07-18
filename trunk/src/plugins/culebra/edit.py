@@ -28,12 +28,14 @@ import dialogs
 import gtksourceview
 import gnomevfs
 import importsTipper
+import words
 
 BLOCK_SIZE = 2048
 
 special_chars = (".",)
 RESPONSE_FORWARD = 0
 RESPONSE_BACKWARD = 1
+RESPONSE_REPLACE = 2
 
 global newnumber
 newnumber = 1
@@ -94,6 +96,9 @@ class EditWindow(gtk.EventBox):
         self.vbox1.pack_start(self.hpaned, True, True)
         self.hpaned.set_border_width(5)
         self.hpaned.show()
+        self.statusbar = gtk.Statusbar()
+        self.vbox1.pack_start(self.statusbar, False, True)
+        self.statusbar.show()
 
         self.scrolledwin2 = gtk.ScrolledWindow()
         self.scrolledwin2.show()
@@ -141,12 +146,15 @@ class EditWindow(gtk.EventBox):
                         <separator/>
                         <menuitem action='EditFind'/>
                         <menuitem action='EditFindNext'/>
+                        <menuitem action='EditReplace'/>
                         <separator/>
                         <menuitem action='DuplicateLine'/>
                         <menuitem action='DeleteLine'/>
                         <menuitem action='GotoLine'/>
                         <menuitem action='CommentBlock'/>
                         <menuitem action='UncommentBlock'/>
+                        <menuitem action='UpperSelection'/>
+                        <menuitem action='LowerSelection'/>
                 </menu>
         </menubar>
         <toolbar>
@@ -179,14 +187,23 @@ class EditWindow(gtk.EventBox):
             ('EditClear', gtk.STOCK_REMOVE, 'C_lear', None, None,
              self.edit_clear),
             ('EditFind', gtk.STOCK_FIND, None, None, None, self.edit_find),
-            ('EditFindNext', None, 'Find _Next', None, None,
-             self.edit_find_next),
-             ('DuplicateLine', None, 'Duplicate Line', '<control>d', None, self.duplicate_line),
-             ('DeleteLine', None, 'Delete Line', '<control>y', None, self.delete_line),
-             ('GotoLine', None, 'Goto Line', '<control>g', None, self.goto_line),
-             ('CommentBlock', None, 'Comment Block', '<control>k', None, self.comment_block),
-            ('UncommentBlock', None, 'Uncomment Block', '<control><shift>k', None,
-             self.uncomment_block),
+            ('EditFindNext', None, 'Find _Next', None, None, self.edit_find_next),
+            ('EditReplace', gtk.STOCK_FIND_AND_REPLACE, 'Replace', '<control>h', 
+                None, self.edit_replace),
+             ('DuplicateLine', None, 'Duplicate Line', '<control>d', 
+                 None, self.duplicate_line),
+             ('DeleteLine', None, 'Delete Line', '<control>y', 
+                 None, self.delete_line),
+             ('GotoLine', None, 'Goto Line', '<control>g', 
+                 None, self.goto_line),
+             ('CommentBlock', None, 'Comment Selection', '<control>k', 
+                 None, self.comment_block),
+             ('UncommentBlock', None, 'Uncomment Selection', '<control><shift>k', 
+                 None, self.uncomment_block),
+             ('UpperSelection', None, 'Upper Selection', '<control>u', 
+                 None, self.upper_selection),
+             ('LowerSelection', None, 'Lower Selection', '<control><shift>u', 
+                 None, self.lower_selection),
             ]
         self.ag = gtk.ActionGroup('edit')
         self.ag.add_actions(actions)
@@ -195,19 +212,36 @@ class EditWindow(gtk.EventBox):
         self.ui.add_ui_from_string(ui_string)
         self.get_parent_window().add_accel_group(self.ui.get_accel_group())
         return (self.ui.get_widget('/menubar'), self.ui.get_widget('/toolbar'))
+    
     def set_title(self, title):
-        pass
+        if title is not None:
+            self.cb.mainwindow.set_title(title)
+
+    def move_cursor(self, tv, step, count, extend_selection):
+        self.update_cursor_position(tv.get_buffer(), tv)
+
+    def update_cursor_position(self, buff, view):
+        it = buff.get_iter_at_mark(buff.get_insert())
+        if view.get_overwrite():
+            ow = "REPL."
+        else:
+            ow = "INS."
+        self.statusbar.push(0, "%s, %s %s" % (it.get_line()+1, 
+                it.get_line_offset()+1, ow))
+        if not buff.get_modified():
+            title = "PIDA " + self.get_current()[0] + "*"
+            self.cb.mainwindow.set_title(title)
 
     def get_parent_window(self):
         return self.cb.mainwindow
 
     def refresh_browser(self, item):
-        name, buffer, text, model = self.get_current()
-        buffer.place_cursor(buffer.get_start_iter())
+        name, buff, text, model = self.get_current()
+        buff.place_cursor(buff.get_start_iter())
         model = self.listclasses(fname=name)
         self.treeClass.set_model(model)
         self.treeClass.expand_all()
-        self.wins[name] = buffer, text, model
+        self.wins[name] = buff, text, model
         pass
     
     def tree_right_clicked(self, tree, event):
@@ -247,9 +281,8 @@ class EditWindow(gtk.EventBox):
             font_desc = pango.FontDescription('monospace 10')
             if font_desc:
                 text.modify_font(font_desc)
-
             #~ buffer.connect('mark_set', self.move_cursor_cb, text)
-            #~ buffer.connect('changed', self.update_cursor_position, text)
+            buff.connect('changed', self.update_cursor_position, text)
             buff.connect('insert-text', self.insert_at_cursor_cb)
             #~ buffer.connect('delete-range', self.delete_range_cb)
             buff.set_data("save", False)
@@ -260,6 +293,7 @@ class EditWindow(gtk.EventBox):
             text.set_show_line_markers(True)
             text.set_tabs_width(4)
             text.connect('key-press-event', self.text_key_press_event_cb)
+            text.connect('move-cursor', self.move_cursor)
             #text.connect('key-release-event', self.text_key_press_event_cb)
             #text.set_insert_spaces_instead_of_tabs(True)
             text.set_margin(80)
@@ -429,10 +463,10 @@ class EditWindow(gtk.EventBox):
         buff.set_data("save", False)
 
     def chk_save(self):
-        fname, buffer, text, model = self.get_current()
-        if buffer is None:
-            return 0
-        if buffer.get_modified():
+        fname, buff, text, model = self.get_current()
+        if buff is None:
+            return False
+        if buff.get_modified():
             dlg = gtk.Dialog('Unsaved File', self.get_parent_window(),
                     gtk.DIALOG_DESTROY_WITH_PARENT,
                          (gtk.STOCK_YES, gtk.RESPONSE_YES,
@@ -446,12 +480,12 @@ class EditWindow(gtk.EventBox):
             ret = dlg.run()
             dlg.hide()
             if ret == gtk.RESPONSE_NO:
-                return 0
+                return False
             if ret == gtk.RESPONSE_YES:
                 if self.file_save():
-                    return 0
-            return 1
-        return 0
+                    return False
+            return True
+        return False
 
     def file_new(self, mi=None):
         if self.chk_save(): return
@@ -459,23 +493,24 @@ class EditWindow(gtk.EventBox):
         global newnumber
         self._new_tab("untitled%s.py" % newnumber)
         newnumber += 1
-        fname, buffer, text, model = self.get_current()
-        buffer.set_text("")
-        buffer.set_modified(False)
+        fname, buff, text, model = self.get_current()
+        buff.set_text("")
+        buff.set_modified(False)
         self.new = 1
-        manager = buffer.get_data('languages-manager')
+        manager = buff.get_data('languages-manager')
         language = manager.get_language_from_mime_type("text/x-python")
-        buffer.set_highlight(True)
-        buffer.set_language(language)
+        buff.set_highlight(True)
+        buff.set_language(language)
 
         return
 
     def file_open(self, mi=None):
 
         fname = dialogs.OpenFile('Open File', self.get_parent_window(),
-                                  None, None, "*")
+                                  None, None, "*.py")
         if not fname: return
         self.load_file(fname)
+        self.cb.mainwindow.set_title("PIDA " + fname)
         return
 
     def file_save(self, mi=None, fname=None):
@@ -506,6 +541,7 @@ class EditWindow(gtk.EventBox):
             fd.close()
             buff.set_modified(False)
             buff.set_data("save", True)
+            self.cb.mainwindow.set_title("PIDA " + fname)
             ret = True
 
             del self.wins[f]
@@ -541,7 +577,6 @@ class EditWindow(gtk.EventBox):
         return self.file_save(fname=f)
 
     def file_close(self, mi=None, event=None):
-
         page = self.notebook.get_current_page()
         child = self.notebook.get_nth_page(page)
         f=self.notebook.get_tab_label_text(child)
@@ -601,6 +636,52 @@ class EditWindow(gtk.EventBox):
         search_text.grab_focus()
         dialog.show_all()
         response_id = dialog.run()
+        
+    def edit_replace(self, mi): 
+        def dialog_response_callback(dialog, response_id):
+            if response_id == gtk.RESPONSE_CLOSE:
+                dialog.destroy()
+                return
+            if response_id == RESPONSE_FORWARD:
+                self._search(search_text.get_text(), self.last_search_iter)
+                return
+            if response_id == RESPONSE_REPLACE:
+                self._search(search_text.get_text(), self.last_search_iter)
+                start, end = buff.get_selection_bounds()
+                buff.delete(start, end)
+                buff.insert(start, replace_text.get_text())
+                self.last_search_iter = buff.get_iter_at_mark(buff.get_insert())
+                start = buff.get_iter_at_mark(buff.get_insert())
+                start.backward_chars(len(replace_text.get_text()))
+                buff.select_range(start, self.last_search_iter)
+                return
+                
+        buff = self.get_current()[1]
+        search_text = gtk.Entry()
+        replace_text = gtk.Entry() 
+        s = buff.get_selection_bounds()
+        if len(s) > 0:
+            search_text.set_text(buff.get_slice(s[0], s[1]))
+        dialog = gtk.Dialog("Search", self.get_parent_window(),
+                            gtk.DIALOG_DESTROY_WITH_PARENT,
+                            (gtk.STOCK_FIND, RESPONSE_FORWARD,
+                             gtk.STOCK_FIND_AND_REPLACE, RESPONSE_REPLACE,
+                             gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE))
+        lbl = gtk.Label("Find what:")
+        dialog.vbox.pack_start(lbl, True, True, 0)
+        dialog.vbox.pack_start(search_text, True, True, 0)
+        lbl = gtk.Label("Replace with:")
+        dialog.vbox.pack_start(lbl, True, True, 0)
+        dialog.vbox.pack_start(replace_text, True, True, 0)
+        dialog.connect("response", dialog_response_callback)
+        dialog.set_default_response(RESPONSE_FORWARD)
+        search_text.set_activates_default(True)
+        replace_text.set_activates_default(True)
+        search_text.show()
+        replace_text.show()
+        search_text.grab_focus()
+        dialog.show_all()
+        response_id = dialog.run()
     
     def _search(self, search_string, iter = None):
         f, buff, text, model = self.get_current()
@@ -616,13 +697,12 @@ class EditWindow(gtk.EventBox):
                 match_start, match_end = res
                 buff.place_cursor(match_start)
                 buff.select_range(match_start, match_end)
-                text.scroll_to_iter(match_start, 0.0)
+                text.scroll_to_iter(match_start, 0.25)
                 self.last_search_iter = match_end
-                #~ print res
             else:
                 self.search_string = None
-                self.last_search_iter = None
-    
+                self.last_search_iter = buff.get_iter_at_mark(buff.get_insert())
+            
     def edit_find_next(self, mi):
         self._search(self.search_string, self.last_search_iter)
     
@@ -635,11 +715,11 @@ class EditWindow(gtk.EventBox):
             if line.isdigit():
                 f, buff, tv, model = self.get_current()
                 titer = buff.get_iter_at_line(int(line)-1)
-                tv.scroll_to_iter(titer, 0.4)
+                tv.scroll_to_iter(titer, 0.25)
                 buff.place_cursor(titer)
                 tv.grab_focus()
                 dialog.destroy()
-        
+       
         line_text = gtk.Entry()
         dialog = gtk.Dialog("Goto Line", self.get_parent_window(),
                             gtk.DIALOG_DESTROY_WITH_PARENT,
@@ -720,7 +800,24 @@ class EditWindow(gtk.EventBox):
             ret = "\n"
         text = buf.get_text(start, end)
         buf.insert(end, ret+text)
-                    
+    
+    def upper_selection(self, mi):
+        buf = self.get_current()[1]
+        bound = buf.get_selection_bounds()
+        if not len(bound) == 0:
+            start, end = bound
+            text = buf.get_text(start, end)
+            buf.delete(start, end)
+            buf.insert(start, text.upper())
+            
+    def lower_selection(self, mi):
+        buf = self.get_current()[1]
+        bound = buf.get_selection_bounds()
+        if not len(bound) == 0:
+            start, end = bound
+            text = buf.get_text(start, end)
+            buf.delete(start, end)
+            buf.insert(start, text.lower())            
         
 class AutoCompletionWindow(gtk.Window):
     
@@ -759,12 +856,15 @@ class AutoCompletionWindow(gtk.Window):
                                 rect.x, rect.y + rect.height)
 
         tx, ty = source_view.get_window(gtk.TEXT_WINDOW_WIDGET).get_origin()
-        
+        wth, hht = parent.get_size()
+        width = wth - (tx+wx)
+        height = hht - (ty+wy)
+        if width > 200: width = 200
+        if height > 200: height = 200
         self.move(wx+tx, wy+ty)
-        #~ print wx+tx, wy+ty
         self.add(frame)
         frame.add(self.tree)
-        self.tree.set_size_request(200,200)
+        self.tree.set_size_request(width, height)
         self.tree.connect('row-activated', self.row_activated_cb)
         self.tree.connect('focus-out-event', self.focus_out_event_cb)
         self.tree.connect('key-press-event', self.key_press_event_cb)
@@ -792,7 +892,18 @@ class AutoCompletionWindow(gtk.Window):
         wx, wy = source_view.buffer_to_window_coords(gtk.TEXT_WINDOW_WIDGET, 
                                 rect.x, rect.y + rect.height)
         tx, ty = source_view.get_window(gtk.TEXT_WINDOW_WIDGET).get_origin()
+        wth, hht = parent.get_size()
+        print wth, hht 
+        wth += tx
+        hht += ty
+        width = wth - (wx+tx) 
+        height = hht - (wy+ty)
+        if width > 200: width = 200
+        if height > 200: height = 200
+        print wy+ty
+        print width, height
         self.move(wx+tx, wy+ty)
+        self.tree.set_size_request(width, height)
         self.show_all()
         self.tree.grab_focus()
         
@@ -811,15 +922,24 @@ class AutoCompletionWindow(gtk.Window):
             
     def search_func(self, model, column, key, iter):
         return not model.get_value(iter, column).startswith(key)
+
+class Cb:
+    def __init__(self):
+        self.mainwindow = None
         
 def edit(fname, mainwin=False):
-    if mainwin: quit_cb = lambda w: gtk.main_quit()
-    else:       quit_cb = None
-    w = EditWindow(quit_cb=quit_cb)
+    quit_cb = lambda w: gtk.main_quit()
+    cb = Cb()
+    w = gtk.Window()
+    w.connect('delete-event', gtk.main_quit)
+    cb.mainwindow = w
+    e = EditWindow(cb, quit_cb=quit_cb)
     if fname != "":
         w.file_new()
+    w.set_title("Culebra")
+    w.add(e)
     w.maximize()
-    w.show()
+    w.show_all()
     w.set_size_request(0,0)
 
     w.dirname = os.getcwd()
