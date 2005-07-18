@@ -729,7 +729,10 @@ class EditWindow(gtk.EventBox):
         buf = self.get_current()[1]
         bound = buf.get_selection_bounds()
         if len(bound) == 0:
-            buf.insert_at_cursor(comment)
+            it = buf.get_iter_at_mark(buf.get_insert())
+            line = it.get_line()
+            insert_iter = buf.get_iter_at_line(line)
+            buf.insert(insert_iter, comment)
         else:
             start, end = bound
             start_line = start.get_line()
