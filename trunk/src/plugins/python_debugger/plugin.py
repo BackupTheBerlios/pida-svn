@@ -303,6 +303,18 @@ class Plugin(plugin.Plugin):
         self.reactor.start()
         pid = self.term.start(self.fn, self.parentsock, self.childsock)
         self.debugger_loaded = True
+        
+    def evt_debuggerload(self):
+        self.load()
+        
+    def evt_step(self):
+        self.send('step')
+        
+    def evt_next(self):
+        self.send('next')
+        
+    def evt_continue(self):
+        self.send('continue')
 
     def cb_breaks_rclick(self, ite, time):
         fn = self.breaks.get(ite, 1)

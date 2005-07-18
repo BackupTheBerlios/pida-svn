@@ -139,6 +139,10 @@ class EditWindow(gtk.EventBox):
                 </menu>
                 <menu name='RunMenu' action='RunMenu'>
                         <menuitem action='RunScript'/>
+                        <menuitem action='DebugScript'/>
+                        <menuitem action='DebugStep'/>
+                        <menuitem action='DebugNext'/>
+                        <menuitem action='DebugContinue'/>
                 </menu>
         </menubar>
         <toolbar>
@@ -194,6 +198,10 @@ class EditWindow(gtk.EventBox):
                  None, self.lower_selection),
             ('RunMenu', None, '_Run'),
             ('RunScript', gtk.STOCK_EXECUTE, None, "F5",None, self.run_script),
+            ('DebugScript', None, "Debug Script", "F7",None, self.debug_script),
+            ('DebugStep', None, "Step", "F8",None, self.step_script),
+            ('DebugNext', None, "Next", "<shift>F7",None, self.next_script),
+            ('DebugContinue', None, "Continue", "<control>F7", None, self.continue_script),
             ]
         self.ag = gtk.ActionGroup('edit')
         self.ag.add_actions(actions)
@@ -814,6 +822,19 @@ class EditWindow(gtk.EventBox):
     
     def run_script(self, mi):
         self.plugin.do_evt("bufferexecute") 
+        
+    def debug_script(self, mi):
+        self.plugin.do_evt('debuggerload')
+        
+    def step_script(self, mi):
+        self.plugin.do_evt('step')
+
+    def next_script(self, mi):
+        self.plugin.do_evt('next')
+
+    def continue_script(self, mi):
+        self.plugin.do_evt('continue')
+
         
 class AutoCompletionWindow(gtk.Window):
     
