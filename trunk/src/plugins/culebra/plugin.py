@@ -92,8 +92,11 @@ class Plugin(plugin.Plugin):
     def evt_started(self):
         self.launch()
         
-    def evt_debuggerframe(self, frame): 
-        self.current_frame = frame
+    def evt_debuggerframe(self, frame):
+        if not frame.filename.startswith('<'):
+            if frame.filename != self.editor.get_current()[0]:
+                self.do_edit('openfile', frame.filename)
+            self.do_edit('gotoline', frame.lineno - 1)
         
     def edit_getbufferlist(self):
         bl = []

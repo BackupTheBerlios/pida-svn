@@ -833,30 +833,12 @@ class EditWindow(gtk.EventBox):
         
     def step_script(self, mi):
         self.plugin.do_evt('step')
-        buff = self.get_current()[1]
-        tv = self.get_current()[2]
-        line = self.plugin.current_frame.lineno
-        titer = buff.get_iter_at_line(int(line)-1)
-        tv.scroll_to_iter(titer, 0.25)
-        buff.place_cursor(titer)
 
     def next_script(self, mi):
         self.plugin.do_evt('next')
-        line = self.plugin.current_frame.lineno
-        buff = self.get_current()[1]
-        tv = self.get_current()[2]
-        titer = buff.get_iter_at_line(int(line)-1)
-        tv.scroll_to_iter(titer, 0.25)
-        buff.place_cursor(titer)
 
     def continue_script(self, mi):
         self.plugin.do_evt('continue')
-        line = self.plugin.current_frame.lineno
-        buff = self.get_current()[1]
-        tv = self.get_current()[2]
-        titer = buff.get_iter_at_line(int(line)-1)
-        tv.scroll_to_iter(titer, 0.25)
-        buff.place_cursor(titer)
         
 class AutoCompletionWindow(gtk.Window):
     
