@@ -284,7 +284,10 @@ class Plugin(plugin.Plugin):
     def do_stack(self, stacks):
         stack = pickle.loads(stacks)
         self.stack.populate([PidaFrame(*fr) for fr in stack], -1)
+        curframe = PidaFrame(*stack[-1])
+        self.do_evt('debuggerframe', curframe)
         
+
     def send(self, command):
         if self.term.pid:
             self.term.feed_child('%s\n' % command)
