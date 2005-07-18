@@ -134,11 +134,6 @@ class Application(object):
             editorname = 'culebra'
         # using the registry can't ever work
         #if self.registry.general.emacsmode.value():
-        if len(sys.argv) > 1:
-            if sys.argv[1] == 'emacs':
-                editorname = 'emacs'
-            elif sys.argv[1] == 'culebra':
-                editorname = 'culebra'
         self.set_editor(editorname)
 
 
