@@ -92,6 +92,9 @@ class Plugin(plugin.Plugin):
     def evt_started(self):
         self.launch()
         
+    def evt_debuggerframe(self, frame): 
+        self.current_frame = frame
+        
     def edit_getbufferlist(self):
         bl = []
         for i in range(self.editor.notebook.get_n_pages()):

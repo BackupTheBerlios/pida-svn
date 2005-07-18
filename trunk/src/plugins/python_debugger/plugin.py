@@ -318,7 +318,7 @@ class Plugin(plugin.Plugin):
         
     def evt_continue(self):
         self.send('continue')
-
+        
     def cb_breaks_rclick(self, ite, time):
         fn = self.breaks.get(ite, 1)
         line = self.breaks.get(ite, 2)
