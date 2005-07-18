@@ -182,5 +182,13 @@ def configure(reg):
                   1,
                   'Determines whether Pida will start Vim embedded.')
    
+    core_group = reg.add_group('components',
+        'Choose which components to use.')
+
+    core_group.add('editor',
+        registry.RegistryItem,
+        'vim',
+        'The editor Pida will use')
+
 if __name__ == '__main__':
     pass

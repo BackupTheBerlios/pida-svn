@@ -126,9 +126,12 @@ class Application(object):
             if plugin and plugin.VISIBLE:
                 opt_plugs.append(plugin)
         
+        self.registry.load()
         # The editor 
-        editorname = 'vim'
-        
+        # editorname = 'vim'
+        editorname = self.registry.components.editor.value()
+        if not editorname in ['vim', 'culebra']:
+            editorname = 'culebra'
         # using the registry can't ever work
         #if self.registry.general.emacsmode.value():
         if len(sys.argv) > 1:
