@@ -3,6 +3,7 @@ vital
 process accounting
 cleaner shutdown
 give editor startup on focus
+correct error when editor fails
 
 near future
 --
