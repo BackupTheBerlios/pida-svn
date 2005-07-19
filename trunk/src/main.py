@@ -143,7 +143,7 @@ class Application(object):
             if not self.opts.get('plugins', pluginname):
                 # slow but only once
                 for plugin in self.plugins:
-                    if plugin.NAME == pluginname:
+                    if plugin and plugin.NAME == pluginname:
                         self.plugins.remove(plugin)
                         opt_plugs.remove(plugin)
 
@@ -173,7 +173,10 @@ class Application(object):
         Set the editor plugin
         """
         self.editor = self.add_plugin(name)
-        return self.editor
+        if self.editor:
+            return self.editor
+        else:
+            raise Exception, 'Selected editor failed to load'
 
     def action(self, name, *args, **kw):
         self.debug('action: %s' % name)
