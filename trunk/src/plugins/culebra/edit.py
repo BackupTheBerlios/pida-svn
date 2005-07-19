@@ -120,14 +120,13 @@ class EditWindow(gtk.EventBox):
                         <menuitem action='FileExit'/>
                 </menu>
                 <menu name='EditMenu' action='EditMenu'>
+                        <menuitem action='EditUndo'/>
+                        <menuitem action='EditRedo'/>
+                        <separator/>
                         <menuitem action='EditCut'/>
                         <menuitem action='EditCopy'/>
                         <menuitem action='EditPaste'/>
                         <menuitem action='EditClear'/>
-                        <separator/>
-                        <menuitem action='EditFind'/>
-                        <menuitem action='EditFindNext'/>
-                        <menuitem action='EditReplace'/>
                         <separator/>
                         <menuitem action='DuplicateLine'/>
                         <menuitem action='DeleteLine'/>
@@ -136,6 +135,11 @@ class EditWindow(gtk.EventBox):
                         <menuitem action='UncommentBlock'/>
                         <menuitem action='UpperSelection'/>
                         <menuitem action='LowerSelection'/>
+                </menu>
+                <menu name='FindMenu' action='FindMenu'>
+                        <menuitem action='EditFind'/>
+                        <menuitem action='EditFindNext'/>
+                        <menuitem action='EditReplace'/>
                 </menu>
                 <menu name='RunMenu' action='RunMenu'>
                         <menuitem action='RunScript'/>
@@ -151,6 +155,9 @@ class EditWindow(gtk.EventBox):
                 <toolitem action='FileSave'/>
                 <toolitem action='FileSaveAs'/>
                 <toolitem action='Close'/>
+                <separator/>
+                <toolitem action='EditUndo'/>
+                <toolitem action='EditRedo'/>
                 <separator/>
                 <toolitem action='EditCut'/>
                 <toolitem action='EditCopy'/>
@@ -173,15 +180,14 @@ class EditWindow(gtk.EventBox):
             ('Close', gtk.STOCK_CLOSE, None, None, None, self.file_close),
             ('FileExit', gtk.STOCK_QUIT, None, None, None, self.file_exit),
             ('EditMenu', None, '_Edit'),
+            ('EditUndo', gtk.STOCK_UNDO, None, "<control>z", None, self.edit_undo),
+            ('EditRedo', gtk.STOCK_REDO, None, "<control><shift>z", None, self.edit_redo),
             ('EditCut', gtk.STOCK_CUT, None, None, None, self.edit_cut),
             ('EditCopy', gtk.STOCK_COPY, None, None, None, self.edit_copy),
             ('EditPaste', gtk.STOCK_PASTE, None, None, None, self.edit_paste),
             ('EditClear', gtk.STOCK_REMOVE, 'C_lear', None, None,
              self.edit_clear),
-            ('EditFind', gtk.STOCK_FIND, None, None, None, self.edit_find),
-            ('EditFindNext', None, 'Find _Next', None, None, self.edit_find_next),
-            ('EditReplace', gtk.STOCK_FIND_AND_REPLACE, 'Replace', '<control>h', 
-                None, self.edit_replace),
+            
              ('DuplicateLine', None, 'Duplicate Line', '<control>d', 
                  None, self.duplicate_line),
              ('DeleteLine', None, 'Delete Line', '<control>y', 
@@ -196,6 +202,11 @@ class EditWindow(gtk.EventBox):
                  None, self.upper_selection),
              ('LowerSelection', None, 'Lower Selection', '<control><shift>u', 
                  None, self.lower_selection),
+            ('FindMenu', None, '_Find'),
+            ('EditFind', gtk.STOCK_FIND, None, None, None, self.edit_find),
+            ('EditFindNext', None, 'Find _Next', None, None, self.edit_find_next),
+            ('EditReplace', gtk.STOCK_FIND_AND_REPLACE, 'Replace', '<control>h', 
+                None, self.edit_replace),
             ('RunMenu', None, '_Run'),
             ('RunScript', gtk.STOCK_EXECUTE, None, "F5",None, self.run_script),
             ('DebugScript', None, "Debug Script", "F7",None, self.debug_script),
@@ -560,7 +571,7 @@ class EditWindow(gtk.EventBox):
         self.check_mime(fname)
         buff.place_cursor(curr_mark)
         text.grab_focus()
-
+        self.cb.edit('getbufferlist')
         return ret
 
     def file_saveas(self, mi=None):
@@ -610,6 +621,20 @@ class EditWindow(gtk.EventBox):
         buff = self.get_current()[1]
         buff.delete_selection(True, True)
         return
+        
+    def edit_undo(self, mi):
+        buff = self.get_current()[1]
+        tv = self.get_current()[2]
+        buff.undo()
+        tv.scroll_to_cursor()
+        tv.grab_focus()
+        
+    def edit_redo(self, mi):
+        buff = self.get_current()[1]
+        tv = self.get_current()[2]
+        buff.redo()
+        tv.scroll_to_cursor()
+        tv.grab_focus()
 
     def edit_find(self, mi): 
         def dialog_response_callback(dialog, response_id):
@@ -821,6 +846,7 @@ class EditWindow(gtk.EventBox):
             buf.insert(start, text.lower())
     
     def run_script(self, mi):
+        self.cb.edit('getbufferlist')
         self.plugin.do_evt("bufferexecute") 
         
     def debug_script(self, mi):
