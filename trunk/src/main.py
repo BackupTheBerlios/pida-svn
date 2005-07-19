@@ -99,6 +99,7 @@ class Application(object):
         self.log('started', 20)
 
     def startup(self):
+        sys.excepthook = debugwindow.show
         self.optparser = optparse.OptionParser()
         self.registry = registry.Registry(os.path.expanduser('~/.pida/pida.conf'))
 
@@ -139,7 +140,6 @@ class Application(object):
 
        
         #self.evt('init')
-       
        
         self.registry.prime_optparser(self.optparser)
         self.optparser.parse_args()
@@ -219,8 +219,10 @@ class Application(object):
         self.log(message, 10)
                 
 
+import debugwindow
 def main(argv):
     a = Application()
+    debugwindow.DebugWindow.application = a
     gtk.threads_init()
     gtk.main()
 
