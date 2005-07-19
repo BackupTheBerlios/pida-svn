@@ -583,7 +583,7 @@ class EditWindow(gtk.EventBox):
         if not f: return False
 
         self.dirname = os.path.dirname(f)
-        self.cb.mainwindow.set_title(os.path.basename(fname))
+        self.cb.mainwindow.set_title(os.path.basename(f))
         self.new = 0
         return self.file_save(fname=f)
 
