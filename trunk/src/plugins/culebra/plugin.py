@@ -75,18 +75,21 @@ class Plugin(plugin.Plugin):
                 break
     
     def check_mime(self, fname):
-        buff, text, model = self.editor.wins[fname]
-        manager = buff.get_data('languages-manager')
-        if os.path.isabs(fname):
-            path = fname
-        else:
-            path = os.path.abspath(fname)
-        uri = gnomevfs.URI(path)
-        mime_type = gnomevfs.get_mime_type(path) # needs ASCII filename, not URI
-        if mime_type:
-            language = manager.get_language_from_mime_type(mime_type)
-            if language:
-                return language.get_name().lower()
+        try:
+            buff, text, model = self.editor.wins[fname]
+            manager = buff.get_data('languages-manager')
+            if os.path.isabs(fname):
+                path = fname
+            else:
+                path = os.path.abspath(fname)
+            uri = gnomevfs.URI(path)
+            mime_type = gnomevfs.get_mime_type(path) # needs ASCII filename, not URI
+            if mime_type:
+                language = manager.get_language_from_mime_type(mime_type)
+                if language:
+                    return language.get_name().lower()
+        except:
+            pass
         return 'None'
 
     def evt_started(self):

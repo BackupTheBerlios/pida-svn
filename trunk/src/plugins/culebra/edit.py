@@ -205,7 +205,7 @@ class EditWindow(gtk.EventBox):
             ('FindMenu', None, '_Find'),
             ('EditFind', gtk.STOCK_FIND, None, None, None, self.edit_find),
             ('EditFindNext', None, 'Find _Next', None, None, self.edit_find_next),
-            ('EditReplace', gtk.STOCK_FIND_AND_REPLACE, 'Replace', '<control>h', 
+            ('EditReplace', gtk.STOCK_FIND_AND_REPLACE, None, '<control>h', 
                 None, self.edit_replace),
             ('RunMenu', None, '_Run'),
             ('RunScript', gtk.STOCK_EXECUTE, None, "F5",None, self.run_script),
@@ -223,8 +223,7 @@ class EditWindow(gtk.EventBox):
         return (self.ui.get_widget('/menubar'), self.ui.get_widget('/toolbar'))
     
     def set_title(self, title):
-        if title is not None:
-            self.cb.mainwindow.set_title(title)
+        pass
 
     def move_cursor(self, tv, step, count, extend_selection):
         self.update_cursor_position(tv.get_buffer(), tv)
@@ -238,7 +237,7 @@ class EditWindow(gtk.EventBox):
         self.statusbar.push(0, "%s, %s %s" % (it.get_line()+1, 
                 it.get_line_offset()+1, ow))
         if not buff.get_modified():
-            title = "PIDA " + self.get_current()[0] + "*"
+            title = os.path.split(self.get_current()[0])[1] + "*"
             self.cb.mainwindow.set_title(title)
 
     def get_parent_window(self):
@@ -341,13 +340,16 @@ class EditWindow(gtk.EventBox):
                 # to avoid problems with float point.
                 return
         if len(complete.strip()) > 0:
-            lst = importsTipper.GenerateTip(complete, os.path.dirname(name))
-            if self.ac_w is None:
-                self.ac_w = AutoCompletionWindow(text, iter2, complete, 
+            try:
+                lst = importsTipper.GenerateTip(complete, os.path.dirname(name))
+                if self.ac_w is None:
+                    self.ac_w = AutoCompletionWindow(text, iter2, complete, 
                                                 lst, self.cb.mainwindow)
-            else:
-                self.ac_w.set_list(text, iter2, complete, 
+                else:
+                    self.ac_w.set_list(text, iter2, complete, 
                                    lst, self.cb.mainwindow)
+            except:
+                pass
         return
         
     def get_context(self, buff, iter):
@@ -519,7 +521,7 @@ class EditWindow(gtk.EventBox):
                                   None, None, "*.py")
         if not fname: return
         self.load_file(fname)
-        self.cb.mainwindow.set_title("PIDA " + fname)
+        self.cb.mainwindow.set_title(os.path.split(fname)[1])
         return
 
     def file_save(self, mi=None, fname=None):
@@ -550,7 +552,7 @@ class EditWindow(gtk.EventBox):
             fd.close()
             buff.set_modified(False)
             buff.set_data("save", True)
-            self.cb.mainwindow.set_title("PIDA " + fname)
+            self.cb.mainwindow.set_title(os.path.split(fname)[1])
             ret = True
 
             del self.wins[f]
@@ -581,7 +583,7 @@ class EditWindow(gtk.EventBox):
         if not f: return False
 
         self.dirname = os.path.dirname(f)
-        self.set_title(os.path.basename(f))
+        self.cb.mainwindow.set_title(os.path.basename(fname))
         self.new = 0
         return self.file_save(fname=f)
 
