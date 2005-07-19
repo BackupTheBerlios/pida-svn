@@ -282,7 +282,7 @@ class FileTree(gtkextra.Tree):
         #ctrls.add_button('new', self.cb_but,
         #    'Create a new file, and edit it in vim.', ['new'])
         ctrls.add_button('open', self.cb_but,
-            'Open the file in vim.', ['open'])
+            'Open the file in editor.', ['open'])
         ctrls.add_button('delete', self.cb_but,
             'Delete the file.', ['delete'])
         ctrls.add_separator()

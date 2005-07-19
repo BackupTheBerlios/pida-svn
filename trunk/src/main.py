@@ -107,17 +107,11 @@ class Application(object):
         options.configure(self.registry)
 
 
-        # now the plugins
-
+        # now the base plugins
 
         self.boss = create_plugin('boss', self)
-        if self.boss:
-            self.boss.configure(self.registry)
-
-
+        self.boss.configure(self.registry)
         shell_plug = self.add_plugin('terminal')
-
-
         buffer_plug = self.add_plugin('buffer')
 
 
@@ -136,8 +130,6 @@ class Application(object):
         # using the registry can't ever work
         #if self.registry.general.emacsmode.value():
         self.set_editor(editorname)
-
-
        
         #self.evt('init')
        
