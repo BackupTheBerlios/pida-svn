@@ -602,6 +602,7 @@ class EditWindow(gtk.EventBox):
         self.hide()
         self.destroy()
         if self.quit_cb: self.quit_cb(self)
+        self.plugin.do_action('quit')
         return False
 
     def edit_cut(self, mi):
@@ -628,15 +629,11 @@ class EditWindow(gtk.EventBox):
         buff = self.get_current()[1]
         tv = self.get_current()[2]
         buff.undo()
-        tv.scroll_to_cursor()
-        tv.grab_focus()
         
     def edit_redo(self, mi):
         buff = self.get_current()[1]
         tv = self.get_current()[2]
         buff.redo()
-        tv.scroll_to_cursor()
-        tv.grab_focus()
 
     def edit_find(self, mi): 
         def dialog_response_callback(dialog, response_id):
