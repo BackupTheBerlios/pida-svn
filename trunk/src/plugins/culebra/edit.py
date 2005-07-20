@@ -286,8 +286,8 @@ class EditWindow(gtk.EventBox):
             buff.set_data("save", False)
             self.editor.set_buffer(buff)
             self.editor.grab_focus()
-            self.current_frame = len(self.wins)
-            self.wins[self.current_frame] = [buff, f]
+            self.current_buffer = len(self.wins)
+            self.wins[self.current_buffer] = [buff, f]
 
     def insert_at_cursor_cb(self, buff, iter, text, length):
         complete = ""
@@ -380,7 +380,7 @@ class EditWindow(gtk.EventBox):
         try:
             fd = open(fname)
             self._new_tab(fname)
-            buff, fn = self.wins[self.current_frame]
+            buff, fn = self.wins[self.current_buffer]
             buff.set_text('')
             buf = fd.read(BLOCK_SIZE)
             while buf != '':
@@ -400,6 +400,8 @@ class EditWindow(gtk.EventBox):
             resp = dlg.run()
             dlg.hide()
             return
+        print self.current_buffer
+        print self.wins
         self.check_mime(self.current_buffer)
         self.editor.grab_focus()
 
@@ -411,7 +413,6 @@ class EditWindow(gtk.EventBox):
         else:
             path = os.path.abspath(fname)
         uri = gnomevfs.URI(path)
-        print path
         mime_type = gnomevfs.get_mime_type(path) # needs ASCII filename, not URI
         if mime_type:
             language = manager.get_language_from_mime_type(mime_type)
