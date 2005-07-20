@@ -107,6 +107,9 @@ class Application(object):
         options.configure(self.registry)
 
 
+        self.registry.prime_optparser(self.optparser)
+        self.optparser.parse_args()
+        self.registry.load()
         # now the base plugins
 
         self.boss = create_plugin('boss', self)
@@ -121,7 +124,6 @@ class Application(object):
             if plugin and plugin.VISIBLE:
                 opt_plugs.append(plugin)
         
-        self.registry.load()
         # The editor 
         # editorname = 'vim'
         editorname = self.registry.components.editor.value()
@@ -133,8 +135,6 @@ class Application(object):
        
         #self.evt('init')
        
-        self.registry.prime_optparser(self.optparser)
-        self.optparser.parse_args()
         self.registry.load()
         self.registry.save()
       

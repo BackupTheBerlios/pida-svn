@@ -22,6 +22,7 @@
 #SOFTWARE.
 
 import os
+import sys
 import gtk
 import logging
 
@@ -66,7 +67,10 @@ class Plugin(plugin.Plugin):
         self.filetype_current = 'None'
 
         self.log = logging.getLogger()
-        logging.basicConfig()
+        self.loghandler = None
+        #logging.basicConfig()
+        self.evt_reset()
+        #sys.stdout = sys.stderr = file('/dev/null', 'w')
 
         self.tips = gtk.Tooltips()
         self.tips.enable()
@@ -80,6 +84,11 @@ class Plugin(plugin.Plugin):
         pass
 
     def evt_reset(self):
+        logfile = self.prop_main_registry.files.log.value()
+        if self.loghandler:
+            self.log.removeHandler(self.loghandler)
+        self.loghandler = logging.FileHandler(logfile)
+        self.log.addHandler(self.loghandler)
         self.log.setLevel(self.prop_main_registry.log.level.value())
         
     def evt_bufferchange(self, buffernumber, buffername):

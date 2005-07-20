@@ -82,6 +82,11 @@ def configure(reg):
                 os.path.join(dirs_user._default, 'pida.projects'),
                 'Location of the project data file.')
 
+    file_log = file_group.add('log',
+                registry.File,
+                os.path.join(dirs_user._default, 'pida.log'),
+                'Location of the log file.')
+
     file_shrt = file_group.add('shortcut_data',
                 registry.File,
                 os.path.join(dirs_user._default, 'pida.shortcuts'),

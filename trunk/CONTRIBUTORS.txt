@@ -30,7 +30,8 @@ p0g
 (and everyone else for putting up with my ridiculous questions)
 
 (other packagers)
-Archlinux packager angeloth at tin dot it
+Gentoo Ebuild <bjoern dot michaelsen at gmail dot com>
+Archlinux packager <angeloth at tin dot it>
 
 (authors of integrated tools)
 Vim
