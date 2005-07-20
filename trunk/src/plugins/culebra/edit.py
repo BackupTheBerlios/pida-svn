@@ -278,7 +278,8 @@ class EditWindow(gtk.EventBox):
                 buff = gtksourceview.SourceBuffer()
                 self.new = True
             buff.set_data('languages-manager', lm)
-            font_desc = pango.FontDescription('monospace 10')
+            fontname = self.plugin.local_registry.font.value()
+            font_desc = pango.FontDescription(fontname)
             if font_desc:
                 self.editor.modify_font(font_desc)
             buff.connect('changed', self.update_cursor_position, self.editor)

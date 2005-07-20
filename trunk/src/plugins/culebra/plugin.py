@@ -45,6 +45,16 @@ class Plugin(plugin.Plugin):
         self.bufferlist = None
         self.currentbufnum = None
 
+    def configure(self, reg):
+        self.local_registry = reg.add_group('culebra',
+            'Options pertaining to the Culebra text editor')
+        self.local_registry.add('font',
+                registry.Font,
+                'Monospace 10',
+                'The Font used by Culebra')
+        
+        
+
     def launch(self):
         self.create_editor()
         self.edit_getbufferlist()
