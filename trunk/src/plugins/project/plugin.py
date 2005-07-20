@@ -30,6 +30,7 @@ import re
 import ConfigParser
 # Pida imports
 import pida.configuration.registry as registry
+import pida.configuration.config as config
 import pida.plugin as plugin
 import pida.gtkextra as gtkextra
 import pida.base as base
@@ -46,20 +47,31 @@ VCS = {VCS_NONE: 'None',
 
 CWD = '__current__working_directory__'
 
+class EntryWrapper(gtk.Entry):
+
+    def __init__(self, cb):
+        self.cb = cb
+        gtk.Entry.__init__(self)
+    
+    def _get_win(self):
+        return self
+
+    win = property(_get_win)
+
 # Default attributes for projects
 PROJECT_ATTRIBUTES = [
     ('directory',
      'The working directory the project is in',
      os.path.expanduser('~'),
-     'folder'),
+     gtkextra.FolderButton),
     ('project_executable',
      'The executable file for the project',
      '',
-     'file'),
+     gtkextra.FileButton),
     ('environment',
      'The environment variable list',
      '',
-     None)]
+     EntryWrapper)]
 
 class ProjectRegistry(ConfigParser.ConfigParser):
     """
@@ -179,7 +191,7 @@ class ProjectEditor(base.pidaobject):
             name = attribute[0]
             namelabel = gtk.Label(name)
             hbox.pack_start(namelabel, expand=False, padding=4)
-            entry = gtk.Entry()
+            entry = attribute[3](self.cb)
             hbox.pack_start(entry)
             self.attribute_widgets[name] = entry
         

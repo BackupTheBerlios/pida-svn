@@ -224,8 +224,12 @@ class FolderButton(gtk.HBox):
     def get_filename(self):
         return self.entry.get_text()
 
+    get_text = get_filename
+
     def set_filename(self, fn):
         self.entry.set_text(fn)
+
+    set_text = set_filename
 
 class FileDialog(FolderDialog):
     TITLE = 'Select File'
