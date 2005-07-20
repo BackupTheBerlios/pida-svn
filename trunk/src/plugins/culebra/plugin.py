@@ -24,6 +24,7 @@
 # System imports
 import os
 import time
+import pango
 # GTK imports
 import gtk
 import gnomevfs
@@ -100,6 +101,12 @@ class Plugin(plugin.Plugin):
         except:
             pass
         return 'None'
+
+    def evt_reset(self):
+        fontname = self.local_registry.font.value()
+        font_desc = pango.FontDescription(fontname)
+        if font_desc:
+            self.editor.editor.modify_font(font_desc)
 
     def evt_started(self):
         self.launch()
