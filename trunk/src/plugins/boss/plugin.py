@@ -133,11 +133,11 @@ class Plugin(plugin.Plugin):
         Start a new browser
         """
 
-    def action_showconfig(self):
+    def action_showconfig(self, pagename=None):
         """ called to show the config editor """
         # Create a new configuration editor, and show it.
         self.configeditor = config.ConfigEditor(self.pida)
-        self.configeditor.show('culebra')
+        self.configeditor.show(pagename)
 
     def action_quit(self):
         """ Quit Pida. """

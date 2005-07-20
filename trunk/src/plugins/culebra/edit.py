@@ -156,6 +156,8 @@ class EditWindow(gtk.EventBox):
                         <menuitem action='UncommentBlock'/>
                         <menuitem action='UpperSelection'/>
                         <menuitem action='LowerSelection'/>
+                        <separator/>
+                        <menuitem action='ShowOptions'/>
                 </menu>
                 <menu name='FindMenu' action='FindMenu'>
                         <menuitem action='EditFind'/>
@@ -234,6 +236,8 @@ class EditWindow(gtk.EventBox):
             ('DebugStep', None, "Step", "F8",None, self.step_script),
             ('DebugNext', None, "Next", "<shift>F7",None, self.next_script),
             ('DebugContinue', None, "Continue", "<control>F7", None, self.continue_script),
+            ('ShowOptions', None, 'Configuration', 'F12', None,
+                lambda action: self.plugin.do_action('showconfig', 'culebra'))
             ]
         self.ag = gtk.ActionGroup('edit')
         self.ag.add_actions(actions)
