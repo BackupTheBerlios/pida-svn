@@ -101,7 +101,6 @@ class Plugin(plugin.Plugin):
             self.do_edit('gotoline', frame.lineno - 1)
         
     def edit_getbufferlist(self):
-        print 'hello'
         bl = []
         L = self.editor.wins.keys()
         L.sort()
@@ -117,7 +116,6 @@ class Plugin(plugin.Plugin):
         return filename
 
     def edit_getcurrentbuffer(self):
-        print 'gcb'
         cb = self.abspath(self.editor.get_current()[1])
         for i, filename in self.bufferlist:
             if filename == cb:
