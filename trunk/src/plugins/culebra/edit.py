@@ -288,6 +288,8 @@ class EditWindow(gtk.EventBox):
             self.editor.grab_focus()
             self.current_buffer = len(self.wins)
             self.wins[self.current_buffer] = [buff, f]
+            self.plugin.do_edit('getbufferlist')
+            self.plugin.do_edit('getcurrentbuffer')
 
     def insert_at_cursor_cb(self, buff, iter, text, length):
         complete = ""

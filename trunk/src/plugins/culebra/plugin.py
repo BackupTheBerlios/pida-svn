@@ -101,13 +101,13 @@ class Plugin(plugin.Plugin):
             self.do_edit('gotoline', frame.lineno - 1)
         
     def edit_getbufferlist(self):
+        print 'hello'
         bl = []
-        for i in self.editor.wins.keys():
-            page = i
-            label = self.editor.wins[i][1]
-            path = self.abspath(label)
-            if path:
-                bl.append([i, path])
+        L = self.editor.wins.keys()
+        L.sort()
+        for i in L:
+            buff, fname = self.editor.wins[i]
+            bl.append([i, fname])
         self.bufferlist = bl
         self.cb.evt('bufferlist', bl)
 
@@ -117,6 +117,7 @@ class Plugin(plugin.Plugin):
         return filename
 
     def edit_getcurrentbuffer(self):
+        print 'gcb'
         cb = self.abspath(self.editor.get_current()[1])
         for i, filename in self.bufferlist:
             if filename == cb:
@@ -124,9 +125,12 @@ class Plugin(plugin.Plugin):
                 break
 
     def edit_changebuffer(self, num):
+        print self.editor.current_buffer, num
         if self.editor.current_buffer != num:
             self.editor.current_buffer = num
-            self.editor.editor.set_buffer(self.editor.wins[num][0])
+            buff, fname = self.editor.get_current()
+            self.editor.editor.set_buffer(buff)
+            self.do_evt('bufferchange', num, fname)
 
     def edit_closebuffer(self):
         self.editor.file_close()
