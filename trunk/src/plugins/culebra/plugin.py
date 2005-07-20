@@ -54,7 +54,6 @@ class Plugin(plugin.Plugin):
             self.editor = edit.EditWindow(self.cb, self)
             self.cb.embedwindow.add(self.editor)
             self.editor.show_all()
-            self.editor.notebook.connect('switch-page', self.cb_switchbuffer)
         
     def populate_widgets(self):
         pass
@@ -103,9 +102,9 @@ class Plugin(plugin.Plugin):
         
     def edit_getbufferlist(self):
         bl = []
-        for i in range(self.editor.notebook.get_n_pages()):
-            page = self.editor.notebook.get_nth_page(i)
-            label = self.editor.notebook.get_tab_label_text(page)
+        for i in self.editor.wins.keys():
+            page = i
+            label = self.editor.wins[i][1]
             path = self.abspath(label)
             if path:
                 bl.append([i, path])
@@ -118,28 +117,27 @@ class Plugin(plugin.Plugin):
         return filename
 
     def edit_getcurrentbuffer(self):
-        cb = self.abspath(self.editor.get_current()[0])
+        cb = self.abspath(self.editor.get_current()[1])
         for i, filename in self.bufferlist:
             if filename == cb:
                 self.cb.evt('bufferchange', i, filename)
                 break
 
     def edit_changebuffer(self, num):
-        if self.editor.notebook.get_current_page() != num:
-            self.editor.notebook.set_current_page(num)
+        if self.editor.current_buffer != num:
+            self.editor.current_buffer = num
+            self.editor.editor.set_buffer(self.editor.wins[num][0])
 
     def edit_closebuffer(self):
         self.editor.file_close()
 
     def edit_gotoline(self, line):
-        tv = self.editor.get_current()[2]
-        buf = self.editor.get_current()[1]
+        buf = self.editor.get_current()[0]
         titer = buf.get_iter_at_line(line)
-        tv.scroll_to_iter(titer, 0.25)
+        self.editor.editor.scroll_to_iter(titer, 0.25)
         buf.place_cursor(titer)
-        tv.grab_focus()
+        self.editor.editor.grab_focus()
 
     def edit_openfile(self, filename):
         self.editor.load_file(filename)
-        tv = self.editor.get_current()[2]
-        tv.grab_focus()
+        self.editor.editor.grab_focus()
