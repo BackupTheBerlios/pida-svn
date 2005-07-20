@@ -137,7 +137,7 @@ class Plugin(plugin.Plugin):
         """ called to show the config editor """
         # Create a new configuration editor, and show it.
         self.configeditor = config.ConfigEditor(self.pida)
-        self.configeditor.show()
+        self.configeditor.show('culebra')
 
     def action_quit(self):
         """ Quit Pida. """

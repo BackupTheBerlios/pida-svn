@@ -466,6 +466,9 @@ class ConfigEditor(object):
         #for section in sects:
             box = gtk.VBox()
             sectlab = ''.join([group._name[0].upper(), group._name[1:]])
+            sectdoc = gtk.Label(group._doc)
+            box.pack_start(sectdoc, expand=False)
+            
             tabid = self.nb.append_page(box, gtk.Label(sectlab))
             pages.append((sectlab, tabid))
             for option in group:
@@ -502,9 +505,16 @@ class ConfigEditor(object):
         #self.opts.write()
         self.cb.evt('reset')
 
-    def show(self):
+    def show(self, pagename=None):
         self.load()
         self.win.show_all()
+        if pagename:
+            for row in self.tree.get_model():
+                name, i = row
+                if name.lower() == pagename.lower():
+                    self.nb.set_current_page(i)
+                    self.tree.set_cursor(row.path)
+                    break
 
     def hide(self):
         self.win.hide_all()

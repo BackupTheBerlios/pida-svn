@@ -119,6 +119,11 @@ class RegistryGroup(object):
         else:
             raise BadRegistryKey, '"%s"' % childname
 
+    def _get_doc(self):
+        return self._doc
+
+    doc = property(_get_doc)
+
 class Directory(RegistryItem):
     DISPLAY_WIDGET = config.ConfigFolder
     def validate(self, value):
