@@ -133,11 +133,6 @@ def configure(reg):
                 'firefox',
                 'The path to your preferred browser.')
 
-    coms_seem = coms_group.add('see',
-                registry.WhichFile,
-                'see',
-                'The path to the "see" general previewer.')
-    
     coms_pdoc = coms_group.add('pydoc',
                 registry.WhichFile,
                 'pydoc',
