@@ -283,6 +283,9 @@ class Plugin(plugin.Plugin):
     def evt_serverchange(self, name):
         self.currentserver = name
 
+    def evt_editorfocus(self):
+        self.cw.foreground(self.currentserver)
+
     def edit_closebuffer(self):
         """ Close the current buffer. """
         # Call the method of the vim communication window.

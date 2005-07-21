@@ -87,6 +87,7 @@ class Plugin(plugin.Plugin):
         self.reset_logger()
         self.reset_io()
 
+
     def reset_logger(self):
         logfile = self.prop_main_registry.files.log.value()
         if self.loghandler:

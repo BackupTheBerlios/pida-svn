@@ -48,7 +48,7 @@ class MainWindow(base.pidaobject, gtk.Window):
         pm = gtk.VPaned()
         
 
-        self.pida.embedwindow = gtk.VBox()
+        self.pida.embedwindow = gtk.EventBox()
         self.pida.embedslider = p0
         pm.pack1(self.pida.embedwindow, True, True)
         p0.pack1(pm, True, True)
@@ -63,15 +63,17 @@ class MainWindow(base.pidaobject, gtk.Window):
             p1v.pack_start(self.statusbar, expand=False)
         
 
-        if (self.prop_main_registry.layout.embedded_mode.value() and \
-            self.pida.editor.NAME == 'Vim') or self.pida.editor.NAME == 'Culebra':
+        embedded =  (self.prop_main_registry.layout.embedded_mode.value() and \
+            self.pida.editor.NAME == 'Vim') or self.pida.editor.NAME == 'Culebra'
+        
+        if embedded:
             self.resize(1000, 768)
             self.add(p0)
             p0.pack2(p1v, True, True)
             p0.set_position(600)
         else:
             self.resize(400, 768)
-            self.add(p1)
+            self.add(p1v)
         # Pane for standard and optional plugins
         p2 = None
         if self.prop_main_registry.layout.vertical_split.value():
@@ -81,7 +83,7 @@ class MainWindow(base.pidaobject, gtk.Window):
         p1.pack1(p2, True, True)
 
         termined = self.prop_main_registry.layout.terminal_under_editor.value()
-        if termined:
+        if termined and embedded:
             pm.pack2(shell_plug.win, True, True)
         else:
             p1.pack2(shell_plug.win, True, True)
@@ -161,6 +163,7 @@ class MainWindow(base.pidaobject, gtk.Window):
         """
         # if <CONTROL> was pressed with the key
         if event.state & gtk.gdk.CONTROL_MASK:
+            print event.keyval
             if event.keyval == 97:
                 print '<C-a>'
                 # returning True prevents the key event propogating
@@ -168,6 +171,9 @@ class MainWindow(base.pidaobject, gtk.Window):
             elif event.keyval == 115:
                 print '<C-s>'
                 return False
+            elif event.keyval == 65289:
+                self.do_evt('editorfocus')
+                return True
         return False
         
     def cb_quit(self, *a):
