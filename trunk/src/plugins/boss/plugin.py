@@ -106,7 +106,7 @@ class Plugin(plugin.Plugin):
             self.filetypes[buffernumber] = 'None'
         if self.filetype_current != self.filetypes[buffernumber]:
             self.filetype_current = self.filetypes[buffernumber]
-            self.cb.mainwindow.add_pages(self.get_pluginnames(self.filetype_current))
+            self.pida.mainwindow.add_pages(self.get_pluginnames(self.filetype_current))
         self.filetype_triggered = False
         self.pida.mainwindow.set_title('PIDA %s' % buffername)
         
@@ -116,11 +116,11 @@ class Plugin(plugin.Plugin):
 
     def get_pluginnames(self, filetype):
         genplugins = [s.strip() for s in self.ftregistry.all.value().split(',')]
-        try:
-            ftplugins = [s.strip() for s in self.cb.opts.get('filetypes', filetype).split(',')]
-        except AttributeError:
+        ftplugins = []
+        if hasattr(self.prop_main_registry.filetypes, filetype):
+            fl = getattr(self.prop_main_registry.filetypes, filetype).value()
+            ftplugins = [s.strip() for s in fl.split(',')]
             # No filetypes for the plugin
-            ftplugins = []
         return genplugins + ftplugins
 
     def get_named_plugin(self, name):
@@ -149,7 +149,7 @@ class Plugin(plugin.Plugin):
     def action_showconfig(self, pagename=None):
         """ called to show the config editor """
         # Create a new configuration editor, and show it.
-        self.configeditor = config.ConfigEditor(self.pida)
+        self.configeditor = config.ConfigEditor()
         self.configeditor.show(pagename)
 
     def action_quit(self):

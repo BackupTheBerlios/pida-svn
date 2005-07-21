@@ -170,12 +170,11 @@ class Tree(base.pidaobject):
             else:
                 self.view.expand_row(path, False)
 
-class FolderDialog(gtk.FileChooserDialog):
+class FolderDialog(base.pidaobject, gtk.FileChooserDialog):
     TITLE = 'Select Directory'
     ACTION = gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER
 
-    def __init__(self, cb, responsecb):
-        self.cb = cb
+    def do_init(self, responsecb):
         gtk.FileChooserDialog.__init__(self, title=self.TITLE,
                                              parent=None,
                                              action=self.ACTION,
@@ -186,15 +185,14 @@ class FolderDialog(gtk.FileChooserDialog):
     def connect_widgets(self):
         pass
 
-class FolderButton(gtk.HBox):
+class FolderButton(base.pidaobject, gtk.HBox):
     DTYPE = FolderDialog
 
-    def __init__(self, cb):
-        self.cb = cb
+    def do_init(self):
         gtk.HBox.__init__(self)
         self.entry = gtk.Entry()
         self.pack_start(self.entry)
-        self.but = self.cb.boss.icons.get_button('open')
+        self.but = self.do_get_button('open')
         self.but.connect('clicked', self.cb_open)
         self.pack_start(self.but, expand=False)
         self.dialog = None
@@ -204,7 +202,7 @@ class FolderButton(gtk.HBox):
 
     def show(self):
         if not self.dialog:
-            self.dialog = self.DTYPE(self.cb, self.cb_response)
+            self.dialog = self.DTYPE(self.cb_response)
             self.dialog.connect('destroy', self.cb_destroy)
         self.dialog.set_filename(self.entry.get_text())
         self.dialog.show()
@@ -243,16 +241,12 @@ class FileDialog(FolderDialog):
 class FileButton(FolderButton):
     DTYPE = FileDialog
 
-class Winparent(gtk.Window):
-    def __init__(self, cb, child):
-        self.cb = cb
+class Winparent(base.pidaobject, gtk.Window):
+    def do_init(self, child):
         gtk.Window.__init__(self)
 # Only set transient if on_top is true, or not defined.
-        try:
-            if child.registry.on_top.value():
-                self.set_transient_for(self.cb.mainwindow)
-        except AttributeError:
-            self.set_transient_for(self.cb.cw)
+        if child.registry.on_top.value():
+            self.set_transient_for(self.pida.mainwindow)
         self.childplug = child
         self.show()
         child.win.reparent(self)
@@ -340,7 +334,7 @@ class Optionbox(Messagebox):
         Messagebox.populate_widgets(self)
         self.entry = gtk.combo_box_new_text()
         self.frame.pack_start(self.entry)
-        self.submit = self.cb.icons.get_button('apply', 12)
+        self.submit = self.do_get_button('apply', 12)
         self.tb.pack_start(self.submit, expand=False)
 
     def option(self, msg, options, callback):
@@ -558,9 +552,7 @@ class ContextToolbar(ContextGenerator, Toolbar):
 class Icons(base.pidaobject):
 
     def do_init(self):
-        #icon_file = self.cb.opts.get('files','icon_data')
         icon_file = self.prop_main_registry.files.icon_data.value()
-        print icon_file
         self.d = shelve.open(icon_file, 'r')
         self.cs = gtk.gdk.COLORSPACE_RGB
     

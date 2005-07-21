@@ -28,16 +28,17 @@ import gtk
 # System imports
 import textwrap
 #Pida imports
+import pida.base as base
 import pida.gtkextra as gtkextra
 
-class ConfigWidget(object):
+class ConfigWidget(base.pidaobject):
     """
     A widget holder which can save or load its state.
     
     This class is largely abstract, and must be overriden for useful use. See
     the examples below.
     """
-    def __init__(self, cb, widget, option):
+    def do_init(self, widget, option):
         """
         Constructor
         
@@ -47,8 +48,6 @@ class ConfigWidget(object):
         @param widget: The actual widget for the holder.
         @type widget: gtk.Widget
         """
-        # The application class
-        self.cb = cb
         self.option = option
         # Build the widget
         # Containers
@@ -115,7 +114,7 @@ class ConfigEntry(ConfigWidget):
     """
     An entry widget for plain configuration strings.
     """
-    def __init__(self, cb, option):
+    def do_init(self, option):
         """
         Constructor.
         
@@ -129,7 +128,7 @@ class ConfigEntry(ConfigWidget):
         @type key: string
         """
         widget = gtk.Entry()
-        ConfigWidget.__init__(self, cb, widget, option)
+        ConfigWidget.do_init(self, widget, option)
 
     def load(self):
         """
@@ -147,7 +146,7 @@ class ConfigBoolean(ConfigWidget):
     """
     A checkbox widget forr boolean configuration values.
     """
-    def __init__(self, cb, option):
+    def do_init(self, option):
         """
         Constructor.
         
@@ -161,7 +160,7 @@ class ConfigBoolean(ConfigWidget):
         @type key: string
         """
         widget = gtk.CheckButton(label="Yes")
-        ConfigWidget.__init__(self, cb, widget, option)
+        ConfigWidget.do_init(self, widget, option)
        
     def stob(self, s):
         """
@@ -187,7 +186,7 @@ class ConfigFont(ConfigWidget):
     """
     A font selection dialogue that takes its values from the config database.
     """
-    def __init__(self, cb, option):
+    def do_init(self, option):
         """
         Constructor.
         
@@ -201,7 +200,7 @@ class ConfigFont(ConfigWidget):
         @type key: string
         """
         widget = gtk.FontButton()
-        ConfigWidget.__init__(self, cb, widget, option)
+        ConfigWidget.do_init(self, widget, option)
         
     def load(self):
         """
@@ -220,7 +219,7 @@ class ConfigFile(ConfigWidget):
     """
     A widget that represents a file selection entry and dialogue button.
     """
-    def __init__(self, cb, option):
+    def do_init(self, option):
         """
         Constructor.
         
@@ -233,8 +232,8 @@ class ConfigFile(ConfigWidget):
         @param key: The configuration key that the widget is for
         @type key: string
         """
-        widget = gtkextra.FileButton(cb)
-        ConfigWidget.__init__(self, cb, widget, option)
+        widget = gtkextra.FileButton()
+        ConfigWidget.do_init(self, widget, option)
         
     def load(self):
         """
@@ -255,7 +254,7 @@ class ConfigFolder(ConfigFile):
     
     (Note called "Folder" because GTK calls it a "Folder").
     """
-    def __init__(self, cb, option):
+    def do_init(self, option):
         """
         Constructor.
         
@@ -268,14 +267,14 @@ class ConfigFolder(ConfigFile):
         @param key: The configuration key that the widget is for
         @type key: string
         """
-        widget = gtkextra.FolderButton(cb)
-        ConfigWidget.__init__(self, cb, widget, option)
+        widget = gtkextra.FolderButton()
+        ConfigWidget.do_init(self, widget, option)
        
 class ConfigColor(ConfigWidget):
     """
     A widget for a colour selection button and dialogue.
     """
-    def __init__(self, cb, option):
+    def do_init(self, option):
         """
         Constructor.
         
@@ -289,7 +288,7 @@ class ConfigColor(ConfigWidget):
         @type key: string
         """
         widget = gtk.ColorButton()
-        ConfigWidget.__init__(self, cb, widget, option)
+        ConfigWidget.do_init(self, widget, option)
 
     def load(self):
         """
@@ -312,14 +311,14 @@ class ConfigInteger(ConfigEntry):
     MAX = 99
     STEP = 1
     
-    def __init__(self, cb, option):
+    def do_init(self, option):
         if hasattr(option, 'adjustment'):
             adjvals = option.adjustment
         else:
             adjvals = self.MIN, self.MAX, self.STEP
         adj = gtk.Adjustment(0, *adjvals)
         widget = gtk.SpinButton(adj)
-        ConfigWidget.__init__(self, cb, widget, option)
+        ConfigWidget.do_init(self, widget, option)
 
     def load(self):
         """
@@ -334,12 +333,12 @@ class ConfigInteger(ConfigEntry):
         self.set_value(int(self.widget.get_value()))
 
 class ConfigList(ConfigEntry):
-    def __init__(self, cb, option):
+    def do_init(self, option):
         widget = gtk.combo_box_new_text()
         if hasattr(option, 'choices'):
             for choice in getattr(option, 'choices'):
                 widget.append_text(choice)
-        ConfigWidget.__init__(self, cb, widget, option)
+        ConfigWidget.do_init(self, widget, option)
                 
     def load(self):
         for i, row in enumerate(self.widget.get_model()):
@@ -350,11 +349,11 @@ class ConfigList(ConfigEntry):
     def save(self):
         self.set_value(self.widget.get_active_text())
 
-class ListTree(gtk.TreeView):
+class ListTree(base.pidaobject, gtk.TreeView):
     """
     A treeview control for switching a notebook's tabs.
     """
-    def __init__(self, cb, configeditor):
+    def do_init(self, configeditor):
         """
         Constructor.
         
@@ -365,7 +364,6 @@ class ListTree(gtk.TreeView):
             for.
         @type configeditor: pida.config.ConfigEditor
         """
-        self.cb = cb
         self.configeditor = configeditor
         self.store = gtk.ListStore(str, int)
         gtk.TreeView.__init__(self, self.store)
@@ -393,29 +391,28 @@ class ListTree(gtk.TreeView):
             s = '%s' % name
             self.store.append((s, i))
 
-class ConfigEditor(object):
+class ConfigEditor(base.pidaobject):
     """
     A top-level window containing dynamically generated controls for
     configuration information from the Pida options database.
     """
-    def __init__(self, cb):
+    def do_init(self):
         """
         Constructor.
         
         @param cb: An instance of the application class.
         @type cb: pida.main.Application
         """
-        self.cb = cb
         # main window
         self.win = gtk.Window()
         self.win.set_title('PIDA Configuration Editor')
-        self.win.set_transient_for(self.cb.mainwindow)
+        self.win.set_transient_for(self.pida.mainwindow)
         self.win.connect('destroy', self.cb_cancel)
         # top container
         hbox = gtk.HBox()
         self.win.add(hbox)
         self.lmodel = gtk.ListStore(str, int)
-        self.tree = ListTree(self.cb, self)
+        self.tree = ListTree(self)
         hbox.pack_start(self.tree, expand=False, padding=6)
         vbox = gtk.VBox()
         hbox.pack_start(vbox)
@@ -451,7 +448,7 @@ class ConfigEditor(object):
         self.initialize()
 
     def setopts(self):
-        self.registry = self.cb.registry
+        self.registry = self.prop_main_registry
 
     def initialize(self):
         """
@@ -473,7 +470,7 @@ class ConfigEditor(object):
             pages.append((sectlab, tabid))
             for option in group:
                 #ctype = TYPES[self.get_type(section, opt)]
-                cw = option.DISPLAY_WIDGET(self.cb, option)
+                cw = option.DISPLAY_WIDGET(option)
                 box.pack_start(cw.win, expand=False, padding=4)
                 self.controls[(group._name, option._name)] = cw
                 box.pack_start(gtk.HSeparator(), expand=False, padding=4)
@@ -503,7 +500,7 @@ class ConfigEditor(object):
         #    for opt in self.opts.options(section):
         #        self.controls[(section, opt)].save()
         #self.opts.write()
-        self.cb.evt('reset')
+        self.do_evt('reset')
 
     def show(self, pagename=None):
         self.load()
