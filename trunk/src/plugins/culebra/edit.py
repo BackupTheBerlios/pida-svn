@@ -426,6 +426,7 @@ class EditWindow(gtk.EventBox):
         for i, (buff, fn) in enumerate(self.wins):
             if fn == fname:
                 self.plugin.do_edit('changebuffer', i)
+                break
         self.editor.grab_focus()
 
     def check_mime(self, buffer_number):
