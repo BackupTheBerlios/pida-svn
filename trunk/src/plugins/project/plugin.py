@@ -189,7 +189,7 @@ class ProjectEditor(base.pidaobject):
             name = attribute[0]
             namelabel = gtk.Label(name)
             hbox.pack_start(namelabel, expand=False, padding=4)
-            entry = attribute[3](self.pida)
+            entry = attribute[3]()
             hbox.pack_start(entry)
             self.attribute_widgets[name] = entry
         

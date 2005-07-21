@@ -173,7 +173,7 @@ class Plugin(plugin.Plugin):
         '''
         # Create a new open file dialogue if it does not exist
         if not self.odialog:
-            self.odialog = gtkextra.FileDialog(self.pida, self.cb_open_response)
+            self.odialog = gtkextra.FileDialog(self.cb_open_response)
             # Connect the window's destroy event
             self.odialog.connect('destroy', self.cb_open_destroy)
         # Show the open-file dialogue

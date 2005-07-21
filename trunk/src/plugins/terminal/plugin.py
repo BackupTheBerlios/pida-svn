@@ -39,13 +39,13 @@ except ImportError:
         bad = True
     vte = Dummy
 # Pida plug in base
+import pida.base as base
 import pida.plugin as plugin
 import pida.gtkextra as gtkextra
 import pida.configuration.registry as registry
 # will vanish, superceded by plugin.ContextMenu
-class TerminalMenu(gtk.Menu):
-    def __init__(self, cb):
-        self.cb = cb
+class TerminalMenu(base.pidaobject, gtk.Menu):
+    def do_init(self):
         gtk.Menu.__init__(self)
 
     def add_item(self, name, callback, *args):
@@ -59,16 +59,18 @@ class TerminalMenu(gtk.Menu):
         item.show()
         self.prepend(item)        
 
-class Match(object):
+class Match(base.pidaobject):
     RE = re.compile('.+')
     
-    def __init__(self, cb):
-        self.cb = cb
-        self.menu = TerminalMenu(self.cb)
+    def do_init(self):
+        self.menu = TerminalMenu()
         self.generate_menu()
 
     def check(self, word):
-        return self.RE.search(word)
+        try:
+            return self.RE.search(word)
+        except TypeError:
+            return None
 
     def popup(self, word):
         self.word = word
@@ -90,7 +92,7 @@ class DefaultMatch(Match):
 class URLMatch(Match):
     RE = re.compile('http')
     def generate_menu(self):
-        obrowser = self.cb.opts.get('commands', 'browser')
+        obrowser = self.prop_main_registry.commands.browser.value()
         self.add_match_command('external',
                                 obrowser, ['browser'])
 
@@ -106,12 +108,11 @@ class NumberMatch(Match):
     def cb_kill(self, *args):
         os.kill(int(self.word), 15)
 
-class MatchHandler(object):
-    def __init__(self, cb):
-        self.cb = cb
-        self.matches = [NumberMatch(self.cb), 
-                        URLMatch(self.cb),
-                        DefaultMatch(self.cb)]
+class MatchHandler(base.pidaobject):
+    def do_init(self):
+        self.matches = [NumberMatch(),
+                        URLMatch(),
+                        DefaultMatch()]
 
     def match(self, word):
         for m in self.matches:
@@ -119,30 +120,29 @@ class MatchHandler(object):
                 m.popup(word)
                 break
 
-class Terminal(vte.Terminal):
+class Terminal(base.pidaobject, vte.Terminal):
     ''' A terminal emulator widget that uses global config information. '''
-    def __init__(self, cb):
-        self.cb = cb
+    def do_init(self):
         vte.Terminal.__init__(self)
         ## set config stuff
         # transparency
-        v = self.cb.opts.get('terminal','enable_transparency')
-        trans = int(v)
+        trans = self.prop_main_registry.terminal.enable_transparency.value()
         if trans:
             self.set_background_transparent(trans)
         # colors
         # get the colour map
         cmap = self.get_colormap()
         # bg
-        c = self.cb.opts.get('terminal', 'background_color')
+        c = self.prop_main_registry.terminal.background_color.value()
         bgcol = cmap.alloc_color(c)
         # fg
-        c = self.cb.opts.get('terminal', 'foreground_color')
+        c = self.prop_main_registry.terminal.foreground_color.value()
         fgcol = cmap.alloc_color(c)
         # set to the new values
         self.set_colors(fgcol, bgcol, [])
         #font
-        self.set_font_from_string(self.cb.opts.get('terminal', 'font'))
+        font = self.prop_main_registry.terminal.font.value()
+        self.set_font_from_string(font)
         # set the default size really small
         self.set_size(40, 20)
 
@@ -154,29 +154,28 @@ class Terminal(vte.Terminal):
         # call the superclass method
         vte.Terminal.feed(self, text)
 
-class PidaTerminal(gtk.VBox):
+class PidaTerminal(base.pidaobject, gtk.VBox):
     ''' A terminal emulator widget aware of the notebook it resides in. '''
-    def __init__(self, cb, notebook, icon, immortal=False):
-        self.cb = cb
+    def do_init(self, notebook, icon, immortal=False):
         # the parent notebook
         self.notebook = notebook
         # generate widgets
         gtk.VBox.__init__(self)
         self.show()
         # terminal widget
-        self.term = Terminal(self.cb)
+        self.term = Terminal()
         self.pack_start(self.term)
         self.term.show()
         # connect the terminal widget's signals
         self.term.connect('button_press_event', self.cb_button)
         self.term.connect('child-exited', self.cb_exited)
         # tab label
-        self.label = Tablabel(self.cb, icon)
+        self.label = Tablabel(icon)
         # can we be killed?
         self.immortal=immortal
         # a handler for right click matching
         # may be removed
-        self.match = MatchHandler(self.cb)
+        self.match = MatchHandler()
         # the PID of the child process
         self.pid = -1
 
@@ -257,15 +256,14 @@ class PidaTerminal(gtk.VBox):
         ''' Any key event handler. '''
         self.remove()
 
-class Tablabel(gtk.EventBox):
+class Tablabel(base.pidaobject, gtk.EventBox):
     ''' A label for a notebook tab. '''
-    def __init__(self, cb, stockid):
-        self.cb = cb
+    def do_init(self, stockid):
         # Construct widgets
         gtk.EventBox.__init__(self)
         self.set_visible_window(True)
         # Get the requested icon
-        self.image = self.cb.boss.icons.get_image(stockid, 14)
+        self.image = self.do_get_image(stockid)
         self.add(self.image)
         # Different styles for highligting labels
         self.hst = self.style.copy()
@@ -283,32 +281,9 @@ class Tablabel(gtk.EventBox):
         ''' Highlight the tab label '''
         self.set_style(self.hst)
 
-class Logterminal(PidaTerminal):
-    ''' A terminal for logging. '''
-
-    def __init__(self, *args):
-        PidaTerminal.__init__(self, *args)
-        #self.term.set_font_from_string(self.cb.opts.get('terminal',
-        #                                                'font_log'))
-        self.term.feed('Log started at ')
-        self.term.feed('Level %s\r\n' % self.level(), '32;1')
-    
-    def level(self):
-        return int(self.cb.opts.get('log', 'level'))
-
-    def write_log(self, message, details='', level=0):
-        if level >= self.level():
-        
-            self.term.feed('%s ' % level, '32;1')
-            self.term.feed('%s ' % message, '34;1')
-            self.term.feed('%s\r\n' % self.truncate(details))
-
-    def truncate(self, message):
-        return message[:36]
-
 class PidaBrowser(gtk.VBox):
 
-    def __init__(self, cb, notebook, icon, immortal=False):
+    def __init__(self, notebook, icon, immortal=False):
         self.cb = cb
         # the parent notebook
         self.notebook = notebook
@@ -462,7 +437,7 @@ class Plugin(plugin.Plugin):
         self.notebook.connect('switch-page', self.cb_switch)
 
     def add_terminal(self, ttype, icon, immortal=False):
-        child = ttype(self.cb, self.notebook, icon, immortal)
+        child = ttype(self.notebook, icon, immortal)
         child.show_all()
         self.notebook.append_page(child, tab_label=child.label)
         for i in range(self.notebook.get_n_pages()):
@@ -479,7 +454,7 @@ class Plugin(plugin.Plugin):
     def new_browser(self, url):
         if not url:
             url = 'http://www.google.com/'
-        args = self.cb.registry.commands.browser.value().split(' ', 1)
+        args = self.prop_main_registry.commands.browser.value().split(' ', 1)
         com = args.pop(0)
         pid = os.fork()
         if not pid:
@@ -543,7 +518,7 @@ class Plugin(plugin.Plugin):
         if 'icon' in kw:
             icon = kw['icon']
             del kw['icon']
-        child = PidaTerminal(self.cb, self.notebook, icon)
+        child = PidaTerminal(self.notebook, icon)
         args = commandline.split()
         command = args.pop(0)
         args.insert(0, 'PIDA')

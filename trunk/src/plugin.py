@@ -224,7 +224,7 @@ class Plugin(base.pidaobject):
         Reparent the plugin in a top-level window.
         """
         self.oldparent = self.win.get_parent()
-        self.detach_window = gtkextra.Winparent(self.cb, self)
+        self.detach_window = gtkextra.Winparent(self)
 
     def log(self, message, level):
         """
