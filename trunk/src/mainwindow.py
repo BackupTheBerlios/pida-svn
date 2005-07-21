@@ -27,10 +27,9 @@ import gobject
 import base
 import os
 # The main application window.
-class MainWindow(gtk.Window):
+class MainWindow(base.pidaobject, gtk.Window):
     """ the main window """
-    def __init__(self, cb):
-        self.cb =cb
+    def do_init(self):
         gtk.Window.__init__(self)
         # Set the window title.
         caption = 'PIDA' # %s' % __version__

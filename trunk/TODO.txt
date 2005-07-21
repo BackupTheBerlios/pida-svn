@@ -1,9 +1,6 @@
 vital
 --
-process accounting
-cleaner shutdown
 give editor startup on focus
-correct error when editor fails
 make browser a component
 
 near future

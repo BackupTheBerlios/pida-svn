@@ -153,7 +153,7 @@ class Application(base.pidaobject):
                         self.plugins.remove(plugin)
                         opt_plugs.remove(plugin)
 
-        self.mainwindow = mainwindow.MainWindow(self)
+        self.mainwindow = mainwindow.MainWindow()
 
         self.evt('populate')
         self.mainwindow.set_plugins(self.editor, buffer_plug, shell_plug, opt_plugs)
