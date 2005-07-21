@@ -479,10 +479,11 @@ class Plugin(plugin.Plugin):
     def new_browser(self, url):
         if not url:
             url = 'http://www.google.com/'
-        com, args = self.cb.registry.commands.browser.value().split(' ', 1)
+        args = self.cb.registry.commands.browser.value().split(' ', 1)
+        com = args.pop(0)
         pid = os.fork()
         if not pid:
-            os.execvp(com, ['PIDA'] + [args] + [url])
+            os.execlp(com, com,  *(args+[url]))
         #child = self.add_terminal(PidaBrowser, 'internet', False)
         #child.gourl(url)
         #child.run_command(command, args, **kw)
