@@ -132,4 +132,4 @@ class Plugin(plugin.Plugin):
 
     def edit_openfile(self, filename):
         self.editor.load_file(filename)
-        self.editor.editor.grab_focus()
+        self.edit_changebuffer(len(self.editor.wins) - 1)

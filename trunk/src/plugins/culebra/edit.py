@@ -554,12 +554,11 @@ class EditWindow(gtk.EventBox):
 
     def file_close(self, mi=None, event=None):
         del self.wins[self.current_buffer]
-        if self.current_buffer >= len(self.wins):
-            if len(self.wins) == 0:
-                self._new_tab('untitled.py')
-            else:
-                self.current_buffer = len(self.wins)-1
-                self.editor.set_buffer(self.wins[self.current_buffer - 1])
+        if len(self.wins) == 0:
+            self._new_tab('untitled.py')
+        else:
+            self.current_buffer = len(self.wins) - 1
+            self.editor.set_buffer(self.wins[self.current_buffer][0])
         self.cb.edit('getbufferlist')
         self.plugin.do_edit('getcurrentbuffer')
         return
