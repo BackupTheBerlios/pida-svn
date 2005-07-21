@@ -133,21 +133,11 @@ def configure(reg):
                 'firefox',
                 'The path to your preferred browser.')
 
-    coms_page = coms_group.add('pager',
-                registry.WhichFile,
-                'less',
-                'The path to the paging program (eg less).')
-
     coms_seem = coms_group.add('see',
                 registry.WhichFile,
                 'see',
                 'The path to the "see" general previewer.')
     
-    coms_mcom = coms_group.add('mc',
-                registry.WhichFile,
-                'mc',
-                'The path to the midnight commander or any file manager.')
-
     coms_pdoc = coms_group.add('pydoc',
                 registry.WhichFile,
                 'pydoc',

@@ -508,7 +508,8 @@ class Plugin(plugin.Plugin):
         else:
             self.termmap_xterm(commandline, **kw)
 
-
+    def evt_killterminal(self):
+        self.cb_close()
 
     def evt_shortcutschanged(self):
         self.ctxbar.refresh()
