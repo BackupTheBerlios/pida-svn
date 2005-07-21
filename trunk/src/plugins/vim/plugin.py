@@ -138,8 +138,7 @@ class Plugin(plugin.Plugin):
                 self.message('Only one embedded Vim allowed.')
             else:
                 name = self.generate_embedname()
-                self.vim = vimembed.PidaVim(self.cb,
-                                            self.pida.embedwindow, vimcom, name)
+                self.vim = vimembed.PidaVim(self.pida.embedwindow, vimcom, name)
                 self.vim.connect(self.cb_plugged, self.cb_unplugged)
         else:
             os.system('%s --servername pida' % vimcom)
@@ -256,7 +255,7 @@ class Plugin(plugin.Plugin):
         self.show_or_hide_serverlist()
 
     def evt_started(self, *args):
-        self.cw = gdkvim.VimWindow(self.cb)
+        self.cw = gdkvim.VimWindow()
         self.embedded_value = self.prop_main_registry.layout.embedded_mode.value()
         if self.is_embedded():
             self.launch()

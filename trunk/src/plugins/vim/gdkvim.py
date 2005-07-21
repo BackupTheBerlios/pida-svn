@@ -139,7 +139,7 @@ class VimHidden(base.pidaobject):
         """
         if not self.pid:
             # Get the console vim executable path
-            command = self.cb.opts.get('commands', 'vim')
+            command = self.prop_main_registry.commands.vim.value()
             # Fork using pty.fork to prevent Vim taking the terminal
             pid, fd = pty.fork()
             if pid == 0:
@@ -180,7 +180,7 @@ class VimHidden(base.pidaobject):
             # Not started yet
             return False
 
-class VimWindow(gtk.Window):
+class VimWindow(base.pidaobject, gtk.Window):
     """
     A GTK window that can communicate with any number Vim instances.
 
@@ -189,7 +189,7 @@ class VimWindow(gtk.Window):
     set to receive such events. This is notably the "Vim" property which must
     be present and set to a version string, in this case "6.0" is used.
     """
-    def __init__(self, cb):
+    def do_init(self):
         """
         Constructor.
 
@@ -199,7 +199,6 @@ class VimWindow(gtk.Window):
         @param cb: An instance of the main Application class.
         @type cb: pida.main.Application.
         """
-        self.cb = cb
         gtk.Window.__init__(self)
         # Window needs to be realized to do anything useful with it. Realizing
         # does not show the window to the user, so we can use it, but not have
@@ -309,7 +308,7 @@ class VimWindow(gtk.Window):
         This blocks, so we don't use it. It is one of the alternative methods
         of retrieving an accurate serverlist. It is slow, and expensive.
         """
-        vimcom = self.cb.opts.get('commands', 'vim_console')
+        vimcom = prop_main_registry.commands.vim_console.value()
         p = os.popen('%s --serverlist' % vimcom)
         servers = p.read()
         p.close()
@@ -393,7 +392,7 @@ class VimWindow(gtk.Window):
         @type serverlist: list
         """
         # Call the event.
-        self.cb.evt('serverlist', serverlist)
+        self.do_evt('serverlist', serverlist)
 
     def fetch_cwd(self, servername):
         """
@@ -533,7 +532,7 @@ class VimWindow(gtk.Window):
                 for n in l:
                     if not n[0].startswith('E'):
                         L.append([n[0], self.abspath(server, n[1])])
-                self.cb.evt('bufferlist', L)
+                self.do_evt('bufferlist', L)
         #self.get_cwd(server)
         self.send_expr(server, 'Bufferlist()', cb)
 
@@ -541,7 +540,7 @@ class VimWindow(gtk.Window):
         def cb(bs):
             bn = bs.split(',')
             bn[1] = self.abspath(server, bn[1])
-            self.cb.evt('bufferchange', *bn)
+            self.do_evt('bufferchange', *bn)
         #self.get_cwd(server)
         self.send_expr(server, "bufnr('%').','.bufname('%')", cb)
 
@@ -569,7 +568,7 @@ class VimWindow(gtk.Window):
     def cb_reply_async(self, data):
         if data.count(','):
             evt, d = data.split(',', 1)
-            self.cb.evt(evt, *d.split(','))
+            self.do_evt(evt, *d.split(','))
         else:
-            self.cb.action_log('bad async reply', data, 10)
+            self.do_log('bad async reply', data, 10)
 

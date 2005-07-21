@@ -83,11 +83,10 @@ class Vim(base.pidaobject):
 
 class PidaVim(Vim):
     
-    def __init__(self, cb, holder, command, name):
-        self.cb = cb
+    def do_init(self, holder, command, name):
         self.name = name
         # get the user preferences
-        Vim.__init__(self, command,  ['gvim', '-f', '--servername', name])
+        Vim.do_init(self, command,  ['gvim', '-f', '--servername', name])
         holder.add(self.win)
         holder.show_all()
         self.run()
