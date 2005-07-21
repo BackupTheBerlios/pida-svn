@@ -35,6 +35,7 @@ import gobject
 import base
 import mainwindow
 import gtkextra
+import firstrun
 import configuration.options as options
 import configuration.config as config
 import configuration.registry as registry
@@ -112,6 +113,8 @@ class Application(object):
         self.registry.load()
         # now the base plugins
 
+        self.do_first_time()
+
         self.boss = create_plugin('boss', self)
         self.boss.configure(self.registry)
         shell_plug = self.add_plugin('terminal')
@@ -157,6 +160,14 @@ class Application(object):
         self.evt('started')
         self.evt('reset')
         
+
+    def do_first_time(self):
+        userdir = self.registry.directories.user.value()
+        ftname = os.path.join(userdir, '.firsttime')
+        if not os.path.exists(ftname):
+            firsttimer = firstrun.FirstTimeWindow()
+            firsttimer.show(ftname)
+
 
     def add_plugin(self, name):
         """
