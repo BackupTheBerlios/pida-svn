@@ -101,13 +101,21 @@ class Plugin(plugin.Plugin):
             self.do_edit('gotoline', frame.lineno - 1)
         
     def edit_getbufferlist(self):
-        bl = []
-        for i in self.editor.wins:
-            page = self.editor.wins.index(i)
-            label = i[1]
-            path = self.abspath(label)
-            if path:
-                bl.append([i, path])
+        #bl = []
+        #L = self.editor.wins.keys()
+        #L.sort()
+        #for i in L:
+        #    buff, fname = self.editor.wins[i]
+        #    bl.append([i, fname])
+        #self.bufferlist = bl
+        bl = [(i, v[1]) for (i, v) in enumerate(self.editor.wins)]
+        #bl = []
+        #for i in self.editor.wins:
+        #    page = self.editor.wins.index(i)
+        #    label = i[1]
+        #    path = self.abspath(label)
+        #    if path:
+        #        bl.append([i, path])
         self.bufferlist = bl
         self.cb.evt('bufferlist', bl)
 

@@ -277,7 +277,7 @@ class EditWindow(gtk.EventBox):
         return None, None
 
     def _new_tab(self, f, buff = None):
-        l = [n for n in self.wins.values() if n[1]==f]
+        l = [n for n in self.wins if n[1]==f]
         if len(l) == 0:
             lm = gtksourceview.SourceLanguagesManager()
             if buff is None:
@@ -292,9 +292,9 @@ class EditWindow(gtk.EventBox):
             buff.set_data("save", False)
             self.editor.set_buffer(buff)
             self.editor.grab_focus()
-            self.current_buffer = max(self.wins.keys()) + 1
-            self.buff.set_data('filename', f)
-            self.wins[self.current_buffer] = [buff, f]
+            buff.set_data('filename', f)
+            self.wins.append([buff, f])
+            self.current_buffer = len(self.wins) - 1
 
 
     def insert_at_cursor_cb(self, buff, iter, text, length):
@@ -412,7 +412,7 @@ class EditWindow(gtk.EventBox):
             dlg.hide()
             return
         self.check_mime(self.current_buffer)
-        #self.plugin.do_edit('getbufferlist')
+        self.plugin.do_edit('getbufferlist')
         self.plugin.do_edit('getcurrentbuffer')
         self.editor.grab_focus()
 
