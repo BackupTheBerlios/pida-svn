@@ -491,9 +491,9 @@ class EditWindow(gtk.EventBox):
         language = manager.get_language_from_mime_type("text/x-python")
         buff.set_highlight(True)
         buff.set_language(language)
-        self.plugin.do_edit('changebuffer', len(self.wins) - 1)
         self.plugin.do_edit('getbufferlist')
         self.plugin.do_edit('getcurrentbuffer')
+        self.plugin.do_edit('changebuffer', len(self.wins) - 1)
 
         return
 
