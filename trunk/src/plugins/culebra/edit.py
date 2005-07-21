@@ -280,7 +280,6 @@ class EditWindow(gtk.EventBox):
         return self.cb.mainwindow
 
     def get_current(self, page = None):
-        print self.current_buffer
         if len(self.wins) > 0:
             if page is None:
                 return self.wins[self.current_buffer]
@@ -424,6 +423,7 @@ class EditWindow(gtk.EventBox):
         self.check_mime(self.current_buffer)
         self.plugin.do_edit('getbufferlist')
         self.plugin.do_edit('getcurrentbuffer')
+        self.plugin.do_edit('changebuffer', len(self.wins) - 1)
         self.editor.grab_focus()
 
     def check_mime(self, buffer_number):
@@ -491,9 +491,6 @@ class EditWindow(gtk.EventBox):
         language = manager.get_language_from_mime_type("text/x-python")
         buff.set_highlight(True)
         buff.set_language(language)
-        self.plugin.do_edit('getbufferlist')
-        self.plugin.do_edit('getcurrentbuffer')
-        self.plugin.do_edit('changebuffer', len(self.wins) - 1)
 
         return
 
@@ -504,6 +501,9 @@ class EditWindow(gtk.EventBox):
         if not fname: return
         self.load_file(fname)
         self.cb.mainwindow.set_title(os.path.split(fname)[1])
+        self.plugin.do_edit('getbufferlist')
+        self.plugin.do_edit('getcurrentbuffer')
+        self.plugin.do_edit('changebuffer', len(self.wins) - 1)
         return
 
     def file_save(self, mi=None, fname=None):
