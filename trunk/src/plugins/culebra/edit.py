@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+﻿5# -*- coding: utf-8 -*-
 # Copyright Fernando San Martín Woerner <fsmw@gnome.org>
 # $Id$
 #Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -151,7 +151,6 @@ class EditWindow(gtk.EventBox):
                         <separator/>
                         <menuitem action='DuplicateLine'/>
                         <menuitem action='DeleteLine'/>
-                        <menuitem action='GotoLine'/>
                         <menuitem action='CommentBlock'/>
                         <menuitem action='UncommentBlock'/>
                         <menuitem action='UpperSelection'/>
@@ -163,9 +162,12 @@ class EditWindow(gtk.EventBox):
                         <menuitem action='EditFind'/>
                         <menuitem action='EditFindNext'/>
                         <menuitem action='EditReplace'/>
+                        <separator/>                        
+                        <menuitem action='GotoLine'/>
                 </menu>
                 <menu name='RunMenu' action='RunMenu'>
                         <menuitem action='RunScript'/>
+                        <menuitem action='StopScript'/>
                         <menuitem action='DebugScript'/>
                         <menuitem action='DebugStep'/>
                         <menuitem action='DebugNext'/>
@@ -190,6 +192,7 @@ class EditWindow(gtk.EventBox):
                 <toolitem action='EditReplace'/>
                 <separator/>
                 <toolitem action='RunScript'/>
+                <toolitem action='StopScript'/>
         </toolbar>
         </ui>
         """
@@ -215,8 +218,6 @@ class EditWindow(gtk.EventBox):
                  None, self.duplicate_line),
              ('DeleteLine', None, 'Delete Line', '<control>y', 
                  None, self.delete_line),
-             ('GotoLine', None, 'Goto Line', '<control>g', 
-                 None, self.goto_line),
              ('CommentBlock', None, 'Comment Selection', '<control>k', 
                  None, self.comment_block),
              ('UncommentBlock', None, 'Uncomment Selection', '<control><shift>k', 
@@ -230,8 +231,11 @@ class EditWindow(gtk.EventBox):
             ('EditFindNext', None, 'Find _Next', None, None, self.edit_find_next),
             ('EditReplace', gtk.STOCK_FIND_AND_REPLACE, None, '<control>h', 
                 None, self.edit_replace),
+            ('GotoLine', None, 'Goto Line', '<control>g', 
+                 None, self.goto_line),
             ('RunMenu', None, '_Run'),
             ('RunScript', gtk.STOCK_EXECUTE, None, "F5",None, self.run_script),
+            ('StopScript', gtk.STOCK_STOP, None, "<ctrl>F5",None, self.stop_script),
             ('DebugScript', None, "Debug Script", "F7",None, self.debug_script),
             ('DebugStep', None, "Step", "F8",None, self.step_script),
             ('DebugNext', None, "Next", "<shift>F7",None, self.next_script),
@@ -269,6 +273,7 @@ class EditWindow(gtk.EventBox):
         return self.cb.mainwindow
 
     def get_current(self, page = None):
+        print self.current_buffer
         if len(self.wins) > 0:
             if page is None:
                 return self.wins[self.current_buffer]
@@ -388,6 +393,7 @@ class EditWindow(gtk.EventBox):
             self._new_tab(fname)
             buff, fn = self.wins[self.current_buffer]
             buff.set_text('')
+            self.editor.set_buffer(buff)
             buf = fd.read(BLOCK_SIZE)
             while buf != '':
                 buff.insert_at_cursor(buf)
@@ -406,9 +412,8 @@ class EditWindow(gtk.EventBox):
             resp = dlg.run()
             dlg.hide()
             return
-        print self.current_buffer
-        print self.wins
         self.check_mime(self.current_buffer)
+        self.plugin.do_edit('getbufferlist')
         self.editor.grab_focus()
 
     def check_mime(self, buffer_number):
@@ -475,6 +480,7 @@ class EditWindow(gtk.EventBox):
         language = manager.get_language_from_mime_type("text/x-python")
         buff.set_highlight(True)
         buff.set_language(language)
+        self.plugin.do_edit('changebuffer', self.current_buffer)
         return
 
     def file_open(self, mi=None):
@@ -805,6 +811,10 @@ class EditWindow(gtk.EventBox):
         self.cb.edit('getbufferchange')
         self.plugin.do_evt("bufferexecute") 
         
+    def stop_script(self, mi):
+
+        pass
+        
     def debug_script(self, mi):
         self.plugin.do_evt('debuggerload')
         buff = self.get_current()[0]
@@ -820,6 +830,11 @@ class EditWindow(gtk.EventBox):
 
     def continue_script(self, mi):
         self.plugin.do_evt('continue')
+        
+    def next_buffer(self, mi):
+        keys = self.wins.keys()
+        nxt = keys[keys.index(self.current_buffer)+1]
+        self.plugin.do_edit('changebuffer', nxt)
         
 class AutoCompletionWindow(gtk.Window):
     
