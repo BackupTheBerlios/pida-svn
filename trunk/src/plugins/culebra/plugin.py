@@ -61,15 +61,6 @@ class Plugin(plugin.Plugin):
     def cb_alternative(self, *args):
         self.do_action('showconfig')
     
-        nuber = int(number)
-        if len(self.editor.wins) != len(self.bufferlist):
-            self.edit_getbufferlist()
-        for i, name in self.bufferlist:
-            if i == number:
-                if i != self.currentbufnum:
-                    self.currentbufnum = i
-                    self.cb.evt('bufferchange', number, name)
-                break
     
     def check_mime(self, fname):
         try:
@@ -131,4 +122,3 @@ class Plugin(plugin.Plugin):
 
     def edit_openfile(self, filename):
         self.editor.load_file(filename)
-        self.edit_changebuffer(len(self.editor.wins) - 1)
