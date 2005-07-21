@@ -61,7 +61,6 @@ class Plugin(plugin.Plugin):
     def cb_alternative(self, *args):
         self.do_action('showconfig')
     
-    def cb_switchbuffer(self, notebook, page, number):
         nuber = int(number)
         if len(self.editor.wins) != len(self.bufferlist):
             self.edit_getbufferlist()
@@ -69,7 +68,6 @@ class Plugin(plugin.Plugin):
             if i == number:
                 if i != self.currentbufnum:
                     self.currentbufnum = i
-                    self.cb.evt('filetype', number, self.check_mime(name))
                     self.cb.evt('bufferchange', number, name)
                 break
     
@@ -101,21 +99,7 @@ class Plugin(plugin.Plugin):
             self.do_edit('gotoline', frame.lineno - 1)
         
     def edit_getbufferlist(self):
-        #bl = []
-        #L = self.editor.wins.keys()
-        #L.sort()
-        #for i in L:
-        #    buff, fname = self.editor.wins[i]
-        #    bl.append([i, fname])
-        #self.bufferlist = bl
         bl = [(i, v[1]) for (i, v) in enumerate(self.editor.wins)]
-        #bl = []
-        #for i in self.editor.wins:
-        #    page = self.editor.wins.index(i)
-        #    label = i[1]
-        #    path = self.abspath(label)
-        #    if path:
-        #        bl.append([i, path])
         self.bufferlist = bl
         self.cb.evt('bufferlist', bl)
 
@@ -125,16 +109,16 @@ class Plugin(plugin.Plugin):
         return filename
 
     def edit_getcurrentbuffer(self):
-        cb = self.abspath(self.editor.get_current()[1])
-        for i, filename in self.bufferlist:
-            if filename == cb:
-                self.cb.evt('bufferchange', i, filename)
-                break
+        fn = self.editor.get_current()[1]
+        print self.check_mime(fn), fn
+        self.cb.evt('filetype', self.editor.current_buffer, self.check_mime(fn))
+        self.do_evt('bufferchange', self.editor.current_buffer, fn)
 
     def edit_changebuffer(self, num):
         if self.editor.current_buffer != num:
             self.editor.current_buffer = num
             self.editor.editor.set_buffer(self.editor.wins[num][0])
+            self.edit_getcurrentbuffer()
 
     def edit_closebuffer(self):
         self.editor.file_close()
