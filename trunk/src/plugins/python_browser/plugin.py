@@ -68,7 +68,7 @@ class DefTree(gtkextra.Tree):
         name = el.name
         typl = el.type[0].lower()
         col = ''
-        if self.cb.registry.python_browser.use_colors.value():
+        if self.prop_main_registry.python_browser.use_colors.value():
             if typl == 'f':
                 col = ' foreground="#0000c0"'
             else:
@@ -103,7 +103,7 @@ class RefTree(gtkextra.Tree):
 class RefWin(gtkextra.Transient):
 
     def populate_widgets(self):
-        self.tree = RefTree(self.cb)
+        self.tree = RefTree()
         self.frame.pack_start(self.tree.win)
 
 class Plugin(plugin.Plugin):
@@ -185,13 +185,13 @@ class Plugin(plugin.Plugin):
         self.question('Search Pydoc for:', ans)
 
     def cb_defs_select(self, tv):
-        self.cb.edit('gotoline', self.defs.selected(2))
+        self.do_edit('gotoline', self.defs.selected(2))
 
     def cb_refs_select(self, tv):
         fn, line, col = [self.refs.selected(i) for i in [0, 2, 3]]
         if fn != self.fn:
-            self.cb.edit('openfile', fn)
-        self.cb.edit('gotoline', line)
+            self.do_edit('openfile', fn)
+        self.do_edit('gotoline', line)
 
     def cb_defs_rclick(self, ite, time):
         line = self.defs.get(ite, 2)
@@ -235,8 +235,8 @@ class Plugin(plugin.Plugin):
         self.refwin.hide()
 
     def evt_doc(self, text):
-        pydoc = self.cb.opts.get('commands', 'pydoc')
-        self.cb.action_newterminal(pydoc, ['pydoc', text])
+        pydoc = self.prop_main_registry.commands.pydoc.value()
+        self.do_action('newterminal', '%s %s' % (pydoc, text))
 
 
 
