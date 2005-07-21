@@ -98,7 +98,7 @@ class Plugin(plugin.Plugin):
     def reset_io(self):
         stdiofile = '%s.io' % self.prop_main_registry.files.log.value()
         f = open(stdiofile, 'w')
-        sys.stdout = sys.stderr = f
+        #sys.stdout = sys.stderr = f
 
     def evt_bufferchange(self, buffernumber, buffername):
         if not self.filetype_triggered:

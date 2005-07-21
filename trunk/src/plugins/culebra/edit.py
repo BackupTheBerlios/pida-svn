@@ -295,10 +295,8 @@ class EditWindow(gtk.EventBox):
             buff.set_data("save", False)
             self.editor.set_buffer(buff)
             self.editor.grab_focus()
-            self.current_buffer = len(self.wins)
+            self.current_buffer = max(self.wins.keys()) + 1
             self.wins[self.current_buffer] = [buff, f]
-            self.plugin.do_edit('getbufferlist')
-            self.plugin.do_edit('getcurrentbuffer')
 
     def insert_at_cursor_cb(self, buff, iter, text, length):
         complete = ""
@@ -403,6 +401,7 @@ class EditWindow(gtk.EventBox):
             self.dirname = os.path.dirname(fname)
             buff.set_modified(False)
             self.new = False
+            self.check_mime(self.current_buffer)
         except:
             dlg = gtk.MessageDialog(self.get_parent_window(),
                     gtk.DIALOG_DESTROY_WITH_PARENT,
@@ -413,7 +412,8 @@ class EditWindow(gtk.EventBox):
             dlg.hide()
             return
         self.check_mime(self.current_buffer)
-        self.plugin.do_edit('getbufferlist')
+        #self.plugin.do_edit('getbufferlist')
+        self.plugin.do_edit('getcurrentbuffer')
         self.editor.grab_focus()
 
     def check_mime(self, buffer_number):
@@ -556,8 +556,10 @@ class EditWindow(gtk.EventBox):
         try:
             self.editor.set_buffer(self.wins[self.current_buffer - 1])
         except:
-            self.editor.set_buffer(None)
-        self.cb.edit('getbufferlist')
+            pass
+            #self.editor.get_buffer().set_text('')
+        #self.cb.edit('getbufferlist')
+        #self.cb.edit('getcurrentbuffer')
         return
 
     def file_exit(self, mi=None, event=None):

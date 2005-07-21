@@ -133,19 +133,21 @@ class Plugin(plugin.Plugin):
         return filename
 
     def edit_getcurrentbuffer(self):
-        cb = self.abspath(self.editor.get_current()[1])
-        for i, filename in self.bufferlist:
-            if filename == cb:
-                self.cb.evt('bufferchange', i, filename)
-                break
+        #cb = self.abspath(self.editor.get_current()[1])
+        #for i, filename in self.bufferlist:
+        #    if filename == cb:
+        #        self.do_evt('bufferchange', i, filename)
+        #        break
+        fn = self.editor.get_current()[1]
+        self.do_evt('bufferchange', self.editor.current_buffer, fn)
 
     def edit_changebuffer(self, num):
-        print self.editor.current_buffer, num
+        buff, fname = self.editor.get_current()
         if self.editor.current_buffer != num:
             self.editor.current_buffer = num
-            buff, fname = self.editor.get_current()
             self.editor.editor.set_buffer(buff)
             self.do_evt('bufferchange', num, fname)
+            print num, fname
 
     def edit_closebuffer(self):
         self.editor.file_close()
