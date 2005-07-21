@@ -111,6 +111,11 @@ class Plugin(plugin.Plugin):
                   'm',
                   'The shortcut to paste the yanked text to a pastebin.')
 
+        shgrp.add('shortcut_switch_focus',
+            registry.RegistryItem,
+            ',',
+            'The shortcut to shift focust to the Pida controls')
+
     def populate_widgets(self):
         self.old_shortcuts = {'n':{}, 'v':{}}
         self.vim = None
@@ -332,6 +337,7 @@ class Plugin(plugin.Plugin):
         """
         self.cw.quit(self.currentserver)
 
+
 SHORTCUTS = [('shortcut_execute',
                 'Async_event("bufferexecute,")'),
              ('shortcut_project_execute',
@@ -345,7 +351,9 @@ SHORTCUTS = [('shortcut_execute',
              ('shortcut_doc_cursor',
                 'Async_event("doc,".@")'),
              ('shortcut_pastebin_yanked',
-                '''Async_event("pastebin,".@")''')]
+                '''Async_event("pastebin,".@")'''),
+             ('shortcut_switch_focus',
+                'Async_event("switchfocus,")')]
 
 NMAP_COM = '%smap %s :call %s<lt>CR>'
 

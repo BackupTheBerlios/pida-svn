@@ -253,3 +253,5 @@ class Plugin(plugin.Plugin):
     def evt_disconnected(self, *args):
         self.buffers.clear()
 
+    def evt_switchfocus(self, *args):
+        self.buffers.view.grab_focus()
