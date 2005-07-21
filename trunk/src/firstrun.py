@@ -58,6 +58,7 @@ class FirstTimeWindow(base.pidaobject):
         self.win = gtk.Window()
         self.win.set_title('First Time Wizard')
         self.win.connect('destroy', self.cb_done)
+        self.win.set_position(gtk.WIN_POS_CENTER)
 
         hbox = gtk.HBox()
         self.win.add(hbox)
