@@ -83,9 +83,9 @@ class EditWindow(gtk.EventBox):
         self.vbox1.pack_start(self.hpaned, True, True)
         self.hpaned.set_border_width(5)
         self.hpaned.show()
-        self.statusbar = gtk.Statusbar()
-        self.vbox1.pack_start(self.statusbar, False, True)
-        self.statusbar.show()
+#        self.statusbar = gtk.Statusbar()
+#        self.vbox1.pack_start(self.statusbar, False, True)
+#        self.statusbar.show()
         # the gtksourceview
         lm = gtksourceview.SourceLanguagesManager()
         buff = gtksourceview.SourceBuffer()
@@ -270,8 +270,8 @@ class EditWindow(gtk.EventBox):
             ow = "REPL."
         else:
             ow = "INS."
-        self.statusbar.push(0, "%s, %s %s" % (it.get_line()+1, 
-                it.get_line_offset()+1, ow))
+#        self.statusbar.push(0, "%s, %s %s" % (it.get_line()+1, 
+#                it.get_line_offset()+1, ow))
         if not buff.get_modified():
             title = os.path.split(self.get_current()[1])[1] + "*"
             self.cb.mainwindow.set_title(title)
