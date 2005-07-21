@@ -21,11 +21,13 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import os
 
 import gtk
 import gobject
+
 import base
-import os
+
 # The main application window.
 class MainWindow(base.pidaobject, gtk.Window):
     """ the main window """

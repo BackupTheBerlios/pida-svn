@@ -73,11 +73,11 @@ PROJECT_ATTRIBUTES = [
      '',
      EntryWrapper)]
 
-class ProjectRegistry(ConfigParser.ConfigParser):
+class ProjectRegistry(base.pidaobject, ConfigParser.ConfigParser):
     """
     A class to store, and serialize project data.
     """
-    def __init__(self, cb, filename):
+    def do_init(self, filename):
         """
         Constructor.
 
@@ -87,7 +87,6 @@ class ProjectRegistry(ConfigParser.ConfigParser):
         @param filename: The filename for storing the data.
         @type filename: str
         """
-        self.cb = cb
         ConfigParser.ConfigParser.__init__(self)
         self.filename = filename
         self.types = {}
@@ -540,7 +539,7 @@ class Plugin(plugin.Plugin):
     
         conffile = fn = self.prop_main_registry.files.project_data.value()
         
-        self.config = ProjectRegistry(self.cb, conffile)
+        self.config = ProjectRegistry(conffile)
         self.config.load()
         self.projects.populate(self.config, self.current_directory)
 
