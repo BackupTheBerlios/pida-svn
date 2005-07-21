@@ -47,10 +47,9 @@ VCS = {VCS_NONE: 'None',
 
 CWD = '__current__working_directory__'
 
-class EntryWrapper(gtk.Entry):
+class EntryWrapper(base.pidaobject, gtk.Entry):
 
-    def __init__(self, cb):
-        self.cb = cb
+    def do_init(self, *args):
         gtk.Entry.__init__(self)
     
     def _get_win(self):
@@ -164,7 +163,7 @@ class ProjectEditor(base.pidaobject):
         leftbox = gtk.VBox()
         mainbox.pack_start(leftbox)
 
-        self.projects = ProjectTree(self.cb)
+        self.projects = ProjectTree()
         leftbox.pack_start(self.projects.win)
         self.projects.connect_select(self.cb_project_select)
         self.projects.populate(self.project_registry)
@@ -190,7 +189,7 @@ class ProjectEditor(base.pidaobject):
             name = attribute[0]
             namelabel = gtk.Label(name)
             hbox.pack_start(namelabel, expand=False, padding=4)
-            entry = attribute[3](self.cb)
+            entry = attribute[3](self.pida)
             hbox.pack_start(entry)
             self.attribute_widgets[name] = entry
         
@@ -283,7 +282,7 @@ class FileTree(gtkextra.Tree):
         self.dir_label = gtk.Label()
         tb.pack_start(self.dir_label)
         
-        ctrls = gtkextra.Toolbar(self.cb)
+        ctrls = gtkextra.Toolbar()
         tb.pack_start(ctrls.win)
 
         ctrls.add_button('up', self.cb_but,
@@ -545,7 +544,7 @@ class Plugin(plugin.Plugin):
 
         self.editor = None
 
-        self.maps = create_vcs_maps(self.cb, self.cb_vcs_command)
+        self.maps = create_vcs_maps(self.cb_vcs_command)
 
     def vcs_command(self, vcsmap, command):
         commandname = 'command_%s' % command
@@ -727,7 +726,7 @@ class Subversion(VersionControlSystem):
                         'repository')
 
 
-def create_vcs_maps(cb, callbackfunc):
+def create_vcs_maps(callbackfunc):
     return {VCS_DARCS: Darcs(callbackfunc),
             VCS_SVN: Subversion(callbackfunc)}
 
