@@ -130,6 +130,9 @@ class Plugin(plugin.Plugin):
     def action_settip(self, widget, tiptext):
         self.tips.set_tip(widget, tiptext)
 
+    def action_status(self, message):
+        self.pida.mainwindow.statusbar.push(1, message)
+
     def do_log(self, source, message, level):
         """
         Log a message.

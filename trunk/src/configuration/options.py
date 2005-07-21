@@ -175,6 +175,11 @@ def configure(reg):
         False,
         'Determines whther the terminal will appear underneath the editor')
 
+    lay_status = lay_group.add('status_bar',
+        registry.Boolean,
+        True,
+        'Whether a status bar will be shown')
+
     core_group = reg.add_group('components',
         'Choose which components to use.')
 

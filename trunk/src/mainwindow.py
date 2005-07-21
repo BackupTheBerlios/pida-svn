@@ -53,12 +53,20 @@ class MainWindow(gtk.Window):
         p0.pack1(pm, True, True)
 
         p1 = gtk.VPaned()
+        p1v = gtk.VBox()
+        p1v.pack_start(p1)
+    
+        sbared = self.cb.registry.layout.status_bar.value()
+        self.statusbar= gtk.Statusbar()
+        if sbared:
+            p1v.pack_start(self.statusbar, expand=False)
+        
 
         if (self.cb.registry.layout.embedded_mode.value() and \
             self.cb.editor.NAME == 'Vim') or self.cb.editor.NAME == 'Culebra':
             self.resize(1000, 768)
             self.add(p0)
-            p0.pack2(p1, True, True)
+            p0.pack2(p1v, True, True)
             p0.set_position(600)
         else:
             self.resize(400, 768)
