@@ -38,7 +38,7 @@ class Plugin(plugin.Plugin):
     DICON = 'run', 'Run Gazpacho user interface designer.'
 
     def populate_widgets(self):
-        self.second_toolbar = gtkextra.Toolbar(self.cb)
+        self.second_toolbar = gtkextra.Toolbar()
         self.add(self.second_toolbar.win, expand=False)
 
         self.second_toolbar.add_button('cut', self.cb_gazpacho,
@@ -88,7 +88,7 @@ class Plugin(plugin.Plugin):
     def launch(self):
         if not self.gazpacho:
             self.holder.remove(self.button)
-            self.gazpacho = gazpachembed.Gazpacho(self.cb)
+            self.gazpacho = gazpachembed.Gazpacho(self.pida)
         self.gazpacho.undo_button = self.undo_but
         self.gazpacho.redo_button = self.redo_but
         self.gazpacho.launch(self.holder)
