@@ -78,10 +78,12 @@ class DebugWindow(gtk.Dialog):
         self._info_label.show()
         hbox.show()
 
+        self.notebook = gtk.Notebook()
+        self.vbox.pack_start(self.notebook)
+
         sw = gtk.ScrolledWindow()
         sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         sw.set_shadow_type(gtk.SHADOW_IN)
-        self.vbox.pack_start(sw)
         sw.show()
         
         self._buffer = gtk.TextBuffer()
@@ -96,6 +98,28 @@ class DebugWindow(gtk.Dialog):
         sw.add(self._textview)
         self._textview.show()
         
+        self.notebook.append_page(sw, tab_label=gtk.Label("Exception"))
+        
+
+        lsw = gtk.ScrolledWindow()
+        lsw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        lsw.set_shadow_type(gtk.SHADOW_IN)
+        self._lbuf = gtk.TextBuffer()
+        self._lview = gtk.TextView(self._lbuf)
+        lsw.add(self._lview)
+        self.notebook.append_page(lsw, tab_label=gtk.Label("Log"))
+
+        isw = gtk.ScrolledWindow()
+        isw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        isw.set_shadow_type(gtk.SHADOW_IN)
+        self._ibuf = gtk.TextBuffer()
+        self._iview = gtk.TextView(self._ibuf)
+        
+        isw.add(self._iview)
+        self.notebook.append_page(isw, tab_label=gtk.Label("Stdio"))
+        
+        self.notebook.show_all()
+
     def show_exception(self, exctype, value, tb):
         self._info_label.set_text(str(exctype))
         self.print_tb(tb)
@@ -110,6 +134,18 @@ class DebugWindow(gtk.Dialog):
             msg, arguments = result
         self._insert(msg, 'exc')
         self._insert(' ' + arguments)
+
+        self.show_log()
+
+    def show_log(self):
+        logfn = self.application.registry.files.log.value()
+        iofn = '%s.io' % logfn
+        lf = open(logfn, 'r')
+        self._lbuf.set_text(lf.read())
+        lf.close()
+        of = open(iofn, 'r')
+        self._ibuf.set_text(of.read())
+        of.close()
         
     def _print(self, line):
         self._buffer.insert_at_cursor(line + '\n')
@@ -184,6 +220,13 @@ def show(exctype, value, tb):
         dw.show_exception(exctype, value, tb)
         dw.run()
         dw.destroy()
+
+def show_log():
+    dw = DebugWindow()
+    dw.show_log()
+    dw.notebook.set_current_page(1)
+    dw.run()
+    dw.destroy()
 
 if __name__ == '__main__':
     dw = DebugWindow()

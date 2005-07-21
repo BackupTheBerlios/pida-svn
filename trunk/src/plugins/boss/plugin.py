@@ -84,6 +84,10 @@ class Plugin(plugin.Plugin):
         pass
 
     def evt_reset(self):
+        self.reset_logger()
+        self.reset_io()
+
+    def reset_logger(self):
         logfile = self.prop_main_registry.files.log.value()
         if self.loghandler:
             self.log.removeHandler(self.loghandler)
@@ -91,6 +95,11 @@ class Plugin(plugin.Plugin):
         self.log.addHandler(self.loghandler)
         self.log.setLevel(self.prop_main_registry.log.level.value())
         
+    def reset_io(self):
+        stdiofile = '%s.io' % self.prop_main_registry.files.log.value()
+        f = open(stdiofile, 'w')
+        sys.stdout = sys.stderr = f
+
     def evt_bufferchange(self, buffernumber, buffername):
         if not self.filetype_triggered:
             self.filetypes[buffernumber] = 'None'

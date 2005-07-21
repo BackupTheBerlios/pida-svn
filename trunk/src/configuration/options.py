@@ -163,13 +163,6 @@ def configure(reg):
 
     log_level.adjustment = (10, 50, 10)
 
-
-    gen_group = reg.add_group('general', 'General Options')
-
-    gen_group.add('emacsmode', registry.Boolean, 0,
-                  'Whether Pida will use XEmacs integration '
-                  '(Experimental)')
-
     lay_group = reg.add_group('layout', 'Thigs to do with layout')
 
     lay_max = lay_group.add('start_maximised',
