@@ -172,6 +172,10 @@ class EditWindow(gtk.EventBox):
                         <menuitem action='DebugNext'/>
                         <menuitem action='DebugContinue'/>
                 </menu>
+                <menu name='BufferMenu' action='BufferMenu'>
+                        <menuitem action='PrevBuffer'/>
+                        <menuitem action='NextBuffer'/>
+                </menu>
         </menubar>
         <toolbar>
                 <toolitem action='FileNew'/>
@@ -192,6 +196,9 @@ class EditWindow(gtk.EventBox):
                 <separator/>
                 <toolitem action='RunScript'/>
                 <toolitem action='StopScript'/>
+                <separator/>
+                <toolitem action='PrevBuffer'/>
+                <toolitem action='NextBuffer'/>
         </toolbar>
         </ui>
         """
@@ -239,6 +246,9 @@ class EditWindow(gtk.EventBox):
             ('DebugStep', None, "Step", "F8",None, self.step_script),
             ('DebugNext', None, "Next", "<shift>F7",None, self.next_script),
             ('DebugContinue', None, "Continue", "<control>F7", None, self.continue_script),
+            ('BufferMenu', None, '_Buffers'),
+            ('PrevBuffer', gtk.STOCK_GO_UP, None, "<shift>F6",None, self.prev_buffer),
+            ('NextBuffer', gtk.STOCK_GO_DOWN, None, "F6",None, self.next_buffer),
             ]
         self.ag = gtk.ActionGroup('edit')
         self.ag.add_actions(actions)
@@ -838,9 +848,17 @@ class EditWindow(gtk.EventBox):
         self.plugin.do_evt('continue')
         
     def next_buffer(self, mi):
-        keys = self.wins.keys()
-        nxt = keys[keys.index(self.current_buffer)+1]
-        self.plugin.do_edit('changebuffer', nxt)
+        i = self.current_buffer + 1
+        if i <= len(self.wins):
+            i = 0
+        self.plugin.do_edit('changebuffer', i)
+
+    def prev_buffer(self, mi):
+        i = self.current_buffer - 1
+        if i < 0:
+            i = len(self.wins) - 1
+        self.plugin.do_edit('changebuffer', i)
+
         
 class AutoCompletionWindow(gtk.Window):
     
