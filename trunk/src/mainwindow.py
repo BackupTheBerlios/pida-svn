@@ -46,23 +46,23 @@ class MainWindow(base.pidaobject, gtk.Window):
         pm = gtk.VPaned()
         
 
-        self.cb.embedwindow = gtk.VBox()
-        self.cb.embedslider = p0
-        pm.pack1(self.cb.embedwindow, True, True)
+        self.pida.embedwindow = gtk.VBox()
+        self.pida.embedslider = p0
+        pm.pack1(self.pida.embedwindow, True, True)
         p0.pack1(pm, True, True)
 
         p1 = gtk.VPaned()
         p1v = gtk.VBox()
         p1v.pack_start(p1)
     
-        sbared = self.cb.registry.layout.status_bar.value()
+        sbared = self.prop_main_registry.layout.status_bar.value()
         self.statusbar= gtk.Statusbar()
         if sbared:
             p1v.pack_start(self.statusbar, expand=False)
         
 
-        if (self.cb.registry.layout.embedded_mode.value() and \
-            self.cb.editor.NAME == 'Vim') or self.cb.editor.NAME == 'Culebra':
+        if (self.prop_main_registry.layout.embedded_mode.value() and \
+            self.pida.editor.NAME == 'Vim') or self.pida.editor.NAME == 'Culebra':
             self.resize(1000, 768)
             self.add(p0)
             p0.pack2(p1v, True, True)
@@ -72,13 +72,13 @@ class MainWindow(base.pidaobject, gtk.Window):
             self.add(p1)
         # Pane for standard and optional plugins
         p2 = None
-        if self.cb.registry.layout.vertical_split.value():
+        if self.prop_main_registry.layout.vertical_split.value():
             p2 = gtk.VPaned()
         else:
             p2 = gtk.HPaned()
         p1.pack1(p2, True, True)
 
-        termined = self.cb.registry.layout.terminal_under_editor.value()
+        termined = self.prop_main_registry.layout.terminal_under_editor.value()
         if termined:
             pm.pack2(shell_plug.win, True, True)
         else:
@@ -99,9 +99,9 @@ class MainWindow(base.pidaobject, gtk.Window):
         self.opt_windows = {}
         for plug in opt_plugs:
             self.add_opt_plugin(plug)
-        self.add_pages(self.cb.boss.get_pluginnames('None'))
+        self.add_pages(self.prop_boss.get_pluginnames('None'))
 
-        if self.cb.registry.layout.start_maximised.value():
+        if self.prop_main_registry.layout.start_maximised.value():
             self.maximize()
         # Show the window as late as possible.
 
@@ -129,8 +129,8 @@ class MainWindow(base.pidaobject, gtk.Window):
         plugin.ctlbar.remove(plugin.label)
         # create a label with a tooltip/EventBox
         label = gtk.EventBox()
-        self.cb.boss.tips.set_tip(label, plugin.NAME)
-        im = self.cb.boss.icons.get_image(plugin.ICON)
+        self.do_set_tooltip(label, plugin.NAME)
+        im = self.do_get_image(plugin.ICON)
         im.show()
         label.add(im)
         
@@ -177,7 +177,7 @@ class MainWindow(base.pidaobject, gtk.Window):
         """
         # call the close acition of the application.
         # self.save_geometry()
-        self.cb.action('quit')
+        self.do_action('quit')
    
 class SplashScreen(base.pidaobject):
 

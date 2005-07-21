@@ -57,6 +57,11 @@ class pidaobject(object):
 
     prop_optional_pluginlist = property(__get_opt_plugins)
 
+    def __get_boss(self):
+        return self.pida.boss
+
+    prop_boss = property(__get_boss)
+
 
     def do_init(self, *args, **kw):
         pass
