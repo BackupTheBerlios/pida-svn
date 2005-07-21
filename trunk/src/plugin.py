@@ -93,7 +93,7 @@ class Plugin(base.pidaobject):
         self.label = gtk.Label(self.NAME)
         self.ctlbar.pack_start(self.label, expand=False)
         # The horizontal expander.
-        self.sepbar = gtkextra.Sepbar(self.cb)
+        self.sepbar = gtkextra.Sepbar()
         self.sepbar.connect(self.cb_sep_rclick, self.cb_sep_dclick)
         self.ctlbar.pack_start(self.sepbar.win, padding=6)
         # The shortcut bar.

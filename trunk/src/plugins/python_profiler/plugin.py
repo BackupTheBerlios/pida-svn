@@ -35,6 +35,7 @@ import gobject
 
 # Pida imports
 #import tree
+import pida.base as base
 import pida.plugin as plugin
 import pida.gtkextra as gtkextra
 import pida.gobjectreactor as gobjectreactor
@@ -113,7 +114,7 @@ class Plugin(plugin.Plugin):
         
         sb.pack_start(self.sortascending)
 
-        self.pstats = PstatsTree(self.cb)
+        self.pstats = PstatsTree()
         self.add(self.pstats.win)
 
         for col in self.pstats.COLUMNS[1:]:
@@ -123,7 +124,7 @@ class Plugin(plugin.Plugin):
         self.add_button('fullscreen', self.cb_details,
             'Open results in a separate window.')
 
-        self.profiler = Profiler(self.cb)
+        self.profiler = Profiler()
         self.fn = None
         self.readbuf = ''
 
@@ -171,11 +172,10 @@ class Plugin(plugin.Plugin):
         self.fn = name
 
 
-class Profiler(object):
+class Profiler(base.pidaobject):
 
-    def __init__(self, cb):
-        self.cb = cb
-        sockdir = self.cb.opts.get('directories', 'socket')
+    def do_init(self):
+        sockdir = self.prop_main_registry.directories.socket.value()
         self.parentsock = os.path.join(sockdir, 'profiler_parent')
         self.childsock = os.path.join(sockdir, 'profiler_child')
         self.reactor = gobjectreactor.Reactor(self, self.parentsock,
@@ -188,7 +188,7 @@ class Profiler(object):
         self.reactor.start()
         profilerfn = os.path.join(SCRIPT_DIR, 'profiler.py')
         #xid = '%s' % self.ipc.get_lid()
-        py = self.cb.opts.get('commands', 'python')
+        py = self.prop_main_registry.commands.python.value()
         pid = os.fork()
         if pid == 0:
             os.execvp(py, ['python', profilerfn, filename, self.parentsock,

@@ -30,7 +30,7 @@ class pidaobject(object):
 
     def __init__(self, *args, **kw):
         self.pida = pidaobject._application
-        self.cb = self.pida
+        #self.cb = self.pida
 
         self.do_action = self.pida.action
         self.do_evt = self.pida.evt

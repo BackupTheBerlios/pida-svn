@@ -10,6 +10,7 @@ import pickle
 #import tree
 import gobject
 import tempfile
+import pida.base as base
 import pida.gtkextra as gtkextra
 import pida.gobjectreactor as gobjectreactor
 import linecache
@@ -143,15 +144,13 @@ class FrameViewer(gtk.Label):
 
 import vte
 
-class DebugTerminal(vte.Terminal):
+class DebugTerminal(base.pidaobject, vte.Terminal):
 
-    def __init__(self, cb):
-        self.cb = cb
+    def do_init(self):
         self.pid = None
         vte.Terminal.__init__(self)
-         #font
-        self.set_font_from_string(self.cb.opts.get('terminal', 'font'))
-
+        font = self.prop_main_registry.terminal.font.value()
+        self.set_font_from_string(font)
         self.set_size_request(-1, 32)
 
     def kill(self):
@@ -167,7 +166,7 @@ class DebugTerminal(vte.Terminal):
     def start(self, fn, parentsock, childsock):
         self.kill()
         sn = os.path.join(SCRIPT_DIR, 'debugger.py')
-        c = self.cb.opts.get('commands', 'python')
+        c = self.prop_main_registry.commands.python.value()
         args = ['python', sn, fn, parentsock, childsock]
         self.pid = self.fork_command(c, args)
         self.grab_focus()
@@ -200,7 +199,7 @@ class Plugin(plugin.Plugin):
     DICON = 'debug', 'Load current buffer into debugger.'
 
     def create_reactor(self):
-        sockdir = self.cb.opts.get('directories', 'socket')
+        sockdir = self.prop_main_registry.directories.socket.value()
         self.parentsock = os.path.join(sockdir, 'profiler_parent')
         self.childsock = os.path.join(sockdir, 'profiler_child')
         self.reactor = gobjectreactor.Reactor(self, self.parentsock,
@@ -225,7 +224,7 @@ class Plugin(plugin.Plugin):
         vp.pack1(tb)
 
 
-        self.stack = StackTree(self.cb)
+        self.stack = StackTree()
         tb.pack_start(self.stack.win)
         self.stack.connect_select(self.cb_stack_select)
         self.stack.connect_activate(self.cb_stack_activate)
@@ -237,26 +236,26 @@ class Plugin(plugin.Plugin):
 
         brlb = gtk.Label()
         brlb.set_markup('<span size="small">Breaks</span>')
-        self.breaks = BreakTree(self.cb)
+        self.breaks = BreakTree()
         self.breaks.connect_rightclick(self.cb_breaks_rclick)
         nb.append_page(self.breaks.win, tab_label=brlb)
 
         loclb = gtk.Label()
         loclb.set_markup('<span size="small">Locals</span>')
-        self.locs = LocalsTree(self.cb)
+        self.locs = LocalsTree()
         self.locs.connect_activate(self.cb_locs_activate)
         nb.append_page(self.locs.win, tab_label=loclb)
 
         gllb = gtk.Label()
         gllb.set_markup('<span size="small">Globals</span>')
-        self.globs = VarTree(self.cb)
+        self.globs = VarTree()
         self.globs.connect_activate(self.cb_globs_activate)
         nb.append_page(self.globs.win, tab_label=gllb)
 
         self.dumpwin = DumpWindow()
         self.add(self.dumpwin.win, expand=False)
 
-        self.term = DebugTerminal(self.cb)
+        self.term = DebugTerminal()
         self.add(self.term, expand=False)
 
         self.curindex = 0
@@ -268,7 +267,7 @@ class Plugin(plugin.Plugin):
         f = open(self.lfn, 'w')
         f.write(s)
         f.close()
-        self.cb.edit('preview', self.lfn)
+        self.do_edit('preview', self.lfn)
 
     def do_eval(self, s, *args):
         com, val = s.split('\n', 1)
@@ -347,8 +346,8 @@ class Plugin(plugin.Plugin):
         fn = frame.filename
         line = frame.lineno
         if fn != self.fn:
-            self.cb.edit('openfile', fn)
-        self.cb.edit('gotoline', line)
+            self.do_edit('openfile', fn)
+        self.do_edit('gotoline', line)
         #self.send('list')
 
     def set_breakpoint(self, fn, line):

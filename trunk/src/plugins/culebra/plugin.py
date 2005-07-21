@@ -61,8 +61,8 @@ class Plugin(plugin.Plugin):
 
     def create_editor(self):
         if not self.editor:
-            self.editor = edit.EditWindow(self.cb, self)
-            self.cb.embedwindow.add(self.editor)
+            self.editor = edit.EditWindow(self)
+            self.pida.embedwindow.add(self.editor)
             self.editor.show_all()
         
     def populate_widgets(self):
@@ -107,7 +107,7 @@ class Plugin(plugin.Plugin):
     def edit_getbufferlist(self):
         bl = [(i, v[1]) for (i, v) in enumerate(self.editor.wins)]
         self.bufferlist = bl
-        self.cb.evt('bufferlist', bl)
+        self.do_evt('bufferlist', bl)
 
     def abspath(self, filename):
         if filename and not filename.startswith('/'):
@@ -116,7 +116,7 @@ class Plugin(plugin.Plugin):
 
     def edit_getcurrentbuffer(self):
         fn = self.editor.get_current()[1]
-        self.cb.evt('filetype', self.editor.current_buffer, self.check_mime(fn))
+        self.do_evt('filetype', self.editor.current_buffer, self.check_mime(fn))
         self.do_evt('bufferchange', self.editor.current_buffer, fn)
 
     def edit_changebuffer(self, num):

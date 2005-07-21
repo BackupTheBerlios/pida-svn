@@ -42,8 +42,7 @@ newnumber = 1
 
 class EditWindow(gtk.EventBox):
 
-    def __init__(self, cb, plugin=None, quit_cb=None):
-        self.cb = cb
+    def __init__(self, plugin=None, quit_cb=None):
         gtk.EventBox.__init__(self)
         self.search_string = None
         self.last_search_iter = None
@@ -281,7 +280,7 @@ class EditWindow(gtk.EventBox):
             self.cb.mainwindow.set_title(title)
 
     def get_parent_window(self):
-        return self.cb.mainwindow
+        return self.plugin.pida.mainwindow
 
     def get_current(self, page = None):
         if len(self.wins) > 0:

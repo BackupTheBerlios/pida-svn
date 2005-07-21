@@ -379,9 +379,8 @@ class Toolbar(base.pidaobject):
     def show(self):
         self.win.show_all()
 
-class Sepbar(object):
-    def __init__(self, cb):
-        self.cb = cb
+class Sepbar(base.pidaobject):
+    def do_init(self):
         self.win = gtk.EventBox()
         exp = gtk.HSeparator()
         self.win.add(exp)
