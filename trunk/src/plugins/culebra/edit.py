@@ -849,7 +849,7 @@ class EditWindow(gtk.EventBox):
         
     def next_buffer(self, mi):
         i = self.current_buffer + 1
-        if i <= len(self.wins):
+        if i >= len(self.wins):
             i = 0
         self.plugin.do_edit('changebuffer', i)
 
