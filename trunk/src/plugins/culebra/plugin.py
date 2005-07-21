@@ -24,7 +24,6 @@
 # System imports
 import os
 import time
-import pango
 # GTK imports
 import gtk
 import gnomevfs
@@ -45,16 +44,6 @@ class Plugin(plugin.Plugin):
         self.editor = None
         self.bufferlist = None
         self.currentbufnum = None
-
-    def configure(self, reg):
-        self.local_registry = reg.add_group('culebra',
-            'Options pertaining to the Culebra text editor')
-        self.local_registry.add('font',
-                registry.Font,
-                'Monospace 10',
-                'The Font used by Culebra')
-        
-        
 
     def launch(self):
         self.create_editor()
@@ -102,12 +91,6 @@ class Plugin(plugin.Plugin):
             pass
         return 'None'
 
-    def evt_reset(self):
-        fontname = self.local_registry.font.value()
-        font_desc = pango.FontDescription(fontname)
-        if font_desc:
-            self.editor.editor.modify_font(font_desc)
-
     def evt_started(self):
         self.launch()
         
@@ -119,11 +102,12 @@ class Plugin(plugin.Plugin):
         
     def edit_getbufferlist(self):
         bl = []
-        L = self.editor.wins.keys()
-        L.sort()
-        for i in L:
-            buff, fname = self.editor.wins[i]
-            bl.append([i, fname])
+        for i in self.editor.wins:
+            page = self.editor.wins.index(i)
+            label = i[1]
+            path = self.abspath(label)
+            if path:
+                bl.append([i, path])
         self.bufferlist = bl
         self.cb.evt('bufferlist', bl)
 
@@ -133,21 +117,16 @@ class Plugin(plugin.Plugin):
         return filename
 
     def edit_getcurrentbuffer(self):
-        #cb = self.abspath(self.editor.get_current()[1])
-        #for i, filename in self.bufferlist:
-        #    if filename == cb:
-        #        self.do_evt('bufferchange', i, filename)
-        #        break
-        fn = self.editor.get_current()[1]
-        self.do_evt('bufferchange', self.editor.current_buffer, fn)
+        cb = self.abspath(self.editor.get_current()[1])
+        for i, filename in self.bufferlist:
+            if filename == cb:
+                self.cb.evt('bufferchange', i, filename)
+                break
 
     def edit_changebuffer(self, num):
-        buff, fname = self.editor.get_current()
         if self.editor.current_buffer != num:
             self.editor.current_buffer = num
-            self.editor.editor.set_buffer(buff)
-            self.do_evt('bufferchange', num, fname)
-            print num, fname
+            self.editor.editor.set_buffer(self.editor.wins[num][0])
 
     def edit_closebuffer(self):
         self.editor.file_close()

@@ -51,7 +51,7 @@ class EditWindow(gtk.EventBox):
         self.insert_string = None
         self.cursor_iter = None
         self.plugin = plugin
-        self.wins = {}
+        self.wins = []
         self.current_word = ""
         self.wl = []
         self.ac_w = None
@@ -117,7 +117,8 @@ class EditWindow(gtk.EventBox):
         scrolledwin2.show()
         self.editor.show()
         self.editor.grab_focus()
-        self.wins[0] = [buff, "untitled.py"]
+        buff.set_data('filename', "untitled.py")
+        self.wins.append([buff, "untitled.py"])
         self.current_buffer = 0
         self.hpaned.add2(scrolledwin2)
         self.hpaned.set_position(200)
@@ -155,8 +156,6 @@ class EditWindow(gtk.EventBox):
                         <menuitem action='UncommentBlock'/>
                         <menuitem action='UpperSelection'/>
                         <menuitem action='LowerSelection'/>
-                        <separator/>
-                        <menuitem action='ShowOptions'/>
                 </menu>
                 <menu name='FindMenu' action='FindMenu'>
                         <menuitem action='EditFind'/>
@@ -240,8 +239,6 @@ class EditWindow(gtk.EventBox):
             ('DebugStep', None, "Step", "F8",None, self.step_script),
             ('DebugNext', None, "Next", "<shift>F7",None, self.next_script),
             ('DebugContinue', None, "Continue", "<control>F7", None, self.continue_script),
-            ('ShowOptions', None, 'Configuration', 'F12', None,
-                lambda action: self.plugin.do_action('showconfig', 'culebra'))
             ]
         self.ag = gtk.ActionGroup('edit')
         self.ag.add_actions(actions)
@@ -287,16 +284,18 @@ class EditWindow(gtk.EventBox):
                 buff = gtksourceview.SourceBuffer()
                 self.new = True
             buff.set_data('languages-manager', lm)
-            #font_desc = pango.FontDescription(fontname)
-            #if font_desc:
-            #    self.editor.modify_font(font_desc)
+            font_desc = pango.FontDescription('monospace 10')
+            if font_desc:
+                self.editor.modify_font(font_desc)
             buff.connect('changed', self.update_cursor_position, self.editor)
             buff.connect('insert-text', self.insert_at_cursor_cb)
             buff.set_data("save", False)
             self.editor.set_buffer(buff)
             self.editor.grab_focus()
             self.current_buffer = max(self.wins.keys()) + 1
+            self.buff.set_data('filename', f)
             self.wins[self.current_buffer] = [buff, f]
+
 
     def insert_at_cursor_cb(self, buff, iter, text, length):
         complete = ""
@@ -391,6 +390,7 @@ class EditWindow(gtk.EventBox):
             self._new_tab(fname)
             buff, fn = self.wins[self.current_buffer]
             buff.set_text('')
+            buff.set_data('filename', fname)
             self.editor.set_buffer(buff)
             buf = fd.read(BLOCK_SIZE)
             while buf != '':
@@ -474,6 +474,7 @@ class EditWindow(gtk.EventBox):
         self._new_tab("untitled%s.py" % len(self.wins))
         buff, fname = self.get_current()
         buff.set_text("")
+        buff.set_data('filename', fname)
         buff.set_modified(False)
         self.new = 1
         manager = buff.get_data('languages-manager')
@@ -496,9 +497,9 @@ class EditWindow(gtk.EventBox):
         if self.new:
             return self.file_saveas()
 
-        buff, f = self.get_current()
+        buff = self.editor.get_buffer()
         curr_mark = buff.get_iter_at_mark(buff.get_insert())
-
+        f = buff.get_data('filename')
         ret = False
 
         if fname is None:
@@ -552,14 +553,12 @@ class EditWindow(gtk.EventBox):
         return self.file_save(fname=f)
 
     def file_close(self, mi=None, event=None):
-        self.wins.pop(self.current_buffer)
-        try:
-            self.editor.set_buffer(self.wins[self.current_buffer - 1])
-        except:
-            pass
-            #self.editor.get_buffer().set_text('')
-        #self.cb.edit('getbufferlist')
-        #self.cb.edit('getcurrentbuffer')
+        del self.wins[self.current_buffer]
+        if self.current_buffer >= len(self.wins):
+            self.current_buffer = len(self.wins)-1
+        self.editor.set_buffer(self.wins[self.current_buffer - 1])
+        self.cb.edit('getbufferlist')
+
         return
 
     def file_exit(self, mi=None, event=None):
