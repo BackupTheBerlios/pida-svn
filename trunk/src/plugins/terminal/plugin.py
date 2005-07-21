@@ -424,7 +424,7 @@ class Plugin(plugin.Plugin):
         
         self.registry.add('on_top',
                 registry.Boolean,
-                1,
+                False,
                 'Is the detached window on top of main PIDA window? (Transient'
                 ' window)')
     
