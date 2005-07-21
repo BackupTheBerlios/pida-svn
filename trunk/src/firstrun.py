@@ -73,7 +73,7 @@ class FirstTimeWindow(base.pidaobject):
         box = gtk.VBox()
         hbox.pack_start(box, padding=8)
 
-        s = ('It Seems this is the first time '
+        s = ('It seems this is the first time '
             'you are running Pida.\n\nPlease select an editor:')
 
         box.pack_start(gtk.Label(s), expand=False, padding=8)
