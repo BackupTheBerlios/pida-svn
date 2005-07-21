@@ -831,8 +831,7 @@ class EditWindow(gtk.EventBox):
         self.plugin.do_evt("bufferexecute") 
         
     def stop_script(self, mi):
-
-        pass
+        self.plugin.do_evt('killterminal')
         
     def debug_script(self, mi):
         self.plugin.do_evt('debuggerload')
