@@ -481,7 +481,10 @@ class EditWindow(gtk.EventBox):
         language = manager.get_language_from_mime_type("text/x-python")
         buff.set_highlight(True)
         buff.set_language(language)
-        self.plugin.do_edit('changebuffer', self.current_buffer)
+        self.plugin.do_edit('changebuffer', len(self.wins) - 1)
+        self.plugin.do_edit('getbufferlist')
+        self.plugin.do_edit('getcurrentbuffer')
+
         return
 
     def file_open(self, mi=None):
@@ -559,7 +562,7 @@ class EditWindow(gtk.EventBox):
         else:
             self.current_buffer = len(self.wins) - 1
             self.editor.set_buffer(self.wins[self.current_buffer][0])
-        self.cb.edit('getbufferlist')
+        self.plugin.do_edit('getbufferlist')
         self.plugin.do_edit('getcurrentbuffer')
         return
 
