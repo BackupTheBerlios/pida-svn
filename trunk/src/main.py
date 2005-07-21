@@ -82,10 +82,13 @@ class DummyOpts(object):
 # as the cb parameter on instantiation.
 # It is responsible for performing "actions" on the editor or other compnent
 # and also for initiating "events" and propogating them to plugins.
-class Application(object):
+class Application(base.pidaobject):
     """ The application class, a glue for everything """
     def __init__(self):
         base.set_application_instance(self)
+        base.pidaobject.__init__(self)
+
+    def do_init(self):
         # List of plugins loaded used for event passing
         self.plugins = []
         # convenience
@@ -101,8 +104,8 @@ class Application(object):
 
     def startup(self):
         sys.excepthook = debugwindow.show
-        self.optparser = optparse.OptionParser()
         self.registry = registry.Registry(os.path.expanduser('~/.pida/pida.conf'))
+        self.optparser = optparse.OptionParser()
 
        
         options.configure(self.registry)

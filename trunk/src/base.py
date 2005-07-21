@@ -31,18 +31,32 @@ class pidaobject(object):
     def __init__(self, *args, **kw):
         self.pida = pidaobject._application
         self.cb = self.pida
-        
+
         self.do_action = self.pida.action
         self.do_evt = self.pida.evt
         self.do_edit = self.pida.edit
         
-        self.prop_main_registry = self.pida.registry
-        self.prop_loaded_plugins = self.pida.plugins
-        self.prop_optional_pluginlist = self.pida.OPTPLUGINS
         self.prop_class_name = self.__class__.__name__
         self.prop_display_name = self.NAME
         
         self.do_init(*args, **kw)
+
+    def __get_registry(self):
+        return self.pida.registry
+
+    prop_main_registry = property(__get_registry)
+
+    def __get_plugins(self):
+        return self.pida.plufins
+
+    prop_loaded_plugins = property(__get_plugins)
+
+
+    def __get_opt_plugins(self):
+        return self.pida.OPTPLUGINS
+
+    prop_optional_pluginlist = property(__get_opt_plugins)
+
 
     def do_init(self, *args, **kw):
         pass
