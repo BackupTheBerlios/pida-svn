@@ -170,6 +170,11 @@ def configure(reg):
                   1,
                   'Determines whether Pida will start Vim embedded.')
    
+    lay_term = lay_group.add('terminal_under_editor',
+        registry.Boolean,
+        False,
+        'Determines whther the terminal will appear underneath the editor')
+
     core_group = reg.add_group('components',
         'Choose which components to use.')
 

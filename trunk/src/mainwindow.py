@@ -44,10 +44,14 @@ class MainWindow(gtk.Window):
     def set_plugins(self, server_plug, buffer_plug, shell_plug, opt_plugs):
         p0 = gtk.HPaned()
         
+        pm = gtk.VPaned()
+        
+
         self.cb.embedwindow = gtk.VBox()
         self.cb.embedslider = p0
-        p0.pack1(self.cb.embedwindow, True, True)
-        
+        pm.pack1(self.cb.embedwindow, True, True)
+        p0.pack1(pm, True, True)
+
         p1 = gtk.VPaned()
 
         if (self.cb.registry.layout.embedded_mode.value() and \
@@ -66,7 +70,13 @@ class MainWindow(gtk.Window):
         else:
             p2 = gtk.HPaned()
         p1.pack1(p2, True, True)
-        p1.pack2(shell_plug.win, True, True)
+
+        termined = self.cb.registry.layout.terminal_under_editor.value()
+        if termined:
+            pm.pack2(shell_plug.win, True, True)
+        else:
+            p1.pack2(shell_plug.win, True, True)
+
         lbox = gtk.VBox()
         lbox.set_size_request(200, -1)
         p2.pack1(lbox, True, True)
