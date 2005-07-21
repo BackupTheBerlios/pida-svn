@@ -156,6 +156,8 @@ class EditWindow(gtk.EventBox):
                         <menuitem action='UncommentBlock'/>
                         <menuitem action='UpperSelection'/>
                         <menuitem action='LowerSelection'/>
+                        <separator/>
+                        <menuitem action='Configuration' />
                 </menu>
                 <menu name='FindMenu' action='FindMenu'>
                         <menuitem action='EditFind'/>
@@ -219,6 +221,8 @@ class EditWindow(gtk.EventBox):
             ('EditPaste', gtk.STOCK_PASTE, None, None, None, self.edit_paste),
             ('EditClear', gtk.STOCK_REMOVE, 'C_lear', None, None,
              self.edit_clear),
+            ('Configuration', None, 'Configur_e', None, None,
+                lambda action: self.plugin.do_action('showconfig', 'culebra')),
             
              ('DuplicateLine', None, 'Duplicate Line', '<control>d', 
                  None, self.duplicate_line),

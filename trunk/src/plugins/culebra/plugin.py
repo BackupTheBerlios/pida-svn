@@ -26,6 +26,7 @@ import os
 import time
 # GTK imports
 import gtk
+import pango
 import gnomevfs
 import gobject
 # Pida imports
@@ -39,6 +40,15 @@ import edit
 class Plugin(plugin.Plugin):
     NAME = 'Culebra'    
     DICON = 'configure', 'Configure Pida'
+
+    def configure(self, reg):
+        self.personal_registry = reg.add_group('culebra',
+            'options pertaining to the Culebra editor')
+
+        self.personal_registry.add('font',
+            registry.Font,
+            'Monospace 10',
+            'The Font used by Culebra')
 
     def do_init(self):
         self.editor = None
@@ -61,7 +71,12 @@ class Plugin(plugin.Plugin):
     def cb_alternative(self, *args):
         self.do_action('showconfig')
     
-    
+    def evt_reset(self):
+        font = self.personal_registry.font.value()
+        font_desc = pango.FontDescription(font)
+        if font_desc:
+            self.editor.editor.modify_font(font_desc)
+
     def check_mime(self, fname):
         try:
             buff, fn = self.editor.get_current()

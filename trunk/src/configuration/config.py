@@ -506,7 +506,6 @@ class ConfigEditor(object):
         self.cb.evt('reset')
 
     def show(self, pagename=None):
-        print pagename
         self.load()
         self.win.show_all()
         if pagename:
