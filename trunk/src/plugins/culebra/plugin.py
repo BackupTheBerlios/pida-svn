@@ -73,7 +73,7 @@ class Plugin(plugin.Plugin):
     
     def check_mime(self, fname):
         try:
-            buff, text, model = self.editor.wins[fname]
+            buff, fn = self.editor.get_current()
             manager = buff.get_data('languages-manager')
             if os.path.isabs(fname):
                 path = fname
@@ -85,7 +85,7 @@ class Plugin(plugin.Plugin):
                 language = manager.get_language_from_mime_type(mime_type)
                 if language:
                     return language.get_name().lower()
-        except:
+        except Exception, e:
             pass
         return 'None'
 
@@ -110,7 +110,6 @@ class Plugin(plugin.Plugin):
 
     def edit_getcurrentbuffer(self):
         fn = self.editor.get_current()[1]
-        print self.check_mime(fn), fn
         self.cb.evt('filetype', self.editor.current_buffer, self.check_mime(fn))
         self.do_evt('bufferchange', self.editor.current_buffer, fn)
 

@@ -100,7 +100,7 @@ class Application(base.pidaobject):
         self.server = None
         self.startup()
         # start
-        self.log('started', 20)
+        self.do_log('started', 20)
 
     def startup(self):
         sys.excepthook = debugwindow.show
@@ -193,16 +193,16 @@ class Application(base.pidaobject):
             raise Exception, 'Selected editor failed to load'
 
     def action(self, name, *args, **kw):
-        self.debug('action: %s' % name)
+        self.do_log_debug('action: %s' % name)
         self.signal_to_plugin(self.boss, 'action', name, *args, **kw)
 
     def edit(self, name, *args, **kw):
-        self.debug('edit: %s' % name)
+        self.do_log_debug('edit: %s' % name)
         self.signal_to_plugin(self.editor, 'edit', name, *args, **kw)
 
     def evt(self, name, *args, **kw):
         """Callback for events from vim client, propogates them to plugins"""
-        self.debug('evt: %s' % name)
+        self.do_log_debug('evt: %s' % name)
         self.signal_to_plugin(self.boss, 'evt', name, *args, **kw)
         # pass the event to every plugin
         for plugin in self.plugins:
@@ -221,12 +221,6 @@ class Application(base.pidaobject):
             #    return False
         return False
 
-    def log(self, message, level):
-        self.boss.do_log('Pida', message, level)
-
-    def debug(self, message):
-        self.log(message, 10)
-                
 
 import debugwindow
 def main(argv):
