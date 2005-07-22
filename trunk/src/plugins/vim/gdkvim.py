@@ -452,7 +452,8 @@ class VimWindow(base.pidaobject, gtk.Window):
             if t and len(t[0]):
                 if t[0].startswith('-'):
                     #attributes start with a '-', strip it and set the value
-                    messageattrs[t[0][1:]] = t[1]
+                    if len(t) > 1:
+                        messageattrs[t[0][1:]] = t[1]
                 else:
                     # Otherwise set the t attribute
                     messageattrs['t'] = t[0]
