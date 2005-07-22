@@ -53,6 +53,8 @@ def OpenFile(title, parent=None, dirname=None, fname=None, mask = None):
 
     if fname:
         dlg.set_current_folder(os.path.dirname(fname))
+    elif dirname:
+        dlg.set_current_folder(dirname)
     else:
         dlg.set_current_folder(os.getcwd())
 

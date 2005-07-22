@@ -323,6 +323,7 @@ class EditWindow(gtk.EventBox):
         if len(complete.strip()) > 0:
             try:
                 lst_ = importsTipper.GenerateTip(complete, os.path.dirname(fn))
+                print lst_
                 if self.ac_w is None:
                     self.ac_w = AutoCompletionWindow(self.editor, iter2, complete, 
                                                 lst_, self.plugin.pida.mainwindow)
@@ -398,6 +399,7 @@ class EditWindow(gtk.EventBox):
 
     def load_file(self, fname):
         try:
+
             fd = open(fname)
             self._new_tab(fname)
             buff, fn = self.wins[self.current_buffer]
@@ -505,8 +507,11 @@ class EditWindow(gtk.EventBox):
 
     def file_open(self, mi=None):
 
+        fn = self.get_current()[1]
+        dirn =os.path.dirname(fn)
+        print dirn
         fname = dialogs.OpenFile('Open File', self.get_parent_window(),
-                                  None, None, "*.py")
+                                  dirn, None, "*.py")
         if not fname: return
         self.load_file(fname)
         self.plugin.pida.mainwindow.set_title(os.path.split(fname)[1])
