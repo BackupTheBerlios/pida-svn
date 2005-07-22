@@ -174,7 +174,8 @@ class Plugin(plugin.Plugin):
 
     def execute(self):
         py = self.prop_main_registry.commands.python.value()
-        self.do_action('newterminal', '%s %s' % (py, self.fn))
+        dirn = os.path.split(self.fn)[0]
+        self.do_action('newterminal', '%s %s' % (py, self.fn), directory=dirn)
 
     def cb_alternative(self):
         self.execute()

@@ -113,7 +113,7 @@ class PidaTerminal(base.pidaobject, gtk.VBox):
 
     def popup(self, word):
         """ Popup the terminal context menu """
-        menu = TerminalMenu(self.cb)
+        menu = TerminalMenu(self.pida)
         menu.set_title(word)
 
     def kill(self):
