@@ -435,7 +435,7 @@ class Plugin(plugin.Plugin):
         self.notebook.get_nth_page(id).label.read()
 
     def cb_browser(self, *args):
-        self.new_browser('http://www.google.com/palm/')
+        self.new_browser('http://www.google.com/')
 
     def termmap_internal(self, commandline, **kw):
         icon = 'terminal'
