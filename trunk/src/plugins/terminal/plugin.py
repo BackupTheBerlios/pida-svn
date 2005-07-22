@@ -44,7 +44,7 @@ import pida.gtkextra as gtkextra
 import pida.configuration.registry as registry
 
 class Terminal(base.pidaobject, vte.Terminal):
-    ''' A terminal emulator widget that uses global config information. '''
+    """ A terminal emulator widget that uses global config information. """
     def do_init(self):
         vte.Terminal.__init__(self)
         ## set config stuff
@@ -70,7 +70,7 @@ class Terminal(base.pidaobject, vte.Terminal):
         self.set_size(40, 20)
 
     def feed(self, text, color=None):
-        ''' Feed text to the terminal, optionally coloured.'''
+        """ Feed text to the terminal, optionally coloured."""
         if color:
             # construct the ansi escape sequence
             text = '\x1b[%sm%s\x1b[0m' % (color, text)
@@ -78,7 +78,7 @@ class Terminal(base.pidaobject, vte.Terminal):
         vte.Terminal.feed(self, text)
 
 class PidaTerminal(base.pidaobject, gtk.VBox):
-    ''' A terminal emulator widget aware of the notebook it resides in. '''
+    """ A terminal emulator widget aware of the notebook it resides in. """
     def do_init(self, notebook, icon, immortal=False):
         # the parent notebook
         self.notebook = notebook
@@ -103,19 +103,21 @@ class PidaTerminal(base.pidaobject, gtk.VBox):
         self.pid = -1
 
     def run_command(self, command, args=[], **kw):
-        ''' Fork a system command in the terminal '''
+        """ Fork a system command in the terminal """
         self.term.feed('Executing ')
         self.term.feed(command, '34;1')
         self.term.feed(' %s\r\n' % args)
         self.pid = self.term.fork_command(command, args, **kw)
+        # give the terminal focus
         self.term.grab_focus()
 
     def popup(self, word):
+        """ Popup the terminal context menu """
         menu = TerminalMenu(self.cb)
         menu.set_title(word)
 
     def kill(self):
-        ''' Attempt to forcibly teminate the child process, if running '''
+        """ Attempt to forcibly teminate the child process, if running """
         if self.pid > 0:
             try:
                 os.kill(self.pid, 15)
@@ -123,7 +125,7 @@ class PidaTerminal(base.pidaobject, gtk.VBox):
                 pass #"already terminated"
 
     def remove(self):
-        ''' Remove own page from parent notebook '''
+        """ Remove own page from parent notebook """
         index = self.notebook.page_num(self)
         if self.immortal:
             return False
@@ -132,12 +134,12 @@ class PidaTerminal(base.pidaobject, gtk.VBox):
             return True
 
     def right_press(self, x, y):
-        ''' Right click handler '''
+        """ Right click handler """
         word = self.word_from_coord(x, y)
         self.match.match(word)
 
     def word_from_coord(self, x, y):
-        ''' Retrieve the word in the terminal at cursor coordinates '''
+        """ Retrieve the word in the terminal at cursor coordinates """
         def isin(term, cx, cy, *args):
             if cy == y:
                 return True
@@ -153,7 +155,7 @@ class PidaTerminal(base.pidaobject, gtk.VBox):
 
             
     def char_from_coord(self, cx, cy):
-        ''' Character coordinates for cursor coordinates. '''
+        """ Character coordinates for cursor coordinates. """
         h = self.term.get_char_height()
         w = self.term.get_char_width()
         ya = self.term.get_adjustment().value
@@ -162,25 +164,25 @@ class PidaTerminal(base.pidaobject, gtk.VBox):
         return x, y
 
     def cb_button(self, terminal, event):
-        ''' Mouse button event handler. '''
+        """ Mouse button event handler. """
         if event.button == 3:
             if event.type == gtk.gdk.BUTTON_PRESS:
                 cc = self.char_from_coord(event.x, event.y)
                 self.right_press(*cc)
 
     def cb_exited(self, *a):
-        ''' Child exited event handler. '''
+        """ Child exited event handler. """
         self.pid = -1
         self.term.feed('\r\nchild exited ', '1;34')
         self.term.feed('press any key to close')
         self.term.connect('commit', self.cb_anykey)
     
     def cb_anykey(self, *a):
-        ''' Any key event handler. '''
+        """ Any key event handler. """
         self.remove()
 
 class Tablabel(base.pidaobject, gtk.EventBox):
-    ''' A label for a notebook tab. '''
+    """ A label for a notebook tab. """
     def do_init(self, stockid):
         # Construct widgets
         gtk.EventBox.__init__(self)
@@ -197,11 +199,11 @@ class Tablabel(base.pidaobject, gtk.EventBox):
         self.show_all()
 
     def read(self):
-        ''' Called to unhighlight the tab label '''
+        """ Called to unhighlight the tab label """
         self.set_style(self.dst)
    
     def unread(self):
-        ''' Highlight the tab label '''
+        """ Highlight the tab label """
         self.set_style(self.hst)
 
 class PidaBrowser(gtk.VBox):
@@ -275,12 +277,12 @@ class PidaBrowser(gtk.VBox):
         self.remove()
 
     def remove(self):
-        ''' Remove own page from parent notebook '''
+        """ Remove own page from parent notebook """
         index = self.notebook.page_num(self)
         self.notebook.remove_page(index)
         
 class Plugin(plugin.Plugin):
-    ''' The terminal emulator plugin '''
+    """ The terminal emulator plugin """
     NAME = "Shell"
     DETACHABLE = True
 
