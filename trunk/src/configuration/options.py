@@ -172,7 +172,7 @@ def configure(reg):
 
     lay_status = lay_group.add('status_bar',
         registry.Boolean,
-        True,
+        False,
         'Whether a status bar will be shown')
 
     core_group = reg.add_group('components',
