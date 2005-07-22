@@ -25,9 +25,7 @@
 import os
 import re
 
-import threading
-
-# gtk
+# GTK imports
 import gtk
 
 # vte terminal emulator widget
@@ -38,87 +36,12 @@ except ImportError:
         Terminal = object
         bad = True
     vte = Dummy
-# Pida plug in base
+
+# Pida imports
 import pida.base as base
 import pida.plugin as plugin
 import pida.gtkextra as gtkextra
 import pida.configuration.registry as registry
-# will vanish, superceded by plugin.ContextMenu
-class TerminalMenu(base.pidaobject, gtk.Menu):
-    def do_init(self):
-        gtk.Menu.__init__(self)
-
-    def add_item(self, name, callback, *args):
-        item = gtk.MenuItem(label=name)
-        item.connect('activate', callback, *args)
-        item.show()
-        self.append(item)
-
-    def set_title(self, title):
-        item = gtk.MenuItem(label=title)
-        item.show()
-        self.prepend(item)        
-
-class Match(base.pidaobject):
-    RE = re.compile('.+')
-    
-    def do_init(self):
-        self.menu = TerminalMenu()
-        self.generate_menu()
-
-    def check(self, word):
-        try:
-            return self.RE.search(word)
-        except TypeError:
-            return None
-
-    def popup(self, word):
-        self.word = word
-        self.menu.popup(None, None, None, 3, 0)
-
-    def add_match_command(self, name, cmd, args):
-        self.menu.add_item(name, self.cb_newcommand, cmd, args)
-
-    def cb_newcommand(self, menu, cmd, args):
-        args = list(args)
-        args.append(self.word)
-        self.cb.action_newterminal(cmd, args)
-
-class DefaultMatch(Match):
-    def generate_menu(self):
-        self.add_match_command('dict',
-                                '/usr/bin/dict', ['dict'])
-
-class URLMatch(Match):
-    RE = re.compile('http')
-    def generate_menu(self):
-        obrowser = self.prop_main_registry.commands.browser.value()
-        self.add_match_command('external',
-                                obrowser, ['browser'])
-
-class NumberMatch(Match):
-    RE = re.compile('[0-9].+')
-    def generate_menu(self):
-        self.menu.add_item('jump to', self.cb_jump)
-        self.menu.add_item('kill 15', self.cb_kill)
-    
-    def cb_jump(self, *args):
-        self.cb.action_gotoline(int(self.word.strip(',.:')))
-        
-    def cb_kill(self, *args):
-        os.kill(int(self.word), 15)
-
-class MatchHandler(base.pidaobject):
-    def do_init(self):
-        self.matches = [NumberMatch(),
-                        URLMatch(),
-                        DefaultMatch()]
-
-    def match(self, word):
-        for m in self.matches:
-            if m.check(word):
-                m.popup(word)
-                break
 
 class Terminal(base.pidaobject, vte.Terminal):
     ''' A terminal emulator widget that uses global config information. '''
@@ -282,7 +205,6 @@ class Tablabel(base.pidaobject, gtk.EventBox):
         self.set_style(self.hst)
 
 class PidaBrowser(gtk.VBox):
-
     def __init__(self, notebook, icon, immortal=False):
         self.cb = cb
         # the parent notebook
@@ -537,3 +459,80 @@ class Plugin(plugin.Plugin):
     def termmap_external(self, termpath, commandline, **kw):
         commandargs = [termpath, '-hold', '-e', commandline]
         self.do_action('fork', commandargs)
+
+# will vanish, superceded by plugin.ContextMenu
+class TerminalMenu(base.pidaobject, gtk.Menu):
+    def do_init(self):
+        gtk.Menu.__init__(self)
+
+    def add_item(self, name, callback, *args):
+        item = gtk.MenuItem(label=name)
+        item.connect('activate', callback, *args)
+        item.show()
+        self.append(item)
+
+    def set_title(self, title):
+        item = gtk.MenuItem(label=title)
+        item.show()
+        self.prepend(item)        
+
+class Match(base.pidaobject):
+    RE = re.compile('.+')
+    
+    def do_init(self):
+        self.menu = TerminalMenu()
+        self.generate_menu()
+
+    def check(self, word):
+        try:
+            return self.RE.search(word)
+        except TypeError:
+            return None
+
+    def popup(self, word):
+        self.word = word
+        self.menu.popup(None, None, None, 3, 0)
+
+    def add_match_command(self, name, cmd, args):
+        self.menu.add_item(name, self.cb_newcommand, cmd, args)
+
+    def cb_newcommand(self, menu, cmd, args):
+        args = list(args)
+        args.append(self.word)
+        self.cb.action_newterminal(cmd, args)
+
+class DefaultMatch(Match):
+    def generate_menu(self):
+        self.add_match_command('dict',
+                                '/usr/bin/dict', ['dict'])
+
+class URLMatch(Match):
+    RE = re.compile('http')
+    def generate_menu(self):
+        obrowser = self.prop_main_registry.commands.browser.value()
+        self.add_match_command('external',
+                                obrowser, ['browser'])
+
+class NumberMatch(Match):
+    RE = re.compile('[0-9].+')
+    def generate_menu(self):
+        self.menu.add_item('jump to', self.cb_jump)
+        self.menu.add_item('kill 15', self.cb_kill)
+    
+    def cb_jump(self, *args):
+        self.cb.action_gotoline(int(self.word.strip(',.:')))
+        
+    def cb_kill(self, *args):
+        os.kill(int(self.word), 15)
+
+class MatchHandler(base.pidaobject):
+    def do_init(self):
+        self.matches = [NumberMatch(),
+                        URLMatch(),
+                        DefaultMatch()]
+
+    def match(self, word):
+        for m in self.matches:
+            if m.check(word):
+                m.popup(word)
+                break

@@ -54,7 +54,6 @@ EDITORS = {'vim':Vim(), 'culebra':Culebra()}
 class FirstTimeWindow(base.pidaobject):
 
     def do_init(self):
-
         self.win = gtk.Window()
         self.win.set_title('First Time Wizard')
         self.win.connect('destroy', self.cb_done)
