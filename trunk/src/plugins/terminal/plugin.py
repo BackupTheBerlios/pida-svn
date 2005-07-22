@@ -503,19 +503,19 @@ class Match(base.pidaobject):
     def cb_newcommand(self, menu, cmd, args):
         args = list(args)
         args.append(self.word)
-        self.cb.action_newterminal(cmd, args)
+        self.do_action('newterminal', ' '.join([cmd] + args))
 
 class DefaultMatch(Match):
     def generate_menu(self):
         self.add_match_command('dict',
-                                '/usr/bin/dict', ['dict'])
+                                '/usr/bin/dict', [])
 
 class URLMatch(Match):
     RE = re.compile('http')
     def generate_menu(self):
         obrowser = self.prop_main_registry.commands.browser.value()
         self.add_match_command('external',
-                                obrowser, ['browser'])
+                                obrowser, [])
 
 class NumberMatch(Match):
     RE = re.compile('[0-9].+')
@@ -524,7 +524,7 @@ class NumberMatch(Match):
         self.menu.add_item('kill 15', self.cb_kill)
     
     def cb_jump(self, *args):
-        self.cb.action_gotoline(int(self.word.strip(',.:')))
+        self.do_edit('gotoline', int(self.word.strip(',.:')))
         
     def cb_kill(self, *args):
         os.kill(int(self.word), 15)
