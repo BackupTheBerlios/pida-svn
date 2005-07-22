@@ -698,6 +698,10 @@ class Darcs(VersionControlSystem):
     def command_update(self, **kw):
         self.launch(['pull'], **kw)
 
+    def command_add(self, **kw):
+        if kw['filename']:
+            self.launch(['add', kw['filename']], **kw)
+
 class Subversion(VersionControlSystem):
     COMMAND = 'svn'
     ARGS = ['svn']
