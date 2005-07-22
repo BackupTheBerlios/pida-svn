@@ -277,7 +277,7 @@ class EditWindow(gtk.EventBox):
 #                it.get_line_offset()+1, ow))
         if not buff.get_modified():
             title = os.path.split(self.get_current()[1])[1] + "*"
-            self.cb.mainwindow.set_title(title)
+            self.plugin.pida.mainwindow.set_title(title)
 
     def get_parent_window(self):
         return self.plugin.pida.mainwindow
@@ -325,10 +325,10 @@ class EditWindow(gtk.EventBox):
                 lst_ = importsTipper.GenerateTip(complete, os.path.dirname(fn))
                 if self.ac_w is None:
                     self.ac_w = AutoCompletionWindow(self.editor, iter2, complete, 
-                                                lst_, self.cb.mainwindow)
+                                                lst_, self.plugin.pida.mainwindow)
                 else:
                     self.ac_w.set_list(self.editor, iter2, complete, 
-                                   lst_, self.cb.mainwindow)
+                                   lst_, self.plugin.pida.mainwindow)
             except:
                 pass
         return
@@ -509,7 +509,7 @@ class EditWindow(gtk.EventBox):
                                   None, None, "*.py")
         if not fname: return
         self.load_file(fname)
-        self.cb.mainwindow.set_title(os.path.split(fname)[1])
+        self.plugin.pida.mainwindow.set_title(os.path.split(fname)[1])
         return
 
     def file_save(self, mi=None, fname=None):
@@ -540,7 +540,7 @@ class EditWindow(gtk.EventBox):
             fd.close()
             buff.set_modified(False)
             buff.set_data("save", True)
-            self.cb.mainwindow.set_title(os.path.split(fname)[1])
+            self.plugin.pida.mainwindow.set_title(os.path.split(fname)[1])
             ret = True
             self.wins[self.current_buffer] = [buff, fname]
         except:
@@ -555,7 +555,7 @@ class EditWindow(gtk.EventBox):
         self.check_mime(self.current_buffer)
         buff.place_cursor(curr_mark)
         self.editor.grab_focus()
-        self.cb.edit('getbufferlist')
+        self.plugin.do_edit('getbufferlist')
         return ret
 
     def file_saveas(self, mi=None):
@@ -567,7 +567,7 @@ class EditWindow(gtk.EventBox):
         if not f: return False
 
         self.dirname = os.path.dirname(f)
-        self.cb.mainwindow.set_title(os.path.basename(f))
+        self.plugin.pida.mainwindow.set_title(os.path.basename(f))
         self.new = 0
         return self.file_save(fname=f)
 
@@ -829,8 +829,8 @@ class EditWindow(gtk.EventBox):
     
     def run_script(self, mi):
         self.file_save()
-        self.cb.edit('getbufferlist')
-        self.cb.edit('getbufferchange')
+        self.plugin.do_edit('getbufferlist')
+        self.plugin.do_edit('getbufferchange')
         self.plugin.do_evt("bufferexecute") 
         
     def stop_script(self, mi):
