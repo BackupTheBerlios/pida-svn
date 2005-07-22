@@ -924,6 +924,7 @@ class AutoCompletionWindow(gtk.Window):
         self.tree.set_headers_visible(False)
         self.set_transient_for(parent)
         self.show_all()
+        self.tree.set_cursor((0,))
         self.tree.grab_focus()
         
     def set_list(self, source_view, trig_iter, text, lst, parent):
@@ -956,6 +957,7 @@ class AutoCompletionWindow(gtk.Window):
         self.move(wx+tx, wy+ty)
         self.tree.set_size_request(width, height)
         self.show_all()
+        self.tree.set_cursor((0,))
         self.tree.grab_focus()
         
     def row_activated_cb(self, tree, path, view_column, data = None):
