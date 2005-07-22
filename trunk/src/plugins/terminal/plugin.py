@@ -371,9 +371,11 @@ class Plugin(plugin.Plugin):
 
     def remove_terminal(self, index):
         child = self.notebook.get_nth_page(index)
-        child.kill()
-        removed =  child.remove()
-        return removed
+        if child:
+            child.kill()
+            removed = child.remove()
+        return True
+        
 
     def new_browser(self, url):
         if not url:
