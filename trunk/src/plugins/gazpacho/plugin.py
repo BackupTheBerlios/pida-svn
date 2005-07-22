@@ -129,12 +129,12 @@ class Plugin(plugin.Plugin):
             f.write('%sdef %s(%s):\n%spass\n' % (' ' * 4, callbackname,
                                                  ', '.join(cbargs), ' ' * 8))
             f.close()
-            self.cb.edit('openfile', callbackfile)
-            self.cb.edit('gotoline', '%')
+            self.do_edit('openfile', callbackfile)
+            self.do_edit('gotoline', '%')
         else:
             if callbackfile != self.filename:
-                self.cb.edit('openfile', callbackfile)
-            self.cb.edit('gotoline', '%')
+                self.do_edit('openfile', callbackfile)
+            self.do_edit('gotoline', '%')
 
     def evt_bufferchange(self, number, name):
         self.filename = name
