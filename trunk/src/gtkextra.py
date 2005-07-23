@@ -51,6 +51,7 @@ class Tree(base.pidaobject):
         self.view = gtk.TreeView(self.model)
         self.view.set_headers_visible(False)
         self.view.set_rules_hint(True)
+        self.view.set_enable_search(False)
         self.win = gtk.VBox()
 
         self.toolbar = gtk.HBox()
