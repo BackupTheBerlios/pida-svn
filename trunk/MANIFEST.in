@@ -1,4 +1,8 @@
-include *.txt
+include README
+include CONTRIUTORS
+include CHANGELOG
+include RELNOTES
+include TODO
 include *.py
 recursive-include src *.py
 include scripts/*
