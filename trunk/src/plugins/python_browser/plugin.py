@@ -141,13 +141,13 @@ class Plugin(plugin.Plugin):
         self.add_button('rename', self.cb_but_rename, 'Rename class or method')
         self.add_button('find', self.cb_but_references, 'List references.')
 
-        self.menu = gtkextra.PositionPopup('position')
+        #self.menu = gtkextra.PositionPopup('position')
 
     def connect_widgets(self):
         self.defs.connect_select(self.cb_defs_select)
         self.refs.connect_select(self.cb_refs_select)
-        self.defs.connect_rightclick(self.cb_defs_rclick)
-        self.refs.connect_rightclick(self.cb_refs_rclick)
+        #self.defs.connect_rightclick(self.cb_defs_rclick)
+        #self.refs.connect_rightclick(self.cb_refs_rclick)
 
     def get_references(self, label='References'):
         row, col = self.defs.selected(2), self.defs.selected(3)
