@@ -39,11 +39,13 @@ VCS_NONE = 0
 VCS_DARCS = 1
 VCS_CVS = 2
 VCS_SVN = 3
+VCS_MERC = 4
 
 VCS = {VCS_NONE: 'None',
        VCS_DARCS: 'Darcs',
        VCS_CVS: 'CVS',
-       VCS_SVN: 'SVN'}
+       VCS_SVN: 'SVN',
+       VCS_MERC: 'Mercurial'}
 
 CWD = '__current__working_directory__'
 
@@ -729,10 +731,35 @@ class Subversion(VersionControlSystem):
                         'Show the diff between the working copy and the '
                         'repository')
 
+class Mercurial(VersionControlSystem):
+    COMMAND = 'hg'
+    ARGS = ['hg']
+
+    def command_update(self, **kw):
+        self.launch(['update'], **kw)
+    
+    def command_commit(self, **kw):
+        self.launch(['commit'], **kw)
+
+    def command_diff(self, **kw):
+        self.launch(['diff'], **kw)
+
+    def command_add(self, **kw):
+        if kw['filename']:
+            self.launch(['add', kw['filename']], **kw)
+
+    def add_custom_buttons(self):
+        self.add_button('vcs_diff', 'diff',
+                        'Show the diff between the working copy and the '
+                        'repository')
+    
+
 
 def create_vcs_maps(callbackfunc):
     return {VCS_DARCS: Darcs(callbackfunc),
-            VCS_SVN: Subversion(callbackfunc)}
+            VCS_SVN: Subversion(callbackfunc),
+            VCS_CVS: Cvs(callbackfunc),
+            VCS_MERC: Mercurial(callbackfunc)}
 
 def get_vcs_for_directory(dirname):
     vcs = 0
@@ -747,6 +774,8 @@ def get_vcs_for_directory(dirname):
             elif i == 'CVS':
                 vcs = VCS_CVS
                 break
+            elif i == '.hg':
+                vcs = VCS_MERC
     return vcs
 
 def get_vcs_name_for_directory(dirname):
