@@ -149,8 +149,9 @@ class VimHidden(base.pidaobject):
             pid, fd = pty.fork()
             if pid == 0:
                 # Child, execute Vim with the correct servername argument
-                os.execvp(command, ['gvim', '--servername', self.name,
+                os.execvp(command, ['gvim', '-f', '--servername', self.name,
                     '--socketid', '%s' % xid])
+                    #'-v'])
                 # os.system('%s -v --servername %s' % (command, self.name))
             else:
                 # Parent, store the pid, and file descriptor for later.
