@@ -50,8 +50,7 @@ SCRIPT_DIR = script_directory()
 
 class DetailsWindow(gtk.Window):
 
-    def __init__(self, cb, treemodel):
-        self.cb = cb
+    def __init__(self, treemodel):
         gtk.Window.__init__(self)
         self.set_title('PIDA Profiler Detailed View')
         self.set_size_request(640, 400)
@@ -129,7 +128,7 @@ class Plugin(plugin.Plugin):
         self.readbuf = ''
 
     def cb_details(self, *args):
-        dw = DetailsWindow(self.cb, self.pstats.model)
+        dw = DetailsWindow(self.pstats.model)
         dw.show_all()
 
     def cb_sort_changed(self, *args):
