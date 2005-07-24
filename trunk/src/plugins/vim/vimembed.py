@@ -51,7 +51,7 @@ class Vim(base.pidaobject):
         if not xid:
             return
         if not self.pid:
-            pid = os.fork()
+            pid, fd = pty.fork()
             if pid == 0:
                 args.extend(['--socketid', '%s' % xid])
                 os.execvp(self.command, args)

@@ -141,10 +141,17 @@ class VimHidden(base.pidaobject):
             # Get the console vim executable path
             command = self.prop_main_registry.commands.vim.value()
             # Fork using pty.fork to prevent Vim taking the terminal
+            sock = gtk.Socket()
+            w = gtk.Window()
+            w.realize()
+            w.add(sock)
+            xid = sock.get_id()
             pid, fd = pty.fork()
             if pid == 0:
                 # Child, execute Vim with the correct servername argument
-                os.execvp(command, ['vim', '-v', '--servername', self.name])
+                os.execvp(command, ['gvim', '--servername', self.name,
+                    '--socketid', '%s' % xid])
+                # os.system('%s -v --servername %s' % (command, self.name))
             else:
                 # Parent, store the pid, and file descriptor for later.
                 self.pid = pid
