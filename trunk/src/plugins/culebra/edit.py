@@ -91,6 +91,7 @@ class EditWindow(gtk.EventBox):
         self.new = True
         buff.set_data('languages-manager', lm)
         self.editor = gtksourceview.SourceView(buff)
+        self.plugin.pida.mainwindow.connect('delete-event', self.file_exit)
         font_desc = pango.FontDescription('monospace 10')
         if font_desc:
             self.editor.modify_font(font_desc)
@@ -262,7 +263,7 @@ class EditWindow(gtk.EventBox):
         return (self.ui.get_widget('/menubar'), self.ui.get_widget('/toolbar'))
     
     def set_title(self, title):
-        pass
+        self.plugin.pida.mainwindow.set_title(title)
 
     def move_cursor(self, tv, step, count, extend_selection):
         self.update_cursor_position(tv.get_buffer(), tv)
@@ -493,7 +494,7 @@ class EditWindow(gtk.EventBox):
         buff.set_text("")
         buff.set_data('filename', fname)
         buff.set_modified(False)
-        self.new = 1
+        self.new = True
         manager = buff.get_data('languages-manager')
         language = manager.get_language_from_mime_type("text/x-python")
         buff.set_highlight(True)
@@ -628,7 +629,7 @@ class EditWindow(gtk.EventBox):
                 dialog.destroy()
                 return
             self._search(search_text.get_text(), self.last_search_iter)
-        buff = self.get_current()[1]
+        buff = self.get_current()[0]
         search_text = gtk.Entry()
         s = buff.get_selection_bounds()
         if len(s) > 0:
