@@ -545,6 +545,7 @@ class EditWindow(gtk.EventBox):
             fd.close()
             buff.set_modified(False)
             buff.set_data("save", True)
+            buff.set_data('filename', fname)
             self.plugin.pida.mainwindow.set_title(os.path.split(fname)[1])
             ret = True
             self.wins[self.current_buffer] = [buff, fname]
@@ -558,9 +559,11 @@ class EditWindow(gtk.EventBox):
             dlg.hide()
 
         self.check_mime(self.current_buffer)
+        self.plugin.do_edit('getbufferlist')
+        self.plugin.do_edit('getcurrentbuffer')
+        self.plugin.do_edit('changebuffer', len(self.wins) - 1)
         buff.place_cursor(curr_mark)
         self.editor.grab_focus()
-        self.plugin.do_edit('getbufferlist')
         return ret
 
     def file_saveas(self, mi=None):
