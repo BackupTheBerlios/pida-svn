@@ -321,17 +321,16 @@ class EditWindow(gtk.EventBox):
                 # to avoid problems with floating point.
                 return
         if len(complete.strip()) > 0:
-#            try:
-            lst_ = importsTipper.GenerateTip(complete, os.path.dirname(fn))
-            print lst_
-            if self.ac_w is None:
-                self.ac_w = AutoCompletionWindow(self.editor, iter2, complete, 
-                                            lst_, self.plugin.pida.mainwindow)
-            else:
-                self.ac_w.set_list(self.editor, iter2, complete, 
-                               lst_, self.plugin.pida.mainwindow)
-#            except:
-#                pass
+            try:
+                lst_ = importsTipper.GenerateTip(complete, os.path.dirname(fn))
+                if self.ac_w is None:
+                    self.ac_w = AutoCompletionWindow(self.editor, iter2, complete, 
+                                                lst_, self.plugin.pida.mainwindow)
+                else:
+                    self.ac_w.set_list(self.editor, iter2, complete, 
+                                   lst_, self.plugin.pida.mainwindow)
+            except:
+                pass
         return
         
     def get_context(self, buff, iter):
