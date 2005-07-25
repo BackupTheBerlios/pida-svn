@@ -399,7 +399,6 @@ class EditWindow(gtk.EventBox):
 
     def load_file(self, fname):
         try:
-
             fd = open(fname)
             self._new_tab(fname)
             buff, fn = self.wins[self.current_buffer]
@@ -509,10 +508,14 @@ class EditWindow(gtk.EventBox):
 
         fn = self.get_current()[1]
         dirn =os.path.dirname(fn)
-        print dirn
         fname = dialogs.OpenFile('Open File', self.get_parent_window(),
                                   dirn, None, "*.py")
+        
         if not fname: return
+        if self.new:
+            buff = self.get_current()[0]
+            if not buff.get_modified():
+                del self.wins[self.current_buffer]
         self.load_file(fname)
         self.plugin.pida.mainwindow.set_title(os.path.split(fname)[1])
         return
