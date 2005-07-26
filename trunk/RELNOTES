@@ -1,1 +1,8 @@
-0.2.2
+Release Notes for Pida 0.2.2
+
+== What's New ==
+
+Features:
+
+;Pastebin plugin : Allows pasting of entered, and yanked text to the rafb.net
+and #Pida pastebins.

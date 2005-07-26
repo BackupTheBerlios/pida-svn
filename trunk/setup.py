@@ -80,7 +80,7 @@ setup(name='pida',
     download_url='http://pida.berlios.de/index.php/PIDA:Downloads',
     description=('A Python IDE written in Python and GTK, '
                  'which uses Vim as its editor.'),
-    long_description='Please visit the Pida website at for more details.',
+    long_description='Please visit the Pida website for more details.',
     packages=packages,
     package_dir = {'pida': 'src'},
     scripts=['scripts/pida'],
