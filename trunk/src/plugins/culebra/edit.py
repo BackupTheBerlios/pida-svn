@@ -1,4 +1,4 @@
-﻿5# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # Copyright Fernando San Martín Woerner <fsmw@gnome.org>
 # $Id$
 #Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -36,6 +36,7 @@ special_chars = (".",)
 RESPONSE_FORWARD = 0
 RESPONSE_BACKWARD = 1
 RESPONSE_REPLACE = 2
+RESPONSE_REPLACE_ALL = 3
 
 global newnumber
 newnumber = 1
@@ -82,9 +83,6 @@ class EditWindow(gtk.EventBox):
         self.vbox1.pack_start(self.hpaned, True, True)
         self.hpaned.set_border_width(5)
         self.hpaned.show()
-#        self.statusbar = gtk.Statusbar()
-#        self.vbox1.pack_start(self.statusbar, False, True)
-#        self.statusbar.show()
         # the gtksourceview
         lm = gtksourceview.SourceLanguagesManager()
         buff = gtksourceview.SourceBuffer()
@@ -274,8 +272,6 @@ class EditWindow(gtk.EventBox):
             ow = "REPL."
         else:
             ow = "INS."
-#        self.statusbar.push(0, "%s, %s %s" % (it.get_line()+1, 
-#                it.get_line_offset()+1, ow))
         if not buff.get_modified():
             title = os.path.split(self.get_current()[1])[1] + "*"
             self.plugin.pida.mainwindow.set_title(title)
@@ -662,7 +658,8 @@ class EditWindow(gtk.EventBox):
                 self._search(search_text.get_text(), self.last_search_iter)
                 return
             if response_id == RESPONSE_REPLACE:
-                self._search(search_text.get_text(), self.last_search_iter)
+                if not self._search(search_text.get_text(), self.last_search_iter):
+                    return
                 start, end = buff.get_selection_bounds()
                 buff.delete(start, end)
                 buff.insert(start, replace_text.get_text())
@@ -670,8 +667,17 @@ class EditWindow(gtk.EventBox):
                 start = buff.get_iter_at_mark(buff.get_insert())
                 start.backward_chars(len(replace_text.get_text()))
                 buff.select_range(start, self.last_search_iter)
-                return
-                
+            if response_id == RESPONSE_REPLACE_ALL:
+                current_iter = buff.get_iter_at_mark(buff.get_insert())
+                while self._search(search_text.get_text(), self.last_search_iter, False):
+                    start, end = buff.get_selection_bounds()
+                    buff.delete(start, end)
+                    buff.insert(start, replace_text.get_text())
+                    self.last_search_iter = buff.get_iter_at_mark(buff.get_insert())
+                    start = buff.get_iter_at_mark(buff.get_insert())
+                    start.backward_chars(len(replace_text.get_text()))
+                    buff.select_range(start, self.last_search_iter)
+                buff.place_cursor(current_iter)
         buff = self.get_current()[0]
         search_text = gtk.Entry()
         replace_text = gtk.Entry() 
@@ -681,7 +687,8 @@ class EditWindow(gtk.EventBox):
         dialog = gtk.Dialog("Search", self.get_parent_window(),
                             gtk.DIALOG_DESTROY_WITH_PARENT,
                             (gtk.STOCK_FIND, RESPONSE_FORWARD,
-                             gtk.STOCK_FIND_AND_REPLACE, RESPONSE_REPLACE,
+                             "Replace", RESPONSE_REPLACE,
+                             "Replace All", RESPONSE_REPLACE_ALL,
                              gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE))
         lbl = gtk.Label("Find what:")
         dialog.vbox.pack_start(lbl, True, True, 0)
@@ -699,7 +706,7 @@ class EditWindow(gtk.EventBox):
         dialog.show_all()
         response_id = dialog.run()
     
-    def _search(self, search_string, iter = None):
+    def _search(self, search_string, iter = None, scroll=True):
         buff, fname = self.get_current()
         if iter is None:
             start = buff.get_start_iter()
@@ -713,11 +720,14 @@ class EditWindow(gtk.EventBox):
                 match_start, match_end = res
                 buff.place_cursor(match_start)
                 buff.select_range(match_start, match_end)
-                self.editor.scroll_to_iter(match_start, 0.25)
+                if scroll:
+                    self.editor.scroll_to_iter(match_start, 0.25)
                 self.last_search_iter = match_end
+                return True
             else:
                 self.search_string = None
                 self.last_search_iter = buff.get_iter_at_mark(buff.get_insert())
+                return False
             
     def edit_find_next(self, mi):
         self._search(self.search_string, self.last_search_iter)
