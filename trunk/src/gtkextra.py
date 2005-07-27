@@ -118,11 +118,12 @@ class Tree(base.pidaobject):
             self.r_cb_activated(*args)
 
     def cb_butpress(self, source, event):
+        return
         if event.button == 3:
             if len(self.model):
-                pathdd = self.view.get_dest_row_at_pos(int(event.x),
+                path = self.view.get_dest_row_at_pos(int(event.x),
                                                             int(event.y))
-                if pathdd:
+                if path:
                     ite = self.model.get_iter(path)
                     self.cb_rightclick(ite, event.time)
 
