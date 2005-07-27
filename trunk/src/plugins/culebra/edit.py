@@ -28,7 +28,7 @@ import dialogs
 import gtksourceview
 import gnomevfs
 import importsTipper
-import words
+import keyword
 
 BLOCK_SIZE = 2048
 
@@ -305,38 +305,79 @@ class EditWindow(gtk.EventBox):
             self.wins.append([buff, f])
             self.current_buffer = len(self.wins) - 1
 
-
     def insert_at_cursor_cb(self, buff, iter, text, length):
         complete = ""
+        
+        iter2 = buff.get_iter_at_mark(buff.get_insert())
+        s, e = buff.get_bounds()
+        text_code = buff.get_text(s, e)
+        lst_ = []
         if self.ac_w is not None:
             self.ac_w.hide()
-        if text in special_chars:
-            buff, fn = self.get_current()
-            iter2 = buff.get_iter_at_mark(buff.get_insert())
+        mod = False
+
+        if text != '.':
+            complete = self.get_context(buff, iter2, True)
+            if "\n" in complete or complete.isdigit():
+                return
+            else:
+                complete = complete + text
+            try:
+                c = compile(text_code, '<string>', 'exec')
+                lst_ = [a for a in c.co_names if a.startswith(complete)]
+                con = map(str, c.co_consts)
+                con = [a for a in con if a.startswith(complete) and a not in lst_]
+                lst_ += con
+                lst_ += keyword.kwlist
+                lst_ = [a for a in lst_ if a.startswith(complete)]
+                lst_.sort()
+            except:
+                lst_ += keyword.kwlist
+                lst_ = [a for a in lst_ if a.startswith(complete)]
+                lst_.sort()
+
+        else:
+            mod = True
             complete = self.get_context(buff, iter2)
             if complete.isdigit():
-                # to avoid problems with floating point.
                 return
-        if len(complete.strip()) > 0:
-            try:
-                lst_ = importsTipper.GenerateTip(complete, os.path.dirname(fn))
-                if self.ac_w is None:
-                    self.ac_w = AutoCompletionWindow(self.editor, iter2, complete, 
-                                                lst_, self.plugin.pida.mainwindow)
-                else:
-                    self.ac_w.set_list(self.editor, iter2, complete, 
-                                   lst_, self.plugin.pida.mainwindow)
-            except:
-                pass
+            if len(complete.strip()) > 0:
+                try:
+                    lst_ = [str(a[0]) for a in importsTipper.GenerateTip(complete, os.path.dirname(fn)) if a is not None]
+                except:
+                    try:
+                        c = compile(text_code, '<string>', 'exec')
+                        lst_ = [a for a in c.co_names if a is not None]
+                    except:
+                        lst_ = []
+        if len(lst_)==0:
+            return
+        if self.ac_w is None:
+            
+            self.ac_w = AutoCompletionWindow(self.editor, iter2, complete, 
+                                        lst_, 
+                                        self.plugin.pida.mainwindow, 
+                                        mod, 
+                                        self.context_bounds)
+        else:
+            self.ac_w.set_list(self.editor, iter2, complete, 
+                           lst_, 
+                           self.plugin.pida.mainwindow, 
+                           mod, 
+                           self.context_bounds)
         return
         
-    def get_context(self, buff, iter):
+    def get_context(self, buff, iter, sp=False):
         iter2 = iter.copy()
-        iter.backward_word_starts(1)
+        if sp:
+            iter.backward_word_start()
+        else:
+            iter.backward_word_starts(1)
         iter3 = iter.copy()
         iter3.backward_chars(1)
         prev = iter3.get_text(iter)
         complete = iter.get_text(iter2)
+        self.context_bounds = (buff.create_mark('cstart',iter), buff.create_mark('cend',iter2))
         if prev in (".", "_"):
             t = self.get_context(buff, iter)
             return t + complete
@@ -888,7 +929,7 @@ class EditWindow(gtk.EventBox):
         
 class AutoCompletionWindow(gtk.Window):
     
-    def __init__(self,  source_view, trig_iter, text, lst, parent):
+    def __init__(self,  source_view, trig_iter, text, lst, parent, mod, cbound):
         
         gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
         
@@ -896,15 +937,12 @@ class AutoCompletionWindow(gtk.Window):
         self.store = gtk.ListStore(str, str, str)
         self.source = source_view
         self.iter = trig_iter
+        self.mod = mod
+        self.cbounds = cbound
         frame = gtk.Frame()
         
         for i in lst:
-            if i[3] == importsTipper.TYPE_UNKNOWN:
-                stock = gtk.STOCK_NEW
-            else:
-                stock = gtk.STOCK_CONVERT
-                
-            self.store.append((stock, i[0], i[2]))
+            self.store.append((gtk.STOCK_CONVERT, i, ""))
         self.tree = gtk.TreeView(self.store)
         
         render = gtk.CellRendererPixbuf()
@@ -943,16 +981,14 @@ class AutoCompletionWindow(gtk.Window):
         self.tree.set_cursor((0,))
         self.tree.grab_focus()
         
-    def set_list(self, source_view, trig_iter, text, lst, parent):
+    def set_list(self, source_view, trig_iter, text, lst, parent, mod, cbound):
+        self.mod = mod
+        self.cbounds = cbound
         self.store = gtk.ListStore(str, str, str)
         self.source = source_view
         self.iter = trig_iter
         for i in lst:
-            if i[3] == importsTipper.TYPE_UNKNOWN:
-                stock = gtk.STOCK_NEW
-            else:
-                stock = gtk.STOCK_CONVERT
-            self.store.append((stock, i[0], i[2]))
+            self.store.append((gtk.STOCK_CONVERT, i, ""))
         self.tree.set_model(self.store)
         self.tree.set_search_column(1)
         self.tree.set_search_equal_func(self.search_func)
@@ -961,15 +997,12 @@ class AutoCompletionWindow(gtk.Window):
                                 rect.x, rect.y + rect.height)
         tx, ty = source_view.get_window(gtk.TEXT_WINDOW_WIDGET).get_origin()
         wth, hht = parent.get_size()
-        print wth, hht 
         wth += tx
         hht += ty
         width = wth - (wx+tx) 
         height = hht - (wy+ty)
         if width > 200: width = 200
         if height > 200: height = 200
-        print wy+ty
-        print width, height
         self.move(wx+tx, wy+ty)
         self.tree.set_size_request(width, height)
         self.show_all()
@@ -979,7 +1012,14 @@ class AutoCompletionWindow(gtk.Window):
     def row_activated_cb(self, tree, path, view_column, data = None):
         complete = self.store[path][1] + self.store[path][2]
         buff = self.source.get_buffer()
-        buff.insert_at_cursor(complete)
+        if not self.mod:
+            s, e = self.cbounds
+            buff.select_range(buff.get_iter_at_mark(s), buff.get_iter_at_mark(e))
+            start, end = buff.get_selection_bounds()
+            buff.delete(start, end)
+            buff.insert(start, complete)
+        else:
+            buff.insert_at_cursor(complete)
         self.hide()
         
     def focus_out_event_cb(self, widget, event):
