@@ -209,6 +209,7 @@ class FolderButton(base.pidaobject, gtk.HBox):
             self.dialog = self.DTYPE(self.cb_response)
             self.dialog.connect('destroy', self.cb_destroy)
         self.dialog.set_filename(self.entry.get_text())
+        self.dialog.set_transient_for(self.pida.mainwindow)
         self.dialog.show()
 
     def cb_response(self, d, resp):
