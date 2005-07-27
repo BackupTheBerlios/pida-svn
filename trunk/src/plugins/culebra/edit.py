@@ -307,7 +307,7 @@ class EditWindow(gtk.EventBox):
 
     def insert_at_cursor_cb(self, buff, iter, text, length):
         complete = ""
-        
+        buff, fn = self.get_current()
         iter2 = buff.get_iter_at_mark(buff.get_insert())
         s, e = buff.get_bounds()
         text_code = buff.get_text(s, e)
@@ -315,7 +315,6 @@ class EditWindow(gtk.EventBox):
         if self.ac_w is not None:
             self.ac_w.hide()
         mod = False
-
         if text != '.':
             complete = self.get_context(buff, iter2, True)
             if "\n" in complete or complete.isdigit():
@@ -335,7 +334,6 @@ class EditWindow(gtk.EventBox):
                 lst_ += keyword.kwlist
                 lst_ = [a for a in lst_ if a.startswith(complete)]
                 lst_.sort()
-
         else:
             mod = True
             complete = self.get_context(buff, iter2)
@@ -353,7 +351,6 @@ class EditWindow(gtk.EventBox):
         if len(lst_)==0:
             return
         if self.ac_w is None:
-            
             self.ac_w = AutoCompletionWindow(self.editor, iter2, complete, 
                                         lst_, 
                                         self.plugin.pida.mainwindow, 
@@ -542,7 +539,6 @@ class EditWindow(gtk.EventBox):
         return
 
     def file_open(self, mi=None):
-
         fn = self.get_current()[1]
         dirn =os.path.dirname(fn)
         fname = dialogs.OpenFile('Open File', self.get_parent_window(),
@@ -560,26 +556,20 @@ class EditWindow(gtk.EventBox):
     def file_save(self, mi=None, fname=None):
         if self.new:
             return self.file_saveas()
-
         buff = self.editor.get_buffer()
         curr_mark = buff.get_iter_at_mark(buff.get_insert())
         f = buff.get_data('filename')
         ret = False
-
         if fname is None:
             fname = f
-
         try:
-
             start, end = buff.get_bounds()
             blockend = start.copy()
             fd = open(fname, "w")
-
             while blockend.forward_chars(BLOCK_SIZE):
                 buf = buff.get_text(start, blockend)
                 fd.write(buf)
                 start = blockend.copy()
-
             buf = buff.get_text(start, blockend)
             fd.write(buf)
             fd.close()
@@ -891,8 +881,8 @@ class EditWindow(gtk.EventBox):
     
     def run_script(self, mi):
         self.file_save()
-        self.plugin.do_edit('getbufferlist')
-        self.plugin.do_edit('getbufferchange')
+#        self.plugin.do_edit('getbufferlist')
+#        self.plugin.do_edit('getbufferchange')
         self.plugin.do_evt("bufferexecute") 
         
     def stop_script(self, mi):
