@@ -5,6 +5,7 @@ import gtk
 import os
 import shelve
 import shutil
+import gdbm
 
 I = gtk.IconTheme()
 I.set_custom_theme('Rodent')
@@ -19,7 +20,7 @@ try:
 except:
     pass
 os.mkdir('iconbuild')
-outfile = shelve.open('icons.dat')
+outfile = shelve.Shelf(gdbm.open('icons.dat', 'c'))
 for line in f:
     name, key = [s.strip() for s in line.split(' ')]
     i = I.load_icon(name, 15, 0)
