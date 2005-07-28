@@ -6,3 +6,9 @@ Features:
 
 ;Pastebin plugin : Allows pasting of entered, and yanked text to the rafb.net
 and #Pida pastebins.
+
+;Culebra plugin : Editor using GTSourceView, including syntax highlighting,
+block indent, block comment, and intelligent code completion.
+
+;Mercurial support : Basic support has been added to the project plugin to
+support the Mercurial version control system.
