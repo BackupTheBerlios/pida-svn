@@ -591,7 +591,7 @@ class EditWindow(gtk.EventBox):
         self.check_mime(self.current_buffer)
         self.plugin.do_edit('getbufferlist')
         self.plugin.do_edit('getcurrentbuffer')
-        self.plugin.do_edit('changebuffer', len(self.wins) - 1)
+#        self.plugin.do_edit('changebuffer', len(self.wins) - 1)
         buff.place_cursor(curr_mark)
         self.editor.grab_focus()
         return ret

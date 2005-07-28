@@ -121,6 +121,8 @@ class Plugin(plugin.Plugin):
 
     def edit_changebuffer(self, num):
         if self.editor.current_buffer != num:
+            buff = self.editor.wins[self.editor.current_buffer][0]
+            buff.set_data('current_line', buff.get_insert())
             self.editor.current_buffer = num
             self.editor.editor.set_buffer(self.editor.wins[num][0])
             self.edit_getcurrentbuffer()
