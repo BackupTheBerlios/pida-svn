@@ -26,7 +26,6 @@ import sys, os
 import pango
 import dialogs
 import gtksourceview
-import culebraBuffer
 import gnomevfs
 import importsTipper
 import keyword
@@ -47,23 +46,16 @@ class CulebraBuffer(gtksourceview.SourceBuffer):
     def __init__(self, filename=None):
         gtksourceview.SourceBuffer.__init__(self)
         self.filename=filename
-        self.current_line = 0
-        self.connect('changed', self.update_cursor_position)   
-        
-
-    def update_cursor_position(self, buff):
-        it = buff.get_iter_at_mark(buff.get_insert())
-        self.current_line = buff.get_iter_at_mark(buff.get_insert()).get_line()
 
 
 class CulebraView(gtksourceview.SourceView):
 
-    def __init__(self, buff=culebraBuffer.CulebraBuffer()):
+    def __init__(self, buff=CulebraBuffer()):
         if buffer is None:
             gtksourceview.SourceView.__init__(self)
         else:
             gtksourceview.SourceView.__init__(self, buff)
-    
+                
 class EditWindow(gtk.EventBox):
 
     def __init__(self, plugin=None, quit_cb=None):
@@ -388,19 +380,19 @@ class EditWindow(gtk.EventBox):
                            self.context_bounds)
         return
         
-    def get_context(self, buff, iter, sp=False):
-        iter2 = iter.copy()
+    def get_context(self, buff, it, sp=False):
+        iter2 = it.copy()
         if sp:
-            iter.backward_word_start()
+            it.backward_word_start()
         else:
-            iter.backward_word_starts(1)
-        iter3 = iter.copy()
+            it.backward_word_starts(1)
+        iter3 = it.copy()
         iter3.backward_chars(1)
-        prev = iter3.get_text(iter)
-        complete = iter.get_text(iter2)
-        self.context_bounds = (buff.create_mark('cstart',iter), buff.create_mark('cend',iter2))
+        prev = iter3.get_text(it)
+        complete = it.get_text(iter2)
+        self.context_bounds = (buff.create_mark('cstart',it), buff.create_mark('cend',iter2))
         if prev in (".", "_"):
-            t = self.get_context(buff, iter)
+            t = self.get_context(buff, it)
             return t + complete
         else:
             count = 0
@@ -904,8 +896,6 @@ class EditWindow(gtk.EventBox):
     
     def run_script(self, mi):
         self.file_save()
-#        self.plugin.do_edit('getbufferlist')
-#        self.plugin.do_edit('getbufferchange')
         self.plugin.do_evt("bufferexecute") 
         
     def stop_script(self, mi):
@@ -949,7 +939,7 @@ class AutoCompletionWindow(gtk.Window):
         self.set_decorated(False)
         self.store = gtk.ListStore(str, str, str)
         self.source = source_view
-        self.iter = trig_iter
+        self.it = trig_iter
         self.mod = mod
         self.cbounds = cbound
         self.found = False
@@ -1001,7 +991,7 @@ class AutoCompletionWindow(gtk.Window):
         self.cbounds = cbound
         self.store = gtk.ListStore(str, str, str)
         self.source = source_view
-        self.iter = trig_iter
+        self.it = trig_iter
         self.found = False
         self.text = text
         for i in lst:
@@ -1054,24 +1044,24 @@ class AutoCompletionWindow(gtk.Window):
         elif event.keyval == gtk.keysyms.BackSpace:
             self.hide()
             
-    def search_func(self, model, column, key, iter):
+    def search_func(self, model, column, key, it):
         if self.mod:
             cp_text = key
         else:
             cp_text = self.text + key
             self.complete = cp_text
-        if model.get_path(model.get_iter_first()) == model.get_path(iter):
+        if model.get_path(model.get_iter_first()) == model.get_path(it):
             self.found = False
-        if model.get_value(iter, column).startswith(cp_text):
+        if model.get_value(it, column).startswith(cp_text):
             self.found = True
-        if model.iter_next(iter) is None and not self.found:
+        if model.iter_next(it) is None and not self.found:
             if self.text != "":
-                self.complete = model.get_value(iter, 1)
+                self.complete = model.get_value(it, 1)
             else:
                 self.complete = key
             self.insert_complete()
             self.hide()
-        return not model.get_value(iter, column).startswith(cp_text)
+        return not model.get_value(it, column).startswith(cp_text)
 
 class Cb:
     def __init__(self):
