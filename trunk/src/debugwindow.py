@@ -34,9 +34,9 @@ class DebugWindow(gtk.Dialog):
                             gtk.DIALOG_MODAL | gtk.DIALOG_NO_SEPARATOR)
 
         self._build_ui()
-        self.send = self._create_button(gtk.STOCK_NETWORK, _('_Report bug ...'))
-        self.send.connect('clicked', self._on_send__clicked)
-        self.action_area.pack_end(self.send)
+        #self.send = self._create_button(gtk.STOCK_NETWORK, _('_Report bug ...'))
+        #self.send.connect('clicked', self._on_send__clicked)
+        #self.action_area.pack_end(self.send)
 
         
         quit = self._create_button(gtk.STOCK_OK, _('_Continue'))
