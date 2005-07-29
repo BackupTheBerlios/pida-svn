@@ -121,11 +121,12 @@ class Plugin(plugin.Plugin):
 
     def edit_changebuffer(self, num):
         if self.editor.current_buffer != num:
-            buff = self.editor.wins[self.editor.current_buffer][0]
-            buff.set_data('current_line', buff.get_insert())
             self.editor.current_buffer = num
+            buff = self.editor.wins[self.editor.current_buffer][0]
             self.editor.editor.set_buffer(self.editor.wins[num][0])
             self.edit_getcurrentbuffer()
+            self.editor.editor.scroll_to_mark(buff.get_insert(), 0.25)
+            self.editor.editor.grab_focus()    
 
     def edit_closebuffer(self):
         self.editor.file_close()

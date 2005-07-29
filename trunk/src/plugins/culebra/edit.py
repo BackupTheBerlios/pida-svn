@@ -26,6 +26,7 @@ import sys, os
 import pango
 import dialogs
 import gtksourceview
+import culebraBuffer
 import gnomevfs
 import importsTipper
 import keyword
@@ -41,6 +42,28 @@ RESPONSE_REPLACE_ALL = 3
 global newnumber
 newnumber = 1
 
+class CulebraBuffer(gtksourceview.SourceBuffer):
+
+    def __init__(self, filename=None):
+        gtksourceview.SourceBuffer.__init__(self)
+        self.filename=filename
+        self.current_line = 0
+        self.connect('changed', self.update_cursor_position)   
+        
+
+    def update_cursor_position(self, buff):
+        it = buff.get_iter_at_mark(buff.get_insert())
+        self.current_line = buff.get_iter_at_mark(buff.get_insert()).get_line()
+
+
+class CulebraView(gtksourceview.SourceView):
+
+    def __init__(self, buff=culebraBuffer.CulebraBuffer()):
+        if buffer is None:
+            gtksourceview.SourceView.__init__(self)
+        else:
+            gtksourceview.SourceView.__init__(self, buff)
+    
 class EditWindow(gtk.EventBox):
 
     def __init__(self, plugin=None, quit_cb=None):
@@ -85,15 +108,16 @@ class EditWindow(gtk.EventBox):
         self.hpaned.show()
         # the gtksourceview
         lm = gtksourceview.SourceLanguagesManager()
-        buff = gtksourceview.SourceBuffer()
+        buff = CulebraBuffer()
         self.new = True
         buff.set_data('languages-manager', lm)
-        self.editor = gtksourceview.SourceView(buff)
+#        self.editor = gtksourceview.SourceView(buff)
+        self.editor = CulebraView(buff)
         self.plugin.pida.mainwindow.connect('delete-event', self.file_exit)
         font_desc = pango.FontDescription('monospace 10')
         if font_desc:
             self.editor.modify_font(font_desc)
-        buff.connect('changed', self.update_cursor_position, self.editor)
+        
         buff.connect('insert-text', self.insert_at_cursor_cb)
         buff.set_data("save", False)
         manager = buff.get_data('languages-manager')
@@ -264,17 +288,7 @@ class EditWindow(gtk.EventBox):
         self.plugin.pida.mainwindow.set_title(title)
 
     def move_cursor(self, tv, step, count, extend_selection):
-        self.update_cursor_position(tv.get_buffer(), tv)
-
-    def update_cursor_position(self, buff, view):
-        it = buff.get_iter_at_mark(buff.get_insert())
-        if view.get_overwrite():
-            ow = "REPL."
-        else:
-            ow = "INS."
-        if not buff.get_modified():
-            title = os.path.split(self.get_current()[1])[1] + "*"
-            self.plugin.pida.mainwindow.set_title(title)
+        return
 
     def get_parent_window(self):
         return self.plugin.pida.mainwindow
@@ -290,13 +304,12 @@ class EditWindow(gtk.EventBox):
         if len(l) == 0:
             lm = gtksourceview.SourceLanguagesManager()
             if buff is None:
-                buff = gtksourceview.SourceBuffer()
+                buff = CulebraBuffer()
                 self.new = True
             buff.set_data('languages-manager', lm)
             font_desc = pango.FontDescription('monospace 10')
             if font_desc:
                 self.editor.modify_font(font_desc)
-            buff.connect('changed', self.update_cursor_position, self.editor)
             buff.connect('insert-text', self.insert_at_cursor_cb)
             buff.set_data("save", False)
             self.editor.set_buffer(buff)
@@ -345,9 +358,20 @@ class EditWindow(gtk.EventBox):
                 except:
                     try:
                         c = compile(text_code, '<string>', 'exec')
-                        lst_ = [a for a in c.co_names if a is not None]
+                        lst_ = [a for a in c.co_names if a.startswith(complete)]
+                        con = map(str, c.co_consts)
+                        con = [a for a in con if a.startswith(complete) and a not in lst_]
+                        lst_ += con
+                        lst_ += keyword.kwlist
+                        lst_ = [a for a in lst_ if a.startswith(complete)]
+                        lst_.sort()
+                        complete = ""
                     except:
-                        lst_ = []
+                        lst_ += keyword.kwlist
+                        lst_ = [a for a in lst_ if a.startswith(complete)]
+                        lst_.sort()
+                        complete = ""
+                        
         if len(lst_)==0:
             return
         if self.ac_w is None:
@@ -438,17 +462,16 @@ class EditWindow(gtk.EventBox):
             buff, fn = self.wins[self.current_buffer]
             buff.set_text('')
             buff.set_data('filename', fname)
+            buff.set_text(fd.read())
+            fd.close()
             self.editor.set_buffer(buff)
-            buf = fd.read(BLOCK_SIZE)
-            while buf != '':
-                buff.insert_at_cursor(buf)
-                buf = fd.read(BLOCK_SIZE)
             self.editor.queue_draw()
             self.set_title(os.path.basename(fname))
             self.dirname = os.path.dirname(fname)
             buff.set_modified(False)
             self.new = False
             self.check_mime(self.current_buffer)
+            buff.place_cursor(buff.get_start_iter())
         except:
             dlg = gtk.MessageDialog(self.get_parent_window(),
                     gtk.DIALOG_DESTROY_WITH_PARENT,
@@ -929,6 +952,8 @@ class AutoCompletionWindow(gtk.Window):
         self.iter = trig_iter
         self.mod = mod
         self.cbounds = cbound
+        self.found = False
+        self.text = text
         frame = gtk.Frame()
         
         for i in lst:
@@ -977,6 +1002,8 @@ class AutoCompletionWindow(gtk.Window):
         self.store = gtk.ListStore(str, str, str)
         self.source = source_view
         self.iter = trig_iter
+        self.found = False
+        self.text = text
         for i in lst:
             self.store.append((gtk.STOCK_CONVERT, i, ""))
         self.tree.set_model(self.store)
@@ -1000,29 +1027,51 @@ class AutoCompletionWindow(gtk.Window):
         self.tree.grab_focus()
         
     def row_activated_cb(self, tree, path, view_column, data = None):
-        complete = self.store[path][1] + self.store[path][2]
-        buff = self.source.get_buffer()
-        if not self.mod:
-            s, e = self.cbounds
-            buff.select_range(buff.get_iter_at_mark(s), buff.get_iter_at_mark(e))
-            start, end = buff.get_selection_bounds()
-            buff.delete(start, end)
-            buff.insert(start, complete)
-        else:
-            buff.insert_at_cursor(complete)
-        self.hide()
+        self.complete = self.store[path][1] + self.store[path][2]
+        self.insert_complete()
         
+    def insert_complete(self):
+        buff = self.source.get_buffer()
+        try:
+            if not self.mod:
+                s, e = self.cbounds
+                buff.select_range(buff.get_iter_at_mark(s), buff.get_iter_at_mark(e))
+                start, end = buff.get_selection_bounds()
+                buff.delete(start, end)
+                buff.insert(start, self.complete)
+            else:
+                buff.insert_at_cursor(self.complete)
+        except:
+            buff.insert_at_cursor(self.complete[len(self.text):])
+        self.hide()
+
     def focus_out_event_cb(self, widget, event):
         self.hide()
 
     def key_press_event_cb(self, widget, event):
         if event.keyval == gtk.keysyms.Escape:
             self.hide()
+        elif event.keyval == gtk.keysyms.BackSpace:
+            self.hide()
             
     def search_func(self, model, column, key, iter):
-        return not model.get_value(iter, column).startswith(key)
-        
-
+        if self.mod:
+            cp_text = key
+        else:
+            cp_text = self.text + key
+            self.complete = cp_text
+        if model.get_path(model.get_iter_first()) == model.get_path(iter):
+            self.found = False
+        if model.get_value(iter, column).startswith(cp_text):
+            self.found = True
+        if model.iter_next(iter) is None and not self.found:
+            if self.text != "":
+                self.complete = model.get_value(iter, 1)
+            else:
+                self.complete = key
+            self.insert_complete()
+            self.hide()
+        return not model.get_value(iter, column).startswith(cp_text)
 
 class Cb:
     def __init__(self):
