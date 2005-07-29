@@ -8,7 +8,16 @@ Features:
 and #Pida pastebins.
 
 ;Culebra plugin : Editor using GTSourceView, including syntax highlighting,
-block indent, block comment, and intelligent code completion.
+block indent, block comment, and intelligent Python code completion, can be used in
+place of Vim.
 
 ;Mercurial support : Basic support has been added to the project plugin to
 support the Mercurial version control system.
+
+;Filetype handling : Plugins can be configured to be displayed per filetype.
+
+;Terminal support : Xterm can be used in place of the internal VTE widget.
+
+;Layout : Added options for alternate layouts.
+
+;Buffer list : Display parent directory of buffer in list
