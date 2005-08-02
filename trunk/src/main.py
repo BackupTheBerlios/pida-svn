@@ -213,13 +213,13 @@ class Application(base.pidaobject):
     def signal_to_plugin(self, plugin, sigtype, signame, *args, **kw):
         funcname = '%s_%s' % (sigtype, signame)
         if hasattr(plugin, funcname):
-            #try:
-            getattr(plugin, funcname)(*args, **kw)
-            #    return True
-            #except Exception, e:
-            #    print ('error passing %s "%s" to %s, %s' % (sigtype, signame,
-            #                                                plugin, e))
-            #    return False
+            try:
+                getattr(plugin, funcname)(*args, **kw)
+                return True
+            except Exception, e:
+                print ('error passing %s "%s" to %s, %s' % (sigtype, signame,
+                                                            plugin, e))
+                return False
         return False
 
 
