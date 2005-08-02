@@ -102,8 +102,12 @@ class Plugin(plugin.Plugin):
 
 
     def paste(self, text):
-        paster = BINS[self.sitelist.get_active_text()](self)
-        paster.paste(text)
+        actiter = self.sitelist.get_active_iter()
+        act = None
+        if actiter:
+            act = self.sitelist.get_model().get_value(actiter, 0)
+            paster = BINS[act](self)
+            paster.paste(text)
 
     def cb_clear(self, text):
         self.model.set_text('')
