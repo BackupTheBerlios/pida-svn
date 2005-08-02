@@ -347,7 +347,11 @@ class ConfigList(ConfigEntry):
                 break
 
     def save(self):
-        self.set_value(self.widget.get_active_text())
+        actiter = self.widget.get_active_iter()
+        act = None
+        if actiter:
+            act = self.widget.get_model().get_value(actiter, 0)
+        self.set_value(act)
 
 class ListTree(base.pidaobject, gtk.TreeView):
     """
