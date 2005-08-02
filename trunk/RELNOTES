@@ -11,6 +11,9 @@ and #Pida pastebins.
 block indent, block comment, and intelligent Python code completion, can be used in
 place of Vim.
 
+;Per-filetype Plugins : Plugins can be optionally displayed and hidden for
+different file-types.
+
 ;Mercurial support : Basic support has been added to the project plugin to
 support the Mercurial version control system.
 
@@ -20,4 +23,6 @@ support the Mercurial version control system.
 
 ;Layout : Added options for alternate layouts.
 
-;Buffer list : Display parent directory of buffer in list
+;Buffer list : Display parent directory of buffer filename in buffer list.
+
+;First time-run wizard to select required components.
