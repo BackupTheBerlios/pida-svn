@@ -67,7 +67,8 @@ class Terminal(base.pidaobject, vte.Terminal):
         font = self.prop_main_registry.terminal.font.value()
         self.set_font_from_string(font)
         # set the default size really small
-        self.set_size(60, 20)
+        self.set_size(60, 10)
+        self.set_size_request(-1, 50)
 
     def feed(self, text, color=None):
         """ Feed text to the terminal, optionally coloured."""
