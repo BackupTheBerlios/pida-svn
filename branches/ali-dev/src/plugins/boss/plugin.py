@@ -77,16 +77,11 @@ class Plugin(plugin.Plugin):
 
         self.child_processes = []
 
-    def evt_populate(self):
-        self.icons = gtkextra.Icons()
+        self.load_sub_plugins()
 
-    def evt_shown(self):
-        pass
-
-    def evt_reset(self):
-        self.reset_logger()
-        self.reset_io()
-
+    def load_sub_plugins(self):
+        for name in ['shortcuts']:
+            self.pida.add_plugin(name)
 
     def reset_logger(self):
         logfile = self.prop_main_registry.files.log.value()
@@ -100,6 +95,16 @@ class Plugin(plugin.Plugin):
         stdiofile = '%s.io' % self.prop_main_registry.files.log.value()
         f = open(stdiofile, 'w')
         sys.stdout = sys.stderr = f
+
+    def evt_populate(self):
+        self.icons = gtkextra.Icons()
+
+    def evt_shown(self):
+        pass
+
+    def evt_reset(self):
+        self.reset_logger()
+        self.reset_io()
 
     def evt_bufferchange(self, buffernumber, buffername):
         if not self.filetype_triggered:
@@ -133,13 +138,6 @@ class Plugin(plugin.Plugin):
 
     def action_status(self, message):
         self.pida.mainwindow.statusbar.push(1, message)
-
-    def do_log(self, source, message, level):
-        """
-        Log a message.
-        """
-        msg = '%s: %s' % (source, message)
-        self.log.log(level, msg)
 
     def action_newbrowser(self, url):
         """
@@ -182,5 +180,12 @@ class Plugin(plugin.Plugin):
 
     def action_accountfork(self, pid):
         self.child_processes.append(pid)
+
+    def do_log(self, source, message, level):
+        """
+        Log a message.
+        """
+        msg = '%s: %s' % (source, message)
+        self.log.log(level, msg)
 
 
