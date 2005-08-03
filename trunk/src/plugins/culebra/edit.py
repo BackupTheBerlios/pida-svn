@@ -59,6 +59,7 @@ class CulebraView(gtksourceview.SourceView):
 class EditWindow(gtk.EventBox):
 
     def __init__(self, plugin=None, quit_cb=None):
+        print "edit win"
         gtk.EventBox.__init__(self)
         self.search_string = None
         self.last_search_iter = None
@@ -303,6 +304,7 @@ class EditWindow(gtk.EventBox):
             if font_desc:
                 self.editor.modify_font(font_desc)
             buff.connect('insert-text', self.insert_at_cursor_cb)
+            print "Connected"
             buff.set_data("save", False)
             self.editor.set_buffer(buff)
             self.editor.grab_focus()
@@ -311,6 +313,7 @@ class EditWindow(gtk.EventBox):
             self.current_buffer = len(self.wins) - 1
 
     def insert_at_cursor_cb(self, buff, iter, text, length):
+        print "insert at cursor"
         complete = ""
         buff, fn = self.get_current()
         iter2 = buff.get_iter_at_mark(buff.get_insert())
@@ -1022,6 +1025,7 @@ class AutoCompletionWindow(gtk.Window):
         
     def insert_complete(self):
         buff = self.source.get_buffer()
+        print self.mod, self.complete
         try:
             if not self.mod:
                 s, e = self.cbounds
@@ -1045,18 +1049,23 @@ class AutoCompletionWindow(gtk.Window):
             self.hide()
             
     def search_func(self, model, column, key, it):
+        
         if self.mod:
             cp_text = key
         else:
             cp_text = self.text + key
             self.complete = cp_text
+        
         if model.get_path(model.get_iter_first()) == model.get_path(it):
             self.found = False
         if model.get_value(it, column).startswith(cp_text):
             self.found = True
+        print self.found, self.mod, self.complete, model.get_value(it, column), key, self.text
         if model.iter_next(it) is None and not self.found:
-            if self.text != "":
+            if self.text != "" and model.get_value(it, column).startswith(self.complete):
                 self.complete = model.get_value(it, 1)
+            elif not model.get_value(it, column).startswith(self.complete):
+                pass
             else:
                 self.complete = key
             self.insert_complete()
