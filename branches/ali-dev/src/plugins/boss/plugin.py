@@ -36,35 +36,9 @@ class Plugin(plugin.Plugin):
     VISIBLE = False
     
     def configure(self, reg):
-        self.ftregistry = reg.add_group('filetypes',
-            'Determines which plugins are displayed for which filetypes.')
-        self.ftregistry.add('all',
-            registry.RegistryItem,
-            'project, pastebin, gazpacho',
-            'What plugins to always use (comma separated)')
-        self.ftregistry.add('python',
-            registry.RegistryItem,
-            'python_browser, python_debugger, python_profiler',
-            'What plugins to use only for python files (comma separated)')
-        self.ftregistry.add('None',
-            registry.RegistryItem,
-            '',
-            'What plugins to use on unknown files (comma separated)')
-
-        self.plugregistry = reg.add_group('plugins',
-            'Determines which plugins are loaded at startup.')
-    
-        for pluginname in self.prop_optional_pluginlist:
-            self.plugregistry.add(pluginname,
-                registry.Boolean,
-                True,
-                'Whether %s wil be loaded at startup (requires restart).' % \
-                    pluginname)
-
+        pass
+ 
     def do_init(self):
-        self.filetypes = {}
-        self.filetype_triggered = False
-        self.filetype_current = 'None'
 
         self.log = logging.getLogger()
         self.loghandler = None
@@ -77,11 +51,14 @@ class Plugin(plugin.Plugin):
 
         self.child_processes = []
 
+        self.boss_plugs = []
+
         self.load_sub_plugins()
 
     def load_sub_plugins(self):
-        for name in ['shortcuts']:
-            self.pida.add_plugin(name)
+        self.filetype = self.pida.create_plugin('filetype')
+        self.filetype.configure(self.prop_main_registry)
+        self.boss_plugs.append(self.filetype)
 
     def reset_logger(self):
         logfile = self.prop_main_registry.files.log.value()
@@ -94,7 +71,7 @@ class Plugin(plugin.Plugin):
     def reset_io(self):
         stdiofile = '%s.io' % self.prop_main_registry.files.log.value()
         f = open(stdiofile, 'w')
-        sys.stdout = sys.stderr = f
+        #sys.stdout = sys.stderr = f
 
     def evt_populate(self):
         self.icons = gtkextra.Icons()
@@ -105,33 +82,6 @@ class Plugin(plugin.Plugin):
     def evt_reset(self):
         self.reset_logger()
         self.reset_io()
-
-    def evt_bufferchange(self, buffernumber, buffername):
-        if not self.filetype_triggered:
-            self.filetypes[buffernumber] = 'None'
-        if self.filetype_current != self.filetypes[buffernumber]:
-            self.filetype_current = self.filetypes[buffernumber]
-            self.pida.mainwindow.add_pages(self.get_pluginnames(self.filetype_current))
-        self.filetype_triggered = False
-        self.pida.mainwindow.set_title('PIDA %s' % buffername)
-        
-    def evt_filetype(self, buffernumber, filetype):
-        self.filetype_triggered = True
-        self.filetypes[buffernumber] = filetype
-
-    def get_pluginnames(self, filetype):
-        genplugins = [s.strip() for s in self.ftregistry.all.value().split(',')]
-        ftplugins = []
-        if hasattr(self.prop_main_registry.filetypes, filetype):
-            fl = getattr(self.prop_main_registry.filetypes, filetype).value()
-            ftplugins = [s.strip() for s in fl.split(',')]
-            # No filetypes for the plugin
-        return genplugins + ftplugins
-
-    def get_named_plugin(self, name):
-        for plugin in self.plugins:
-            if plugin.NAME == name:
-                return plugin
 
     def action_settip(self, widget, tiptext):
         self.tips.set_tip(widget, tiptext)

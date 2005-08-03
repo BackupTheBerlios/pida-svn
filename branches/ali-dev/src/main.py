@@ -223,6 +223,10 @@ class Application(base.pidaobject):
         self.do_log_debug('evt: %s' % name)
         self.signal_to_plugin(self.boss, 'evt', name, *args, **kw)
         # pass the event to every plugin
+        for plugin in self.boss.boss_plugs:
+            # call the instance method, or an empty lambda
+            self.signal_to_plugin(plugin, 'evt', name, *args, **kw)
+
         for plugin in self.plugins:
             # call the instance method, or an empty lambda
             self.signal_to_plugin(plugin, 'evt', name, *args, **kw)
