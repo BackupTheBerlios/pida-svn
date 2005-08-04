@@ -19,7 +19,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-# This file is part of Culebra project.
+# This file is part of Culebra plugin.
 
 import gtk
 import sys, os
@@ -59,7 +59,6 @@ class CulebraView(gtksourceview.SourceView):
 class EditWindow(gtk.EventBox):
 
     def __init__(self, plugin=None, quit_cb=None):
-        print "edit win"
         gtk.EventBox.__init__(self)
         self.search_string = None
         self.last_search_iter = None
@@ -104,7 +103,6 @@ class EditWindow(gtk.EventBox):
         buff = CulebraBuffer()
         self.new = True
         buff.set_data('languages-manager', lm)
-#        self.editor = gtksourceview.SourceView(buff)
         self.editor = CulebraView(buff)
         self.plugin.pida.mainwindow.connect('delete-event', self.file_exit)
         font_desc = pango.FontDescription('monospace 10')
@@ -304,7 +302,6 @@ class EditWindow(gtk.EventBox):
             if font_desc:
                 self.editor.modify_font(font_desc)
             buff.connect('insert-text', self.insert_at_cursor_cb)
-            print "Connected"
             buff.set_data("save", False)
             self.editor.set_buffer(buff)
             self.editor.grab_focus()
@@ -313,7 +310,6 @@ class EditWindow(gtk.EventBox):
             self.current_buffer = len(self.wins) - 1
 
     def insert_at_cursor_cb(self, buff, iter, text, length):
-        print "insert at cursor"
         complete = ""
         buff, fn = self.get_current()
         iter2 = buff.get_iter_at_mark(buff.get_insert())
@@ -455,6 +451,7 @@ class EditWindow(gtk.EventBox):
             fd = open(fname)
             self._new_tab(fname)
             buff, fn = self.wins[self.current_buffer]
+            buff.begin_not_undoable_action()
             buff.set_text('')
             buff.set_data('filename', fname)
             buff.set_text(fd.read())
@@ -467,6 +464,7 @@ class EditWindow(gtk.EventBox):
             self.new = False
             self.check_mime(self.current_buffer)
             buff.place_cursor(buff.get_start_iter())
+            buff.end_not_undoable_action()
         except:
             dlg = gtk.MessageDialog(self.get_parent_window(),
                     gtk.DIALOG_DESTROY_WITH_PARENT,
@@ -680,6 +678,7 @@ class EditWindow(gtk.EventBox):
                 dialog.destroy()
                 return
             self._search(search_text.get_text(), self.last_search_iter)
+            dialog.destroy()
         buff = self.get_current()[0]
         search_text = gtk.Entry()
         s = buff.get_selection_bounds()

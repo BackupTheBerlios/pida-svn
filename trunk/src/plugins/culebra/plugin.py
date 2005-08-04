@@ -42,13 +42,13 @@ class Plugin(plugin.Plugin):
     DICON = 'configure', 'Configure Pida'
 
     def configure(self, reg):
-        self.personal_registry = reg.add_group('culebra',
-            'options pertaining to the Culebra editor')
+        self.personal_registry = reg.add_group('Culebra',
+            'Options pertaining to the Culebra Editor')
 
-        self.personal_registry.add('font',
+        self.personal_registry.add('Font',
             registry.Font,
             'Monospace 10',
-            'The Font used by Culebra')
+            'The Font used by Culebra Editor')
 
     def do_init(self):
         self.editor = None

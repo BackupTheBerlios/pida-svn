@@ -47,9 +47,10 @@ def InputBox(title, label, parent, text=''):
 def OpenFile(title, parent=None, dirname=None, fname=None, mask = None):
 
     dlg = gtk.FileChooserDialog(title, parent,
-                                buttons=(gtk.STOCK_OK, gtk.RESPONSE_OK,
-                                         gtk.STOCK_CANCEL,
-                                         gtk.RESPONSE_CANCEL))
+                                buttons=(gtk.STOCK_CANCEL,
+                                         gtk.RESPONSE_CANCEL,
+                                         gtk.STOCK_OPEN,
+                                         gtk.RESPONSE_OK))
 
     if fname:
         dlg.set_current_folder(os.path.dirname(fname))
@@ -76,9 +77,9 @@ def OpenFile(title, parent=None, dirname=None, fname=None, mask = None):
 def SaveFile(title, parent=None, dirname=None, fname=None):
     dlg = gtk.FileChooserDialog(title, parent,
                                 gtk.FILE_CHOOSER_ACTION_SAVE,
-                                buttons=(gtk.STOCK_OK, gtk.RESPONSE_OK,
-                                         gtk.STOCK_CANCEL,
-                                         gtk.RESPONSE_CANCEL))
+                                buttons=(gtk.STOCK_CANCEL,
+                                         gtk.RESPONSE_CANCEL,
+                                         gtk.STOCK_SAVE, gtk.RESPONSE_OK))
     if fname:
         dlg.set_filename(fname)
     elif dirname:
