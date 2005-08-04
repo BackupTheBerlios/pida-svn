@@ -36,6 +36,10 @@ class MainWindow(base.pidaobject, gtk.Window):
         # Set the window title.
         caption = 'PIDA' # %s' % __version__
         self.set_title(caption)
+        # Set the icon for the main window
+        libdir = self.prop_main_registry.directories.shared.value()
+        logofile = os.path.join(libdir, 'pidaicon.png')
+        self.set_icon_from_file(logofile)
         # Connect the destroy event.
         self.connect('destroy', self.cb_quit)
         # Connect the keypress event.
