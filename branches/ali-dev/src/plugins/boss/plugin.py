@@ -44,7 +44,6 @@ class Plugin(plugin.Plugin):
         self.loghandler = None
         #logging.basicConfig()
         self.evt_reset()
-        #sys.stdout = sys.stderr = file('/dev/null', 'w')
 
         self.tips = gtk.Tooltips()
         self.tips.enable()
