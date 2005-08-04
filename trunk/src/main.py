@@ -119,11 +119,11 @@ class Application(base.pidaobject):
 
         self.do_first_time()
 
-        self.boss = create_plugin('boss', self)
+        self.boss = self.create_plugin('boss')
         self.boss.configure(self.registry)
+
         shell_plug = self.add_plugin('terminal')
         buffer_plug = self.add_plugin('buffer')
-
 
         opt_plugs = []
         for plugname in OPTPLUGINS:
@@ -172,12 +172,29 @@ class Application(base.pidaobject):
             firsttimer = firstrun.FirstTimeWindow()
             firsttimer.show(ftname)
 
+    def create_plugin(self, name):
+        """ Find a named plugin and instantiate it. """
+        # import the module
+        # The last arg [True] just needs to be non-empty
+        try:
+            mod = __import__('pida.plugins.%s.plugin' % name, {}, {}, [True])
+            try:
+                inst = mod.Plugin()
+            except Exception, e:
+                logging.warn('Plugin "%s" failed to instantiate: %s' % (name, e))
+                inst = None
+        except ImportError, e:
+            logging.warn('Plugin "%s" failed to import with: %s' % (name, e))
+            inst = None
+
+        return inst
+
 
     def add_plugin(self, name):
         """
         Create and return the plugin
         """
-        plugin = create_plugin(name, self)
+        plugin = self.create_plugin(name)
         if plugin:
             plugin.configure(self.registry)
             self.plugins.append(plugin)
@@ -206,6 +223,10 @@ class Application(base.pidaobject):
         self.do_log_debug('evt: %s' % name)
         self.signal_to_plugin(self.boss, 'evt', name, *args, **kw)
         # pass the event to every plugin
+        for plugin in self.boss.boss_plugs:
+            # call the instance method, or an empty lambda
+            self.signal_to_plugin(plugin, 'evt', name, *args, **kw)
+
         for plugin in self.plugins:
             # call the instance method, or an empty lambda
             self.signal_to_plugin(plugin, 'evt', name, *args, **kw)
@@ -231,6 +252,4 @@ def main(argv):
 
 if __name__ == '__main__':
     main(sys.argv)
-
-
 

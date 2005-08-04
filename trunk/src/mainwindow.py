@@ -107,7 +107,7 @@ class MainWindow(base.pidaobject, gtk.Window):
         self.opt_windows = {}
         for plug in opt_plugs:
             self.add_opt_plugin(plug)
-        self.add_pages(self.prop_boss.get_pluginnames('None'))
+        self.add_pages(self.prop_boss.filetype.get_pluginnames('None'))
 
         if self.prop_main_registry.layout.start_maximised.value():
             self.maximize()
