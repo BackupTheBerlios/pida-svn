@@ -46,7 +46,48 @@ class CulebraBuffer(gtksourceview.SourceBuffer):
     def __init__(self, filename=None):
         gtksourceview.SourceBuffer.__init__(self)
         self.filename=filename
-
+        lm = gtksourceview.SourceLanguagesManager()
+        self.set_data('languages-manager', lm)
+        self.set_data("save", False)
+        language = lm.get_language_from_mime_type("text/x-python")
+        self.set_highlight(True)
+        self.set_language(language)
+        self.search_string = None
+        self.search_mark = self.create_mark('search', self.get_start_iter())
+        
+    def search(self, search_string, mark = None, scroll=True, editor = None):
+        if mark is None:
+            start = self.get_start_iter()
+        else:
+            start = self.get_iter_at_mark(mark)
+        i = 0
+        if search_string:
+            if self.search_string != search_string:
+                start = self.get_start_iter()
+            self.search_string = search_string
+            res = start.forward_search(search_string, gtk.TEXT_SEARCH_TEXT_ONLY)
+            if res:
+                match_start, match_end = res
+                if scroll and editor is not None:
+                    editor.scroll_to_iter(match_start, 0.25)
+                self.place_cursor(match_start)
+                self.select_range(match_start, match_end)
+                self.move_mark(self.search_mark, match_end)
+                return True
+            else:
+                start = self.get_start_iter()
+                res = start.forward_search(search_string, gtk.TEXT_SEARCH_TEXT_ONLY)
+                if res:
+                    match_start, match_end = res
+                    if scroll and editor is not None:
+                        editor.scroll_to_iter(match_start, 0.25)
+                    self.place_cursor(match_start)
+                    self.select_range(match_start, match_end)
+                    self.move_mark(self.search_mark, match_end)
+                    return True
+                self.search_string = None
+                self.move_mark(self.search_mark, self.get_start_iter())
+        return False
 
 class CulebraView(gtksourceview.SourceView):
 
@@ -55,13 +96,25 @@ class CulebraView(gtksourceview.SourceView):
             gtksourceview.SourceView.__init__(self)
         else:
             gtksourceview.SourceView.__init__(self, buff)
-                
+            
+        self.set_auto_indent(True)
+        self.set_show_line_numbers(True)
+        self.set_show_line_markers(True)
+        self.set_tabs_width(4)
+        self.set_margin(80)
+        self.set_show_margin(True)
+        self.set_smart_home_end(True)
+        self.set_highlight_current_line(True)
+        font_desc = pango.FontDescription('monospace 10')
+        if font_desc:
+            self.modify_font(font_desc)
+                        
 class EditWindow(gtk.EventBox):
 
     def __init__(self, plugin=None, quit_cb=None):
         gtk.EventBox.__init__(self)
         self.search_string = None
-        self.last_search_iter = None
+        self.last_search_mark = None
         self.completion_win = None
         self.insert_string = None
         self.cursor_iter = None
@@ -99,34 +152,15 @@ class EditWindow(gtk.EventBox):
         self.hpaned.set_border_width(5)
         self.hpaned.show()
         # the gtksourceview
-        lm = gtksourceview.SourceLanguagesManager()
         buff = CulebraBuffer()
         self.new = True
-        buff.set_data('languages-manager', lm)
         self.editor = CulebraView(buff)
         self.plugin.pida.mainwindow.connect('delete-event', self.file_exit)
-        font_desc = pango.FontDescription('monospace 10')
-        if font_desc:
-            self.editor.modify_font(font_desc)
-        
         buff.connect('insert-text', self.insert_at_cursor_cb)
-        buff.set_data("save", False)
-        manager = buff.get_data('languages-manager')
-        language = manager.get_language_from_mime_type("text/x-python")
-        buff.set_highlight(True)
-        buff.set_language(language)
         scrolledwin2 = gtk.ScrolledWindow()
         scrolledwin2.add(self.editor)
-        self.editor.set_auto_indent(True)
-        self.editor.set_show_line_numbers(True)
-        self.editor.set_show_line_markers(True)
-        self.editor.set_tabs_width(4)
         self.editor.connect('key-press-event', self.text_key_press_event_cb)
         self.editor.connect('move-cursor', self.move_cursor)
-        self.editor.set_margin(80)
-        self.editor.set_show_margin(True)
-        self.editor.set_smart_home_end(True)
-        self.editor.set_highlight_current_line(True)
         scrolledwin2.show()
         self.editor.show()
         self.editor.grab_focus()
@@ -251,7 +285,7 @@ class EditWindow(gtk.EventBox):
                  None, self.lower_selection),
             ('FindMenu', None, '_Find'),
             ('EditFind', gtk.STOCK_FIND, None, None, None, self.edit_find),
-            ('EditFindNext', None, 'Find _Next', None, None, self.edit_find_next),
+            ('EditFindNext', None, 'Find _Next', 'F3', None, self.edit_find_next),
             ('EditReplace', gtk.STOCK_FIND_AND_REPLACE, None, '<control>h', 
                 None, self.edit_replace),
             ('GotoLine', None, 'Goto Line', '<control>g', 
@@ -293,14 +327,9 @@ class EditWindow(gtk.EventBox):
     def _new_tab(self, f, buff = None):
         l = [n for n in self.wins if n[1]==f]
         if len(l) == 0:
-            lm = gtksourceview.SourceLanguagesManager()
             if buff is None:
                 buff = CulebraBuffer()
                 self.new = True
-            buff.set_data('languages-manager', lm)
-            font_desc = pango.FontDescription('monospace 10')
-            if font_desc:
-                self.editor.modify_font(font_desc)
             buff.connect('insert-text', self.insert_at_cursor_cb)
             buff.set_data("save", False)
             self.editor.set_buffer(buff)
@@ -677,7 +706,9 @@ class EditWindow(gtk.EventBox):
             if response_id == gtk.RESPONSE_CLOSE:
                 dialog.destroy()
                 return
-            self._search(search_text.get_text(), self.last_search_iter)
+            buff.search(search_text.get_text(), 
+                            buff.search_mark, 
+                            editor=self.editor)
             dialog.destroy()
         buff = self.get_current()[0]
         search_text = gtk.Entry()
@@ -703,29 +734,30 @@ class EditWindow(gtk.EventBox):
                 dialog.destroy()
                 return
             if response_id == RESPONSE_FORWARD:
-                self._search(search_text.get_text(), self.last_search_iter)
+                buff.search(search_text.get_text(), buff.search_mark, editor=self.editor)
                 return
             if response_id == RESPONSE_REPLACE:
-                if not self._search(search_text.get_text(), self.last_search_iter):
+                if not buff.search(search_text.get_text(), buff.search_mark, editor=self.editor):
                     return
                 start, end = buff.get_selection_bounds()
                 buff.delete(start, end)
                 buff.insert(start, replace_text.get_text())
-                self.last_search_iter = buff.get_iter_at_mark(buff.get_insert())
+#                self.last_search_iter = buff.get_iter_at_mark(buff.get_insert())
                 start = buff.get_iter_at_mark(buff.get_insert())
                 start.backward_chars(len(replace_text.get_text()))
-                buff.select_range(start, self.last_search_iter)
+                buff.select_range(start, buff.get_iter_at_mark(buff.search_mark))
             if response_id == RESPONSE_REPLACE_ALL:
                 current_iter = buff.get_iter_at_mark(buff.get_insert())
-                while self._search(search_text.get_text(), self.last_search_iter, False):
+                while buff.search(search_text.get_text(), buff.search_mark, False, self.editor):
                     start, end = buff.get_selection_bounds()
                     buff.delete(start, end)
                     buff.insert(start, replace_text.get_text())
-                    self.last_search_iter = buff.get_iter_at_mark(buff.get_insert())
+#                    self.last_search_iter = buff.get_iter_at_mark(buff.get_insert())
                     start = buff.get_iter_at_mark(buff.get_insert())
                     start.backward_chars(len(replace_text.get_text()))
-                    buff.select_range(start, self.last_search_iter)
-                buff.place_cursor(current_iter)
+                    buff.select_range(start, buff.get_iter_at_mark(buff.search_mark))
+                if current_iter is not None:
+                    buff.place_cursor(current_iter)
         buff = self.get_current()[0]
         search_text = gtk.Entry()
         replace_text = gtk.Entry() 
@@ -754,31 +786,13 @@ class EditWindow(gtk.EventBox):
         dialog.show_all()
         response_id = dialog.run()
     
-    def _search(self, search_string, iter = None, scroll=True):
-        buff, fname = self.get_current()
-        if iter is None:
-            start = buff.get_start_iter()
-        else:
-            start = iter
-        i = 0
-        if search_string:
-            self.search_string = search_string
-            res = start.forward_search(search_string, gtk.TEXT_SEARCH_TEXT_ONLY)
-            if res:
-                match_start, match_end = res
-                buff.place_cursor(match_start)
-                buff.select_range(match_start, match_end)
-                if scroll:
-                    self.editor.scroll_to_iter(match_start, 0.25)
-                self.last_search_iter = match_end
-                return True
-            else:
-                self.search_string = None
-                self.last_search_iter = buff.get_iter_at_mark(buff.get_insert())
-                return False
+
             
     def edit_find_next(self, mi):
-        self._search(self.search_string, self.last_search_iter)
+        buff = self.get_current()[0]
+        buff.search(buff.search_string, 
+                    buff.search_mark, 
+                    editor = self.editor)
     
     def goto_line(self, mi=None):
         def dialog_response_callback(dialog, response_id):
@@ -1024,7 +1038,6 @@ class AutoCompletionWindow(gtk.Window):
         
     def insert_complete(self):
         buff = self.source.get_buffer()
-        print self.mod, self.complete
         try:
             if not self.mod:
                 s, e = self.cbounds
@@ -1059,7 +1072,6 @@ class AutoCompletionWindow(gtk.Window):
             self.found = False
         if model.get_value(it, column).startswith(cp_text):
             self.found = True
-        print self.found, self.mod, self.complete, model.get_value(it, column), key, self.text
         if model.iter_next(it) is None and not self.found:
             if self.text != "" and model.get_value(it, column).startswith(self.complete):
                 self.complete = model.get_value(it, 1)
