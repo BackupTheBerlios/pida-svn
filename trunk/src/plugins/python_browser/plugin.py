@@ -173,9 +173,10 @@ class Plugin(plugin.Plugin):
         self.refwin.show(s)
 
     def execute(self):
-        py = self.prop_main_registry.commands.python.value()
-        dirn = os.path.split(self.fn)[0]
-        self.do_action('newterminal', '%s %s' % (py, self.fn), directory=dirn)
+        #py = self.prop_main_registry.commands.python.value()
+        #dirn = os.path.split(self.fn)[0]
+        #self.do_action('newterminal', '%s %s' % (py, self.fn), directory=dirn)
+        self.do_action('command', 'python_execute', [self.fn])
 
     def cb_alternative(self):
         self.execute()
@@ -239,6 +240,11 @@ class Plugin(plugin.Plugin):
         pydoc = self.prop_main_registry.commands.pydoc.value()
         self.do_action('newterminal', '%s %s' % (pydoc, text))
 
+    def evt_reset(self):
+      self.do_action('register_external_command',
+                       'python_execute',
+                       '/usr/bin/python %s', 1, ['file name'], 'execute')
+       
 
 
 

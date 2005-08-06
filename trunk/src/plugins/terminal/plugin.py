@@ -78,23 +78,23 @@ class Terminal(base.pidaobject, vte.Terminal):
         # call the superclass method
         vte.Terminal.feed(self, text)
 
-class PidaTerminal(base.pidaobject, gtk.VBox):
+class PidaTerminal(base.pidaobject):
     """ A terminal emulator widget aware of the notebook it resides in. """
-    def do_init(self, notebook, icon, immortal=False):
+    def do_init(self, icon, immortal=False):
         # the parent notebook
-        self.notebook = notebook
         # generate widgets
-        gtk.VBox.__init__(self)
-        self.show()
+        self.win = gtk.VBox(self)
+        self.win.show()
         # terminal widget
         self.term = Terminal()
-        self.pack_start(self.term)
+        self.win.pack_start(self.term)
         self.term.show()
         # connect the terminal widget's signals
         self.term.connect('button_press_event', self.cb_button)
         self.term.connect('child-exited', self.cb_exited)
         # tab label
-        self.label = Tablabel(icon)
+        # self.label = Tablabel(icon)
+        self.icon = icon
         # can we be killed?
         self.immortal=immortal
         # a handler for right click matching
@@ -102,6 +102,12 @@ class PidaTerminal(base.pidaobject, gtk.VBox):
         self.match = MatchHandler()
         # the PID of the child process
         self.pid = -1
+
+    def start(self):
+        pass
+
+    def die(self):
+        self.kill()
 
     def run_command(self, command, args=[], **kw):
         """ Fork a system command in the terminal """
@@ -127,12 +133,7 @@ class PidaTerminal(base.pidaobject, gtk.VBox):
 
     def remove(self):
         """ Remove own page from parent notebook """
-        index = self.notebook.page_num(self)
-        if self.immortal:
-            return False
-        else:
-            self.notebook.remove_page(index)
-            return True
+        self.do_action('closecontentpage')
 
     def right_press(self, x, y):
         """ Right click handler """
@@ -182,114 +183,8 @@ class PidaTerminal(base.pidaobject, gtk.VBox):
         """ Any key event handler. """
         self.remove()
 
-class Tablabel(base.pidaobject, gtk.EventBox):
-    """ A label for a notebook tab. """
-    def do_init(self, stockid):
-        # Construct widgets
-        gtk.EventBox.__init__(self)
-        self.set_visible_window(True)
-        # Get the requested icon
-        self.image = self.do_get_image(stockid)
-        self.add(self.image)
-        # Different styles for highligting labels
-        self.hst = self.style.copy()
-        self.dst = self.style
-        col = self.get_colormap().alloc_color('#FF8080')
-        for i in xrange(5):
-            self.hst.bg[i] = col
-        self.show_all()
-
-    def read(self):
-        """ Called to unhighlight the tab label """
-        self.set_style(self.dst)
-   
-    def unread(self):
-        """ Highlight the tab label """
-        self.set_style(self.hst)
-
-class PidaBrowser(gtk.VBox):
-    def __init__(self, notebook, icon, immortal=False):
-        self.cb = cb
-        # the parent notebook
-        self.notebook = notebook
-        # generate widgets
-        gtk.VBox.__init__(self)
-        # terminal widget
-        # tab label
-        self.label = Tablabel(self.cb, icon)
-        # can we be killed?
-        self.immortal=immortal
-        # the PID of the child process
-        self.pid = -1
-
-        self.toolbar = gtkextra.Toolbar(self.cb)
-        
-        self.pack_start(self.toolbar.win, expand=False)
-
-        self.back_but = self.toolbar.add_button('left', self.cb_back, 'Go back')
-        self.next_but = self.toolbar.add_button('right', self.cb_forw, 'Go Forwards')
-        self.toolbar.add_button('close', self.cb_stop, 'Stop loading')
-        self.toolbar.add_button('refresh', self.cb_reload, 'Reload Page')
-
-        self.urlentry = gtk.Entry()
-        self.urlentry.connect('activate', self.cb_urlentered)
-        self.toolbar.win.pack_start(self.urlentry)
-
-        self.progresslabel = gtk.Label()
-        self.toolbar.win.pack_start(self.progresslabel, expand=False)
-
-        self.next_but.set_sensitive(False)
-        self.back_but.set_sensitive(False)
-
-        self.socket = gtk.Socket()
-        self.pack_start(self.socket)
-        self.socket.realize()
-
-
-    def cb_moz_progress(self, moz, cur, max):
-        self.progresslabel.set_markup('<span size="x-small">%s</span>' % cur)
-
-    def cb_moz_location(self, moz):
-        self.back_but.set_sensitive(self.moz.can_go_back())
-        self.next_but.set_sensitive(self.moz.can_go_forward())
-        self.urlentry.set_text(self.moz.get_location())
-
-    def cb_urlentered(self, entry):
-        url = self.urlentry.get_text()
-        self.gourl(url)
-
-    def cb_back(self, button):
-        self.moz.go_back()
-
-    def cb_forw(self, button):
-        self.moz.go_forward()
-
-    def cb_reload(self, button):
-        self.moz.reload(0)
-
-    def cb_stop(self, button):
-        self.moz.stop_load()
-
-    def gourl(self, url):
-        if not os.fork():
-            os.execvp('dillo', ['dillo', '-f', '-x', '%s' % self.socket.get_id()])
-
-    def kill(self):
-        self.remove()
-
-    def remove(self):
-        """ Remove own page from parent notebook """
-        index = self.notebook.page_num(self)
-        self.notebook.remove_page(index)
-        
 class Plugin(plugin.Plugin):
-    """ The terminal emulator plugin """
-    NAME = "Shell"
-    DETACHABLE = True
-
-    def init(self):
-        pass
-
+  
     def configure(self, reg):
         ### Terminal emulator options
         
@@ -321,140 +216,26 @@ class Plugin(plugin.Plugin):
                 registry.Color,
                 '#d0d0d0',
                 'The foreground colour for terminals')
-        
-        self.registry.add('on_top',
-                registry.Boolean,
-                False,
-                'Is the detached window on top of main PIDA window? (Transient'
-                ' window)')
     
-    def populate_widgets(self):
-        self.notebook = gtk.Notebook()
-        self.notebook.set_tab_pos(gtk.POS_TOP)
-        self.notebook.set_scrollable(True)
-        self.notebook.set_property('show-border', False)
-        self.notebook.set_property('tab-border', 2)
-        self.notebook.set_property('enable-popup', True)
-        self.add(self.notebook)
-        self.add_separator()
-        self.add_button('python', self.cb_python,
-                        'Open a python shell')
-        self.add_button('internet', self.cb_new_browser,
-                        'Open a new browser')
-        self.add_button('terminal', self.cb_new,
-                        'Open a new shell')
-        self.add_button('close', self.cb_close,
-                        'Close current tab.')
-       
-        self.panes = {}
-        self.toolbar_popup.add_separator()
-        self.toolbar_popup.add_item('configure',
-                            'Configure this shortcut bar',
-                            self.cb_conf_clicked, [])
-
-    def cb_python(self, *args):
-        self.do_action('newterminal', 'python')
-
-    def cb_conf_clicked(self, *args):
-        self.cb.action_showshortcuts()
-
-    def connect_widgets(self):
-        self.notebook.connect('switch-page', self.cb_switch)
-
-    def add_terminal(self, ttype, icon, immortal=False):
-        child = ttype(self.notebook, icon, immortal)
-        child.show_all()
-        self.notebook.append_page(child, tab_label=child.label)
-        for i in range(self.notebook.get_n_pages()):
-            self.notebook.set_current_page(i)
-        #self.notebook.show_all()
-        return child
-
-    def remove_terminal(self, index):
-        child = self.notebook.get_nth_page(index)
-        if child:
-            child.kill()
-            removed = child.remove()
-        return True
-        
-
-    def new_browser(self, url):
-        if not url:
-            url = 'http://www.google.com/'
-        args = self.prop_main_registry.commands.browser.value().split(' ', 1)
-        com = args.pop(0)
-        pid = os.fork()
-        if not pid:
-            os.execlp(com, com,  *(args+[url]))
-        #child = self.add_terminal(PidaBrowser, 'internet', False)
-        #child.gourl(url)
-        #child.run_command(command, args, **kw)
-        #if self.detach_window:
-        #    self.detach_window.present()
-        #return child
-
-    def new_command(self, command, args, icon, **kw):
-        if command == 'browseurl':
-            url = None
-            if len(args) > 1:
-                url = args.pop()
-            return self.new_browser(url)
-        child = self.add_terminal(PidaTerminal, icon, False)
-        child.run_command(command, args, **kw)
-        if self.detach_window:
-            self.detach_window.present()
-        return child
-
     def evt_terminal(self, commandline, **kw):
         if not hasattr(vte, 'bad') and self.registry.internal.value():
             self.termmap_internal(commandline, **kw)
         else:
             self.termmap_xterm(commandline, **kw)
 
-    def evt_killterminal(self):
-        self.cb_close()
-
-    def evt_shortcutschanged(self):
-        self.ctxbar.refresh()
-        self.ctxbar.show()
-
-    def cb_new(self, *args):
-        shell = self.prop_main_registry.commands.shell.value()
-        self.do_action('newterminal', 'bash', icon='terminal')
-
-    def cb_new_browser(self, *args):
-        self.new_browser(None)
-
-    def cb_close(self, *args):
-        if not self.remove_terminal(self.notebook.get_current_page()):
-            self.error('cannot remove log window')
-
-    def cb_changed(self, terminal):
-        cpage = self.notebook.get_nth_page(self.notebook.get_current_page())
-        if terminal != cpage:
-            terminal.label.unread()
-
-    def cb_switch(self, notebook, p, id, *args):
-        self.notebook.get_nth_page(id).label.read()
-
-    def cb_browser(self, *args):
-        self.new_browser('http://www.google.com/')
-
+    __call__ = evt_terminal
+ 
     def termmap_internal(self, commandline, **kw):
         icon = 'terminal'
         if 'icon' in kw:
             icon = kw['icon']
             del kw['icon']
-        child = PidaTerminal(self.notebook, icon)
+        child = PidaTerminal(icon)
         args = commandline.split()
         command = args.pop(0)
         args.insert(0, 'PIDA')
+        self.do_action('newcontentpage', child)
         child.run_command(command, args, **kw)
-        if self.detach_window:
-            self.detach_window.present()
-        self.notebook.append_page(child, tab_label=child.label)
-        self.notebook.set_current_page(self.notebook.get_n_pages() - 1)
-        child.show_all()
         return child
 
     def termmap_xterm(self, commandline, **kw):

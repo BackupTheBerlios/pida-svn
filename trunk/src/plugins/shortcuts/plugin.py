@@ -32,7 +32,63 @@ import pida.base as base
 import gobject
 import pida.gtkextra as gtkextra
 
+
+
+class PidaCommand(base.pidaobject):
+
+    def do_init(self, command, minargs, argnames):
+        self.minimum_arguments = minargs
+        self.argument_names = argnames
+        self.command = command
+
+class ExternalCommand(PidaCommand):
+
+    def __call__(self, args, **kw):
+        # terminal action
+        self.do_action('newterminal', self.command % tuple(args), **kw)
+
+class InternalCommand(PidaCommand):
+    
+    def __call__(self, args):
+        self.command(args)
+
+
+class Plugin(plugin.Plugin):
+
+    def do_init(self):
+        self.commands = {}
+
+
+    def register_command(self, name, command):
+        self.commands[name] = command
+        return command
+
+    def register_external_command(self, name, command, minargs=0, argnames=[],
+                                    icon=None):
+        command = ExternalCommand(command, minargs, argnames)
+        self.register_command(name, command)
+        return command
+
+    def register_internal_command(self, name, callback, minargs=0,
+                                argnames=[], icon=None):
+        command = InternalCommand(command, minargs, argnames)
+        self.register_command(command)
+        return command
+        
+
+    def __call__(self, name, args, **kw):
+        print 'calling'
+        if len(args) < self.commands[name].minimum_arguments:
+            pass
+            # get the entry
+        else:
+            self.commands[name](args, **kw)
+
+
+
+
 class ShortcutTree(gtkextra.Tree):
+
     COLUMNS = [('name', gobject.TYPE_STRING,
                 gtk.CellRendererText, True, 'text')]
     SCROLLABLE = False
@@ -55,7 +111,7 @@ class Window(gtk.Window):
 
 
 
-class Plugin(plugin.Plugin):
+class Plugini(plugin.Plugin):
     NAME = "Shortcuts"
 
     def populate_widgets(self):

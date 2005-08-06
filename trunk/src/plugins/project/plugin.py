@@ -509,6 +509,13 @@ class Plugin(plugin.Plugin):
                           'The files to be excluded from the file tree view.')
 
 
+    def do_init(self):
+        
+        self.do_action('register_external_command',
+                       'shell', 'bash', 0, [], 'terminal')
+                       
+
+
     def populate_widgets(self):
         self.vcsbar = gtk.EventBox()
         self.add(self.vcsbar, expand=False)
@@ -618,7 +625,7 @@ class Plugin(plugin.Plugin):
         else:
             wd = self.config.get(name, 'directory')
         shell = self.prop_main_registry.commands.shell.value()
-        self.do_action('newterminal', shell, directory=wd)
+        self.do_action('command', 'shell', directory=wd)
 
     def evt_projectschanged(self, *a):
         self.config.load()

@@ -42,7 +42,7 @@ class Plugin(plugin.Plugin):
 
         self.log = logging.getLogger()
         self.loghandler = None
-        #logging.basicConfig()
+        logging.basicConfig()
         self.evt_reset()
 
         self.tips = gtk.Tooltips()
@@ -55,9 +55,14 @@ class Plugin(plugin.Plugin):
         self.load_sub_plugins()
 
     def load_sub_plugins(self):
-        self.filetype = self.pida.create_plugin('filetype')
-        self.filetype.configure(self.prop_main_registry)
-        self.boss_plugs.append(self.filetype)
+        for name in ['filetype', 'terminal', 'shortcuts', 'browser']:
+            self.create_sub_plugin(name)
+
+    def create_sub_plugin(self, name):
+        setattr(self, name, self.pida.create_plugin(name))
+        plugin = getattr(self, name)
+        plugin.configure(self.prop_main_registry)
+        self.boss_plugs.append(plugin)
 
     def reset_logger(self):
         logfile = self.prop_main_registry.files.log.value()
@@ -111,10 +116,28 @@ class Plugin(plugin.Plugin):
                 pass
         gtk.main_quit()
 
+    def action_command(self, name, args=[], **kw):
+        self.shortcuts(name, args, **kw)
+
+    def action_register_external_command(self, name, commandline, minargs,
+                                            argnames, icon):
+        self.shortcuts.register_external_command(name, commandline, minargs,
+                                            argnames, icon)
+
     def action_newterminal(self, commandline, **kw):
         """Open a new terminal, by issuing an event"""
         # Fire the newterm event, the terminal plugin will respond.
-        self.do_evt('terminal', commandline, **kw)
+        # self.do_evt('terminal', commandline, **kw)
+        self.terminal(commandline, **kw)
+
+    def action_newbrowser(self, url=None):
+        self.browser(url)
+
+    def action_newcontentpage(self, pageobj):
+        self.do_evt('contentpage', pageobj)
+
+    def action_closecontentpage(self):
+        self.do_evt('closecontentpage')
 
     def action_fork(self, commandargs):
         print commandargs
