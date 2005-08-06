@@ -185,10 +185,6 @@ def configure(reg):
     
     core_editor.choices = ['vim', 'culebra']
 
-    core_browser = core_group.add('internal_browser',
-        registry.Boolean,
-        False,
-        'Determines whether the Pida internal browser is used')
 
 if __name__ == '__main__':
     pass

@@ -241,9 +241,15 @@ class Plugin(plugin.Plugin):
         self.do_action('newterminal', '%s %s' % (pydoc, text))
 
     def evt_reset(self):
-      self.do_action('register_external_command',
+        py = self.prop_main_registry.commands.python.value()
+
+        self.do_action('register_external_command',
                        'python_execute',
-                       '/usr/bin/python %s', 1, ['file name'], 'execute')
+                       '%s %%s' % py, 1, ['file name'], 'execute')
+
+        self.do_action('register_external_command',
+                       'python_shell',
+                       py, 0, [], 'python')
        
 
 

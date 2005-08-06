@@ -40,6 +40,10 @@ class Plugin(plugin.Plugin):
     def configure(self, reg):
         self.registry = reg.add_group('browser', 'Options for web browsing')
     
+
+        self.registry.add('internal_browser', registry.Boolean,
+                          False,
+                          'Determines whether the Pida internal browser is used')
         self.registry.add('homepage', registry.RegistryItem,
                           'http://www.google.com',
                           'The default web browser homepage')
@@ -48,7 +52,7 @@ class Plugin(plugin.Plugin):
         if not url:
             url = self.registry.homepage.value()
             
-        embd = self.prop_main_registry.components.internal_browser.value()
+        embd = self.registry.internal_browser.value()
         if embd:
             browser = Browser()
             self.do_action('newcontentpage', browser)
@@ -57,7 +61,6 @@ class Plugin(plugin.Plugin):
             self.do_action('command', 'browse', [url])
 
     def evt_reset(self):
-        print 'setting browser'
         br = self.prop_main_registry.commands.browser.value()
         self.do_action('register_external_command',
                     'browse', '%s %%s' % br,
@@ -118,8 +121,8 @@ class Fetcher(base.pidaobject):
 
     def fetch_url(self, url, stream=None):
         def fetch():
-            fd = urllib.urlopen(url)
             gtk.threads_enter()
+            fd = urllib.urlopen(url)
             gobject.io_add_watch(fd, gobject.IO_IN, self.readable, stream)
             gtk.threads_leave()
         t = threading.Thread(target=fetch)

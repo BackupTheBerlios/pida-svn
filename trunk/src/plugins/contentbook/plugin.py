@@ -83,16 +83,15 @@ class Plugin(plugin.Plugin):
         self.add(self.notebook)
         self.add_separator()
 
-        #self.add_button('python', self.cb_python,
-        #                'Open a python shell')
 
-
-        def browse(*args):
+        self.add_button('python', self.cb_external_command,
+                        'Open a python shell', ['python_shell'])
+        def browse(button):
             self.do_action('newbrowser')
         self.add_button('internet', browse,
                         'Open a new browser')
-        #self.add_button('terminal', self.cb_new,
-        #                'Open a new shell')
+        self.add_button('terminal', self.cb_external_command,
+                        'Open a new shell', ['shell'])
         self.add_button('close', self.cb_toolbar_close,
                         'Close current tab.')
        
@@ -136,6 +135,10 @@ class Plugin(plugin.Plugin):
     def remove_current_page(self):
         if not self.remove_page(self.notebook.get_current_page()):
             self.error('cannot remove log window')
+
+    def cb_external_command(self, button, name):
+        print name
+        self.do_action('command', name)
 
     def cb_toolbar_clicked(self, button, args):
         pass
