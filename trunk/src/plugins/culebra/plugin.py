@@ -45,7 +45,7 @@ class Plugin(plugin.Plugin):
         self.personal_registry = reg.add_group('Culebra',
             'Options pertaining to the Culebra Editor')
 
-        self.personal_registry.add('Font',
+        self.personal_registry.add('font',
             registry.Font,
             'Monospace 10',
             'The Font used by Culebra Editor')
