@@ -47,7 +47,7 @@ class pidaobject(object):
     prop_main_registry = property(__get_registry)
 
     def __get_plugins(self):
-        return self.pida.plufins
+        return self.pida.plugins
 
     prop_loaded_plugins = property(__get_plugins)
 

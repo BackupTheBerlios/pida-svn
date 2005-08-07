@@ -27,7 +27,11 @@ import pida.configuration.registry as registry
 import pida.configuration.config as config
 import pida.base as base
 
-import gtkhtml2
+try:
+    import gtkhtml2
+except ImportError:
+    gtkhtml2 = None
+
 import threading
 import urllib
 import urlparse
@@ -52,7 +56,7 @@ class Plugin(plugin.Plugin):
         if not url:
             url = self.registry.homepage.value()
             
-        embd = self.registry.internal_browser.value()
+        embd = self.registry.internal_browser.value() and not (gtkhtml2 is None)
         if embd:
             browser = Browser()
             self.do_action('newcontentpage', browser)
