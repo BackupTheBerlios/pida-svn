@@ -80,7 +80,7 @@ class Plugin(plugin.Plugin):
     def check_mime(self, fname):
         try:
             buff, fn = self.editor.get_current()
-            manager = buff.get_data('languages-manager')
+            manager = buff.languages_manager
             if os.path.isabs(fname):
                 path = fname
             else:

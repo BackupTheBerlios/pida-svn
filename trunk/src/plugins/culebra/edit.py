@@ -32,11 +32,13 @@ import keyword
 
 BLOCK_SIZE = 2048
 
-special_chars = (".",)
 RESPONSE_FORWARD = 0
 RESPONSE_BACKWARD = 1
 RESPONSE_REPLACE = 2
 RESPONSE_REPLACE_ALL = 3
+
+BUFFER = 0
+FILENAME = 1
 
 global newnumber
 newnumber = 1
@@ -47,8 +49,8 @@ class CulebraBuffer(gtksourceview.SourceBuffer):
         gtksourceview.SourceBuffer.__init__(self)
         self.filename=filename
         lm = gtksourceview.SourceLanguagesManager()
-        self.set_data('languages-manager', lm)
-        self.set_data("save", False)
+        self.languages_manager = lm
+        self.save = False
         language = lm.get_language_from_mime_type("text/x-python")
         self.set_highlight(True)
         self.set_language(language)
@@ -88,6 +90,84 @@ class CulebraBuffer(gtksourceview.SourceBuffer):
                 self.search_string = None
                 self.move_mark(self.search_mark, self.get_start_iter())
         return False
+        
+    def get_context(self, it, sp=False):
+        iter2 = it.copy()
+        if sp:
+            it.backward_word_start()
+        else:
+            it.backward_word_starts(1)
+        iter3 = it.copy()
+        iter3.backward_chars(1)
+        prev = iter3.get_text(it)
+        complete = it.get_text(iter2)
+        self.context_bounds = (self.create_mark('cstart',it), self.create_mark('cend',iter2))
+        if prev in (".", "_"):
+            t = self.get_context(it)
+            return t + complete
+        else:
+            count = 0
+            return complete
+            
+            
+    def show_completion(self, text, it, editor, mw):
+        complete = ""
+        iter2 = self.get_iter_at_mark(self.get_insert())
+        s, e = self.get_bounds()
+        text_code = self.get_text(s, e)
+        lst_ = []
+
+        mod = False
+        if text != '.':
+            complete = self.get_context(iter2, True)
+            if "\n" in complete or complete.isdigit() or complete.isspace():
+                return
+            else:
+                complete = complete + text
+            try:
+                c = compile(text_code, '<string>', 'exec')
+                lst_ = [a for a in c.co_names if a.startswith(complete)]
+                con = map(str, c.co_consts)
+                con = [a for a in con if a.startswith(complete) and a not in lst_]
+                lst_ += con
+                lst_ += keyword.kwlist
+                lst_ = [a for a in lst_ if a.startswith(complete)]
+                lst_.sort()
+            except:
+                lst_ += keyword.kwlist
+                lst_ = [a for a in lst_ if a.startswith(complete)]
+                lst_.sort()
+        else:
+            mod = True
+            complete = self.get_context(iter2)
+            if complete.isdigit():
+                return
+            if len(complete.strip()) > 0:
+                try:
+                    lst_ = [str(a[0]) for a in importsTipper.GenerateTip(complete, os.path.dirname(fn)) if a is not None]
+                except:
+                    try:
+                        c = compile(text_code, '<string>', 'exec')
+                        lst_ = [a for a in c.co_names if a.startswith(complete)]
+                        con = map(str, c.co_consts)
+                        con = [a for a in con if a.startswith(complete) and a not in lst_]
+                        lst_ += con
+                        lst_ += keyword.kwlist
+                        lst_ = [a for a in lst_ if a.startswith(complete)]
+                        lst_.sort()
+                        complete = ""
+                    except:
+                        lst_ += keyword.kwlist
+                        lst_ = [a for a in lst_ if a.startswith(complete)]
+                        lst_.sort()
+                        complete = ""
+        if len(lst_)==0:
+            return
+        cw = AutoCompletionWindow(editor, iter2, complete, 
+                                    lst_, 
+                                    mw, 
+                                    mod, 
+                                    self.context_bounds)
 
 class CulebraView(gtksourceview.SourceView):
 
@@ -113,16 +193,9 @@ class EditWindow(gtk.EventBox):
 
     def __init__(self, plugin=None, quit_cb=None):
         gtk.EventBox.__init__(self)
-        self.search_string = None
-        self.last_search_mark = None
-        self.completion_win = None
-        self.insert_string = None
-        self.cursor_iter = None
         self.plugin = plugin
         self.wins = []
-        self.current_word = ""
-        self.wl = []
-        self.ac_w = None
+        self.completion_window = None
         self.set_size_request(470, 300)
         self.connect("delete_event", self.file_exit)
         self.quit_cb = quit_cb
@@ -160,11 +233,10 @@ class EditWindow(gtk.EventBox):
         scrolledwin2 = gtk.ScrolledWindow()
         scrolledwin2.add(self.editor)
         self.editor.connect('key-press-event', self.text_key_press_event_cb)
-        self.editor.connect('move-cursor', self.move_cursor)
         scrolledwin2.show()
         self.editor.show()
         self.editor.grab_focus()
-        buff.set_data('filename', "untitled.py")
+        buff.filename = 'untitled.py'
         self.wins.append([buff, "untitled.py"])
         self.current_buffer = 0
         self.hpaned.add2(scrolledwin2)
@@ -224,6 +296,9 @@ class EditWindow(gtk.EventBox):
                 <menu name='BufferMenu' action='BufferMenu'>
                         <menuitem action='PrevBuffer'/>
                         <menuitem action='NextBuffer'/>
+                </menu>
+                <menu name='HelpMenu' action='HelpMenu'>
+                        <menuitem action='About'/>
                 </menu>
         </menubar>
         <toolbar>
@@ -300,6 +375,8 @@ class EditWindow(gtk.EventBox):
             ('BufferMenu', None, '_Buffers'),
             ('PrevBuffer', gtk.STOCK_GO_UP, None, "<shift>F6",None, self.prev_buffer),
             ('NextBuffer', gtk.STOCK_GO_DOWN, None, "F6",None, self.next_buffer),
+            ('HelpMenu', None, '_Help'),
+            ('About', gtk.STOCK_ABOUT, None, None, None, self.about),
             ]
         self.ag = gtk.ActionGroup('edit')
         self.ag.add_actions(actions)
@@ -309,11 +386,18 @@ class EditWindow(gtk.EventBox):
         self.get_parent_window().add_accel_group(self.ui.get_accel_group())
         return (self.ui.get_widget('/menubar'), self.ui.get_widget('/toolbar'))
     
+    def about(self, mi):
+        d = gtk.AboutDialog()
+        d.set_name('Culebra Editor')
+        d.set_version('0.2.3')
+        d.set_copyright('Copyright © 2005 Fernando San Martín Woerner')
+        d.set_comments('This plugin work as text editor inside PIDA')
+        d.set_authors(['Fernando San Martín Woerner (fsmw@gnome.org)'])
+        d.show()
+
+    
     def set_title(self, title):
         self.plugin.pida.mainwindow.set_title(title)
-
-    def move_cursor(self, tv, step, count, extend_selection):
-        return
 
     def get_parent_window(self):
         return self.plugin.pida.mainwindow
@@ -331,81 +415,18 @@ class EditWindow(gtk.EventBox):
                 buff = CulebraBuffer()
                 self.new = True
             buff.connect('insert-text', self.insert_at_cursor_cb)
-            buff.set_data("save", False)
+            buff.save = False  
             self.editor.set_buffer(buff)
             self.editor.grab_focus()
-            buff.set_data('filename', f)
+            buff.filename = f
             self.wins.append([buff, f])
             self.current_buffer = len(self.wins) - 1
 
-    def insert_at_cursor_cb(self, buff, iter, text, length):
-        complete = ""
-        buff, fn = self.get_current()
-        iter2 = buff.get_iter_at_mark(buff.get_insert())
-        s, e = buff.get_bounds()
-        text_code = buff.get_text(s, e)
-        lst_ = []
-        if self.ac_w is not None:
-            self.ac_w.hide()
-        mod = False
-        if text != '.':
-            complete = self.get_context(buff, iter2, True)
-            if "\n" in complete or complete.isdigit():
-                return
-            else:
-                complete = complete + text
-            try:
-                c = compile(text_code, '<string>', 'exec')
-                lst_ = [a for a in c.co_names if a.startswith(complete)]
-                con = map(str, c.co_consts)
-                con = [a for a in con if a.startswith(complete) and a not in lst_]
-                lst_ += con
-                lst_ += keyword.kwlist
-                lst_ = [a for a in lst_ if a.startswith(complete)]
-                lst_.sort()
-            except:
-                lst_ += keyword.kwlist
-                lst_ = [a for a in lst_ if a.startswith(complete)]
-                lst_.sort()
-        else:
-            mod = True
-            complete = self.get_context(buff, iter2)
-            if complete.isdigit():
-                return
-            if len(complete.strip()) > 0:
-                try:
-                    lst_ = [str(a[0]) for a in importsTipper.GenerateTip(complete, os.path.dirname(fn)) if a is not None]
-                except:
-                    try:
-                        c = compile(text_code, '<string>', 'exec')
-                        lst_ = [a for a in c.co_names if a.startswith(complete)]
-                        con = map(str, c.co_consts)
-                        con = [a for a in con if a.startswith(complete) and a not in lst_]
-                        lst_ += con
-                        lst_ += keyword.kwlist
-                        lst_ = [a for a in lst_ if a.startswith(complete)]
-                        lst_.sort()
-                        complete = ""
-                    except:
-                        lst_ += keyword.kwlist
-                        lst_ = [a for a in lst_ if a.startswith(complete)]
-                        lst_.sort()
-                        complete = ""
-                        
-        if len(lst_)==0:
-            return
-        if self.ac_w is None:
-            self.ac_w = AutoCompletionWindow(self.editor, iter2, complete, 
-                                        lst_, 
-                                        self.plugin.pida.mainwindow, 
-                                        mod, 
-                                        self.context_bounds)
-        else:
-            self.ac_w.set_list(self.editor, iter2, complete, 
-                           lst_, 
-                           self.plugin.pida.mainwindow, 
-                           mod, 
-                           self.context_bounds)
+    def insert_at_cursor_cb(self, buff, it, text, length):
+        buff.show_completion(text, 
+                            it, 
+                            self.editor, 
+                            self.plugin.pida.mainwindow)
         return
         
     def get_context(self, buff, it, sp=False):
@@ -482,7 +503,7 @@ class EditWindow(gtk.EventBox):
             buff, fn = self.wins[self.current_buffer]
             buff.begin_not_undoable_action()
             buff.set_text('')
-            buff.set_data('filename', fname)
+            buff.filename = fname
             buff.set_text(fd.read())
             fd.close()
             self.editor.set_buffer(buff)
@@ -514,7 +535,7 @@ class EditWindow(gtk.EventBox):
 
     def check_mime(self, buffer_number):
         buff, fname = self.wins[buffer_number]
-        manager = buff.get_data('languages-manager')
+        manager = buff.languages_manager
         if os.path.isabs(fname):
             path = fname
         else:
@@ -538,7 +559,7 @@ class EditWindow(gtk.EventBox):
                     gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
                     'Couldn\'t get mime type for file "%s"' % fname)
             buff.set_highlight(False)
-        buff.set_data("save", False)
+        buff.save = False
 
     def chk_save(self):
         buff, fname = self.get_current()
@@ -570,10 +591,10 @@ class EditWindow(gtk.EventBox):
         self._new_tab("untitled%s.py" % len(self.wins))
         buff, fname = self.get_current()
         buff.set_text("")
-        buff.set_data('filename', fname)
+        buff.filename = fname
         buff.set_modified(False)
         self.new = True
-        manager = buff.get_data('languages-manager')
+        manager = buff.languages_manager
         language = manager.get_language_from_mime_type("text/x-python")
         buff.set_highlight(True)
         buff.set_language(language)
@@ -584,14 +605,14 @@ class EditWindow(gtk.EventBox):
         return
 
     def file_open(self, mi=None):
-        fn = self.get_current()[1]
+        fn = self.get_current()[FILENAME]
         dirn =os.path.dirname(fn)
         fname = dialogs.OpenFile('Open File', self.get_parent_window(),
                                   dirn, None, "*.py")
         
         if not fname: return
         if self.new:
-            buff = self.get_current()[0]
+            buff = self.get_current()[BUFFER]
             if not buff.get_modified():
                 del self.wins[self.current_buffer]
         self.load_file(fname)
@@ -603,7 +624,7 @@ class EditWindow(gtk.EventBox):
             return self.file_saveas()
         buff = self.editor.get_buffer()
         curr_mark = buff.get_iter_at_mark(buff.get_insert())
-        f = buff.get_data('filename')
+        f = buff.filename
         ret = False
         if fname is None:
             fname = f
@@ -619,8 +640,8 @@ class EditWindow(gtk.EventBox):
             fd.write(buf)
             fd.close()
             buff.set_modified(False)
-            buff.set_data("save", True)
-            buff.set_data('filename', fname)
+            buff.save = True
+            buff.filename = fname
             self.plugin.pida.mainwindow.set_title(os.path.split(fname)[1])
             ret = True
             self.wins[self.current_buffer] = [buff, fname]
@@ -636,7 +657,6 @@ class EditWindow(gtk.EventBox):
         self.check_mime(self.current_buffer)
         self.plugin.do_edit('getbufferlist')
         self.plugin.do_edit('getcurrentbuffer')
-#        self.plugin.do_edit('changebuffer', len(self.wins) - 1)
         buff.place_cursor(curr_mark)
         self.editor.grab_focus()
         return ret
@@ -674,31 +694,31 @@ class EditWindow(gtk.EventBox):
         return False
 
     def edit_cut(self, mi):
-        buff = self.get_current()[0]
+        buff = self.get_current()[BUFFER]
         buff.cut_clipboard(self.clipboard, True)
         return
 
     def edit_copy(self, mi):
-        buff = self.get_current()[0]
+        buff = self.get_current()[BUFFER]
         buff.copy_clipboard(self.clipboard)
         return
 
     def edit_paste(self, mi):
-        buff = self.get_current()[0]
+        buff = self.get_current()[BUFFER]
         buff.paste_clipboard(self.clipboard, None, True)
         return
 
     def edit_clear(self, mi):
-        buff = self.get_current()[0]
+        buff = self.get_current()[BUFFER]
         buff.delete_selection(True, True)
         return
         
     def edit_undo(self, mi):
-        buff = self.get_current()[0]
+        buff = self.get_current()[BUFFER]
         buff.undo()
         
     def edit_redo(self, mi):
-        buff = self.get_current()[0]
+        buff = self.get_current()[BUFFER]
         buff.redo()
 
     def edit_find(self, mi): 
@@ -710,7 +730,7 @@ class EditWindow(gtk.EventBox):
                             buff.search_mark, 
                             editor=self.editor)
             dialog.destroy()
-        buff = self.get_current()[0]
+        buff = self.get_current()[BUFFER]
         search_text = gtk.Entry()
         s = buff.get_selection_bounds()
         if len(s) > 0:
@@ -742,7 +762,6 @@ class EditWindow(gtk.EventBox):
                 start, end = buff.get_selection_bounds()
                 buff.delete(start, end)
                 buff.insert(start, replace_text.get_text())
-#                self.last_search_iter = buff.get_iter_at_mark(buff.get_insert())
                 start = buff.get_iter_at_mark(buff.get_insert())
                 start.backward_chars(len(replace_text.get_text()))
                 buff.select_range(start, buff.get_iter_at_mark(buff.search_mark))
@@ -752,13 +771,12 @@ class EditWindow(gtk.EventBox):
                     start, end = buff.get_selection_bounds()
                     buff.delete(start, end)
                     buff.insert(start, replace_text.get_text())
-#                    self.last_search_iter = buff.get_iter_at_mark(buff.get_insert())
                     start = buff.get_iter_at_mark(buff.get_insert())
                     start.backward_chars(len(replace_text.get_text()))
                     buff.select_range(start, buff.get_iter_at_mark(buff.search_mark))
                 if current_iter is not None:
                     buff.place_cursor(current_iter)
-        buff = self.get_current()[0]
+        buff = self.get_current()[BUFFER]
         search_text = gtk.Entry()
         replace_text = gtk.Entry() 
         s = buff.get_selection_bounds()
@@ -785,11 +803,9 @@ class EditWindow(gtk.EventBox):
         search_text.grab_focus()
         dialog.show_all()
         response_id = dialog.run()
-    
-
             
     def edit_find_next(self, mi):
-        buff = self.get_current()[0]
+        buff = self.get_current()[BUFFER]
         buff.search(buff.search_string, 
                     buff.search_mark, 
                     editor = self.editor)
@@ -824,7 +840,7 @@ class EditWindow(gtk.EventBox):
 
     def comment_block(self, mi=None):
         comment = "#"
-        buf = self.get_current()[0]
+        buf = self.get_current()[BUFFER]
         bound = buf.get_selection_bounds()
         if len(bound) == 0:
             it = buf.get_iter_at_mark(buf.get_insert())
@@ -842,7 +858,7 @@ class EditWindow(gtk.EventBox):
                 start_line += 1
    
     def uncomment_block(self, mi=None):
-        buf = self.get_current()[0]
+        buf = self.get_current()[BUFFER]
         bound = buf.get_selection_bounds()
         if len(bound) == 0:
             it = buf.get_iter_at_mark(buf.get_insert())
@@ -870,7 +886,7 @@ class EditWindow(gtk.EventBox):
                 start_line += 1
                 
     def delete_line(self, mi):
-        buf = self.get_current()[0]
+        buf = self.get_current()[BUFFER]
         it = buf.get_iter_at_mark(buf.get_insert())
         line = it.get_line()
         start = buf.get_iter_at_line(line)
@@ -880,7 +896,7 @@ class EditWindow(gtk.EventBox):
         buf.delete(start, end)
             
     def duplicate_line(self, mi):
-        buf = self.get_current()[0]
+        buf = self.get_current()[BUFFER]
         it = buf.get_iter_at_mark(buf.get_insert())
         line = it.get_line()
         start = buf.get_iter_at_line(line)
@@ -893,7 +909,7 @@ class EditWindow(gtk.EventBox):
         buf.insert(end, ret+text)
     
     def upper_selection(self, mi):
-        buf = self.get_current()[0]
+        buf = self.get_current()[BUFFER]
         bound = buf.get_selection_bounds()
         if not len(bound) == 0:
             start, end = bound
@@ -902,7 +918,7 @@ class EditWindow(gtk.EventBox):
             buf.insert(start, text.upper())
             
     def lower_selection(self, mi):
-        buf = self.get_current()[0]
+        buf = self.get_current()[BUFFER]
         bound = buf.get_selection_bounds()
         if not len(bound) == 0:
             start, end = bound
@@ -919,7 +935,7 @@ class EditWindow(gtk.EventBox):
         
     def debug_script(self, mi):
         self.plugin.do_evt('debuggerload')
-        buff = self.get_current()[0]
+        buff = self.get_current()[BUFFER]
         titer = buff.get_iter_at_line(0)
         self.editor.scroll_to_iter(titer, 0.25)
         buff.place_cursor(titer)
@@ -1002,36 +1018,6 @@ class AutoCompletionWindow(gtk.Window):
         self.tree.set_cursor((0,))
         self.tree.grab_focus()
         
-    def set_list(self, source_view, trig_iter, text, lst, parent, mod, cbound):
-        self.mod = mod
-        self.cbounds = cbound
-        self.store = gtk.ListStore(str, str, str)
-        self.source = source_view
-        self.it = trig_iter
-        self.found = False
-        self.text = text
-        for i in lst:
-            self.store.append((gtk.STOCK_CONVERT, i, ""))
-        self.tree.set_model(self.store)
-        self.tree.set_search_column(1)
-        self.tree.set_search_equal_func(self.search_func)
-        rect = source_view.get_iter_location(trig_iter)
-        wx, wy = source_view.buffer_to_window_coords(gtk.TEXT_WINDOW_WIDGET, 
-                                rect.x, rect.y + rect.height)
-        tx, ty = source_view.get_window(gtk.TEXT_WINDOW_WIDGET).get_origin()
-        wth, hht = parent.get_size()
-        wth += tx
-        hht += ty
-        width = wth - (wx+tx) 
-        height = hht - (wy+ty)
-        if width > 200: width = 200
-        if height > 200: height = 200
-        self.move(wx+tx, wy+ty)
-        self.tree.set_size_request(width, height)
-        self.show_all()
-        self.tree.set_cursor((0,))
-        self.tree.grab_focus()
-        
     def row_activated_cb(self, tree, path, view_column, data = None):
         self.complete = self.store[path][1] + self.store[path][2]
         self.insert_complete()
@@ -1066,7 +1052,7 @@ class AutoCompletionWindow(gtk.Window):
             cp_text = key
         else:
             cp_text = self.text + key
-            self.complete = cp_text
+        self.complete = cp_text
         
         if model.get_path(model.get_iter_first()) == model.get_path(it):
             self.found = False
