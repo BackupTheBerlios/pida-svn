@@ -167,15 +167,7 @@ class MainWindow(base.pidaobject, gtk.Window):
         """
         # if <CONTROL> was pressed with the key
         if event.state & gtk.gdk.CONTROL_MASK:
-            print event.keyval
-            if event.keyval == 97:
-                print '<C-a>'
-                # returning True prevents the key event propogating
-                return False
-            elif event.keyval == 115:
-                print '<C-s>'
-                return False
-            elif event.keyval == 65289:
+            if event.keyval == 65289:
                 self.do_evt('editorfocus')
                 return True
         return False
