@@ -51,15 +51,12 @@ class Gazpacho(object):
             print 'gazpacho not installed'
             return
         if not self.app:
-            if holder:
-                self.app = GazpachoEmbedded(self.cb)
-                self.app.undo_button = self.undo_button
-                self.app.redo_button = self.redo_button
-                self.app._pidawindow = self.cb.mainwindow
-                holder.pack_start(self.app._window)
-                self.holder = holder
-            else:
-                self.app = GazpachoApplication()
+            self.app = GazpachoEmbedded(self.cb)
+            self.app.undo_button = self.undo_button
+            self.app.redo_button = self.redo_button
+            self.app._pidawindow = self.cb.mainwindow
+            holder.pack_start(self.app._window)
+            self.holder = holder
             self.app.reactor = self
         self.app.show_all()
         self.app.new_project()
