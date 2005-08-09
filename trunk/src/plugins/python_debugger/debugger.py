@@ -125,7 +125,24 @@ class Pidadb(pdb.Pdb):
         sys.stdout = oldstdout
         s.seek(0)
         self.cb.evaled(line.strip(), s.read())
+    
+    def _runscript(self, filename):
+        # Start with fresh empty copy of globals and locals and tell the script
+        # that it's being run as __main__ to avoid scripts being able to access
+        # the pdb.py namespace.
+        globals_ = {"__name__" : "__main__"}
+        locals_ = globals_
 
+        # When bdb sets tracing, a number of call and line events happens
+        # BEFORE debugger even reaches user's code (and the exact sequence of
+        # events depends on python version). So we take special measures to
+        # avoid stopping before we reach the main script (see user_line and
+        # user_call for details).
+        self._wait_for_mainpyfile = 1
+        self.mainpyfile = self.canonic(filename)
+        self._user_requested_quit = 0
+        statement = 'execfile( "%s")' % filename
+        self.run(statement, globals=globals_, locals=locals_)
 
 def main():
     mainpyfile =  sys.argv[1]     # Get script filename
