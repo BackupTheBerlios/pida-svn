@@ -144,7 +144,7 @@ class CulebraBuffer(gtksourceview.SourceBuffer):
                 return
             if len(complete.strip()) > 0:
                 try:
-                    lst_ = [str(a[0]) for a in importsTipper.GenerateTip(complete, os.path.dirname(fn)) if a is not None]
+                    lst_ = [str(a[0]) for a in importsTipper.GenerateTip(complete, os.path.dirname(complete)) if a is not None]
                 except:
                     try:
                         c = compile(text_code, '<string>', 'exec')
@@ -395,7 +395,6 @@ class EditWindow(gtk.EventBox):
         d.set_authors(['Fernando San Martín Woerner (fsmw@gnome.org)'])
         d.show()
 
-    
     def set_title(self, title):
         self.plugin.pida.mainwindow.set_title(title)
 
@@ -1101,4 +1100,3 @@ if __name__ == '__main__':
     else:
         fname = ""
     edit(fname, mainwin=True)
-
