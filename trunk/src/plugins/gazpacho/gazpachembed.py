@@ -61,6 +61,7 @@ class Gazpacho(object):
             holder.pack_start(self.app.get_container())
             self.holder = holder
             self.app.reactor = self
+            self.app.refresh_undo_and_redo()
         self.app.show_all()
         self.app.new_project()
 
@@ -83,40 +84,24 @@ class GazpachoEmbedded(GazpachoApplication):
         GazpachoApplication.__init__(self)
 
     def _change_action_state(self, sensitive=[], unsensitive=[]):
-
-        """Set sensitive True for all the actions whose path is on the
-        sensitive list. Set sensitive False for all the actions whose path
-        is on the unsensitive list.
-        """
-        pass
-        #for action_path in sensitive:
-        #    action = self._ui_manager.get_action(action_path)
-        #    action.set_property('sensitive', True)
-        #for action_path in unsensitive:
-        #    action = self._ui_manager.get_action(action_path)
-        #    action.set_property('sensitive', False)            
+        return
 
     def get_window(self):
         return self.cb.mainwindow
 
     def _application_window_create(self):
         application_window = gtk.VBox()
-        #application_window.move(0, 0)
-        #application_window.set_default_size(700, -1)
-        #iconfilename = environ.find_pixmap('gazpacho-icon.png')
-        #gtk.window_set_default_icon_from_file(iconfilename)
-                                                
-        #application_window.connect('delete-event', self._delete_event)
 
-        # Create the different widgets
         menubar = self._construct_menu_and_toolbar(application_window)
 
         self._palette = Palette(self._catalogs)
-        self._palette.set_size_request(300,200)
+        self._palette.set_size_request(300,250)
         self._palette.connect('toggled', self._palette_button_clicked)
 
-        self._editor = Editor(self)
+        self._editor = EmbedEditor(self)
         self._editor.set_size_request(300,200)
+        self._editor._signal_editor._signals_list.connect("row-activated",
+                                           self.cb_signal_activated)
 
         widget_view = self._widget_tree_view_create()
         widget_view.set_size_request(300,200)
@@ -166,7 +151,6 @@ class GazpachoEmbedded(GazpachoApplication):
         application_window.connect('drag_data_received',
                                    self._dnd_data_received_cb)
         
-        self.refresh_undo_and_redo()
 
         return application_window
 
@@ -177,7 +161,7 @@ class GazpachoEmbedded(GazpachoApplication):
         widgetname = self._editor._loaded_widget.name
         widgettype =  self._editor._loaded_widget.gtk_widget
         signalname =  model.get_value(niter, 0)
-        if callbackname.startswith('<'):
+        if callbackname and callbackname.startswith('<'):
             callbackname = '%s_%s' % (widgetname, signalname.replace('-', '_'))
             model.set_value(niter, 1, callbackname)
         if callbackname:
@@ -201,33 +185,6 @@ class GazpachoEmbedded(GazpachoApplication):
                             signalname,
                             callbackname)
         #print self._project.path
-
-
-    def cb_editor_selected(self, button):
-        page = self.editor_combo.get_active()
-        self._editor.set_current_page(page)
- 
-    def cb_selector(self, button):
-        #if not self.selector.get_active():
-        #    self.selector.set_active(True)
-        #    return
-        self._palette._on_button_toggled(self._palette._selector, True)
- 
-    def _lpalette_button_clicked(self, palette):
-        klass = palette.current
-
-        # klass may be None if the selector was pressed
-        self._add_class = klass
-        if klass and klass.is_toplevel():
-            self._command_manager.create(klass, None, self._project)
-            self._palette.unselect_widget()
-            self._add_class = None
-        
-        #self.expander_label.set_label(self._add_class)
-        if self._add_class:
-            self.selector.set_active(False)
-           
-            
 
     def _construct_menu_and_toolbar(self, application_window):
         actions =(
@@ -366,7 +323,6 @@ class GazpachoEmbedded(GazpachoApplication):
         return menu
     
     def refresh_undo_and_redo(self):
-        return
         undo_info = redo_info = None        
         if self._project is not None:
             undo_info = self._project.undo_stack.get_undo_info()
@@ -375,30 +331,24 @@ class GazpachoEmbedded(GazpachoApplication):
         undo_action = self._ui_manager.get_action('/MainToolbar/Undo')
         undo_group = undo_action.get_property('action-group')
         undo_group.set_sensitive(undo_info is not None)
-        undo_widget = self._ui_manager.get_widget('/MainMenu/EditMenu/Undo')
-        label = undo_widget.get_child()
-        if undo_info is not None:
-            label.set_text_with_mnemonic(_('_Undo: %s') % \
-                                         undo_info)
-        else:
-            label.set_text_with_mnemonic(_('_Undo: Nothing'))
+        undo_widget = self.undo_button
+        undo_widget.set_sensitive(undo_info is not None)
             
         redo_action = self._ui_manager.get_action('/MainToolbar/Redo')
         redo_group = redo_action.get_property('action-group')
         redo_group.set_sensitive(redo_info is not None)
-        redo_widget = self._ui_manager.get_widget('/MainMenu/EditMenu/Redo')
-        label = redo_widget.get_child()
-        if redo_info is not None:
-            label.set_text_with_mnemonic(_('_Redo: %s') % \
-                                         redo_info)
-        else:
-            label.set_text_with_mnemonic(_('_Redo: Nothing'))
-
+        redo_widget = self.redo_button
+        redo_widget.set_sensitive(redo_info is not None)
         if self._command_stack_window is not None:
             command_stack_view = self._command_stack_window.get_child()
             command_stack_view.update()
 
  
+class EmbedEditor(Editor):
+
+    def __init__(self, *args):
+        Editor.__init__(self, *args)
+        self._create_signal_page()
 
 
 

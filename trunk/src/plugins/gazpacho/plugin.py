@@ -109,6 +109,7 @@ class Plugin(plugin.Plugin):
         
         f = open(callbackfile, 'r')
         foundline = 0
+        lastline = 0
         if callbackname.startswith('<'):
             callbackname = '%s_%s' % (widgetname, signalname.replace('-', '_'))
 
@@ -116,25 +117,32 @@ class Plugin(plugin.Plugin):
             if line.count(callbackname):
                 foundline = i
                 break
+            lastline = i
+        
         f.close()
 
+        gotoline = 0
         if not foundline:
             argtypes = gobject.signal_query(signalname, widgettype)[-1]
             widgetarg = widgettype.__class__.__name__.lower()
             extraargs = [argname_from_gtype(typ) for typ in argtypes]
             cbargs = ['self', widgetarg] + extraargs
-            print cbargs
             f = open(callbackfile, 'a')
             f.write('\n')
             f.write('%sdef %s(%s):\n%spass\n' % (' ' * 4, callbackname,
                                                  ', '.join(cbargs), ' ' * 8))
             f.close()
             self.do_edit('openfile', callbackfile)
-            self.do_edit('gotoline', '%')
+            gotoline = lastline + 4
         else:
             if callbackfile != self.filename:
                 self.do_edit('openfile', callbackfile)
-            self.do_edit('gotoline', '%')
+            gotoline = foundline + 1
+
+        def go():
+            self.do_edit('gotoline', gotoline)
+            return False
+        gobject.timeout_add(200, go)
 
     def evt_bufferchange(self, number, name):
         self.filename = name
