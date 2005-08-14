@@ -126,7 +126,31 @@ class Plugin(plugin.Plugin):
         self.add(vp)
 
         self.defs = DefTree()
-        vp.pack1(self.defs.win, resize=True, shrink=True)
+
+        defbox = gtk.VBox()
+
+
+        sb = gtk.HBox()
+        defbox.pack_start(self.defs.win)
+        defbox.pack_start(sb, expand=False)
+
+        sortlabel = gtk.Label('Sort')
+        sb.pack_start(sortlabel, expand=False, padding=4)
+
+        self.sortbox = gtk.combo_box_new_text()
+        self.sortbox.connect('changed', self.cb_sort_changed)
+        self.sortbox.append_text('Name')
+        self.sortbox.append_text('Line number')
+        sb.pack_start(self.sortbox)
+
+        self.sortascending = gtk.CheckButton(label="asc")
+        self.sortascending.set_active(True)
+        self.sortascending.connect('toggled', self.cb_sort_changed)
+        sb.pack_start(self.sortascending)
+
+        self.sortbox.set_active(1)
+
+        vp.pack1(defbox, resize=True, shrink=True)
 
         self.refwin = RefWin()
         vp.pack2(self.refwin.win, resize=True, shrink=True)
@@ -177,6 +201,16 @@ class Plugin(plugin.Plugin):
         #dirn = os.path.split(self.fn)[0]
         #self.do_action('newterminal', '%s %s' % (py, self.fn), directory=dirn)
         self.do_action('command', 'python_execute', [self.fn])
+
+    def cb_sort_changed(self, *args):
+        order = self.sortbox.get_active()
+        sortfield = 0
+        if order == 1:
+            sortfield = 2
+        direction = gtk.SORT_DESCENDING
+        if self.sortascending.get_active():
+            direction = gtk.SORT_ASCENDING
+        self.defs.model.set_sort_column_id(sortfield, direction)
 
     def cb_alternative(self):
         self.execute()
