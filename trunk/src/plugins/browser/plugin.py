@@ -34,6 +34,7 @@ except ImportError:
 
 import threading
 import urllib
+import urllib2
 import urlparse
 import gobject
 import gtk
@@ -87,9 +88,26 @@ class Browser(base.pidaobject):
         self.view.connect('on-url', self.ro)
         self.view.set_document(self.doc)
         self.view.set_size_request(400,300)
-        self.win = gtk.ScrolledWindow()
-        self.win.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.win.add(self.view)
+        self.swin = gtk.ScrolledWindow()
+        self.swin.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.swin.add(self.view)
+
+        self.win = gtk.VBox()
+
+        hb = gtk.HBox()
+        toolbar = gtkextra.Toolbar()
+        hb.pack_start(toolbar.win, expand=False)
+        
+        toolbar.add_button('left', self.cb_back_clicked, 'Back')
+        toolbar.add_button('close', self.cb_stop_clicked, 'Stop')
+
+        self.location = gtk.Entry()
+        hb.pack_start(self.location)
+
+        self.location.connect('activate', self.cb_url_entered)
+
+        self.win.pack_start(hb, expand=False)
+        self.win.pack_start(self.swin)
 
     def start(self):
         pass
@@ -103,11 +121,19 @@ class Browser(base.pidaobject):
         self.doc.open_stream('text/html')
         self.fetcher.fetch_url(url)
 
+    def done(self):
+        self.location.set_text(self.url)
+
     def ro(self, *args):
         print 'ro', args
 
     def cb_onurl(self, view, url):
         print url
+
+    def cb_url_entered(self, entry):
+        url = self.location.get_text()
+        print url
+        self.fetch(url)
 
     def cb_request_url(self, doc, url, stream):
         url = urlparse.urljoin(self.url, url)
@@ -117,6 +143,12 @@ class Browser(base.pidaobject):
         url = urlparse.urljoin(self.url, url)
         self.fetch(url)
 
+    def cb_back_clicked(self, button):
+        pass
+
+    def cb_stop_clicked(self, button):
+        pass
+
 class Fetcher(base.pidaobject):
 
     def do_init(self, browser):
@@ -124,15 +156,15 @@ class Fetcher(base.pidaobject):
 
     def fetch_url(self, url, stream=None):
         def fetch():
-            gtk.threads_enter()
             fd = urllib.urlopen(url)
-            gobject.io_add_watch(fd, gobject.IO_IN, self.readable, stream)
+            gtk.threads_enter()
+            gobject.io_add_watch(fd.fp, gobject.IO_IN, self.readable, stream)
             gtk.threads_leave()
         t = threading.Thread(target=fetch)
         t.start()
 
     def readable(self, fd, cond, stream):
-        data = fd.read(1024)
+        data = fd.read(1)
         #print data
         if data:
             if stream:
@@ -145,5 +177,6 @@ class Fetcher(base.pidaobject):
                 stream.close()
             else:
                 self.browser.doc.close_stream()
+                self.browser.done()
             return False
 

@@ -1,7 +1,6 @@
 vital
 --
 fix the browser
-sort python definition list by various parameters
 tabs across top of editor
 handle remote file locations
 give editor startup on focus
