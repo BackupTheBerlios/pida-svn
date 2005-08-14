@@ -76,8 +76,7 @@ class Plugin(plugin.Plugin):
 
 class Browser(base.pidaobject):
     
-
-    icon = 'browser' 
+    icon = 'internet' 
 
     def do_init(self):
         self.fetcher = Fetcher(self)

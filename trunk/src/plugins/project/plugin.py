@@ -674,7 +674,7 @@ class VersionControlSystem(base.pidaobject):
         return self.toolbar.add_button(icon, self.callbackfunc, tooltip, cargs)
 
     def launch(self, args, **kw):
-        icon = 'vcs_%s' % self.ARGS[0]
+        icon = 'vcs_%s' % args[0]
         commandargs = ' '.join([self.COMMAND] + args)
         self.do_action('newterminal', commandargs, icon=icon,
                                    directory=kw['dir'], envv=kw['env'])

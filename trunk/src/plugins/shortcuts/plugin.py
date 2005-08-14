@@ -36,16 +36,18 @@ import pida.gtkextra as gtkextra
 
 class PidaCommand(base.pidaobject):
 
-    def do_init(self, command, minargs, argnames):
+    def do_init(self, command, minargs, argnames, icon):
         self.minimum_arguments = minargs
         self.argument_names = argnames
         self.command = command
+        self.icon = icon
 
 class ExternalCommand(PidaCommand):
 
     def __call__(self, args, **kw):
         # terminal action
-        self.do_action('newterminal', self.command % tuple(args), **kw)
+        self.do_action('newterminal', self.command % tuple(args),
+            icon=self.icon, **kw)
 
 class InternalCommand(PidaCommand):
     
@@ -65,14 +67,14 @@ class Plugin(plugin.Plugin):
 
     def register_external_command(self, name, command, minargs=0, argnames=[],
                                     icon=None):
-        command = ExternalCommand(command, minargs, argnames)
+        command = ExternalCommand(command, minargs, argnames, icon)
         self.register_command(name, command)
         return command
 
     def register_internal_command(self, name, callback, minargs=0,
                                 argnames=[], icon=None):
         command = InternalCommand(command, minargs, argnames)
-        self.register_command(command)
+        self.register_command(name, command, icon)
         return command
         
 

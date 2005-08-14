@@ -230,10 +230,12 @@ class Plugin(plugin.Plugin):
         if 'icon' in kw:
             icon = kw['icon']
             del kw['icon']
+        print icon
         child = PidaTerminal(icon)
         args = commandline.split()
         command = args.pop(0)
         args.insert(0, 'PIDA')
+        child.icon = icon
         self.do_action('newcontentpage', child)
         child.run_command(command, args, **kw)
         return child
