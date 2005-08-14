@@ -35,7 +35,7 @@ import gettext
 # we need to call this before anything else because in some Gazpacho classes
 # there are l10n strings and so they need the _ function in loading time
 #init_l10n()
-from gazpacho import application
+import application
 #from gazpacho.path import pixmaps_dir
 from gazpacho import palette, editor, project, catalog
 from gazpacho.palette import Palette
