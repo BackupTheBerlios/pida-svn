@@ -125,6 +125,7 @@ class Browser(base.pidaobject):
         self.location.set_text(self.url)
 
     def ro(self, *args):
+        return
         print 'ro', args
 
     def cb_onurl(self, view, url):
