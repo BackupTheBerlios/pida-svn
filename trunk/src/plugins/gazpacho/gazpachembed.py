@@ -75,7 +75,7 @@ class GazpachoApplication(application.Application):
                 if not self._confirm_close_project(project):
                     return
                 self._projects.remove(project)
-        self._window.hide_all()
+        self.get_container().hide_all()
 
 class GazpachoEmbedded(GazpachoApplication):
     

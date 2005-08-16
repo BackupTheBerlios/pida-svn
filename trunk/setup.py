@@ -37,7 +37,7 @@ def log(message):
 if sys.argv[-1] == 'upgrade':
     log('Preparing for upgrade')
     for path in sys.path:
-        if path and os.path.exists(path):
+        if path and os.path.isdir(path) and os.path.exists(path):
             for dirname in os.listdir(path):
                 dirpath = os.path.join(path, dirname)
                 if os.path.isdir(dirpath) and dirpath.count(sys.prefix):
