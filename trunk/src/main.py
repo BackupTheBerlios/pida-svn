@@ -134,7 +134,7 @@ class Application(base.pidaobject):
         # The editor 
         # editorname = 'vim'
         editorname = self.registry.components.editor.value()
-        if not editorname in ['vim', 'culebra']:
+        if not editorname in ['vim', 'culebra', 'emacs']:
             editorname = 'culebra'
         # using the registry can't ever work
         #if self.registry.general.emacsmode.value():
