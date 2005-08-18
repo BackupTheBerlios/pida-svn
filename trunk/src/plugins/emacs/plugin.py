@@ -32,8 +32,8 @@ class Plugin(plugin.Plugin):
     NAME = 'Emacs'
     DICON = 'configure', 'Configure Pida'
 
-    def init(self):
-        self.emacs = emacs.EmacsClient(self.cb)
+    def do_init(self):
+        self.emacs = emacs.EmacsClient(self.pida)
 
     def populate_widgets(self):
         self.add_button('editor', self.cb_launch, 'Run XEmacs', [])
