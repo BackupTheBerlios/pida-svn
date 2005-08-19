@@ -22,6 +22,7 @@
 # This file is part of Culebra plugin.
 
 import gtk
+import gobject
 import sys, os
 import pango
 import dialogs
@@ -246,8 +247,45 @@ class EditWindow(gtk.EventBox):
         self.dirname = "."
         # sorry, ugly
         self.filetypes = {}
+        self.create_search_replace_dialog ()
         return
+    
+    def create_search_replace_dialog (self):
+        dialog = gtk.Dialog("Search", self.get_parent_window(),
+                            gtk.DIALOG_DESTROY_WITH_PARENT,
+                            (gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE,
+                             "Replace", RESPONSE_REPLACE,
+                             "Replace All", RESPONSE_REPLACE_ALL,
+                             gtk.STOCK_FIND, RESPONSE_FORWARD))
         
+        def on_delete (dialog, *args):
+            dialog.hide ()
+            return True
+            
+        dialog.connect ("delete-event", on_delete)
+        search_text = gtk.Entry()
+        replace_text = gtk.Entry() 
+        lbl = gtk.Label("Find what:")
+        lbl.show ()
+        dialog.vbox.pack_start(lbl, True, True, 0)
+        dialog.vbox.pack_start(search_text, True, True, 0)
+        lbl = gtk.Label("Replace with:")
+        lbl.show ()
+        dialog.vbox.pack_start(lbl, True, True, 0)
+        dialog.vbox.pack_start(replace_text, True, True, 0)
+        dialog.set_default_response(RESPONSE_FORWARD)
+        search_text.set_activates_default(True)
+        replace_text.set_activates_default(True)
+        search_text.show()
+        replace_text.show()
+        search_text.grab_focus()
+
+        self.replace_dialog = dialog
+        self.replace_dialog.search_text = search_text
+        self.replace_dialog.replace_text = replace_text
+        self.replace_dialog.callback_id = None
+        dialog.connect ("response", self.replace_dialog_response_cb)
+    
     def create_menu(self):
         ui_string = """<ui>
         <menubar>
@@ -391,7 +429,7 @@ class EditWindow(gtk.EventBox):
         d.set_name('Culebra Editor')
         d.set_version('0.2.3')
         d.set_copyright('Copyright © 2005 Fernando San Martín Woerner')
-        d.set_comments('This plugin work as text editor inside PIDA')
+        d.set_comments('This plugin works as text editor inside PIDA')
         d.set_authors(['Fernando San Martín Woerner (fsmw@gnome.org)'])
         d.show()
 
@@ -747,61 +785,55 @@ class EditWindow(gtk.EventBox):
         dialog.show_all()
         response_id = dialog.run()
         
-    def edit_replace(self, mi): 
-        def dialog_response_callback(dialog, response_id):
-            if response_id == gtk.RESPONSE_CLOSE:
-                dialog.destroy()
+    def replace_dialog_response_cb (self, dialog, response_id):
+        search_text = self.replace_dialog.search_text
+        replace_text = self.replace_dialog.replace_text
+        buff = self.get_current()[BUFFER]
+            
+        if response_id == gtk.RESPONSE_CLOSE:
+            self.replace_dialog.hide ()
+
+        elif response_id == RESPONSE_FORWARD:
+            buff.search(search_text.get_text(), buff.search_mark, editor=self.editor)
+
+        elif response_id == RESPONSE_REPLACE:
+            # get selection
+            s = buff.get_selection_bounds()
+            bounds = buff.get_selection_bounds()
+            # validate selection bounds
+            if len (bounds) != len (s) or len (s) == 0:
                 return
-            if response_id == RESPONSE_FORWARD:
-                buff.search(search_text.get_text(), buff.search_mark, editor=self.editor)
+            # validate selection text
+            selected_text = buff.get_slice(s[0], s[1])
+            if selected_text != search_text.get_text ():
                 return
-            if response_id == RESPONSE_REPLACE:
-                if not buff.search(search_text.get_text(), buff.search_mark, editor=self.editor):
-                    return
+                
+            start, end = bounds
+            buff.delete(start, end)
+            buff.insert(start, replace_text.get_text())
+            start = buff.get_iter_at_mark(buff.get_insert())
+            start.backward_chars(len(replace_text.get_text()))
+            buff.search(search_text.get_text(), buff.search_mark, editor=self.editor)
+
+        elif response_id == RESPONSE_REPLACE_ALL:
+            current_iter = buff.get_iter_at_mark(buff.get_insert())
+            while buff.search(search_text.get_text(), buff.search_mark, False, self.editor):
                 start, end = buff.get_selection_bounds()
                 buff.delete(start, end)
                 buff.insert(start, replace_text.get_text())
                 start = buff.get_iter_at_mark(buff.get_insert())
                 start.backward_chars(len(replace_text.get_text()))
                 buff.select_range(start, buff.get_iter_at_mark(buff.search_mark))
-            if response_id == RESPONSE_REPLACE_ALL:
-                current_iter = buff.get_iter_at_mark(buff.get_insert())
-                while buff.search(search_text.get_text(), buff.search_mark, False, self.editor):
-                    start, end = buff.get_selection_bounds()
-                    buff.delete(start, end)
-                    buff.insert(start, replace_text.get_text())
-                    start = buff.get_iter_at_mark(buff.get_insert())
-                    start.backward_chars(len(replace_text.get_text()))
-                    buff.select_range(start, buff.get_iter_at_mark(buff.search_mark))
-                if current_iter is not None:
-                    buff.place_cursor(current_iter)
+
+            if current_iter is not None:
+                buff.place_cursor(current_iter)
+
+    def edit_replace(self, mi): 
         buff = self.get_current()[BUFFER]
-        search_text = gtk.Entry()
-        replace_text = gtk.Entry() 
         s = buff.get_selection_bounds()
         if len(s) > 0:
-            search_text.set_text(buff.get_slice(s[0], s[1]))
-        dialog = gtk.Dialog("Search", self.get_parent_window(),
-                            gtk.DIALOG_DESTROY_WITH_PARENT,
-                            (gtk.STOCK_FIND, RESPONSE_FORWARD,
-                             "Replace", RESPONSE_REPLACE,
-                             "Replace All", RESPONSE_REPLACE_ALL,
-                             gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE))
-        lbl = gtk.Label("Find what:")
-        dialog.vbox.pack_start(lbl, True, True, 0)
-        dialog.vbox.pack_start(search_text, True, True, 0)
-        lbl = gtk.Label("Replace with:")
-        dialog.vbox.pack_start(lbl, True, True, 0)
-        dialog.vbox.pack_start(replace_text, True, True, 0)
-        dialog.connect("response", dialog_response_callback)
-        dialog.set_default_response(RESPONSE_FORWARD)
-        search_text.set_activates_default(True)
-        replace_text.set_activates_default(True)
-        search_text.show()
-        replace_text.show()
-        search_text.grab_focus()
-        dialog.show_all()
-        response_id = dialog.run()
+            self.replace_dialog.search_text.set_text(buff.get_slice(s[0], s[1]))
+        self.replace_dialog.run ()
             
     def edit_find_next(self, mi):
         buff = self.get_current()[BUFFER]
