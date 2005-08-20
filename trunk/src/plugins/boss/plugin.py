@@ -140,7 +140,6 @@ class Plugin(plugin.Plugin):
         self.do_evt('closecontentpage')
 
     def action_fork(self, commandargs):
-        print commandargs
         pid = os.fork()
         if pid == 0:
             try:
