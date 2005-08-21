@@ -3,6 +3,7 @@ import unittest
 
 class TestBoss(base.Test):
     
+
     def _check_subplug(name):
         def check(self):
             subplug = getattr(self.pida.boss, name, 1)
@@ -50,6 +51,7 @@ tests = [TestMainWindow, TestBoss, TestEmbedWindow, TestEditor]
 suites = [unittest.makeSuite(t) for t in tests]
 alltests = unittest.TestSuite(suites)
 
-import sys
-sys.argv.extend(['-c', 'components.editor=culebra'])
-unittest.TextTestRunner(verbosity=5).run(alltests)
+for ed in ['vim', 'culebra', 'emacs']:
+    base.pida.registry.components.editor.set(ed)
+    base.pida.startup()
+    unittest.TextTestRunner(verbosity=5).run(alltests)
