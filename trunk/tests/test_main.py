@@ -10,23 +10,40 @@ class TestBoss(base.Test):
             self.assertNotEqual(subplug, 1)
         return check
 
-    def test_loaded(self):
-        ''' Check the boss has been loaded properly '''
+    def test_boss_loaded(self):
         self.assertNotEqual(self.pida.boss, None)
     
-    def test_account_fork(self):
+    def test_action_accountfork(self):
         self.pida.boss.action_accountfork(-999)
         self.assert_(-999 in self.pida.boss.child_processes)
 
-    def test_fork(self):
+    def test_action_fork(self):
         l1 = len(self.pida.boss.child_processes)
-        self.pida.boss.action_fork(['ls', '-al'])
+        self.pida.boss.action_fork(['uname', '-a'])
         l2 = len(self.pida.boss.child_processes)
         self.assertNotEquals(l1, l2)
 
-    test_shortcuts = _check_subplug('shortcuts')
-    test_terminal = _check_subplug('terminal')
-    test_browser = _check_subplug('browser')
-    test_filetype = _check_subplug('filetype')
+    def test_boss_is_base(self):
+        self.assertEquals(self.pida.boss, self.pida.prop_boss)
 
-base.main()
+    test_subplugin_shortcuts = _check_subplug('shortcuts')
+    test_subplugin_terminal = _check_subplug('terminal')
+    test_subplugin_browser = _check_subplug('browser')
+    test_subplugin_filetype = _check_subplug('filetype')
+
+class TestMainWindow(base.Test):
+
+    def test_mainwindow_exists(self):
+        self.assert_(hasattr(self.pida, 'mainwindow'))
+
+class TestEmbedWindow(base.Test):
+
+    def test_embedwindow_exists(self):
+        self.assert_(hasattr(self.pida, 'embedwindow'))
+        
+
+tests = [TestMainWindow, TestBoss, TestEmbedWindow]
+suites = [unittest.makeSuite(t) for t in tests]
+alltests = unittest.TestSuite(suites)
+
+unittest.TextTestRunner(verbosity=5).run(alltests)
