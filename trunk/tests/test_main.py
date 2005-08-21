@@ -41,9 +41,15 @@ class TestEmbedWindow(base.Test):
     def test_embedwindow_exists(self):
         self.assert_(hasattr(self.pida, 'embedwindow'))
         
+class TestEditor(base.Test):
 
-tests = [TestMainWindow, TestBoss, TestEmbedWindow]
+    def test_culebra(self):
+        print self.pida.editor.NAME
+
+tests = [TestMainWindow, TestBoss, TestEmbedWindow, TestEditor]
 suites = [unittest.makeSuite(t) for t in tests]
 alltests = unittest.TestSuite(suites)
 
+import sys
+sys.argv = ['-c', 'components.editor=vim']
 unittest.TextTestRunner(verbosity=5).run(alltests)

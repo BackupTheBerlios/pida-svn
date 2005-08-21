@@ -113,7 +113,7 @@ class Application(base.pidaobject):
 
 
         self.registry.prime_optparser(self.optparser)
-        self.optparser.parse_args()
+        self.optparser.parse_args(sys.argv)
         self.registry.load()
         # now the base plugins
 
