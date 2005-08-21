@@ -98,24 +98,25 @@ class Application(base.pidaobject):
         self.opts = DummyOpts(self)
         # Icons shared
         self.server = None
-        self.startup()
+        self.set_debughook()
+        self.load_registry()
+        #self.startup()
         # start
-        self.do_log('started', 20)
+        #self.do_log('started', 20)
 
-    def startup(self):
+    def set_debughook(self):
         sys.excepthook = debugwindow.show
         debugwindow.DebugWindow.application = self
+
+    def load_registry(self):
         self.registry = registry.Registry(os.path.expanduser('~/.pida/pida.conf'))
         self.optparser = optparse.OptionParser()
-
-       
         options.configure(self.registry)
-
-
         self.registry.prime_optparser(self.optparser)
         self.optparser.parse_args(sys.argv)
         self.registry.load()
-        # now the base plugins
+
+    def startup(self):
 
         self.do_first_time()
 
@@ -167,6 +168,7 @@ class Application(base.pidaobject):
 
     def do_first_time(self):
         userdir = self.registry.directories.user.value()
+        print userdir
         ftname = os.path.join(userdir, '.firsttime')
         if not os.path.exists(ftname):
             firsttimer = firstrun.FirstTimeWindow()
@@ -247,6 +249,7 @@ class Application(base.pidaobject):
 import debugwindow
 def main(argv):
     a = Application()
+    a.startup()
     gtk.threads_init()
     gtk.main()
 

@@ -51,5 +51,5 @@ suites = [unittest.makeSuite(t) for t in tests]
 alltests = unittest.TestSuite(suites)
 
 import sys
-sys.argv = ['-c', 'components.editor=vim']
+sys.argv.extend(['-c', 'components.editor=culebra'])
 unittest.TextTestRunner(verbosity=5).run(alltests)
