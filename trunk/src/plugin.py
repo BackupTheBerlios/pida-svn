@@ -47,20 +47,6 @@ class Plugin(base.pidaobject):
     DETACHABLE = False
     VISIBLE = True
 
-    #def __init__(self, cb):
-    #    """ 
-    #    Constructor
-    #    
-    #    @param cb: An instance of the main application class.
-    #    @type cb: C{pida.main.Application}
-#
-#        @note: It is recommended that to add additional widgets to the plugin,
-#        that the populate_widgets method is overriden instead of this
-#        constructor.
-#        """
-        # Instance of the Application class.
-#        self.cb = cb
-
     def do_init(self):
         self.detach_window = None
         pass

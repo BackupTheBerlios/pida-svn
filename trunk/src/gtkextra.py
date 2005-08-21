@@ -251,7 +251,7 @@ class FileButton(FolderButton):
 class Winparent(base.pidaobject, gtk.Window):
     def do_init(self, child):
         gtk.Window.__init__(self)
-# Only set transient if on_top is true, or not defined.
+        # Only set transient if on_top is true, or not defined.
         if child.registry.on_top.value():
             self.set_transient_for(self.pida.mainwindow)
         self.childplug = child
@@ -530,9 +530,6 @@ class PositionPopup(ContextPopup):
         self.cb.evt('breakpointclear', line, filename)
 
 class ContextToolbar(ContextGenerator, Toolbar):
-    #def __init__(self, cb, name):
-    #    Toolbar.__init__(self, cb)
-    #    ContextGenerator.__init__(self, cb, name)
     
     def do_init(self, name):
         Toolbar.do_init(self, name)
