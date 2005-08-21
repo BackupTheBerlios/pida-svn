@@ -116,32 +116,36 @@ class Application(base.pidaobject):
         self.optparser.parse_args(sys.argv)
         self.registry.load()
 
+    def load_boss(self):
+        self.boss = self.create_plugin('boss')
+        self.boss.configure(self.registry)
+
+
+    def load_editor(self):
+        editorname = self.registry.components.editor.value()
+        if not editorname in ['vim', 'culebra', 'emacs']:
+            editorname = 'culebra'
+        self.set_editor(editorname)
+
+
+
     def startup(self):
 
         self.do_first_time()
 
-        self.boss = self.create_plugin('boss')
-        self.boss.configure(self.registry)
+        self.load_boss()
+        self.load_editor()
 
         shell_plug = self.add_plugin('contentbook')
         buffer_plug = self.add_plugin('buffer')
 
+        
         opt_plugs = []
         for plugname in OPTPLUGINS:
             plugin = self.add_plugin(plugname)
             if plugin and plugin.VISIBLE:
                 opt_plugs.append(plugin)
         
-        # The editor 
-        # editorname = 'vim'
-        editorname = self.registry.components.editor.value()
-        if not editorname in ['vim', 'culebra', 'emacs']:
-            editorname = 'culebra'
-        # using the registry can't ever work
-        #if self.registry.general.emacsmode.value():
-        self.set_editor(editorname)
-       
-        #self.evt('init')
        
         self.registry.load()
         self.registry.save()

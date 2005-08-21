@@ -45,13 +45,22 @@ class TestEmbedWindow(base.Test):
 class TestEditor(base.Test):
 
     def test_culebra(self):
-        print self.pida.editor.NAME
+        self.assertEquals(self.pida.editor.NAME, 'Culebra')
+
+    def test_gotoline(self):
+        self.assert_(hasattr(self.pida.editor, 'edit_gotoline'))
+
+    def test_openfile(self):
+        self.assert_(hasattr(self.pida.editor, 'edit_openfile'))
+
+
+    
 
 tests = [TestMainWindow, TestBoss, TestEmbedWindow, TestEditor]
 suites = [unittest.makeSuite(t) for t in tests]
 alltests = unittest.TestSuite(suites)
 
-for ed in ['vim', 'culebra', 'emacs']:
+for ed in ['culebra']:
     base.pida.registry.components.editor.set(ed)
     base.pida.startup()
     unittest.TextTestRunner(verbosity=5).run(alltests)
