@@ -89,20 +89,13 @@ class Application(base.pidaobject):
         base.pidaobject.__init__(self)
 
     def do_init(self):
-        # List of plugins loaded used for event passing
         self.plugins = []
-        # convenience
         self.OPTPLUGINS = OPTPLUGINS
-        # Main config options
-        #self.opts = options.Opts()
         self.opts = DummyOpts(self)
-        # Icons shared
         self.server = None
         self.set_debughook()
         self.load_registry()
-        #self.startup()
-        # start
-        #self.do_log('started', 20)
+        self.do_first_time()
 
     def set_debughook(self):
         sys.excepthook = debugwindow.show
@@ -120,32 +113,25 @@ class Application(base.pidaobject):
         self.boss = self.create_plugin('boss')
         self.boss.configure(self.registry)
 
-
     def load_editor(self):
         editorname = self.registry.components.editor.value()
         if not editorname in ['vim', 'culebra', 'emacs']:
             editorname = 'culebra'
         self.set_editor(editorname)
 
-
-
     def startup(self):
-
-        self.do_first_time()
 
         self.load_boss()
         self.load_editor()
 
         shell_plug = self.add_plugin('contentbook')
         buffer_plug = self.add_plugin('buffer')
-
         
         opt_plugs = []
         for plugname in OPTPLUGINS:
             plugin = self.add_plugin(plugname)
             if plugin and plugin.VISIBLE:
                 opt_plugs.append(plugin)
-        
        
         self.registry.load()
         self.registry.save()
@@ -194,7 +180,6 @@ class Application(base.pidaobject):
             inst = None
 
         return inst
-
 
     def add_plugin(self, name):
         """
@@ -249,11 +234,9 @@ class Application(base.pidaobject):
             #    return False
         return False
 
-
 import debugwindow
 def main(argv):
-    a = Application()
-    a.startup()
+    Application().startup()
     gtk.threads_init()
     gtk.main()
 
