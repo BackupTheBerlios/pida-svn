@@ -216,8 +216,10 @@ class Plugin(base.pidaobject):
         Reparent the plugin in the original parent.
         """
         self.win.reparent(self.oldparent)
-        self.detach_window.destroy()
-        self.detach_window = None
+        if self.detach_window:
+            self.detach_window.destroy()
+            self.detach_window = None
+        self.dtbut.set_active(False)
     
     def detatch(self):
         """
