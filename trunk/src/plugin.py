@@ -103,11 +103,6 @@ class Plugin(base.pidaobject):
         self.win.pack_start(self.frame)
         # The toolbar popup menu.
         self.toolbar_popup = gtkextra.Popup()
-        #self.populate_widgets()
-        #self.connect_widgets()
-        #self.frame.show_all()
-        #self.win.show_all()
-    
 
     def populate_widgets(self):
         """
@@ -315,12 +310,6 @@ class Plugin(base.pidaobject):
             # Reattach detached plugins.
             if self.DETACHABLE:
                 self.attach()
-
-    #def evt_init(self):
-    #    """
-    #    Event: called on initializing the plugin.
-    #    """
-    #    self.init()
 
     def evt_populate(self):
         self.__populate__()

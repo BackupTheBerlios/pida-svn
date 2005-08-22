@@ -57,11 +57,11 @@ def configure(reg):
                  'The base per-user directory')
     # libraries
     # This takes a bit of work
-    prefix = ''
+    prefix = '/usr/'
     if __file__.count('lib'):
         prefix = __file__.split('lib', 1)[0]
-    else:
-        prefix = __file__.split('usr', 1)[0]
+    elif __file__.count('share'):
+        prefix = __file__.split('share', 1)[0]
     dirs_libs = dirs_group.add('shared',
                  registry.Directory,
                  os.path.join(prefix, 'share', 'pida'),

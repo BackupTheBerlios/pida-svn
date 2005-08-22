@@ -109,6 +109,9 @@ class Browser(base.pidaobject):
         self.win.pack_start(hb, expand=False)
         self.win.pack_start(self.swin)
 
+        self.urlqueue = []
+        self.urlqueueposition = 0
+
     def start(self):
         pass
 
@@ -122,6 +125,7 @@ class Browser(base.pidaobject):
         self.fetcher.fetch_url(url)
 
     def done(self):
+        self.urlqueue.append(self.url)
         self.location.set_text(self.url)
 
     def ro(self, *args):
@@ -145,7 +149,10 @@ class Browser(base.pidaobject):
         self.fetch(url)
 
     def cb_back_clicked(self, button):
-        pass
+        if len(self.urlqueue) > 1:
+            self.urlqueue.pop()
+            self.fetch(self.urlqueue[-1])
+            self.urlqueue.pop()
 
     def cb_stop_clicked(self, button):
         pass
