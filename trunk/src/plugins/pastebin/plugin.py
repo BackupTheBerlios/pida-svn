@@ -20,7 +20,19 @@
 #LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
+"""Pastebin plugin
+This plugin allows you to paste data to a pastebin.
 
+In the plugin notebook (second from the top down), there is a tab.
+The tab has a icon which looks like a clipboard. When you click on
+the clipboard, an area will come up for you to paste data in. There is
+also a combo box to select your pastebin from. And finally, in the
+topleft corner, there is a button which you can click on to paste the
+data in the area.
+
+Typing ,m in vim mode pastebins the yanked text. The shortcut is
+configurable.
+"""
 import os
 import gtk
 import pango
