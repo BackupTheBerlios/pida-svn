@@ -30,6 +30,7 @@ import gtksourceview
 import gnomevfs
 import importsTipper
 import keyword
+import weakref
 
 BLOCK_SIZE = 2048
 
@@ -170,6 +171,15 @@ class CulebraBuffer(gtksourceview.SourceBuffer):
                                     mod, 
                                     self.context_bounds)
 
+def get_buffer_selection (buffer):
+    """Returns the selected text, when nothing is selected it returns the empty
+    string."""
+    bounds = buffer.get_selection_bounds()
+    if bounds == ():
+        return ""
+    else:
+        return buffer.get_slice(*bounds)
+        
 class CulebraView(gtksourceview.SourceView):
 
     def __init__(self, buff=CulebraBuffer()):
@@ -189,11 +199,182 @@ class CulebraView(gtksourceview.SourceView):
         font_desc = pango.FontDescription('monospace 10')
         if font_desc:
             self.modify_font(font_desc)
-                        
-class EditWindow(gtk.EventBox):
 
+void_func = lambda *args: None
+
+class Component (object):
+    """
+    A Component is an object that is structured in a hierarchical model.
+    It is constructed upon runtime from the root to its children. To define
+    a Component you have to define a list of subcomponents, these are usually
+    classes of this type.
+    They define a method called '_init' that is called in the constructor.
+    It also contains a '_components' protected variable that holds a list of its
+    children components.
+    """
+    
+    def __init__ (self, parent = None):
+        self.__parent = parent is not None and weakref.ref (parent) or void_func
+        # Maintain components reference
+        self._components = []
+        for component in self.components:
+            self._components.append (component(self))
+            
+        self._init ()
+    
+    def _init (self):
+        """Override this method which is called in the constructor."""
+    
+    def getParent (self):
+        return self.__parent ()
+        
+    parent = property (getParent)
+    
+    components = ()
+
+class SearchReplaceComponent (Component):
+    """
+    This class aggregates all code related to Search & Replace functionality.
+    """
+    
+    def _init (self):
+        # Construct the GUI
+        self.dialog = gtk.Dialog("Search", self.parent.get_parent_window(),
+                            gtk.DIALOG_DESTROY_WITH_PARENT,
+                            (gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE,
+                             "Replace", RESPONSE_REPLACE,
+                             "Replace All", RESPONSE_REPLACE_ALL,
+                             gtk.STOCK_FIND, RESPONSE_FORWARD))
+
+        def on_delete (dlg, *args):
+            dlg.hide ()
+            return True
+
+        self.dialog.connect ("delete-event", on_delete)
+
+        self.search_text = gtk.Entry()
+        self.replace_text = gtk.Entry() 
+        lbl = gtk.Label("Find what:")
+        lbl.show ()
+        self.dialog.vbox.pack_start(lbl, True, True, 0)
+        self.dialog.vbox.pack_start(self.search_text, True, True, 0)
+        lbl = gtk.Label("Replace with:")
+        lbl.show ()
+        self.dialog.vbox.pack_start(lbl, True, True, 0)
+        self.dialog.vbox.pack_start(self.replace_text, True, True, 0)
+        self.dialog.set_default_response(RESPONSE_FORWARD)
+        self.search_text.set_activates_default(True)
+        self.replace_text.set_activates_default(True)
+        self.search_text.show()
+        self.replace_text.show()
+        self.search_text.grab_focus()
+
+        self.replace_button = self.dialog.action_area.get_children ()[2]
+        self.replace_all_button = self.dialog.action_area.get_children ()[1]
+        self.find_button = self.dialog.action_area.get_children ()[0]
+        
+        # Setup callbacks
+        self.dialog.connect ("response", self.replace_dialog_response_cb)
+        # The search entry affects the replace, replace all and find buttons
+        # when it has text they can be sensitive
+        self.search_text.connect("changed", self.on_search_text_changed)
+        self.search_text.connect ("focus", self.on_search_focus)
+        self.on_search_text_changed()
+        
+        # The replace button should only be sensitive if there is selected
+        # text and if that text equals the searched text
+        self.find_button.connect ("clicked", self.on_find_clicked)
+
+        self.parent.connect ("search-replace-event", self.on_search_replace)
+    
+    
+    def get_buffer (self):
+        return self.parent.get_current_buffer()
+    
+    buffer = property(get_buffer)
+    
+    def get_buffer_selection (self):
+        return get_buffer_selection (self.buffer)
+        
+    buffer_selection = property(get_buffer_selection)
+    
+    def replace_button_sensitivity (self):
+        self.replace_button.set_sensitive (self.buffer_selection == self.search_text.get_text ())
+    
+    def on_search_focus (self, *args):
+        # Select all
+        self.search_text.select_region (0, -1)
+    
+    def on_search_replace (self, *args):
+        if self.buffer_selection != "":
+            self.search_text.set_text(self.buffer_selection)
+        self.replace_button_sensitivity ()
+        self.search_text.select_region (0, -1)
+        self.search_text.grab_focus()
+        self.dialog.run ()
+    
+        
+    def on_search_text_changed (self, *args):
+        is_sensitive = len(self.search_text.get_text ()) > 0
+        self.replace_button.set_sensitive(False)
+        self.replace_all_button.set_sensitive(is_sensitive)
+        self.find_button.set_sensitive (is_sensitive)
+    
+    def on_find_clicked (self, *args):
+        selected_text = get_buffer_selection (self.buffer)
+        is_sensitive = selected_text != self.search_text.get_text ()
+        self.replace_button_sensitivity ()
+
+    def replace_dialog_response_cb (self, dialog, response_id):
+        search_text = self.search_text
+        replace_text = self.replace_text
+        buff = self.buffer
+            
+        if response_id == gtk.RESPONSE_CLOSE:
+            self.dialog.hide ()
+
+        elif response_id == RESPONSE_FORWARD:
+            buff.search(search_text.get_text(), buff.search_mark, editor=self.parent.editor)
+
+        elif response_id == RESPONSE_REPLACE:
+            # get selection
+            selected_text = self.buffer_selection
+
+            if selected_text != "" and selected_text != search_text.get_text ():
+                return
+                
+            start, end = self.buffer.get_selection_bounds ()
+            buff.delete(start, end)
+            buff.insert(start, replace_text.get_text())
+            start = buff.get_iter_at_mark(buff.get_insert())
+            start.backward_chars(len(replace_text.get_text()))
+            buff.search(search_text.get_text(), buff.search_mark, editor=self.parent.editor)
+
+        elif response_id == RESPONSE_REPLACE_ALL:
+            current_iter = buff.get_iter_at_mark(buff.get_insert())
+            while buff.search(search_text.get_text(), buff.search_mark, False, self.parent.editor):
+                start, end = buff.get_selection_bounds()
+                buff.delete(start, end)
+                buff.insert(start, replace_text.get_text())
+                start = buff.get_iter_at_mark(buff.get_insert())
+                start.backward_chars(len(replace_text.get_text()))
+                buff.select_range(start, buff.get_iter_at_mark(buff.search_mark))
+
+            if current_iter is not None:
+                buff.place_cursor(current_iter)
+        self.replace_button_sensitivity ()
+
+class EditWindow(gtk.EventBox, Component):
+    __gsignals__ = {
+        # Event called when the search-replace action is performed
+        "search-replace-event": (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ())
+    }
+    
+    components = SearchReplaceComponent,
+    
     def __init__(self, plugin=None, quit_cb=None):
         gtk.EventBox.__init__(self)
+        
         self.plugin = plugin
         self.wins = []
         self.completion_window = None
@@ -247,44 +428,8 @@ class EditWindow(gtk.EventBox):
         self.dirname = "."
         # sorry, ugly
         self.filetypes = {}
-        self.create_search_replace_dialog ()
-        return
-    
-    def create_search_replace_dialog (self):
-        dialog = gtk.Dialog("Search", self.get_parent_window(),
-                            gtk.DIALOG_DESTROY_WITH_PARENT,
-                            (gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE,
-                             "Replace", RESPONSE_REPLACE,
-                             "Replace All", RESPONSE_REPLACE_ALL,
-                             gtk.STOCK_FIND, RESPONSE_FORWARD))
-        
-        def on_delete (dialog, *args):
-            dialog.hide ()
-            return True
-            
-        dialog.connect ("delete-event", on_delete)
-        search_text = gtk.Entry()
-        replace_text = gtk.Entry() 
-        lbl = gtk.Label("Find what:")
-        lbl.show ()
-        dialog.vbox.pack_start(lbl, True, True, 0)
-        dialog.vbox.pack_start(search_text, True, True, 0)
-        lbl = gtk.Label("Replace with:")
-        lbl.show ()
-        dialog.vbox.pack_start(lbl, True, True, 0)
-        dialog.vbox.pack_start(replace_text, True, True, 0)
-        dialog.set_default_response(RESPONSE_FORWARD)
-        search_text.set_activates_default(True)
-        replace_text.set_activates_default(True)
-        search_text.show()
-        replace_text.show()
-        search_text.grab_focus()
 
-        self.replace_dialog = dialog
-        self.replace_dialog.search_text = search_text
-        self.replace_dialog.replace_text = replace_text
-        self.replace_dialog.callback_id = None
-        dialog.connect ("response", self.replace_dialog_response_cb)
+        Component.__init__ (self)
     
     def create_menu(self):
         ui_string = """<ui>
@@ -440,10 +585,13 @@ class EditWindow(gtk.EventBox):
         return self.plugin.pida.mainwindow
 
     def get_current(self, page = None):
-        if len(self.wins) > 0:
-            if page is None:
-                return self.wins[self.current_buffer]
+        if len(self.wins) > 0 and page is None:
+            return self.wins[self.current_buffer]
+            
         return None, None
+    
+    def get_current_buffer(self, buffer = BUFFER, **kwargs):
+        return self.get_current(**kwargs)[buffer]
 
     def _new_tab(self, f, buff = None):
         l = [n for n in self.wins if n[1]==f]
@@ -785,55 +933,8 @@ class EditWindow(gtk.EventBox):
         dialog.show_all()
         response_id = dialog.run()
         
-    def replace_dialog_response_cb (self, dialog, response_id):
-        search_text = self.replace_dialog.search_text
-        replace_text = self.replace_dialog.replace_text
-        buff = self.get_current()[BUFFER]
-            
-        if response_id == gtk.RESPONSE_CLOSE:
-            self.replace_dialog.hide ()
-
-        elif response_id == RESPONSE_FORWARD:
-            buff.search(search_text.get_text(), buff.search_mark, editor=self.editor)
-
-        elif response_id == RESPONSE_REPLACE:
-            # get selection
-            s = buff.get_selection_bounds()
-            bounds = buff.get_selection_bounds()
-            # validate selection bounds
-            if len (bounds) != len (s) or len (s) == 0:
-                return
-            # validate selection text
-            selected_text = buff.get_slice(s[0], s[1])
-            if selected_text != search_text.get_text ():
-                return
-                
-            start, end = bounds
-            buff.delete(start, end)
-            buff.insert(start, replace_text.get_text())
-            start = buff.get_iter_at_mark(buff.get_insert())
-            start.backward_chars(len(replace_text.get_text()))
-            buff.search(search_text.get_text(), buff.search_mark, editor=self.editor)
-
-        elif response_id == RESPONSE_REPLACE_ALL:
-            current_iter = buff.get_iter_at_mark(buff.get_insert())
-            while buff.search(search_text.get_text(), buff.search_mark, False, self.editor):
-                start, end = buff.get_selection_bounds()
-                buff.delete(start, end)
-                buff.insert(start, replace_text.get_text())
-                start = buff.get_iter_at_mark(buff.get_insert())
-                start.backward_chars(len(replace_text.get_text()))
-                buff.select_range(start, buff.get_iter_at_mark(buff.search_mark))
-
-            if current_iter is not None:
-                buff.place_cursor(current_iter)
-
-    def edit_replace(self, mi): 
-        buff = self.get_current()[BUFFER]
-        s = buff.get_selection_bounds()
-        if len(s) > 0:
-            self.replace_dialog.search_text.set_text(buff.get_slice(s[0], s[1]))
-        self.replace_dialog.run ()
+    def edit_replace(self, mi):
+        self.emit("search-replace-event")
             
     def edit_find_next(self, mi):
         buff = self.get_current()[BUFFER]
@@ -991,7 +1092,7 @@ class EditWindow(gtk.EventBox):
         if i < 0:
             i = len(self.wins) - 1
         self.plugin.do_edit('changebuffer', i)
-
+gobject.type_register(EditWindow)
         
 class AutoCompletionWindow(gtk.Window):
     
