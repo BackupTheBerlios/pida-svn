@@ -575,7 +575,9 @@ class EditWindow(gtk.EventBox, Component):
         d.set_version('0.2.3')
         d.set_copyright('Copyright © 2005 Fernando San Martín Woerner')
         d.set_comments('This plugin works as text editor inside PIDA')
-        d.set_authors(['Fernando San Martín Woerner (fsmw@gnome.org)'])
+        d.set_authors(['Fernando San Martín Woerner (fsmw@gnome.org)',
+                        'Ali Afshar (aafshar@gmail.com) ',
+                        'Tiago Cogumbreiro (cogumbreiro@gmail.com)'])
         d.show()
 
     def set_title(self, title):
