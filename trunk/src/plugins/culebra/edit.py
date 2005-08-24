@@ -252,6 +252,7 @@ class SearchReplaceComponent (Component):
         self.dialog.connect ("delete-event", on_delete)
         self.dialog.set_has_separator (False)
         self.dialog.vbox.set_border_width (12)
+        self.dialog.set_resizable (False)
         
         tbl = gtk.Table ()
         tbl.set_border_width (12)
@@ -311,7 +312,10 @@ class SearchReplaceComponent (Component):
     buffer_selection = property(get_buffer_selection)
     
     def replace_button_sensitivity (self):
-        self.replace_button.set_sensitive (self.buffer_selection == self.search_text.get_text ())
+        is_sensitive = self.buffer_selection == self.search_text.get_text () \
+                       and self.search_text.get_text () != ""
+                       
+        self.replace_button.set_sensitive (is_sensitive)
     
     def on_search_focus (self, *args):
         # Select all
@@ -934,18 +938,31 @@ class EditWindow(gtk.EventBox, Component):
         s = buff.get_selection_bounds()
         if len(s) > 0:
             search_text.set_text(buff.get_slice(s[0], s[1]))
-        dialog = gtk.Dialog("Search", self.get_parent_window(),
+        dialog = gtk.Dialog("", self.get_parent_window(),
                             gtk.DIALOG_DESTROY_WITH_PARENT,
-                            (gtk.STOCK_FIND, RESPONSE_FORWARD,
-                             gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE))
-        dialog.vbox.pack_end(search_text, True, True, 0)
+                            (gtk.STOCK_FIND, RESPONSE_FORWARD))
         dialog.connect("response", dialog_response_callback)
         dialog.set_default_response(RESPONSE_FORWARD)
+        dialog.set_has_separator (False)
+        dialog.set_resizable (False)
+
+        hbox = gtk.HBox ()
+        hbox.set_border_width (10)
+        hbox.set_spacing (6)
+        hbox.show ()
+        dialog.vbox.add (hbox)
+        
+        lbl = gtk.Label ("Search for:")
+        lbl.set_alignment (0, 0.5)
+        lbl.show ()
+        hbox.pack_start (lbl, False, False)
+        
         search_text.set_activates_default(True)
         search_text.show()
         search_text.grab_focus()
-        dialog.show_all()
-        response_id = dialog.run()
+        hbox.pack_start (search_text, False, False)
+        
+        dialog.run()
         
     def edit_replace(self, mi):
         self.emit("search-replace-event")
