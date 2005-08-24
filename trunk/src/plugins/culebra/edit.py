@@ -239,29 +239,41 @@ class SearchReplaceComponent (Component):
     
     def _init (self):
         # Construct the GUI
-        self.dialog = gtk.Dialog("Search", self.parent.get_parent_window(),
+        self.dialog = gtk.Dialog("", self.parent.get_parent_window(),
                             gtk.DIALOG_DESTROY_WITH_PARENT,
-                            (gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE,
-                             "Replace", RESPONSE_REPLACE,
+                            ("Replace", RESPONSE_REPLACE,
                              "Replace All", RESPONSE_REPLACE_ALL,
                              gtk.STOCK_FIND, RESPONSE_FORWARD))
-
+        
         def on_delete (dlg, *args):
             dlg.hide ()
             return True
 
         self.dialog.connect ("delete-event", on_delete)
-
+        self.dialog.set_has_separator (False)
+        self.dialog.vbox.set_border_width (12)
+        
+        tbl = gtk.Table ()
+        tbl.set_border_width (12)
+        tbl.show ()
+        tbl.set_row_spacings (12)
+        tbl.set_col_spacings (6)
+        self.dialog.vbox.add (tbl)
+        
         self.search_text = gtk.Entry()
         self.replace_text = gtk.Entry() 
-        lbl = gtk.Label("Find what:")
+        lbl = gtk.Label("Search for:")
+        lbl.set_alignment (1, 0)
         lbl.show ()
-        self.dialog.vbox.pack_start(lbl, True, True, 0)
-        self.dialog.vbox.pack_start(self.search_text, True, True, 0)
+        tbl.attach (lbl, 0, 1, 0, 1)
+        tbl.attach (self.search_text, 1, 2, 0, 1, gtk.SHRINK)
+
         lbl = gtk.Label("Replace with:")
+        lbl.set_alignment (1, 0)
         lbl.show ()
-        self.dialog.vbox.pack_start(lbl, True, True, 0)
-        self.dialog.vbox.pack_start(self.replace_text, True, True, 0)
+        tbl.attach (lbl, 0, 1, 1, 2)
+        tbl.attach (self.replace_text, 1, 2, 1, 2, gtk.SHRINK)
+
         self.dialog.set_default_response(RESPONSE_FORWARD)
         self.search_text.set_activates_default(True)
         self.replace_text.set_activates_default(True)
