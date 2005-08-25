@@ -22,6 +22,7 @@
 # This file is part of Culebra plugin.
 
 import gtk
+import gtk.gdk
 import gobject
 import sys, os
 import pango
@@ -41,6 +42,8 @@ RESPONSE_REPLACE_ALL = 3
 
 BUFFER = 0
 FILENAME = 1
+
+KEY_ESCAPE = gtk.gdk.keyval_from_name ("Escape")
 
 global newnumber
 newnumber = 1
@@ -253,6 +256,8 @@ class SearchReplaceComponent (Component):
         self.dialog.set_has_separator (False)
         self.dialog.vbox.set_border_width (12)
         self.dialog.set_resizable (False)
+        self.dialog.set_default_response(RESPONSE_FORWARD)
+        self.dialog.connect ("response", self.replace_dialog_response_cb)
         
         tbl = gtk.Table ()
         tbl.set_border_width (12)
@@ -262,7 +267,19 @@ class SearchReplaceComponent (Component):
         self.dialog.vbox.add (tbl)
         
         self.search_text = gtk.Entry()
+        self.search_text.connect ("key-release-event", self.on_key_pressed)
+        self.search_text.show()
+        self.search_text.set_activates_default(True)
+        # The search entry affects the replace, replace all and find buttons
+        # when it has text they can be sensitive
+        self.search_text.connect("changed", self.on_search_text_changed)
+        self.search_text.connect ("focus", self.on_search_focus)
+
         self.replace_text = gtk.Entry() 
+        self.replace_text.connect ("key-release-event", self.on_key_pressed)
+        self.replace_text.show()
+        self.replace_text.set_activates_default(True)
+        
         lbl = gtk.Label("Search for:")
         lbl.set_alignment (1, 0)
         lbl.show ()
@@ -275,34 +292,22 @@ class SearchReplaceComponent (Component):
         tbl.attach (lbl, 0, 1, 1, 2)
         tbl.attach (self.replace_text, 1, 2, 1, 2, gtk.SHRINK)
 
-        self.dialog.set_default_response(RESPONSE_FORWARD)
-        self.search_text.set_activates_default(True)
-        self.replace_text.set_activates_default(True)
-        self.search_text.show()
-        self.replace_text.show()
-        self.search_text.grab_focus()
-
         self.replace_button = self.dialog.action_area.get_children ()[2]
         self.replace_all_button = self.dialog.action_area.get_children ()[1]
+
         self.find_button = self.dialog.action_area.get_children ()[0]
-        
-        # Setup callbacks
-        self.dialog.connect ("response", self.replace_dialog_response_cb)
-        # The search entry affects the replace, replace all and find buttons
-        # when it has text they can be sensitive
-        self.search_text.connect("changed", self.on_search_text_changed)
-        self.search_text.connect ("focus", self.on_search_focus)
-        self.on_search_text_changed()
-        
         # The replace button should only be sensitive if there is selected
         # text and if that text equals the searched text
         self.find_button.connect ("clicked", self.on_find_clicked)
 
         self.parent.connect ("search-replace-event", self.on_search_replace)
+
+        # Update sensitiveness
+        self.on_search_text_changed()
     
     
     def get_buffer (self):
-        return self.parent.get_current_buffer()
+        return self.parent.buffer
     
     buffer = property(get_buffer)
     
@@ -380,13 +385,99 @@ class SearchReplaceComponent (Component):
                 buff.place_cursor(current_iter)
         self.replace_button_sensitivity ()
 
+    def on_key_pressed (self, search_text, event):
+        global KEY_ESCAPE
+        
+        if event.keyval == KEY_ESCAPE:
+            self.dialog.hide ()
+
+
+class SearchComponent (Component):
+    
+    def get_search_text (self):
+        return self._search_text.get_text ()
+    
+    def set_search_text (self, text):
+        self._search_text.set_text (text)
+    
+    search_text = property (get_search_text, set_search_text)
+    
+    def _init (self):
+        self.parent.connect ("search-event", self.on_search_dialog)
+        
+        self.dialog = gtk.Dialog("", self.parent.get_parent_window(),
+                            gtk.DIALOG_DESTROY_WITH_PARENT,
+                            (gtk.STOCK_FIND, RESPONSE_FORWARD))
+                            
+        self.dialog.set_default_response(RESPONSE_FORWARD)
+        self.dialog.set_has_separator (False)
+        self.dialog.set_resizable (False)
+        self.dialog.connect ("response", self.on_dialog_response)
+
+        hbox = gtk.HBox ()
+        hbox.set_border_width (10)
+        hbox.set_spacing (6)
+        hbox.show ()
+        self.dialog.vbox.add (hbox)
+        
+        lbl = gtk.Label ("Search for:")
+        lbl.set_alignment (0, 0.5)
+        lbl.show ()
+        hbox.pack_start (lbl, False, False)
+        
+        self._search_text = gtk.Entry()
+        self._search_text.set_activates_default(True)
+        self._search_text.show()
+        self._search_text.grab_focus()
+        self._search_text.connect ("key-release-event", self.on_key_pressed)
+        self._search_text.connect ("changed", self.on_search_text_changed)
+        hbox.pack_start (self._search_text, False, False)
+
+        self.find_button = self.dialog.action_area.get_children ()[0]
+        
+        self.on_search_text_changed ()
+    
+    def on_dialog_response (self, dialog, response):
+        # Hide when the user closes the window
+        if response != RESPONSE_FORWARD:
+            dialog.hide ()
+        
+        # Search forward
+        if response == RESPONSE_FORWARD:
+            self.parent.buffer.search(
+                self.search_text, 
+                self.parent.buffer.search_mark, 
+                editor=self.parent.editor
+            )
+        
+    def on_search_dialog (self, *args):
+        # Update search text dialog
+        selected_text = get_buffer_selection (self.parent.buffer)
+        if selected_text != "":
+            self.search_text = selected_text 
+
+        self._search_text.select_region (0, -1)
+        self._search_text.grab_focus()
+
+        self.dialog.run ()
+    
+    def on_key_pressed (self, search_text, event):
+        global KEY_ESCAPE
+        
+        if event.keyval == KEY_ESCAPE:
+            self.dialog.hide ()
+    
+    def on_search_text_changed (self, entry = None):
+        self.find_button.set_sensitive (self.search_text != "")
+         
 class EditWindow(gtk.EventBox, Component):
     __gsignals__ = {
         # Event called when the search-replace action is performed
-        "search-replace-event": (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ())
+        "search-replace-event": (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
+        "search-event": (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
     }
     
-    components = SearchReplaceComponent,
+    components = SearchReplaceComponent, SearchComponent
     
     def __init__(self, plugin=None, quit_cb=None):
         gtk.EventBox.__init__(self)
@@ -527,19 +618,19 @@ class EditWindow(gtk.EventBox, Component):
         """
         actions = [
             ('FileMenu', None, '_File'),
-            ('FileNew', gtk.STOCK_NEW, None, None, None, self.file_new),
-            ('FileOpen', gtk.STOCK_OPEN, None, None, None, self.file_open),
-            ('FileSave', gtk.STOCK_SAVE, None, None, None, self.file_save),
-            ('FileSaveAs', gtk.STOCK_SAVE_AS, None, None, None,
+            ('FileNew', gtk.STOCK_NEW, None, None, "Create a new file", self.file_new),
+            ('FileOpen', gtk.STOCK_OPEN, None, None, "Open a file", self.file_open),
+            ('FileSave', gtk.STOCK_SAVE, None, None, "Save current file", self.file_save),
+            ('FileSaveAs', gtk.STOCK_SAVE_AS, None, None, "Save the current file with a different name",
              self.file_saveas),
-            ('Close', gtk.STOCK_CLOSE, None, None, None, self.file_close),
+            ('Close', gtk.STOCK_CLOSE, None, None, "Close current file", self.file_close),
             ('FileExit', gtk.STOCK_QUIT, None, None, None, self.file_exit),
             ('EditMenu', None, '_Edit'),
-            ('EditUndo', gtk.STOCK_UNDO, None, "<control>z", None, self.edit_undo),
-            ('EditRedo', gtk.STOCK_REDO, None, "<control><shift>z", None, self.edit_redo),
-            ('EditCut', gtk.STOCK_CUT, None, None, None, self.edit_cut),
-            ('EditCopy', gtk.STOCK_COPY, None, None, None, self.edit_copy),
-            ('EditPaste', gtk.STOCK_PASTE, None, None, None, self.edit_paste),
+            ('EditUndo', gtk.STOCK_UNDO, None, "<control>z", "Undo the last action", self.edit_undo),
+            ('EditRedo', gtk.STOCK_REDO, None, "<control><shift>z", "Redo the undone action" , self.edit_redo),
+            ('EditCut', gtk.STOCK_CUT, None, None, "Cut the selection", self.edit_cut),
+            ('EditCopy', gtk.STOCK_COPY, None, None, "Copy the selection", self.edit_copy),
+            ('EditPaste', gtk.STOCK_PASTE, None, None, "Paste the clipboard", self.edit_paste),
             ('EditClear', gtk.STOCK_REMOVE, 'C_lear', None, None,
              self.edit_clear),
             ('Configuration', None, 'Configur_e', None, None,
@@ -558,22 +649,22 @@ class EditWindow(gtk.EventBox, Component):
              ('LowerSelection', None, 'Lower Selection', '<control><shift>u', 
                  None, self.lower_selection),
             ('FindMenu', None, '_Find'),
-            ('EditFind', gtk.STOCK_FIND, None, None, None, self.edit_find),
+            ('EditFind', gtk.STOCK_FIND, None, None, "Search for text", self.edit_find),
             ('EditFindNext', None, 'Find _Next', 'F3', None, self.edit_find_next),
             ('EditReplace', gtk.STOCK_FIND_AND_REPLACE, None, '<control>h', 
-                None, self.edit_replace),
+                "Search for and replace text", self.edit_replace),
             ('GotoLine', None, 'Goto Line', '<control>g', 
                  None, self.goto_line),
             ('RunMenu', None, '_Run'),
-            ('RunScript', gtk.STOCK_EXECUTE, None, "F5",None, self.run_script),
-            ('StopScript', gtk.STOCK_STOP, None, "<ctrl>F5",None, self.stop_script),
+            ('RunScript', gtk.STOCK_EXECUTE, None, "F5","Run script", self.run_script),
+            ('StopScript', gtk.STOCK_STOP, None, "<ctrl>F5","Stop script execution", self.stop_script),
             ('DebugScript', None, "Debug Script", "F7",None, self.debug_script),
             ('DebugStep', None, "Step", "F8",None, self.step_script),
             ('DebugNext', None, "Next", "<shift>F7",None, self.next_script),
             ('DebugContinue', None, "Continue", "<control>F7", None, self.continue_script),
             ('BufferMenu', None, '_Buffers'),
-            ('PrevBuffer', gtk.STOCK_GO_UP, None, "<shift>F6",None, self.prev_buffer),
-            ('NextBuffer', gtk.STOCK_GO_DOWN, None, "F6",None, self.next_buffer),
+            ('PrevBuffer', gtk.STOCK_GO_UP, None, "<shift>F6","Previous buffer", self.prev_buffer),
+            ('NextBuffer', gtk.STOCK_GO_DOWN, None, "F6","Next buffer", self.next_buffer),
             ('HelpMenu', None, '_Help'),
             ('About', gtk.STOCK_ABOUT, None, None, None, self.about),
             ]
@@ -608,8 +699,10 @@ class EditWindow(gtk.EventBox, Component):
             
         return None, None
     
-    def get_current_buffer(self, buffer = BUFFER, **kwargs):
+    def get_buffer(self, buffer = BUFFER, **kwargs):
         return self.get_current(**kwargs)[buffer]
+    
+    buffer = property (get_buffer)
 
     def _new_tab(self, f, buff = None):
         l = [n for n in self.wins if n[1]==f]
@@ -924,45 +1017,8 @@ class EditWindow(gtk.EventBox, Component):
         buff = self.get_current()[BUFFER]
         buff.redo()
 
-    def edit_find(self, mi): 
-        def dialog_response_callback(dialog, response_id):
-            if response_id == gtk.RESPONSE_CLOSE:
-                dialog.destroy()
-                return
-            buff.search(search_text.get_text(), 
-                            buff.search_mark, 
-                            editor=self.editor)
-            dialog.destroy()
-        buff = self.get_current()[BUFFER]
-        search_text = gtk.Entry()
-        s = buff.get_selection_bounds()
-        if len(s) > 0:
-            search_text.set_text(buff.get_slice(s[0], s[1]))
-        dialog = gtk.Dialog("", self.get_parent_window(),
-                            gtk.DIALOG_DESTROY_WITH_PARENT,
-                            (gtk.STOCK_FIND, RESPONSE_FORWARD))
-        dialog.connect("response", dialog_response_callback)
-        dialog.set_default_response(RESPONSE_FORWARD)
-        dialog.set_has_separator (False)
-        dialog.set_resizable (False)
-
-        hbox = gtk.HBox ()
-        hbox.set_border_width (10)
-        hbox.set_spacing (6)
-        hbox.show ()
-        dialog.vbox.add (hbox)
-        
-        lbl = gtk.Label ("Search for:")
-        lbl.set_alignment (0, 0.5)
-        lbl.show ()
-        hbox.pack_start (lbl, False, False)
-        
-        search_text.set_activates_default(True)
-        search_text.show()
-        search_text.grab_focus()
-        hbox.pack_start (search_text, False, False)
-        
-        dialog.run()
+    def edit_find(self, mi):
+        self.emit("search-event")
         
     def edit_replace(self, mi):
         self.emit("search-replace-event")
