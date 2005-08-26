@@ -670,21 +670,28 @@ class EditWindow(gtk.EventBox, Component):
             ]
         self.ag = gtk.ActionGroup('edit')
         self.ag.add_actions(actions)
+        for action_name in ("FileOpen", "FileSave", "EditUndo"):
+            action = self.ag.get_action (action_name)
+            action.set_property ("is-important", True)
         self.ui = gtk.UIManager()
         self.ui.insert_action_group(self.ag, 0)
         self.ui.add_ui_from_string(ui_string)
+        
+        toolbar = self.ui.get_widget ("/toolbar")
+        toolbar.set_property ("show-arrow", False)
+        
         self.get_parent_window().add_accel_group(self.ui.get_accel_group())
-        return (self.ui.get_widget('/menubar'), self.ui.get_widget('/toolbar'))
+        return (self.ui.get_widget('/menubar'), toolbar)
     
     def about(self, mi):
         d = gtk.AboutDialog()
         d.set_name('Culebra Editor')
         d.set_version('0.2.3')
         d.set_copyright('Copyright © 2005 Fernando San Martín Woerner')
-        d.set_comments('This plugin works as text editor inside PIDA')
+        d.set_comments('This plugin works as a text editor inside PIDA')
         d.set_authors(['Fernando San Martín Woerner (fsmw@gnome.org)',
                         'Ali Afshar (aafshar@gmail.com) ',
-                        'Tiago Cogumbreiro (cogumbreiro@gmail.com)'])
+                        'Tiago Cogumbreiro (cogumbreiro@users.sf.net)'])
         d.show()
 
     def set_title(self, title):
