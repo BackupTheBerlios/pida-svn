@@ -105,7 +105,7 @@ class Plugin(plugin.Plugin):
             self.do_edit('gotoline', frame.lineno - 1)
         
     def edit_getbufferlist(self):
-        bl = [(i, v[1]) for (i, v) in enumerate(self.editor.wins)]
+        bl = [(i, v.filename) for (i, v) in enumerate(self.editor.wins)]
         self.bufferlist = bl
         self.do_evt('bufferlist', bl)
 
@@ -115,7 +115,7 @@ class Plugin(plugin.Plugin):
         return filename
 
     def edit_getcurrentbuffer(self):
-        fn = self.editor.get_current()[1]
+        fn = self.editor.get_current().filename
         self.do_evt('filetype', self.editor.current_buffer, self.check_mime(fn))
         self.do_evt('bufferchange', self.editor.current_buffer, fn)
 
@@ -125,8 +125,8 @@ class Plugin(plugin.Plugin):
     def edit_changebuffer(self, num):
         if self.editor.current_buffer != num:
             self.editor.current_buffer = num
-            buff = self.editor.wins[self.editor.current_buffer][0]
-            self.editor.editor.set_buffer(self.editor.wins[num][0])
+            buff = self.editor.wins[self.editor.current_buffer].buffer
+            self.editor.editor.set_buffer(self.editor.wins[num].buffer)
             self.edit_getcurrentbuffer()
             self.editor.editor.scroll_to_mark(buff.get_insert(), 0.25)
             self.editor.editor.grab_focus()
