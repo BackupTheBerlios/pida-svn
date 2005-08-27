@@ -119,6 +119,9 @@ class Plugin(plugin.Plugin):
         self.do_evt('filetype', self.editor.current_buffer, self.check_mime(fn))
         self.do_evt('bufferchange', self.editor.current_buffer, fn)
 
+    def evt_bufferchange(self, buffernumber, name):
+        self.editor.emit ("buffer-changed", self.editor.buffer)
+                
     def edit_changebuffer(self, num):
         if self.editor.current_buffer != num:
             self.editor.current_buffer = num
@@ -126,7 +129,7 @@ class Plugin(plugin.Plugin):
             self.editor.editor.set_buffer(self.editor.wins[num][0])
             self.edit_getcurrentbuffer()
             self.editor.editor.scroll_to_mark(buff.get_insert(), 0.25)
-            self.editor.editor.grab_focus()    
+            self.editor.editor.grab_focus()
 
     def edit_closebuffer(self):
         self.editor.file_close()
