@@ -502,7 +502,6 @@ class ToolbarObserver (object):
         self.on_can_undo(buffer, buffer.can_undo ())
         self.on_can_redo(buffer, buffer.can_redo ())
         self.on_modified_changed (buffer)
-        self.on_marker_updated (buffer, None)
     
     def unobserve (self):
         if not hasattr (self, "sources"):
@@ -608,16 +607,16 @@ class EditWindow(gtk.EventBox, Component):
         self.add(self.vbox)
         self.vbox.show()
         self.menubar, self.toolbar = self.create_menu()
-        hdlbox = gtk.HandleBox()
-        self.vbox.pack_start(hdlbox, expand=False)
-        hdlbox.show()
-        hdlbox.add(self.menubar)
+        
+        self.vbox.pack_start(self.menubar, expand=False)
         self.menubar.show()
+        
         hdlbox = gtk.HandleBox()
         self.vbox.pack_start(hdlbox, expand=False)
         hdlbox.show()
         hdlbox.add(self.toolbar)
         self.toolbar.show()
+        
         self.vpaned = gtk.VPaned()
         self.vbox.pack_start(self.vpaned, expand=True, fill = True)
         self.vpaned.show()
@@ -710,8 +709,6 @@ class EditWindow(gtk.EventBox, Component):
                 <toolitem action='FileNew'/>
                 <toolitem action='FileOpen'/>
                 <toolitem action='FileSave'/>
-                <toolitem action='FileSaveAs'/>
-                <toolitem action='Close'/>
                 <separator/>
                 <toolitem action='EditUndo'/>
                 <toolitem action='EditRedo'/>
