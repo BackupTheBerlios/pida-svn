@@ -100,12 +100,12 @@ class Plugin(plugin.Plugin):
         
     def evt_debuggerframe(self, frame):
         if not frame.filename.startswith('<'):
-            if frame.filename != self.editor.get_current()[0]:
+            if frame.filename != self.editor.get_current().buffer:
                 self.do_edit('openfile', frame.filename)
             self.do_edit('gotoline', frame.lineno - 1)
         
     def edit_getbufferlist(self):
-        bl = [(i, v.filename) for (i, v) in enumerate(self.editor.wins)]
+        bl = [(i, v.filename) for (i, v) in enumerate(self.editor.entries)]
         self.bufferlist = bl
         self.do_evt('bufferlist', bl)
 
@@ -115,27 +115,32 @@ class Plugin(plugin.Plugin):
         return filename
 
     def edit_getcurrentbuffer(self):
-        fn = self.editor.get_current().filename
-        self.do_evt('filetype', self.editor.current_buffer, self.check_mime(fn))
-        self.do_evt('bufferchange', self.editor.current_buffer, fn)
+        entries = self.editor.entries
+        index = entries.selected_index
+        entry = entries.selected
+        
+        self.do_evt('filetype', index, self.check_mime(entry.filename))
+        self.do_evt('bufferchange', index, entry.filename)
 
     def evt_bufferchange(self, buffernumber, name):
-        self.editor.emit ("buffer-changed", self.editor.buffer)
+        self.editor.emit ("buffer-changed", self.editor.entries.selected.buffer)
                 
-    def edit_changebuffer(self, num):
-        if self.editor.current_buffer != num:
-            self.editor.current_buffer = num
-            buff = self.editor.wins[self.editor.current_buffer].buffer
-            self.editor.editor.set_buffer(self.editor.wins[num].buffer)
-            self.edit_getcurrentbuffer()
-            self.editor.editor.scroll_to_mark(buff.get_insert(), 0.25)
-            self.editor.editor.grab_focus()
+    def edit_changebuffer(self, index):
+        entries = self.editor.entries
+        
+        if entries.selected_index == index:
+            return
+        
+        entries.selected_index = index
+        self.edit_getcurrentbuffer()
+        self.editor.editor.scroll_to_mark(entries.selected.buffer.get_insert(), 0.25)
+        self.editor.editor.grab_focus()
 
     def edit_closebuffer(self):
         self.editor.file_close()
 
     def edit_gotoline(self, line):
-        buf = self.editor.get_current()[0]
+        buf = self.editor.get_current().buffer
         titer = buf.get_iter_at_line(line)
         self.editor.editor.scroll_to_iter(titer, 0.25)
         buf.place_cursor(titer)

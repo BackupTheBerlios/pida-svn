@@ -50,7 +50,7 @@ newnumber = 1
 
 class CulebraBuffer(gtksourceview.SourceBuffer):
 
-    def __init__(self, is_new=True):
+    def __init__(self):
         gtksourceview.SourceBuffer.__init__(self)
         lm = gtksourceview.SourceLanguagesManager()
         self.languages_manager = lm
@@ -60,7 +60,6 @@ class CulebraBuffer(gtksourceview.SourceBuffer):
         self.set_language(language)
         self.search_string = None
         self.search_mark = self.create_mark('search', self.get_start_iter())
-        self.is_new = is_new
         
     def search(self, search_string, mark = None, scroll=True, editor = None):
         if mark is None:
@@ -184,12 +183,9 @@ def get_buffer_selection (buffer):
         return buffer.get_slice(*bounds)
         
 class CulebraView(gtksourceview.SourceView):
-    def __init__(self, buffer):
+    def __init__(self):
         
-        if buffer is None:
-            buffer = CulebraBuffer()
-
-        gtksourceview.SourceView.__init__(self, buffer)
+        gtksourceview.SourceView.__init__(self)
             
         self.set_auto_indent(True)
         self.set_show_line_numbers(True)
@@ -486,30 +482,31 @@ class ToolbarObserver (object):
     def on_can_redo (self, buffer, can_redo):
         self.redo.set_sensitive (can_redo)
     
-    def on_modified_changed (self, buffer):
-        is_sensitive = buffer.get_modified () or buffer.is_new
+    def on_modified_changed (self, buff):
+        is_sensitive = buff.get_modified () or self.entry.is_new
         self.save.set_sensitive (is_sensitive)
         self.save_as.set_sensitive (is_sensitive)
         
-        is_sensitive = len (self.edit_window.wins) != 1  \
-                       or not buffer.is_new              \
-                       or buffer.get_modified ()
-                       
-        print "Number of new buffers", self.edit_window.count_new_buffers (),   \
-              "number of total buffers", len(self.edit_window.wins), \
-              "is it modified", buffer.get_modified ()
+        is_sensitive = len (self.edit_window.entries) != 1  \
+                       or not self.entry.is_new             \
+                       or buff.get_modified ()
+        
         self.close.set_sensitive (is_sensitive)
 
-    def observe (self, buffer):
+    def observe (self, buffer_entry):
+        self.entry = buffer_entry
+        buff = buffer_entry.buffer
+        
         self.sources = []
-        self.sources.append(buffer.connect("can-redo", self.on_can_redo))
-        self.sources.append(buffer.connect("can-undo", self.on_can_undo))
+        self.sources.append(buff.connect("can-redo", self.on_can_redo))
+        self.sources.append(buff.connect("can-undo", self.on_can_undo))
         self.sources.append(
-            buffer.connect("modified-changed", self.on_modified_changed)
+            buff.connect("modified-changed", self.on_modified_changed)
         )
-        self.on_can_undo(buffer, buffer.can_undo ())
-        self.on_can_redo(buffer, buffer.can_redo ())
-        self.on_modified_changed (buffer)
+                
+        self.on_can_undo(buff, buff.can_undo ())
+        self.on_can_redo(buff, buff.can_redo ())
+        self.on_modified_changed (buff)
     
     def unobserve (self):
         if not hasattr (self, "sources"):
@@ -534,31 +531,44 @@ class ToolbarSensitivityComponent (Component):
         
         self.script_execute = self.parent.ag.get_action ("RunScript")
         self.script_break = self.parent.ag.get_action ("StopScript")
+        self.next_buffer = self.parent.ag.get_action ("NextBuffer")
+        self.prev_buffer = self.parent.ag.get_action ("PrevBuffer")
         
         self.parent.connect ("buffer-changed", self.on_buffer_changed)
+        events = self.parent.entries.events
+        events.register ("selection-changed", self.on_selection_changed)
         
         self.on_buffer_changed (self.parent, self.parent.buffer)
+        self.on_selection_changed ()
         
-    def on_buffer_changed (self, parent, buffer):
-        if self.observers_pool.has_key (buffer):
+    def on_selection_changed (self, index = None):
+        self.next_buffer.set_sensitive (self.parent.entries.can_select_next ())
+        self.prev_buffer.set_sensitive (self.parent.entries.can_select_previous())
+
+    def on_buffer_changed (self, parent, buff):
+        entry = self.parent.entries.selected
+        
+        if self.observers_pool.has_key (entry):
             return
 
-        is_sensitive = buffer.get_language ().get_name () == "Python"
+        is_sensitive = entry.buffer.get_language ().get_name () == "Python"
         self.script_execute.set_sensitive (is_sensitive)
         self.script_break.set_sensitive (is_sensitive)
 
         obs = ToolbarObserver (**self.elements)
-        obs.observe (buffer)
-        self.observers_pool[buffer] = obs
+        obs.observe (entry)
+        self.observers_pool[entry] = obs
 
 class BufferEntry (object):
-    def __init__ (self, buffer, filename = None):
+    def __init__ (self, buffer = None, filename = None):
+        if buffer is None:
+            buffer = CulebraBuffer ()
         self.__filename = filename
         self.buffer = buffer
     
     def get_filename (self):
         if self.__filename is None:
-            return "untitled.py"
+            return "New File"
         return self.__filename
     
     def set_filename (self, filename):
@@ -572,6 +582,7 @@ class BufferEntry (object):
     is_new = property (get_is_new)
 
 class EventManager:
+    """This is a lightweight events service provider"""
     def __init__ (self, event_names = ()):
         self.events = {}
         for name in event_names:
@@ -588,6 +599,13 @@ class EventManager:
             callback (*args, **kwargs)
 
 class BufferManager (object):
+    """
+    This manages the mechanichs of manipulating the list of BufferEntries.
+    It's basically an observable list that suports item selecting.
+    You can access the entries by the 'entries' variable, for most methods,
+    directly to this class, since the '__getitem__', '__len__' and '__iter__'
+    map to the internal list.
+    """
     
     def __init__ (self):
         self.__entries = []
@@ -596,7 +614,9 @@ class BufferManager (object):
         
     def get_entries (self):
         return self.__entries
-        
+    
+    entries = property (get_entries)
+    
     def count_new (self):
         counter = 0
         for entry in self.entries:
@@ -609,32 +629,138 @@ class BufferManager (object):
         self.events.trigger ("add-entry", buffer_entry)
     
     def remove (self, buffer_entry):
-        if self.selected == buffer_entry:
-            self.selected_index = -1
-        self.entries.remove (buffer_entry)
-        self.events.trigger ("remove-entry", buffer_entry)
+        index = self.entries.index (buffer_entry)
+        selected_entry = self.selected
         
+        self.entries.remove (buffer_entry)
+        
+        index = self.selected_index
+        
+        if selected_entry is not buffer_entry:
+            self.__selected_index = self.entries.index (selected_entry)
+        else:
+            self.__selected_index = -1
+        
+        self.events.trigger ("remove-entry", buffer_entry, index)
+
+        if index != self.selected_index:
+            self.events.trigger ("selection-changed", self.selected_index)
     
-    def __del__ (self, index):
+    def __delitem__ (self, index):
         entry = self.entries[index]
         self.remove (entry)
     
     def set_selected_index (self, index):
+        # When the index maintained then do nothing
+        if self.__selected_index == index:
+            return
+            
         self.__selected_index = index
         self.events.trigger ("selection-changed", index)
     
     def get_selected_index (self):
         return self.__selected_index
     
-    selected_index = property (get_selected_index, set_selected_index)
+    def unset_selected_index (self):
+        self.__selected_index = -1
+    
+    selected_index = property (get_selected_index, set_selected_index, unset_selected_index)
     
     def get_selected (self):
         if self.selected_index == -1:
             return None
+        assert self.selected_index < len (self.entries), "Selected index %d, %r" % (self.selected_index, self.entries)
         return self.entries[self.selected_index]
     
-    selected = property (get_selected)
+    def unset_selected (self):
+        del self[self.selected_index]
     
+    def set_selected (self, entry):
+        self.selected_index = self.entries.index (entry)
+    
+    selected = property (get_selected, set_selected, unset_selected)
+    
+    def __iter__ (self):
+        return iter (self.entries)
+    
+    def __getitem__ (self, key):
+        return self.entries[key]
+    
+    def __len__ (self):
+        return len (self.entries)
+    
+    def __contains__ (self, entry):
+        return entry in self.entries
+    
+    def can_select_next (self):
+        return self.selected_index != -1 \
+               and self.selected_index + 1 < len (self.entries)
+        
+    def select_next (self):
+        assert self.can_select_next ()
+        self.selected_index += 1
+    
+    def can_select_previous (self):
+        return self.selected_index != -1 \
+               and self.selected_index > 0
+    
+    def select_previous (self):
+        assert self.can_select_previous ()
+        self.selected_index -= 1
+
+    def index (self, entry):
+        return self.__entries.index (entry)
+
+class BufferManagerListener (Component):
+    def _init (self):
+        evts = self.entries.events
+        evts.register ("selection-changed", self.on_selection_changed)
+        evts.register ("add-entry", self.on_add_entry)
+        evts.register ("remove-entry", self.on_remove_entry)
+        self.last_index = self.entries.selected_index
+        
+        self.entries.append (BufferEntry ())
+    
+    def get_entries (self):
+        return self.parent.entries
+        
+    entries = property (get_entries)
+    
+    def on_selection_changed (self, index):
+        # If we lost our selection then select the last selected index
+        if index == -1:
+        
+            if self.last_index == -1 or self.last_index >= len (self.entries):
+                self.entries.selected_index = len (self.entries) - 1
+            else:
+                self.entries.selected_index = self.last_index
+       
+        self.last_index = index
+        
+        # Set bind the SourceView to the SourceBuffer
+        self.parent.editor.set_buffer (self.entries.selected.buffer)
+        # and add focus to it
+        self.parent.editor.grab_focus()
+        
+    def on_add_entry (self, entry):
+        # We move the focus to the last selected index
+        self.entries.selected = entry
+
+        entry.buffer.connect('insert-text', self.on_insert_text)
+        
+
+    def on_insert_text (self, buff, it, text, length):
+        buff.show_completion (text,
+                              it,
+                              self.parent.editor,
+                              self.parent.plugin.pida.mainwindow)
+    
+    def on_remove_entry (self, entry, index):
+        # If we have 0 entries then we add one
+        if len (self.entries) == 0:
+            self.entries.append (BufferEntry ())
+        
+        
 class EditWindow(gtk.EventBox, Component):
     __gsignals__ = {
         # Event called when the search-replace action is performed
@@ -644,14 +770,17 @@ class EditWindow(gtk.EventBox, Component):
     }
     
     components = (
-        SearchReplaceComponent, SearchComponent, ToolbarSensitivityComponent
+        BufferManagerListener,
+        SearchReplaceComponent, SearchComponent, ToolbarSensitivityComponent,
+        
     )
     
     def __init__(self, plugin=None, quit_cb=None):
         gtk.EventBox.__init__(self)
         
         self.plugin = plugin
-        self.wins = []
+        self.entries = BufferManager ()
+        
         self.completion_window = None
         self.set_size_request(470, 300)
         self.connect("delete_event", self.file_exit)
@@ -681,19 +810,17 @@ class EditWindow(gtk.EventBox, Component):
         self.vbox1.pack_start(self.hpaned, True, True)
         self.hpaned.set_border_width(5)
         self.hpaned.show()
+        
         # the gtksourceview
-        buff = CulebraBuffer()
-        self.editor = CulebraView(buff)
+        self.editor = CulebraView ()
         self.plugin.pida.mainwindow.connect('delete-event', self.file_exit)
-        buff.connect('insert-text', self.insert_at_cursor_cb)
         scrolledwin2 = gtk.ScrolledWindow()
         scrolledwin2.add(self.editor)
         self.editor.connect('key-press-event', self.text_key_press_event_cb)
         scrolledwin2.show()
         self.editor.show()
         self.editor.grab_focus()
-        self.wins.append(BufferEntry (buff))
-        self.current_buffer = 0
+        
         self.hpaned.add2(scrolledwin2)
         self.hpaned.set_position(200)
         self.dirty = 0
@@ -701,7 +828,7 @@ class EditWindow(gtk.EventBox, Component):
         self.dirname = "."
         # sorry, ugly
         self.filetypes = {}
-
+        
         Component.__init__ (self)
     
     def create_menu(self):
@@ -847,13 +974,6 @@ class EditWindow(gtk.EventBox, Component):
         self.get_parent_window().add_accel_group(self.ui.get_accel_group())
         return (self.ui.get_widget('/menubar'), toolbar)
     
-    def count_new_buffers (self):
-        counter = 0
-        for entry in self.wins:
-            if entry.is_new:
-                counter += 1
-        return counter
-    
     def about(self, mi):
         d = gtk.AboutDialog()
         d.set_name('Culebra Editor')
@@ -871,39 +991,14 @@ class EditWindow(gtk.EventBox, Component):
     def get_parent_window(self):
         return self.plugin.pida.mainwindow
 
-    def get_current(self, page = None):
-        if len(self.wins) > 0 and page is None:
-            return self.wins[self.current_buffer]
-            
-        return None
+    def get_current(self):
+        return self.entries.selected
     
-    def get_buffer(self, **kwargs):
-        return self.get_current(**kwargs).buffer
+    def get_buffer(self):
+        return self.get_current().buffer
     
     buffer = property (get_buffer)
 
-    def _new_tab(self, f = None, buff = None):
-        # If the filename already exists then we're ok
-        for entry in self.wins:
-            if entry.filename == f and not entry.is_new:
-                return
-
-        if buff is None:
-            buff = CulebraBuffer(is_new = True)
-
-        buff.connect('insert-text', self.insert_at_cursor_cb)
-        buff.save = False  
-        self.editor.set_buffer(buff)
-        self.editor.grab_focus()
-        self.wins.append(BufferEntry (buff, f))
-        self.current_buffer = len(self.wins) - 1
-    
-    def insert_at_cursor_cb(self, buff, it, text, length):
-        buff.show_completion(text, 
-                            it, 
-                            self.editor, 
-                            self.plugin.pida.mainwindow)
-        
     def get_context(self, buff, it, sp=False):
         iter2 = it.copy()
         if sp:
@@ -972,24 +1067,36 @@ class EditWindow(gtk.EventBox, Component):
             return True
 
     def load_file(self, fname):
+        entry = None
+        
+        for ent in self.entries:
+            if ent.filename == fname:
+               entry = ent
+               break
+        
+        if entry is None:
+            buff = CulebraBuffer ()
+            entry = BufferEntry (buffer = buff)
+            entry.filename = fname
+            self.entries.append (entry)
+        else:
+            buff = entry.buffer
+            
         try:
             fd = open(fname)
-            self._new_tab(fname)
-            entry = self.wins[self.current_buffer]
-            buff = self.buffer
             buff.begin_not_undoable_action()
             buff.set_text('')
             buff.set_text(fd.read())
-            buff.is_new = False
-            fd.close()
-            self.editor.set_buffer(buff)
-            self.editor.queue_draw()
-            self.set_title(os.path.basename(fname))
-            self.dirname = os.path.dirname(fname)
             buff.set_modified(False)
-            self.check_mime(self.current_buffer)
             buff.place_cursor(buff.get_start_iter())
             buff.end_not_undoable_action()
+            fd.close()
+
+            self.check_mime(entry)
+
+            self.set_title(os.path.basename(fname))
+            self.dirname = os.path.dirname(fname)
+            
         except:
             dlg = gtk.MessageDialog(self.get_parent_window(),
                     gtk.DIALOG_DESTROY_WITH_PARENT,
@@ -997,31 +1104,33 @@ class EditWindow(gtk.EventBox, Component):
                     "Can't open " + fname)
             import traceback
             traceback.print_exc ()
+            
             print sys.exc_info()[1]
             resp = dlg.run()
             dlg.hide()
             return
-        self.check_mime(self.current_buffer)
+            
         self.plugin.do_edit('getbufferlist')
         self.plugin.do_edit('getcurrentbuffer')
+        
         #XXX: no need to change when the buffer we're viewing is the
         #XXX: buffer we want to change to
-        print self.wins
-        for i, entry in enumerate(self.wins):
+        for i, entry in enumerate(self.entries):
             if entry.filename == fname:
                 self.plugin.do_edit('changebuffer', i)
                 break
         self.editor.grab_focus()
 
-    def check_mime(self, buffer_number):
-        entry = self.wins[buffer_number]
+    def check_mime(self, entry):
         buff = entry.buffer
-        manager = entry.buffer.languages_manager
+        
+        manager = buff.languages_manager
         if os.path.isabs(entry.filename):
             path = entry.filename
         else:
             path = os.path.abspath(entry.filename)
         uri = gnomevfs.URI(path)
+
         mime_type = gnomevfs.get_mime_type(path) # needs ASCII filename, not URI
         if mime_type:
             language = manager.get_language_from_mime_type(mime_type)
@@ -1068,36 +1177,50 @@ class EditWindow(gtk.EventBox, Component):
         return False
 
     def file_new(self, mi=None):
-        if self.chk_save(): return
-        
-        self._new_tab()
-        entry = self.get_current()
-        buff = entry.buffer
+        buff = CulebraBuffer ()
         buff.set_text("")
         buff.set_modified(False)
+
         manager = buff.languages_manager
         language = manager.get_language_from_mime_type("text/x-python")
         buff.set_highlight(True)
         buff.set_language(language)
+
+        entry = BufferEntry (buffer = buff)
+        self.entries.append (entry)
+
         self.plugin.do_edit('getbufferlist')
         self.plugin.do_edit('getcurrentbuffer')
-        self.plugin.do_edit('changebuffer', len(self.wins) - 1)
+        self.plugin.do_edit('changebuffer', len(self.entries) - 1)
 
     def file_open(self, mi=None):
-        
+            
         fn = self.get_current().filename
         dirn = os.path.dirname(fn)
         fname = dialogs.OpenFile('Open File', self.get_parent_window(),
                                   dirn, None, "*.py")
         
-        if not fname: return
+        if fname is None:
+            return
         
+        first_entry = self.entries[0]
+        new_and_changed = first_entry.is_new and first_entry.buffer.get_modified ()
+        
+        if len (self.entries) == 1 and new_and_changed and self.chk_save ():
+            return
+            
+        self.load_file(fname)
+        remove_first = self.entries.count_new () == 1 \
+                       and len (self.entries) == 2    \
+                       and not self.entries[0].buffer.get_modified()
 
         # Replace a not modified new buffer when we open
-        if self.count_new_buffers () == 1 and len (self.wins) == 1:
-            if not self.buffer.get_modified():
-                del self.wins[self.current_buffer]
-        self.load_file(fname)
+        if remove_first:
+            self.entries.remove (self.entries[0])
+            self.plugin.do_edit('getbufferlist')
+            self.plugin.do_edit('getcurrentbuffer')
+            self.plugin.do_edit('changebuffer', 0)
+
         self.plugin.pida.mainwindow.set_title(os.path.split(fname)[1])
 
     def file_save(self, mi=None, fname=None):
@@ -1140,7 +1263,7 @@ class EditWindow(gtk.EventBox, Component):
             resp = dlg.run()
             dlg.hide()
 
-        self.check_mime(self.current_buffer)
+        self.check_mime(self.entries.selected)
         self.plugin.do_edit('getbufferlist')
         self.plugin.do_edit('getcurrentbuffer')
         buff.place_cursor(curr_mark)
@@ -1157,24 +1280,15 @@ class EditWindow(gtk.EventBox, Component):
 
         self.dirname = os.path.dirname(f)
         self.plugin.pida.mainwindow.set_title(os.path.basename(f))
-        if buff.is_new:
-            buff.is_new = False
-            entry.filename = f
+        entry.filename = f
             
         return self.file_save(fname=f)
-
+    
     def file_close(self, mi=None, event=None):
         self.chk_save ()
-        del self.wins[self.current_buffer]
-        if len(self.wins) == 0:
-            self._new_tab()
-
-        else:
-            self.current_buffer = len(self.wins) - 1
-            self.editor.set_buffer(self.wins[self.current_buffer].buffer)
+        del self.entries.selected
         self.plugin.do_edit('getbufferlist')
         self.plugin.do_edit('getcurrentbuffer')
-        return
 
     def file_exit(self, mi=None, event=None):
         if self.chk_save(): return True
@@ -1364,16 +1478,15 @@ class EditWindow(gtk.EventBox, Component):
         self.plugin.do_evt('continue')
         
     def next_buffer(self, mi):
-        i = self.current_buffer + 1
-        if i >= len(self.wins):
-            i = 0
-        self.plugin.do_edit('changebuffer', i)
+        if self.entries.can_select_next ():
+            self.entries.select_next ()
+            self.plugin.do_edit('changebuffer', self.entries.selected_index)
 
     def prev_buffer(self, mi):
-        i = self.current_buffer - 1
-        if i < 0:
-            i = len(self.wins) - 1
-        self.plugin.do_edit('changebuffer', i)
+        if self.entries.can_select_previous ():
+            self.entries.select_previous ()
+            self.plugin.do_edit('changebuffer', self.entries.selected_index)
+
 gobject.type_register(EditWindow)
         
 class AutoCompletionWindow(gtk.Window):
