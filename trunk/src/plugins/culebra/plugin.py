@@ -79,12 +79,12 @@ class Plugin(plugin.Plugin):
 
     def check_mime(self, fname):
         try:
-            buff, fn = self.editor.get_current()
-            manager = buff.languages_manager
-            if os.path.isabs(fname):
-                path = fname
+            entry = self.editor.get_current()
+            manager = entry.buffer.languages_manager
+            if os.path.isabs(entry.filename):
+                path = entry.filename
             else:
-                path = os.path.abspath(fname)
+                path = os.path.abspath(entry.filename)
             uri = gnomevfs.URI(path)
             mime_type = gnomevfs.get_mime_type(path) # needs ASCII filename, not URI
             if mime_type:
@@ -100,7 +100,7 @@ class Plugin(plugin.Plugin):
         
     def evt_debuggerframe(self, frame):
         if not frame.filename.startswith('<'):
-            if frame.filename != self.editor.get_current().buffer:
+            if frame.filename != self.editor.get_current().filename:
                 self.do_edit('openfile', frame.filename)
             self.do_edit('gotoline', frame.lineno - 1)
         
@@ -118,7 +118,6 @@ class Plugin(plugin.Plugin):
         entries = self.editor.entries
         index = entries.selected_index
         entry = entries.selected
-        
         self.do_evt('filetype', index, self.check_mime(entry.filename))
         self.do_evt('bufferchange', index, entry.filename)
 
