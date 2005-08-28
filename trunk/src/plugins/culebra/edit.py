@@ -181,7 +181,18 @@ def get_buffer_selection (buffer):
         return ""
     else:
         return buffer.get_slice(*bounds)
+
+def hide_on_delete (window):
+    """
+    Makes a window hide it self instead of getting destroyed.
+    """
+    
+    def on_delete (wnd, *args):
+        wnd.hide ()
+        return True
         
+    return window.connect ("delete-event", on_delete)
+
 class CulebraView(gtksourceview.SourceView):
     def __init__(self):
         
@@ -244,11 +255,7 @@ class SearchReplaceComponent (Component):
                              "Replace All", RESPONSE_REPLACE_ALL,
                              gtk.STOCK_FIND, RESPONSE_FORWARD))
         
-        def on_delete (dlg, *args):
-            dlg.hide ()
-            return True
-
-        self.dialog.connect ("delete-event", on_delete)
+        hide_on_delete (self.dialog)
         self.dialog.set_has_separator (False)
         self.dialog.vbox.set_border_width (12)
         self.dialog.set_resizable (False)
@@ -387,11 +394,6 @@ class SearchReplaceComponent (Component):
         if event.keyval == KEY_ESCAPE:
             self.dialog.hide ()
 
-# XXX: There's a bug that lets the dialog get destroyed. Setps to reproduce:
-# XXX: 1. open the dialog and search for something
-# XXX: 2. select something on the SourceView (the dialog is no longer modal)
-# XXX: 3. close the dialog
-# XXX: 4. open the search dialog, it will be a ghost 
 class SearchComponent (Component):
     
     def get_search_text (self):
@@ -408,7 +410,7 @@ class SearchComponent (Component):
         self.dialog = gtk.Dialog("", self.parent.get_parent_window(),
                             gtk.DIALOG_DESTROY_WITH_PARENT,
                             (gtk.STOCK_FIND, RESPONSE_FORWARD))
-                            
+        hide_on_delete (self.dialog)
         self.dialog.set_default_response(RESPONSE_FORWARD)
         self.dialog.set_has_separator (False)
         self.dialog.set_resizable (False)
