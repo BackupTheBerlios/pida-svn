@@ -493,12 +493,15 @@ class ToolbarObserver (object):
         
         self.close.set_sensitive (is_sensitive)
     
+    def update_selection_sensitive (self, buff):
+        has_selection = buff.get_selection_bounds() != ()
+        self.cut.set_sensitive (has_selection)
+        self.copy.set_sensitive (has_selection)
+    
     def on_mark_set (self, buff, textiter, mark):
         if mark.get_name () in ("insert", "selection-bound"):
-            has_selection = buff.get_selection_bounds() != ()
-            self.cut.set_sensitive (has_selection)
-            self.copy.set_sensitive (has_selection)
-    
+            self.update_selection_sensitive (buff)
+            
     def observe (self, buffer_entry):
         self.entry = buffer_entry
         buff = buffer_entry.buffer
@@ -514,6 +517,7 @@ class ToolbarObserver (object):
         self.on_can_undo(buff, buff.can_undo ())
         self.on_can_redo(buff, buff.can_redo ())
         self.on_modified_changed (buff)
+        self.update_selection_sensitive (buff)
     
     def unobserve (self):
         if not hasattr (self, "sources"):
