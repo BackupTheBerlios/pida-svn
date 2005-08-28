@@ -492,7 +492,13 @@ class ToolbarObserver (object):
                        or buff.get_modified ()
         
         self.close.set_sensitive (is_sensitive)
-
+    
+    def on_mark_set (self, buff, textiter, mark):
+        if mark.get_name () in ("insert", "selection-bound"):
+            has_selection = buff.get_selection_bounds() != ()
+            self.cut.set_sensitive (has_selection)
+            self.copy.set_sensitive (has_selection)
+    
     def observe (self, buffer_entry):
         self.entry = buffer_entry
         buff = buffer_entry.buffer
@@ -503,7 +509,8 @@ class ToolbarObserver (object):
         self.sources.append(
             buff.connect("modified-changed", self.on_modified_changed)
         )
-                
+        self.sources.append(buff.connect("mark-set", self.on_mark_set))
+        
         self.on_can_undo(buff, buff.can_undo ())
         self.on_can_redo(buff, buff.can_redo ())
         self.on_modified_changed (buff)
@@ -520,19 +527,24 @@ class ToolbarSensitivityComponent (Component):
     def _init (self):
         
         self.observers_pool = {}
+        ag = self.parent.ag
+
         self.elements = dict (
-            save = self.parent.ag.get_action ("FileSave"),
-            save_as = self.parent.ag.get_action ("FileSaveAs"),
-            undo = self.parent.ag.get_action ("EditUndo"),
-            redo = self.parent.ag.get_action ("EditRedo"),
-            close = self.parent.ag.get_action ("Close"),
+            save        = ag.get_action ("FileSave"),
+            save_as     = ag.get_action ("FileSaveAs"),
+            undo        = ag.get_action ("EditUndo"),
+            redo        = ag.get_action ("EditRedo"),
+            close       = ag.get_action ("Close"),
+            cut         = ag.get_action ("EditCut"),
+            paste       = ag.get_action ("EditPaste"),
+            copy        = ag.get_action ("EditCopy"),
             edit_window = self.parent,
         )
         
-        self.script_execute = self.parent.ag.get_action ("RunScript")
-        self.script_break = self.parent.ag.get_action ("StopScript")
-        self.next_buffer = self.parent.ag.get_action ("NextBuffer")
-        self.prev_buffer = self.parent.ag.get_action ("PrevBuffer")
+        self.script_execute = ag.get_action ("RunScript")
+        self.script_break   = ag.get_action ("StopScript")
+        self.next_buffer    = ag.get_action ("NextBuffer")
+        self.prev_buffer    = ag.get_action ("PrevBuffer")
         
         self.parent.connect ("buffer-changed", self.on_buffer_changed)
         events = self.parent.entries.events
@@ -540,7 +552,7 @@ class ToolbarSensitivityComponent (Component):
         
         self.on_buffer_changed (self.parent, self.parent.buffer)
         self.on_selection_changed ()
-        
+    
     def on_selection_changed (self, index = None):
         self.next_buffer.set_sensitive (self.parent.entries.can_select_next ())
         self.prev_buffer.set_sensitive (self.parent.entries.can_select_previous())
