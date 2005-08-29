@@ -566,12 +566,12 @@ class ToolbarSensitivityComponent (Component):
     def on_buffer_changed (self, parent, buff):
         entry = self.parent.entries.selected
         
-        if self.observers_pool.has_key (entry):
-            return
-
-        is_sensitive = entry.buffer.get_language ().get_name () == "Python"
+        is_sensitive = buff.get_language ().get_name () == "Python"
         self.script_execute.set_sensitive (is_sensitive)
         self.script_break.set_sensitive (is_sensitive)
+
+        if self.observers_pool.has_key (entry):
+            return
 
         obs = ToolbarObserver (**self.elements)
         obs.observe (entry)
