@@ -1295,7 +1295,6 @@ class EditWindow(gtk.EventBox, Component):
                                 self.dirname,
                                 entry.filename)
         if not f: return False
-
         self.dirname = os.path.dirname(f)
         self.plugin.pida.mainwindow.set_title(os.path.basename(f))
         entry.filename = f
@@ -1364,13 +1363,14 @@ class EditWindow(gtk.EventBox, Component):
             line = line_text.get_text()
             if line.isdigit():
                 entry = self.get_current()
-                titer = buff.get_iter_at_line(int(line)-1)
+                titer = buf.get_iter_at_line(int(line)-1)
                 self.editor.scroll_to_iter(titer, 0.25)
-                entry.buffer.place_cursor(titer)
+                buf.place_cursor(titer)
                 self.editor.grab_focus()
                 dialog.destroy()
        
         line_text = gtk.Entry()
+        buf = self.buffer
         dialog = gtk.Dialog("Goto Line", self.get_parent_window(),
                             gtk.DIALOG_DESTROY_WITH_PARENT,
                             (gtk.STOCK_GO_FORWARD, RESPONSE_FORWARD,
