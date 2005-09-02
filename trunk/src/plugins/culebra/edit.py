@@ -918,10 +918,6 @@ class EditWindow(gtk.EventBox, Component):
                 <toolitem action='EditReplace'/>
                 <separator/>
                 <toolitem action='RunScript'/>
-                <toolitem action='StopScript'/>
-                <separator/>
-                <toolitem action='PrevBuffer'/>
-                <toolitem action='NextBuffer'/>
         </toolbar>
         </ui>
         """
