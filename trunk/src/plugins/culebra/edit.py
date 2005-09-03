@@ -242,6 +242,70 @@ class Component (object):
     
     components = ()
 
+class GotoLineComponent (Component):
+    def _init (self):
+        
+        dialog = gtk.Dialog("", self.parent.get_parent_window(),
+                            gtk.DIALOG_DESTROY_WITH_PARENT,
+                            (gtk.STOCK_JUMP_TO, RESPONSE_FORWARD))
+        self.dialog = dialog
+        hide_on_delete (dialog)
+        dialog.connect("response", self.on_dialog_response)
+        dialog.set_default_response(RESPONSE_FORWARD)
+        dialog.set_border_width (12)
+        dialog.set_has_separator (False)
+        dialog.action_area.set_border_width (0)
+        
+        hbox = gtk.HBox ()
+        hbox.show ()
+        hbox.set_spacing (6)
+        dialog.vbox.add (hbox)
+        
+        lbl = gtk.Label ()
+        lbl.set_markup_with_mnemonic ("_Line number:")
+        lbl.show ()
+        hbox.pack_start (lbl, False, False)
+        
+        line_text = gtk.Entry()
+        self.line_text = line_text
+        line_text.set_activates_default(True)
+        line_text.connect ("changed", self.on_text_changed)
+        line_text.show()
+        hbox.pack_start (line_text, False, False)
+        
+        self.on_text_changed (self.line_text)
+        
+        self.parent.connect ("goto-line-event", self.on_goto_line)
+        
+    def on_dialog_response (self, dialog, response_id):
+        if response_id == gtk.RESPONSE_CLOSE:
+            dialog.hide ()
+            return
+
+        line = self.line_text.get_text()
+        if not line.isdigit():
+            return
+            
+        buff = self.parent.buffer
+        titer = buff.get_iter_at_line(int(line)-1)
+        self.parent.editor.scroll_to_iter(titer, 0.25)
+        buff.place_cursor(titer)
+        
+        # hide when we find something
+        self.parent.editor.grab_focus()
+        dialog.hide ()
+    
+    def on_text_changed (self, entry):
+        
+        is_sensitive = self.line_text.get_text ().isdigit ()
+        self.dialog.set_response_sensitive (RESPONSE_FORWARD, is_sensitive)
+    
+    def on_goto_line (self, edit_window):
+       
+        self.dialog.run()
+        self.line_text.grab_focus()
+
+
 class SearchReplaceComponent (Component):
     """
     This class aggregates all code related to Search & Replace functionality.
@@ -784,11 +848,12 @@ class EditWindow(gtk.EventBox, Component):
         # Event called when the search-replace action is performed
         "search-replace-event": (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
         "search-event": (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
+        "goto-line-event": (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
         "buffer-changed": (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_OBJECT,)),
     }
     
     components = (
-        BufferManagerListener,
+        BufferManagerListener, GotoLineComponent,
         SearchReplaceComponent, SearchComponent, ToolbarSensitivityComponent,
         
     )
@@ -958,7 +1023,7 @@ class EditWindow(gtk.EventBox, Component):
             ('EditFindNext', None, 'Find _Next', 'F3', None, self.edit_find_next),
             ('EditReplace', gtk.STOCK_FIND_AND_REPLACE, None, '<control>h', 
                 "Search for and replace text", self.edit_replace),
-            ('GotoLine', None, 'Goto Line', '<control>g', 
+            ('GotoLine', gtk.STOCK_JUMP_TO, 'Goto Line', '<control>g', 
                  None, self.goto_line),
             ('RunMenu', None, '_Run'),
             ('RunScript', gtk.STOCK_EXECUTE, None, "F5","Run script", self.run_script),
@@ -1352,33 +1417,7 @@ class EditWindow(gtk.EventBox, Component):
                     editor = self.editor)
     
     def goto_line(self, mi=None):
-        def dialog_response_callback(dialog, response_id):
-            if response_id == gtk.RESPONSE_CLOSE:
-                dialog.destroy()
-                return
-            line = line_text.get_text()
-            if line.isdigit():
-                entry = self.get_current()
-                titer = buf.get_iter_at_line(int(line)-1)
-                self.editor.scroll_to_iter(titer, 0.25)
-                buf.place_cursor(titer)
-                self.editor.grab_focus()
-                dialog.destroy()
-       
-        line_text = gtk.Entry()
-        buf = self.buffer
-        dialog = gtk.Dialog("Goto Line", self.get_parent_window(),
-                            gtk.DIALOG_DESTROY_WITH_PARENT,
-                            (gtk.STOCK_GO_FORWARD, RESPONSE_FORWARD,
-                             gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE))
-        dialog.vbox.pack_end(line_text, True, True, 0)
-        dialog.connect("response", dialog_response_callback)
-        dialog.set_default_response(RESPONSE_FORWARD)
-        line_text.set_activates_default(True)
-        line_text.show()
-        line_text.grab_focus()
-        dialog.show_all()
-        response_id = dialog.run()
+        self.emit ("goto-line-event")
 
     def comment_block(self, mi=None):
         comment = "#"
