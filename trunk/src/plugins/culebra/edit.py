@@ -563,6 +563,9 @@ class ToolbarObserver (object):
         self.cut.set_sensitive (has_selection)
         self.copy.set_sensitive (has_selection)
     
+    def update_revert (self, *args):
+        self.revert.set_sensitive (not self.entry.is_new)
+    
     def on_mark_set (self, buff, textiter, mark):
         if mark.get_name () in ("insert", "selection-bound"):
             self.update_selection_sensitive (buff)
@@ -581,7 +584,12 @@ class ToolbarObserver (object):
         self.sources.append (
             self.edit_window.connect ("buffer-closed-event", self.update_close)
         )
-        
+        self.sources.append (
+            self.save.connect ("activate", self.update_revert)
+        )
+        self.sources.append (
+            self.save_as.connect ("activate", self.update_revert)
+        )
         self.on_can_undo(buff, buff.can_undo ())
         self.on_can_redo(buff, buff.can_redo ())
         self.on_modified_changed (buff)
@@ -604,6 +612,7 @@ class ToolbarSensitivityComponent (Component):
         self.elements = dict (
             save        = ag.get_action ("FileSave"),
             save_as     = ag.get_action ("FileSaveAs"),
+            revert      = ag.get_action ("FileRevert"),
             undo        = ag.get_action ("EditUndo"),
             redo        = ag.get_action ("EditRedo"),
             close       = ag.get_action ("Close"),
@@ -617,6 +626,7 @@ class ToolbarSensitivityComponent (Component):
         self.script_break   = ag.get_action ("StopScript")
         self.next_buffer    = ag.get_action ("NextBuffer")
         self.prev_buffer    = ag.get_action ("PrevBuffer")
+        self.revert         = ag.get_action ("FileRevert")
         
         self.parent.connect ("buffer-changed", self.on_buffer_changed)
         events = self.parent.entries.events
@@ -635,6 +645,8 @@ class ToolbarSensitivityComponent (Component):
         is_sensitive = buff.get_language ().get_name () == "Python"
         self.script_execute.set_sensitive (is_sensitive)
         self.script_break.set_sensitive (is_sensitive)
+        
+        self.revert.set_sensitive (not entry.is_new)
 
         if self.observers_pool.has_key (entry):
             return
@@ -923,10 +935,12 @@ class EditWindow(gtk.EventBox, Component):
                 <menu name='FileMenu' action='FileMenu'>
                         <menuitem action='FileNew'/>
                         <menuitem action='FileOpen'/>
+                        <separator/>
                         <menuitem action='FileSave'/>
                         <menuitem action='FileSaveAs'/>
-                        <menuitem action='Close'/>
+                        <menuitem action='FileRevert'/>
                         <separator/>
+                        <menuitem action='Close'/>
                         <menuitem action='FileExit'/>
                 </menu>
                 <menu name='EditMenu' action='EditMenu'>
@@ -936,7 +950,6 @@ class EditWindow(gtk.EventBox, Component):
                         <menuitem action='EditCut'/>
                         <menuitem action='EditCopy'/>
                         <menuitem action='EditPaste'/>
-                        <menuitem action='EditClear'/>
                         <separator/>
                         <menuitem action='DuplicateLine'/>
                         <menuitem action='DeleteLine'/>
@@ -961,10 +974,6 @@ class EditWindow(gtk.EventBox, Component):
                         <menuitem action='DebugStep'/>
                         <menuitem action='DebugNext'/>
                         <menuitem action='DebugContinue'/>
-                </menu>
-                <menu name='BufferMenu' action='BufferMenu'>
-                        <menuitem action='PrevBuffer'/>
-                        <menuitem action='NextBuffer'/>
                 </menu>
                 <menu name='HelpMenu' action='HelpMenu'>
                         <menuitem action='About'/>
@@ -996,6 +1005,7 @@ class EditWindow(gtk.EventBox, Component):
             ('FileSave', gtk.STOCK_SAVE, None, None, "Save current file", self.file_save),
             ('FileSaveAs', gtk.STOCK_SAVE_AS, None, None, "Save the current file with a different name",
              self.file_saveas),
+            ('FileRevert', gtk.STOCK_REVERT_TO_SAVED, None, None, "Revert to a saved version of the file", self.file_revert),
             ('Close', gtk.STOCK_CLOSE, None, None, "Close current file", self.file_close),
             ('FileExit', gtk.STOCK_QUIT, None, None, None, self.file_exit),
             ('EditMenu', None, '_Edit'),
@@ -1006,7 +1016,7 @@ class EditWindow(gtk.EventBox, Component):
             ('EditPaste', gtk.STOCK_PASTE, None, None, "Paste the clipboard", self.edit_paste),
             ('EditClear', gtk.STOCK_REMOVE, 'C_lear', None, None,
              self.edit_clear),
-            ('Configuration', None, 'Configur_e', None, None,
+            ('Configuration', gtk.STOCK_PREFERENCES, None, None, None,
                 lambda action: self.plugin.do_action('showconfig', 'culebra')),
             
              ('DuplicateLine', None, 'Duplicate Line', '<control>d', 
@@ -1017,14 +1027,14 @@ class EditWindow(gtk.EventBox, Component):
                  None, self.comment_block),
              ('UncommentBlock', None, 'Uncomment Selection', '<control><shift>k', 
                  None, self.uncomment_block),
-             ('UpperSelection', None, 'Upper Selection', '<control>u', 
+             ('UpperSelection', None, 'Upper Selection Case', '<control>u', 
                  None, self.upper_selection),
-             ('LowerSelection', None, 'Lower Selection', '<control><shift>u', 
+             ('LowerSelection', None, 'Lower Selection Case', '<control><shift>u', 
                  None, self.lower_selection),
-            ('FindMenu', None, '_Find'),
-            ('EditFind', gtk.STOCK_FIND, None, None, "Search for text", self.edit_find),
-            ('EditFindNext', None, 'Find _Next', 'F3', None, self.edit_find_next),
-            ('EditReplace', gtk.STOCK_FIND_AND_REPLACE, None, '<control>h', 
+            ('FindMenu', None, '_Search'),
+            ('EditFind', gtk.STOCK_FIND, "Find...", None, "Search for text", self.edit_find),
+            ('EditFindNext', gtk.STOCK_FIND, 'Find _Next', 'F3', None, self.edit_find_next),
+            ('EditReplace', gtk.STOCK_FIND_AND_REPLACE, "_Replace...", '<control>h', 
                 "Search for and replace text", self.edit_replace),
             ('GotoLine', gtk.STOCK_JUMP_TO, 'Goto Line', '<control>g', 
                  None, self.goto_line),
@@ -1364,6 +1374,11 @@ class EditWindow(gtk.EventBox, Component):
         entry.filename = f
             
         return self.file_save(fname=f)
+    
+    def file_revert (self, *args):
+        # XXX: the save dialog is totally inapropriate, should be a revert dialog
+        self.chk_save ()
+        self.load_file (self.get_current ().filename)
     
     def file_close(self, mi=None, event=None):
         self.chk_save ()
