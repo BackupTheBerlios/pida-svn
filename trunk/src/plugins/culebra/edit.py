@@ -40,9 +40,6 @@ RESPONSE_BACKWARD = 1
 RESPONSE_REPLACE = 2
 RESPONSE_REPLACE_ALL = 3
 
-BUFFER = 0
-FILENAME = 1
-
 KEY_ESCAPE = gtk.gdk.keyval_from_name ("Escape")
 
 global newnumber
@@ -301,6 +298,8 @@ class GotoLineComponent (Component):
         self.dialog.set_response_sensitive (RESPONSE_FORWARD, is_sensitive)
     
     def on_goto_line (self, edit_window):
+        self.line_text.select_region (0, -1)
+        self.line_text.grab_focus()
        
         self.dialog.run()
         self.line_text.grab_focus()
@@ -552,11 +551,11 @@ class ToolbarObserver (object):
         is_sensitive = buff.get_modified () or self.entry.is_new
         self.save.set_sensitive (is_sensitive)
         self.save_as.set_sensitive (is_sensitive)
-        
-        is_sensitive = len (self.edit_window.entries) != 1  \
-                       or not self.entry.is_new             \
-                       or buff.get_modified ()
-        
+        self.update_close (buff)
+    
+    def update_close (self, *args):
+        manager = self.edit_window.entries
+        is_sensitive = not (len (manager) == manager.count_new () == 1) 
         self.close.set_sensitive (is_sensitive)
     
     def update_selection_sensitive (self, buff):
@@ -579,6 +578,9 @@ class ToolbarObserver (object):
             buff.connect("modified-changed", self.on_modified_changed)
         )
         self.sources.append(buff.connect("mark-set", self.on_mark_set))
+        self.sources.append (
+            self.edit_window.connect ("buffer-closed-event", self.update_close)
+        )
         
         self.on_can_undo(buff, buff.can_undo ())
         self.on_can_redo(buff, buff.can_redo ())
@@ -850,6 +852,7 @@ class EditWindow(gtk.EventBox, Component):
         "search-event": (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
         "goto-line-event": (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
         "buffer-changed": (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_OBJECT,)),
+        "buffer-closed-event": (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
     }
     
     components = (
@@ -1367,6 +1370,7 @@ class EditWindow(gtk.EventBox, Component):
         del self.entries.selected
         self.plugin.do_edit('getbufferlist')
         self.plugin.do_edit('getcurrentbuffer')
+        self.emit ("buffer-closed-event")
 
     def file_exit(self, mi=None, event=None):
         if self.chk_save(): return True
