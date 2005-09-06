@@ -55,6 +55,10 @@ class Plugin(plugin.Plugin):
         self.bufferlist = None
         self.currentbufnum = None
 
+    def populate_widgets(self):
+        pass
+
+    ############################################################################
     def launch(self):
         self.create_editor()
         self.edit_getbufferlist()
@@ -65,18 +69,9 @@ class Plugin(plugin.Plugin):
             self.pida.embedwindow.add(self.editor)
             self.editor.show_all()
         
-    def populate_widgets(self):
-        pass
-
     def cb_alternative(self, *args):
         self.do_action('showconfig')
     
-    def evt_reset(self):
-        font = self.personal_registry.font.value()
-        font_desc = pango.FontDescription(font)
-        if font_desc:
-            self.editor.editor.modify_font(font_desc)
-
     def check_mime(self, fname):
         try:
             entry = self.editor.get_current()
@@ -95,6 +90,18 @@ class Plugin(plugin.Plugin):
             pass
         return 'None'
 
+    def abspath(self, filename):
+        if filename and not filename.startswith('/'):
+            filename = os.path.join(os.getcwd(), filename)
+        return filename
+    
+    ############################################################################
+    def evt_reset(self):
+        font = self.personal_registry.font.value()
+        font_desc = pango.FontDescription(font)
+        if font_desc:
+            self.editor.editor.modify_font(font_desc)
+
     def evt_started(self):
         self.launch()
         
@@ -103,16 +110,15 @@ class Plugin(plugin.Plugin):
             if frame.filename != self.editor.get_current().filename:
                 self.do_edit('openfile', frame.filename)
             self.do_edit('gotoline', frame.lineno - 1)
+
+    def evt_bufferchange(self, buffernumber, name):
+        self.editor.emit ("buffer-changed", self.editor.entries.selected.buffer)
         
+    ############################################################################
     def edit_getbufferlist(self):
         bl = [(i, v.filename) for (i, v) in enumerate(self.editor.entries)]
         self.bufferlist = bl
         self.do_evt('bufferlist', bl)
-
-    def abspath(self, filename):
-        if filename and not filename.startswith('/'):
-            filename = os.path.join(os.getcwd(), filename)
-        return filename
 
     def edit_getcurrentbuffer(self):
         entries = self.editor.entries
@@ -121,9 +127,6 @@ class Plugin(plugin.Plugin):
         self.do_evt('filetype', index, self.check_mime(entry.filename))
         self.do_evt('bufferchange', index, entry.filename)
 
-    def evt_bufferchange(self, buffernumber, name):
-        self.editor.emit ("buffer-changed", self.editor.entries.selected.buffer)
-                
     def edit_changebuffer(self, index):
         entries = self.editor.entries
         
@@ -147,3 +150,4 @@ class Plugin(plugin.Plugin):
 
     def edit_openfile(self, filename):
         self.editor.load_file(filename)
+                

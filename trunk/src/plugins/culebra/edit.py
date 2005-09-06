@@ -42,9 +42,6 @@ RESPONSE_REPLACE_ALL = 3
 
 KEY_ESCAPE = gtk.gdk.keyval_from_name ("Escape")
 
-global newnumber
-newnumber = 1
-
 class CulebraBuffer(gtksourceview.SourceBuffer):
 
     def __init__(self):
@@ -677,22 +674,47 @@ class BufferEntry (object):
     
     is_new = property (get_is_new)
 
-class EventManager:
-    """This is a lightweight events service provider"""
-    def __init__ (self, event_names = ()):
-        self.events = {}
-        for name in event_names:
-            self.events[name] = []
+class EventsDispatcher(object):
+    """
+    An event dispatcher is the central events object. To use it you must first
+    create an event with the ``create_event`` method, this will return an
+    event source which is basically the function you'll use to trigger the
+    event. After that you register the callbacks. Its usage follows:
     
-    def register (self, event, callback):
-        self.events[event].append (callback)
+    >>> dispatcher = EventDispatcher()
+    >>> evt_src = dispatcher.create_event ("on-ring-event")
+    >>> 
+    >>> def callback1 ():
+    >>>     print "riiiing!"
+    >>> 
+    >>> dispatcher.register_callback ("on-ring-event", callback1)
+    >>> 
+    >>> evt_src ()
+    riiing
+    >>> 
+    """
+    def __init__ (self):
+        self.__events = {}
+        
+    def create_event (self, event_name):
+        self.__events[event_name] = []
+        
+        def event_source (*args, **kwargs):
+            for callback in self.__events[event_name]:
+                callback (*args, **kwargs)
+        
+        return event_source
     
-    def unregister (self, event, callback):
-        self.events.remove (callback)
+    def event_exists (self, event_name):
+        return event_name in self.__events
     
-    def trigger (self, event, *args, **kwargs):
-        for callback in self.events[event]:
-            callback (*args, **kwargs)
+    def register (self, event_name, callback):
+        assert self.event_exists (event_name)
+        self.__events[event_name].append (callback)
+    
+    def unregister (self, event_name, callback):
+        self.__events.remove (callback)
+
 
 class BufferManager (object):
     """
@@ -705,7 +727,12 @@ class BufferManager (object):
     
     def __init__ (self):
         self.__entries = []
-        self.events = EventManager (("add-entry", "remove-entry", "selection-changed"))
+
+        self.events = EventsDispatcher()
+        self.__evts_srcs = {}
+        for evt_name in ("add-entry", "remove-entry", "selection-changed"):
+            self.__evts_srcs[evt_name] = self.events.create_event (evt_name)
+
         self.__selected_index = -1
         
     def get_entries (self):
@@ -722,7 +749,7 @@ class BufferManager (object):
     
     def append (self, buffer_entry):
         self.entries.append (buffer_entry)
-        self.events.trigger ("add-entry", buffer_entry)
+        self.__evts_srcs["add-entry"](buffer_entry)
     
     def remove (self, buffer_entry):
         index = self.entries.index (buffer_entry)
@@ -737,10 +764,10 @@ class BufferManager (object):
         else:
             self.__selected_index = -1
         
-        self.events.trigger ("remove-entry", buffer_entry, index)
+        self.__evts_srcs["remove-entry"](buffer_entry, index)
 
         if index != self.selected_index:
-            self.events.trigger ("selection-changed", self.selected_index)
+            self.__evts_srcs["selection-changed"](self.selected_index)
     
     def __delitem__ (self, index):
         entry = self.entries[index]
@@ -752,7 +779,7 @@ class BufferManager (object):
             return
             
         self.__selected_index = index
-        self.events.trigger ("selection-changed", index)
+        self.__evts_srcs["selection-changed"](index)
     
     def get_selected_index (self):
         return self.__selected_index
