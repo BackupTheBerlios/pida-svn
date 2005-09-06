@@ -32,6 +32,7 @@ import gnomevfs
 import importsTipper
 import keyword
 import weakref
+import codecs
 
 BLOCK_SIZE = 2048
 
@@ -44,7 +45,7 @@ KEY_ESCAPE = gtk.gdk.keyval_from_name ("Escape")
 
 class CulebraBuffer(gtksourceview.SourceBuffer):
 
-    def __init__(self, filename = None):
+    def __init__(self, filename = None, encoding = "utf-8"):
         gtksourceview.SourceBuffer.__init__(self)
         lm = gtksourceview.SourceLanguagesManager()
         self.languages_manager = lm
@@ -54,7 +55,9 @@ class CulebraBuffer(gtksourceview.SourceBuffer):
         self.set_language(language)
         self.search_string = None
         self.search_mark = self.create_mark('search', self.get_start_iter())
-        self.__filename = filename
+        
+        self.filename = filename
+        self.encoding = encoding
     
     def get_filename (self):
         if self.__filename is None:
@@ -65,6 +68,14 @@ class CulebraBuffer(gtksourceview.SourceBuffer):
         self.__filename = filename
     
     filename = property (get_filename, set_filename)
+    
+    def get_encoding (self):
+        return self.__encoding
+    
+    def set_encoding (self, encoding):
+        self.__encoding = encoding
+    
+    encoding = property (get_encoding, set_encoding)
     
     def get_is_new (self):
         return self.__filename is None
@@ -1202,7 +1213,19 @@ class EditWindow(gtk.EventBox, Component):
                 fd = open(fname)
                 buff.begin_not_undoable_action()
                 buff.set_text('')
-                buff.set_text(fd.read())
+                data = fd.read ()
+                enc_data = None
+                for enc in (sys.getdefaultencoding(), "utf-8", "iso8859", "ascii"):
+                    try:
+                        enc_data = unicode (data, enc)
+                        buff.encoding = enc
+                        break
+                    except UnicodeDecodeError:
+                        pass
+                assert enc_data is not None, "There was a problem detecting the encoding"
+                    
+                
+                buff.set_text(enc_data)
                 buff.set_modified(False)
                 buff.place_cursor(buff.get_start_iter())
                 buff.end_not_undoable_action()
@@ -1357,12 +1380,17 @@ class EditWindow(gtk.EventBox, Component):
             #XXX: and when it's finished we should delete the original
             #XXX: and swap filenames
             fd = open(fname, "w")
+
+            writer = codecs.getwriter(buff.encoding)(fd)
+            
             while blockend.forward_chars(BLOCK_SIZE):
-                buf = buff.get_text(start, blockend)
-                fd.write(buf)
+                data = buff.get_text(start, blockend).decode("utf-8")
+                writer.write(data)
                 start = blockend.copy()
-            buf = buff.get_text(start, blockend)
-            fd.write(buf)
+
+            data = buff.get_text(start, blockend).decode("utf-8")
+            writer.write(data)
+
             fd.close()
             buff.set_modified(False)
             buff.filename = fname
@@ -1385,6 +1413,8 @@ class EditWindow(gtk.EventBox, Component):
         return ret
 
     def file_saveas(self, mi=None):
+        #XXX: When a user saves the file with an already opened file
+        #XXX: we get two buffers pointing to the same file.
         buff = self.get_current()
         f = dialogs.SaveFile('Save File As', 
                                 self.get_parent_window(), 
