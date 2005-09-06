@@ -44,7 +44,7 @@ KEY_ESCAPE = gtk.gdk.keyval_from_name ("Escape")
 
 class CulebraBuffer(gtksourceview.SourceBuffer):
 
-    def __init__(self):
+    def __init__(self, filename = None):
         gtksourceview.SourceBuffer.__init__(self)
         lm = gtksourceview.SourceLanguagesManager()
         self.languages_manager = lm
@@ -54,6 +54,22 @@ class CulebraBuffer(gtksourceview.SourceBuffer):
         self.set_language(language)
         self.search_string = None
         self.search_mark = self.create_mark('search', self.get_start_iter())
+        self.__filename = filename
+    
+    def get_filename (self):
+        if self.__filename is None:
+            return "New File"
+        return self.__filename
+    
+    def set_filename (self, filename):
+        self.__filename = filename
+    
+    filename = property (get_filename, set_filename)
+    
+    def get_is_new (self):
+        return self.__filename is None
+    
+    is_new = property (get_is_new)
         
     def search(self, search_string, mark = None, scroll=True, editor = None):
         if mark is None:
@@ -280,7 +296,7 @@ class GotoLineComponent (Component):
         if not line.isdigit():
             return
             
-        buff = self.parent.buffer
+        buff = self.parent.get_current()
         titer = buff.get_iter_at_line(int(line)-1)
         self.parent.editor.scroll_to_iter(titer, 0.25)
         buff.place_cursor(titer)
@@ -370,7 +386,7 @@ class SearchReplaceComponent (Component):
     
     
     def get_buffer (self):
-        return self.parent.buffer
+        return self.parent.get_current()
     
     buffer = property(get_buffer)
     
@@ -508,13 +524,13 @@ class SearchComponent (Component):
         if response == RESPONSE_FORWARD:
             self.parent.buffer.search(
                 self.search_text, 
-                self.parent.buffer.search_mark, 
+                self.parent.get_current().search_mark, 
                 editor=self.parent.editor
             )
         
     def on_search_dialog (self, *args):
         # Update search text dialog
-        selected_text = get_buffer_selection (self.parent.buffer)
+        selected_text = get_buffer_selection (self.parent.get_current())
         if selected_text != "":
             self.search_text = selected_text 
 
@@ -545,7 +561,7 @@ class ToolbarObserver (object):
         self.redo.set_sensitive (can_redo)
     
     def on_modified_changed (self, buff):
-        is_sensitive = buff.get_modified () or self.entry.is_new
+        is_sensitive = buff.get_modified () or buff.is_new
         self.save.set_sensitive (is_sensitive)
         self.save_as.set_sensitive (is_sensitive)
         self.update_close (buff)
@@ -561,15 +577,14 @@ class ToolbarObserver (object):
         self.copy.set_sensitive (has_selection)
     
     def update_revert (self, *args):
-        self.revert.set_sensitive (not self.entry.is_new)
+        self.revert.set_sensitive (not self.buffer.is_new)
     
     def on_mark_set (self, buff, textiter, mark):
         if mark.get_name () in ("insert", "selection-bound"):
             self.update_selection_sensitive (buff)
             
-    def observe (self, buffer_entry):
-        self.entry = buffer_entry
-        buff = buffer_entry.buffer
+    def observe (self, buff):
+        self.buffer = buff
         
         self.sources = []
         self.sources.append(buff.connect("can-redo", self.on_can_redo))
@@ -629,7 +644,7 @@ class ToolbarSensitivityComponent (Component):
         events = self.parent.entries.events
         events.register ("selection-changed", self.on_selection_changed)
         
-        self.on_buffer_changed (self.parent, self.parent.buffer)
+        self.on_buffer_changed (self.parent, self.parent.get_current())
         self.on_selection_changed ()
     
     def on_selection_changed (self, index = None):
@@ -637,42 +652,18 @@ class ToolbarSensitivityComponent (Component):
         self.prev_buffer.set_sensitive (self.parent.entries.can_select_previous())
 
     def on_buffer_changed (self, parent, buff):
-        entry = self.parent.entries.selected
-        
         is_sensitive = buff.get_language ().get_name () == "Python"
         self.script_execute.set_sensitive (is_sensitive)
         self.script_break.set_sensitive (is_sensitive)
         
-        self.revert.set_sensitive (not entry.is_new)
+        self.revert.set_sensitive (not buff.is_new)
         
         if self.observer is not None:
             self.observer.unobserve ()
 
         obs = ToolbarObserver (**self.elements)
-        obs.observe (entry)
+        obs.observe (buff)
         self.observer = obs
-
-class BufferEntry (object):
-    def __init__ (self, buffer = None, filename = None):
-        if buffer is None:
-            buffer = CulebraBuffer ()
-        self.__filename = filename
-        self.buffer = buffer
-    
-    def get_filename (self):
-        if self.__filename is None:
-            return "New File"
-        return self.__filename
-    
-    def set_filename (self, filename):
-        self.__filename = filename
-    
-    filename = property (get_filename, set_filename)
-    
-    def get_is_new (self):
-        return self.__filename is None
-    
-    is_new = property (get_is_new)
 
 class EventsDispatcher(object):
     """
@@ -757,31 +748,31 @@ class BufferManager (object):
                 counter += 1
         return counter
     
-    def append (self, buffer_entry):
-        self.entries.append (buffer_entry)
-        self.__evts_srcs["add-entry"](buffer_entry)
+    def append (self, buff):
+        self.entries.append (buff)
+        self.__evts_srcs["add-entry"](buff)
     
-    def remove (self, buffer_entry):
-        index = self.entries.index (buffer_entry)
+    def remove (self, buff):
+        index = self.entries.index (buff)
         selected_entry = self.selected
         
-        self.entries.remove (buffer_entry)
+        self.entries.remove (buff)
         
         index = self.selected_index
         
-        if selected_entry is not buffer_entry:
+        if selected_entry is not buff:
             self.__selected_index = self.entries.index (selected_entry)
         else:
             self.__selected_index = -1
         
-        self.__evts_srcs["remove-entry"](buffer_entry, index)
+        self.__evts_srcs["remove-entry"](buff, index)
 
         if index != self.selected_index:
             self.__evts_srcs["selection-changed"](self.selected_index)
     
     def __delitem__ (self, index):
-        entry = self.entries[index]
-        self.remove (entry)
+        buff = self.entries[index]
+        self.remove (buff)
     
     def set_selected_index (self, index):
         # When the index maintained then do nothing
@@ -844,6 +835,9 @@ class BufferManager (object):
     def index (self, entry):
         return self.__entries.index (entry)
 
+    def __repr__ (self):
+        return repr (self.__entries)
+
 class BufferManagerListener (Component):
     def _init (self):
         evts = self.entries.events
@@ -852,7 +846,7 @@ class BufferManagerListener (Component):
         evts.register ("remove-entry", self.on_remove_entry)
         self.last_index = self.entries.selected_index
         
-        self.entries.append (BufferEntry ())
+        self.entries.append (CulebraBuffer())
     
     def get_entries (self):
         return self.parent.entries
@@ -871,15 +865,15 @@ class BufferManagerListener (Component):
         self.last_index = index
         
         # Set bind the SourceView to the SourceBuffer
-        self.parent.editor.set_buffer (self.entries.selected.buffer)
+        self.parent.editor.set_buffer (self.entries.selected)
         # and add focus to it
         self.parent.editor.grab_focus()
         
-    def on_add_entry (self, entry):
+    def on_add_entry (self, buff):
         # We move the focus to the last selected index
-        self.entries.selected = entry
+        self.entries.selected = buff
 
-        entry.buffer.connect('insert-text', self.on_insert_text)
+        buff.connect('insert-text', self.on_insert_text)
         
 
     def on_insert_text (self, buff, it, text, length):
@@ -891,7 +885,7 @@ class BufferManagerListener (Component):
     def on_remove_entry (self, entry, index):
         # If we have 0 entries then we add one
         if len (self.entries) == 0:
-            self.entries.append (BufferEntry ())
+            self.entries.append (CulebraBuffer())
         
         
 class EditWindow(gtk.EventBox, Component):
@@ -1123,11 +1117,6 @@ class EditWindow(gtk.EventBox, Component):
     def get_current(self):
         return self.entries.selected
     
-    def get_buffer(self):
-        return self.get_current().buffer
-    
-    buffer = property (get_buffer)
-
     def get_context(self, buff, it, sp=False):
         iter2 = it.copy()
         if sp:
@@ -1196,77 +1185,79 @@ class EditWindow(gtk.EventBox, Component):
             return True
 
     def load_file(self, fname):
-        entry = None
+        buff = None
         
         for ent in self.entries:
             if ent.filename == fname:
-               entry = ent
+               buff = ent
                break
         
-        if entry is None:
-            buff = CulebraBuffer ()
-            entry = BufferEntry (buffer = buff)
-            entry.filename = fname
-            self.entries.append (entry)
+        if buff is None:
+            new_entry = True
+            buff = CulebraBuffer()
+            buff.filename = fname
+            self.entries.append (buff)
+            # We only update the contents of a new buffer
+            try:
+                fd = open(fname)
+                buff.begin_not_undoable_action()
+                buff.set_text('')
+                buff.set_text(fd.read())
+                buff.set_modified(False)
+                buff.place_cursor(buff.get_start_iter())
+                buff.end_not_undoable_action()
+                fd.close()
+
+                self.check_mime(buff)
+
+                self.set_title(os.path.basename(fname))
+                self.dirname = os.path.dirname(fname)
+                
+            except:
+                dlg = gtk.MessageDialog(self.get_parent_window(),
+                        gtk.DIALOG_DESTROY_WITH_PARENT,
+                        gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+                        "Can't open " + fname)
+                import traceback
+                traceback.print_exc ()
+                
+                print sys.exc_info()[1]
+                resp = dlg.run()
+                dlg.hide()
+                return
+
         else:
-            buff = entry.buffer
+            new_entry = False
             
-        try:
-            fd = open(fname)
-            buff.begin_not_undoable_action()
-            buff.set_text('')
-            buff.set_text(fd.read())
-            buff.set_modified(False)
-            buff.place_cursor(buff.get_start_iter())
-            buff.end_not_undoable_action()
-            fd.close()
-
-            self.check_mime(entry)
-
-            self.set_title(os.path.basename(fname))
-            self.dirname = os.path.dirname(fname)
             
-        except:
-            dlg = gtk.MessageDialog(self.get_parent_window(),
-                    gtk.DIALOG_DESTROY_WITH_PARENT,
-                    gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
-                    "Can't open " + fname)
-            import traceback
-            traceback.print_exc ()
-            
-            print sys.exc_info()[1]
-            resp = dlg.run()
-            dlg.hide()
-            return
-            
-        remove_first = self.entries.count_new () == 1 \
-                       and len (self.entries) == 2    \
-                       and not self.entries[0].buffer.get_modified()
-
         # Replace a not modified new buffer when we open
-        if remove_first:
-            self.entries.remove (self.entries[0])
+        if new_entry and self.entries.count_new() == 1 and len(self.entries) == 2:
+            if self.entries[0].is_new:
+                new_entry = self.entries[0]
+            else:
+                new_entry = self.entries[1]
+            
+            if not new_entry.get_modified():
+                # Remove the new entry
+                self.entries.remove(new_entry)
         
         # If the opened entry is not the selected one then select it
-        if entry is not self.get_current ():
-            for i, entry in enumerate(self.entries):
-                if entry.filename == fname:
-                    self.plugin.do_edit('changebuffer', i)
-                    break
-
-        self.plugin.do_edit('getbufferlist')
-        self.plugin.do_edit('getcurrentbuffer')
+        if buff is not self.get_current ():
+            self.plugin.do_edit('changebuffer', self.entries.index (buff))
+    
+        if new_entry:
+            self.plugin.do_edit('getbufferlist')
+            self.plugin.do_edit('getcurrentbuffer')
 
         self.editor.grab_focus()
 
-    def check_mime(self, entry):
-        buff = entry.buffer
+    def check_mime(self, buff):
         
         manager = buff.languages_manager
-        if os.path.isabs(entry.filename):
-            path = entry.filename
+        if os.path.isabs(buff.filename):
+            path = buff.filename
         else:
-            path = os.path.abspath(entry.filename)
+            path = os.path.abspath(buff.filename)
         uri = gnomevfs.URI(path)
 
         mime_type = gnomevfs.get_mime_type(path) # needs ASCII filename, not URI
@@ -1290,16 +1281,15 @@ class EditWindow(gtk.EventBox, Component):
         buff.save = False
 
     def chk_save(self):
-        entry = self.get_current()
-        if entry.buffer is None:
-            return False
-        if entry.buffer.get_modified():
+        buff = self.get_current()
+
+        if buff.get_modified():
             dlg = gtk.Dialog('Unsaved File', self.get_parent_window(),
                     gtk.DIALOG_DESTROY_WITH_PARENT,
                          (gtk.STOCK_YES, gtk.RESPONSE_YES,
                           gtk.STOCK_NO, gtk.RESPONSE_NO,
                           gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL))
-            lbl = gtk.Label((entry.is_new and "Untitled" or entry.filename)+
+            lbl = gtk.Label((buff.is_new and "Untitled" or buff.filename)+
                         " has not been saved\n" +
                         "Do you want to save it?")
             lbl.show()
@@ -1324,8 +1314,7 @@ class EditWindow(gtk.EventBox, Component):
         buff.set_highlight(True)
         buff.set_language(language)
 
-        entry = BufferEntry (buffer = buff)
-        self.entries.append (entry)
+        self.entries.append (buff)
 
         self.plugin.do_edit('getbufferlist')
         self.plugin.do_edit('getcurrentbuffer')
@@ -1342,7 +1331,7 @@ class EditWindow(gtk.EventBox, Component):
             return
         
         first_entry = self.entries[0]
-        new_and_changed = first_entry.is_new and first_entry.buffer.get_modified ()
+        new_and_changed = first_entry.is_new and first_entry.get_modified ()
         
         if len (self.entries) == 1 and new_and_changed and self.chk_save ():
             return
@@ -1352,13 +1341,12 @@ class EditWindow(gtk.EventBox, Component):
 
     def file_save(self, mi=None, fname=None):
             
-        entry = self.get_current ()
-        if entry.is_new:
+        buff = self.get_current ()
+        if buff.is_new:
             return self.file_saveas()
             
-        buff = entry.buffer
         curr_mark = buff.get_iter_at_mark(buff.get_insert())
-        f = entry.filename
+        f = buff.filename
         ret = False
         if fname is None:
             fname = f
@@ -1377,8 +1365,7 @@ class EditWindow(gtk.EventBox, Component):
             fd.write(buf)
             fd.close()
             buff.set_modified(False)
-            buff.save = True
-            entry.filename = fname
+            buff.filename = fname
             self.plugin.pida.mainwindow.set_title(os.path.split(fname)[1])
             ret = True
         except:
@@ -1398,15 +1385,15 @@ class EditWindow(gtk.EventBox, Component):
         return ret
 
     def file_saveas(self, mi=None):
-        entry = self.get_current()
+        buff = self.get_current()
         f = dialogs.SaveFile('Save File As', 
                                 self.get_parent_window(), 
                                 self.dirname,
-                                entry.filename)
+                                buff.filename)
         if not f: return False
         self.dirname = os.path.dirname(f)
         self.plugin.pida.mainwindow.set_title(os.path.basename(f))
-        entry.filename = f
+        buff.filename = f
             
         return self.file_save(fname=f)
     
@@ -1431,32 +1418,26 @@ class EditWindow(gtk.EventBox, Component):
         return False
 
     def edit_cut(self, mi):
-        buff = self.buffer
-        buff.cut_clipboard(self.clipboard, True)
+        self.get_current().cut_clipboard(self.clipboard, True)
         return
 
     def edit_copy(self, mi):
-        buff = self.buffer
-        buff.copy_clipboard(self.clipboard)
+        self.get_current().copy_clipboard(self.clipboard)
         return
 
     def edit_paste(self, mi):
-        buff = self.buffer
-        buff.paste_clipboard(self.clipboard, None, True)
+        self.get_current().paste_clipboard(self.clipboard, None, True)
         return
 
     def edit_clear(self, mi):
-        buff = self.buffer
-        buff.delete_selection(True, True)
+        self.get_current().delete_selection(True, True)
         return
         
     def edit_undo(self, mi):
-        buff = self.buffer
-        buff.undo()
+        self.get_current().undo()
         
     def edit_redo(self, mi):
-        buff = self.buffer
-        buff.redo()
+        self.get_current().redo()
 
     def edit_find(self, mi):
         self.emit("search-event")
@@ -1465,17 +1446,16 @@ class EditWindow(gtk.EventBox, Component):
         self.emit("search-replace-event")
             
     def edit_find_next(self, mi):
-        buff = self.buffer
-        buff.search(buff.search_string, 
-                    buff.search_mark, 
-                    editor = self.editor)
+        self.get_current().search(buff.search_string, 
+                                  buff.search_mark, 
+                                  editor = self.editor)
     
     def goto_line(self, mi=None):
         self.emit ("goto-line-event")
 
     def comment_block(self, mi=None):
         comment = "#"
-        buf = self.buffer
+        buf = self.get_current()
         bound = buf.get_selection_bounds()
         if len(bound) == 0:
             it = buf.get_iter_at_mark(buf.get_insert())
@@ -1493,7 +1473,7 @@ class EditWindow(gtk.EventBox, Component):
                 start_line += 1
    
     def uncomment_block(self, mi=None):
-        buf = self.buffer
+        buf = self.get_current()
         bound = buf.get_selection_bounds()
         if len(bound) == 0:
             it = buf.get_iter_at_mark(buf.get_insert())
@@ -1521,7 +1501,7 @@ class EditWindow(gtk.EventBox, Component):
                 start_line += 1
                 
     def delete_line(self, mi):
-        buf = self.buffer
+        buf = self.get_current()
         it = buf.get_iter_at_mark(buf.get_insert())
         line = it.get_line()
         start = buf.get_iter_at_line(line)
@@ -1531,7 +1511,7 @@ class EditWindow(gtk.EventBox, Component):
         buf.delete(start, end)
             
     def duplicate_line(self, mi):
-        buf = self.buffer
+        buf = self.get_current()
         it = buf.get_iter_at_mark(buf.get_insert())
         line = it.get_line()
         start = buf.get_iter_at_line(line)
@@ -1544,7 +1524,7 @@ class EditWindow(gtk.EventBox, Component):
         buf.insert(end, ret+text)
     
     def upper_selection(self, mi):
-        buf = self.buffer
+        buf = self.get_current()
         bound = buf.get_selection_bounds()
         if not len(bound) == 0:
             start, end = bound
@@ -1553,7 +1533,7 @@ class EditWindow(gtk.EventBox, Component):
             buf.insert(start, text.upper())
             
     def lower_selection(self, mi):
-        buf = self.buffer
+        buf = self.get_current()
         bound = buf.get_selection_bounds()
         if not len(bound) == 0:
             start, end = bound
@@ -1570,7 +1550,7 @@ class EditWindow(gtk.EventBox, Component):
         
     def debug_script(self, mi):
         self.plugin.do_evt('debuggerload')
-        buff = self.buffer
+        buff = self.get_current()
         titer = buff.get_iter_at_line(0)
         self.editor.scroll_to_iter(titer, 0.25)
         buff.place_cursor(titer)

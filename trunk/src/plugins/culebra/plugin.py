@@ -112,7 +112,7 @@ class Plugin(plugin.Plugin):
             self.do_edit('gotoline', frame.lineno - 1)
 
     def evt_bufferchange(self, buffernumber, name):
-        self.editor.emit ("buffer-changed", self.editor.entries.selected.buffer)
+        self.editor.emit ("buffer-changed", self.editor.get_current())
         
     ############################################################################
     def edit_getbufferlist(self):
@@ -134,8 +134,9 @@ class Plugin(plugin.Plugin):
             return
         
         entries.selected_index = index
+        buff = entries.selected
         self.edit_getcurrentbuffer()
-        self.editor.editor.scroll_to_mark(entries.selected.buffer.get_insert(), 0.25)
+        self.editor.editor.scroll_to_mark(buff.get_insert(), 0.25)
         self.editor.editor.grab_focus()
 
     def edit_closebuffer(self):
