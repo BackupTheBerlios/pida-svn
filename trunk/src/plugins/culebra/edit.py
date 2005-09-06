@@ -603,7 +603,7 @@ class ToolbarObserver (object):
 class ToolbarSensitivityComponent (Component):
     def _init (self):
         
-        self.observers_pool = {}
+        self.observer = None
         ag = self.parent.ag
 
         self.elements = dict (
@@ -644,13 +644,13 @@ class ToolbarSensitivityComponent (Component):
         self.script_break.set_sensitive (is_sensitive)
         
         self.revert.set_sensitive (not entry.is_new)
-
-        if self.observers_pool.has_key (entry):
-            return
+        
+        if self.observer is not None:
+            self.observer.unobserve ()
 
         obs = ToolbarObserver (**self.elements)
         obs.observe (entry)
-        self.observers_pool[entry] = obs
+        self.observer = obs
 
 class BufferEntry (object):
     def __init__ (self, buffer = None, filename = None):
@@ -705,6 +705,19 @@ class EventsDispatcher(object):
         
         return event_source
     
+    def create_events (self, event_names, event_sources = None):
+        """
+        This is a utility method that creates or fills a dict-like object
+        and returns it. The keys are the event names and the values are the
+        event sources.
+        """
+        if event_sources is None:
+            event_sources = {}
+            
+        for evt_name in event_names:
+            event_sources[evt_name] = self.create_event (evt_name)
+        return event_sources
+    
     def event_exists (self, event_name):
         return event_name in self.__events
     
@@ -729,10 +742,7 @@ class BufferManager (object):
         self.__entries = []
 
         self.events = EventsDispatcher()
-        self.__evts_srcs = {}
-        for evt_name in ("add-entry", "remove-entry", "selection-changed"):
-            self.__evts_srcs[evt_name] = self.events.create_event (evt_name)
-
+        self.__evts_srcs = self.events.create_events (("add-entry", "remove-entry", "selection-changed"))
         self.__selected_index = -1
         
     def get_entries (self):
