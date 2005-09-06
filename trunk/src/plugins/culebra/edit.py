@@ -1239,15 +1239,24 @@ class EditWindow(gtk.EventBox, Component):
             dlg.hide()
             return
             
+        remove_first = self.entries.count_new () == 1 \
+                       and len (self.entries) == 2    \
+                       and not self.entries[0].buffer.get_modified()
+
+        # Replace a not modified new buffer when we open
+        if remove_first:
+            self.entries.remove (self.entries[0])
+        
+        # If the opened entry is not the selected one then select it
+        if entry is not self.get_current ():
+            for i, entry in enumerate(self.entries):
+                if entry.filename == fname:
+                    self.plugin.do_edit('changebuffer', i)
+                    break
+
         self.plugin.do_edit('getbufferlist')
         self.plugin.do_edit('getcurrentbuffer')
-        
-        #XXX: no need to change when the buffer we're viewing is the
-        #XXX: buffer we want to change to
-        for i, entry in enumerate(self.entries):
-            if entry.filename == fname:
-                self.plugin.do_edit('changebuffer', i)
-                break
+
         self.editor.grab_focus()
 
     def check_mime(self, entry):
@@ -1339,17 +1348,6 @@ class EditWindow(gtk.EventBox, Component):
             return
             
         self.load_file(fname)
-        remove_first = self.entries.count_new () == 1 \
-                       and len (self.entries) == 2    \
-                       and not self.entries[0].buffer.get_modified()
-
-        # Replace a not modified new buffer when we open
-        if remove_first:
-            self.entries.remove (self.entries[0])
-            self.plugin.do_edit('getbufferlist')
-            self.plugin.do_edit('getcurrentbuffer')
-            self.plugin.do_edit('changebuffer', 0)
-
         self.plugin.pida.mainwindow.set_title(os.path.split(fname)[1])
 
     def file_save(self, mi=None, fname=None):
