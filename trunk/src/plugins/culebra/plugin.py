@@ -30,10 +30,10 @@ import pango
 import gnomevfs
 import gobject
 # Pida imports
-import pida.plugin as plugin
-import pida.gtkextra as gtkextra
-import pida.configuration.config as config
-import pida.configuration.registry as registry
+from pida import plugin
+from pida import gtkextra
+from pida.configuration import config
+from pida.configuration import registry
 
 import edit
 
@@ -49,7 +49,12 @@ class Plugin(plugin.Plugin):
             registry.Font,
             'Monospace 10',
             'The Font used by Culebra Editor')
-
+        self.personal_registry.add('use_autocomplete',
+            registry.Boolean,
+            False,
+            "Use autocomplete"
+        )
+        
     def do_init(self):
         self.editor = None
         self.bufferlist = None
@@ -101,6 +106,8 @@ class Plugin(plugin.Plugin):
         font_desc = pango.FontDescription(font)
         if font_desc:
             self.editor.editor.modify_font(font_desc)
+        
+        self.editor.use_autocomplete = self.personal_registry.use_autocomplete.value()
 
     def evt_started(self):
         self.launch()

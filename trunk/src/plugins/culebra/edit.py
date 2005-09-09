@@ -232,7 +232,83 @@ class CulebraView(gtksourceview.SourceView):
             self.modify_font(font_desc)
 
 void_func = lambda *args: None
+def getRootComponent(component):
+    while component.parent is not None:
+        component = component.parent
+    return component
 
+class PathComponent (object):
+    def __init__ (self, path, static = False):
+        self.fullPath = path.split("/")
+        self.isAbsolute = path.startswith("/")
+        self.isStatic = static
+    
+    def transverse (self, full_path, helper_func):
+        
+        return obj
+        
+    def __get__ (self, obj, type = None):
+
+        if self.isStatic and hasattr(self, "returnValue"):
+            return self.returnValue
+            
+        if self.isAbsolute:
+            obj = getRootComponent(obj)
+            
+        for path in self.fullPath:
+            if path == "." or path == "":
+                pass
+            elif path == "..":
+                obj = obj.parent
+            else:
+                is_callable = path.endswith("()")
+                if is_callable:
+                    path = path[:-len ("()")]
+                
+                obj = getattr(obj, path)
+                if is_callable:
+                    obj = obj()
+        
+        if self.isStatic:
+            self.returnValue = obj
+            
+        return obj
+
+class PropertyWrapper (object):
+    """
+    PropertyWrapper is usefull to wrap the getter and setter methods of a
+    variable that is not accessible through the 'property' protocol.
+    It accepts private variables as well. 
+    """
+    def __init__ (self, variable, getter = None, setter = None):
+        self.variable = variable
+        self.realVariable = None
+        self.getter = getter
+        self.setter = setter
+        
+        if self.setter is None:
+            del self.__set__
+        
+        if self.getter is None:
+            del self.__get__
+        
+    def getVariable (self, obj):
+        if self.realVariable is None:
+            if self.variable.startswith("__"):
+                self.realVariable = "_" + type(obj).__name__ + self.variable
+            else:
+                self.realVariable = self.variable
+        return getattr (obj, self.realVariable)
+    
+    def __get__ (self, obj, type = None):
+        obj = self.getVariable (obj)
+        return getattr (obj, self.getter)()
+    
+    def __set__ (self, obj, value):
+        obj = self.getVariable (obj)
+        getattr (obj, self.setter) (value)
+        
+        
 class Component (object):
     """
     A Component is an object that is structured in a hierarchical model.
@@ -348,6 +424,8 @@ class SearchReplaceComponent (Component):
         self.dialog.set_resizable (False)
         self.dialog.set_default_response(RESPONSE_FORWARD)
         self.dialog.connect ("response", self.replace_dialog_response_cb)
+        self.dialog.connect ("key-release-event", self.on_key_pressed)
+        self.dialog.set_modal(False)
         
         tbl = gtk.Table ()
         tbl.set_border_width (12)
@@ -357,7 +435,6 @@ class SearchReplaceComponent (Component):
         self.dialog.vbox.add (tbl)
         
         self.search_text = gtk.Entry()
-        self.search_text.connect ("key-release-event", self.on_key_pressed)
         self.search_text.show()
         self.search_text.set_activates_default(True)
         # The search entry affects the replace, replace all and find buttons
@@ -366,7 +443,6 @@ class SearchReplaceComponent (Component):
         self.search_text.connect ("focus", self.on_search_focus)
 
         self.replace_text = gtk.Entry() 
-        self.replace_text.connect ("key-release-event", self.on_key_pressed)
         self.replace_text.show()
         self.replace_text.set_activates_default(True)
         
@@ -395,11 +471,7 @@ class SearchReplaceComponent (Component):
         # Update sensitiveness
         self.on_search_text_changed()
     
-    
-    def get_buffer (self):
-        return self.parent.get_current()
-    
-    buffer = property(get_buffer)
+    buffer = PathComponent("../get_current()")
     
     def get_buffer_selection (self):
         return get_buffer_selection (self.buffer)
@@ -490,6 +562,7 @@ class SearchComponent (Component):
         self._search_text.set_text (text)
     
     search_text = property (get_search_text, set_search_text)
+    search_text = PropertyWrapper ("__search_text", "get_text", "set_text")
     
     def _init (self):
         self.parent.connect ("search-event", self.on_search_dialog)
@@ -498,10 +571,12 @@ class SearchComponent (Component):
                             gtk.DIALOG_DESTROY_WITH_PARENT,
                             (gtk.STOCK_FIND, RESPONSE_FORWARD))
         hide_on_delete (self.dialog)
+        self.dialog.set_modal(False)
         self.dialog.set_default_response(RESPONSE_FORWARD)
-        self.dialog.set_has_separator (False)
-        self.dialog.set_resizable (False)
-        self.dialog.connect ("response", self.on_dialog_response)
+        self.dialog.set_has_separator(False)
+        self.dialog.set_resizable(False)
+        self.dialog.connect("response", self.on_dialog_response)
+        self.dialog.connect ("key-release-event", self.on_key_pressed)
 
         hbox = gtk.HBox ()
         hbox.set_border_width (10)
@@ -515,16 +590,20 @@ class SearchComponent (Component):
         hbox.pack_start (lbl, False, False)
         
         self._search_text = gtk.Entry()
+        self.__search_text = self._search_text
         self._search_text.set_activates_default(True)
         self._search_text.show()
         self._search_text.grab_focus()
-        self._search_text.connect ("key-release-event", self.on_key_pressed)
         self._search_text.connect ("changed", self.on_search_text_changed)
         hbox.pack_start (self._search_text, False, False)
 
-        self.find_button = self.dialog.action_area.get_children ()[0]
+        find_button = self.dialog.action_area.get_children()[0]
+        self.find_next = self.parent.ag.get_action("EditFindNext")
+        self.find_next.connect_proxy(find_button)
         
         self.on_search_text_changed ()
+        
+        
     
     def on_dialog_response (self, dialog, response):
         # Hide when the user closes the window
@@ -533,7 +612,7 @@ class SearchComponent (Component):
         
         # Search forward
         if response == RESPONSE_FORWARD:
-            self.parent.buffer.search(
+            self.parent.get_current().search(
                 self.search_text, 
                 self.parent.get_current().search_mark, 
                 editor=self.parent.editor
@@ -548,7 +627,7 @@ class SearchComponent (Component):
         self._search_text.select_region (0, -1)
         self._search_text.grab_focus()
 
-        self.dialog.run ()
+        self.dialog.show ()
     
     def on_key_pressed (self, search_text, event):
         global KEY_ESCAPE
@@ -557,7 +636,7 @@ class SearchComponent (Component):
             self.dialog.hide ()
     
     def on_search_text_changed (self, entry = None):
-        self.find_button.set_sensitive (self.search_text != "")
+        self.find_next.set_sensitive (self.search_text != "")
 
 class ToolbarObserver (object):
     """We must use one instance of this class for each buffer that is assigned."""
@@ -850,6 +929,9 @@ class BufferManager (object):
         return repr (self.__entries)
 
 class BufferManagerListener (Component):
+    use_autocomplete = PathComponent("../use_autocomplete")
+    entries = PathComponent("../entries")
+    
     def _init (self):
         evts = self.entries.events
         evts.register ("selection-changed", self.on_selection_changed)
@@ -858,11 +940,6 @@ class BufferManagerListener (Component):
         self.last_index = self.entries.selected_index
         
         self.entries.append (CulebraBuffer())
-    
-    def get_entries (self):
-        return self.parent.entries
-        
-    entries = property (get_entries)
     
     def on_selection_changed (self, index):
         # If we lost our selection then select the last selected index
@@ -888,11 +965,12 @@ class BufferManagerListener (Component):
         
 
     def on_insert_text (self, buff, it, text, length):
-        buff.show_completion (text,
-                              it,
-                              self.parent.editor,
-                              self.parent.plugin.pida.mainwindow)
-    
+        if self.use_autocomplete:
+            buff.show_completion (text,
+                                  it,
+                                  self.parent.editor,
+                                  self.parent.plugin.pida.mainwindow)
+        
     def on_remove_entry (self, entry, index):
         # If we have 0 entries then we add one
         if len (self.entries) == 0:
@@ -1107,6 +1185,15 @@ class EditWindow(gtk.EventBox, Component):
         
         self.get_parent_window().add_accel_group(self.ui.get_accel_group())
         return (self.ui.get_widget('/menubar'), toolbar)
+    
+    __use_autocomplete = False
+    def get_use_autocomplete(self):
+        return self.__use_autocomplete
+    
+    def set_use_autocomplete(self, value):
+        self.__use_autocomplete = value
+    
+    use_autocomplete = property (get_use_autocomplete, set_use_autocomplete)
     
     def about(self, mi):
         d = gtk.AboutDialog()
@@ -1476,7 +1563,8 @@ class EditWindow(gtk.EventBox, Component):
         self.emit("search-replace-event")
             
     def edit_find_next(self, mi):
-        self.get_current().search(buff.search_string, 
+        buff = self.get_current()
+        buff.search(buff.search_string, 
                                   buff.search_mark, 
                                   editor = self.editor)
     
