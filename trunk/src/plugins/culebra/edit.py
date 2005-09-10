@@ -33,6 +33,7 @@ import importsTipper
 import keyword
 import weakref
 import codecs
+from components import *
 
 BLOCK_SIZE = 2048
 
@@ -49,7 +50,6 @@ class CulebraBuffer(gtksourceview.SourceBuffer):
         gtksourceview.SourceBuffer.__init__(self)
         lm = gtksourceview.SourceLanguagesManager()
         self.languages_manager = lm
-        self.save = False
         language = lm.get_language_from_mime_type("text/x-python")
         self.set_highlight(True)
         self.set_language(language)
@@ -231,114 +231,6 @@ class CulebraView(gtksourceview.SourceView):
         if font_desc is not None:
             self.modify_font(font_desc)
 
-void_func = lambda *args: None
-def getRootComponent(component):
-    while component.parent is not None:
-        component = component.parent
-    return component
-
-class PathComponent (object):
-    def __init__ (self, path, static = False):
-        self.fullPath = path.split("/")
-        self.isAbsolute = path.startswith("/")
-        self.isStatic = static
-    
-    def transverse (self, full_path, helper_func):
-        
-        return obj
-        
-    def __get__ (self, obj, type = None):
-
-        if self.isStatic and hasattr(self, "returnValue"):
-            return self.returnValue
-            
-        if self.isAbsolute:
-            obj = getRootComponent(obj)
-            
-        for path in self.fullPath:
-            if path == "." or path == "":
-                pass
-            elif path == "..":
-                obj = obj.parent
-            else:
-                is_callable = path.endswith("()")
-                if is_callable:
-                    path = path[:-len ("()")]
-                
-                obj = getattr(obj, path)
-                if is_callable:
-                    obj = obj()
-        
-        if self.isStatic:
-            self.returnValue = obj
-            
-        return obj
-
-class PropertyWrapper (object):
-    """
-    PropertyWrapper is usefull to wrap the getter and setter methods of a
-    variable that is not accessible through the 'property' protocol.
-    It accepts private variables as well. 
-    """
-    def __init__ (self, variable, getter = None, setter = None):
-        self.variable = variable
-        self.realVariable = None
-        self.getter = getter
-        self.setter = setter
-        
-        if self.setter is None:
-            del self.__set__
-        
-        if self.getter is None:
-            del self.__get__
-        
-    def getVariable (self, obj):
-        if self.realVariable is None:
-            if self.variable.startswith("__"):
-                self.realVariable = "_" + type(obj).__name__ + self.variable
-            else:
-                self.realVariable = self.variable
-        return getattr (obj, self.realVariable)
-    
-    def __get__ (self, obj, type = None):
-        obj = self.getVariable (obj)
-        return getattr (obj, self.getter)()
-    
-    def __set__ (self, obj, value):
-        obj = self.getVariable (obj)
-        getattr (obj, self.setter) (value)
-        
-        
-class Component (object):
-    """
-    A Component is an object that is structured in a hierarchical model.
-    It is constructed upon runtime from the root to its children. To define
-    a Component you have to define a list of subcomponents, these are usually
-    classes of this type.
-    They define a method called '_init' that is called in the constructor.
-    It also contains a '_components' protected variable that holds a list of its
-    children components.
-    """
-    
-    def __init__ (self, parent = None):
-        self.__parent = parent is not None and weakref.ref (parent) or void_func
-        # Maintain components reference
-        self._components = []
-        for component in self.components:
-            self._components.append (component(self))
-            
-        self._init ()
-    
-    def _init (self):
-        """Override this method which is called in the constructor."""
-    
-    def getParent (self):
-        return self.__parent ()
-        
-    parent = property (getParent)
-    
-    components = ()
-
 class GotoLineComponent (Component):
     def _init (self):
         
@@ -471,7 +363,7 @@ class SearchReplaceComponent (Component):
         # Update sensitiveness
         self.on_search_text_changed()
     
-    buffer = PathComponent("../get_current()")
+    buffer = ObjectPath("../get_current()")
     
     def get_buffer_selection (self):
         return get_buffer_selection (self.buffer)
@@ -555,13 +447,6 @@ class SearchReplaceComponent (Component):
 
 class SearchComponent (Component):
     
-    def get_search_text (self):
-        return self._search_text.get_text ()
-    
-    def set_search_text (self, text):
-        self._search_text.set_text (text)
-    
-    search_text = property (get_search_text, set_search_text)
     search_text = PropertyWrapper ("__search_text", "get_text", "set_text")
     
     def _init (self):
@@ -589,13 +474,12 @@ class SearchComponent (Component):
         lbl.show ()
         hbox.pack_start (lbl, False, False)
         
-        self._search_text = gtk.Entry()
-        self.__search_text = self._search_text
-        self._search_text.set_activates_default(True)
-        self._search_text.show()
-        self._search_text.grab_focus()
-        self._search_text.connect ("changed", self.on_search_text_changed)
-        hbox.pack_start (self._search_text, False, False)
+        self.__search_text = gtk.Entry()
+        self.__search_text.set_activates_default(True)
+        self.__search_text.show()
+        self.__search_text.grab_focus()
+        self.__search_text.connect ("changed", self.on_search_text_changed)
+        hbox.pack_start (self.__search_text, False, False)
 
         find_button = self.dialog.action_area.get_children()[0]
         self.find_next = self.parent.ag.get_action("EditFindNext")
@@ -624,8 +508,8 @@ class SearchComponent (Component):
         if selected_text != "":
             self.search_text = selected_text 
 
-        self._search_text.select_region (0, -1)
-        self._search_text.grab_focus()
+        self.__search_text.select_region (0, -1)
+        self.__search_text.grab_focus()
 
         self.dialog.show ()
     
@@ -929,8 +813,8 @@ class BufferManager (object):
         return repr (self.__entries)
 
 class BufferManagerListener (Component):
-    use_autocomplete = PathComponent("../use_autocomplete")
-    entries = PathComponent("../entries")
+    use_autocomplete = ObjectPath("../use_autocomplete")
+    entries = ObjectPath("../entries")
     
     def _init (self):
         evts = self.entries.events
@@ -1362,7 +1246,7 @@ class EditWindow(gtk.EventBox, Component):
         self.editor.grab_focus()
 
     def check_mime(self, buff):
-        
+        print buff
         manager = buff.languages_manager
         if os.path.isabs(buff.filename):
             path = buff.filename
@@ -1388,7 +1272,7 @@ class EditWindow(gtk.EventBox, Component):
                     gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
                     'Couldn\'t get mime type for file "%s"' % fname)
             buff.set_highlight(False)
-        buff.save = False
+
 
     def chk_save(self):
         buff = self.get_current()

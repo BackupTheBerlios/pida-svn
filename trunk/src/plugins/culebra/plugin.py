@@ -79,20 +79,24 @@ class Plugin(plugin.Plugin):
     
     def check_mime(self, fname):
         try:
-            entry = self.editor.get_current()
-            manager = entry.buffer.languages_manager
-            if os.path.isabs(entry.filename):
-                path = entry.filename
+            buff = self.editor.get_current()
+            manager = buff.languages_manager
+            if os.path.isabs(buff.filename):
+                path = buff.filename
             else:
-                path = os.path.abspath(entry.filename)
+                path = os.path.abspath(buff.filename)
             uri = gnomevfs.URI(path)
             mime_type = gnomevfs.get_mime_type(path) # needs ASCII filename, not URI
             if mime_type:
                 language = manager.get_language_from_mime_type(mime_type)
                 if language:
                     return language.get_name().lower()
-        except Exception, e:
+        except RuntimeError:
             pass
+            # The file was not found
+        except Exception, e:
+            import traceback
+            traceback.print_exc()
         return 'None'
 
     def abspath(self, filename):
