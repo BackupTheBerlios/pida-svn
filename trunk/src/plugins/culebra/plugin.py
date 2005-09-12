@@ -154,7 +154,7 @@ class Plugin(plugin.Plugin):
         self.editor.file_close()
 
     def edit_gotoline(self, line):
-        buf = self.editor.get_current().buffer
+        buf = self.editor.get_current()
         titer = buf.get_iter_at_line(line)
         self.editor.editor.scroll_to_iter(titer, 0.25)
         buf.place_cursor(titer)
