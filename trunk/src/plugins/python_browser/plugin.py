@@ -241,10 +241,10 @@ class Plugin(plugin.Plugin):
         self.get_references(label='Renames')
         brmc = brm()
         def rename(name):
-            row, col = self.tree.get_selected_id()
+            row, col = self.defs.selected(2), self.defs.selected(3)
             brmc.renameByCoordinates(self.fn, int(row), int(col), name)
             brmc.save()
-            self.refresh(self.fn)
+            self.refresh_defs(self.fn)
         self.question('Name to rename to?', rename)
 
     def cb_but_references(self, *a):
@@ -254,7 +254,7 @@ class Plugin(plugin.Plugin):
         brmc = brm()
         brmc.undo()
         brmc.save()
-        self.refresh(self.fn)
+        self.refresh_defs(self.fn)
 
     def evt_bufferchange(self, nr, name):
         self.fn = name
