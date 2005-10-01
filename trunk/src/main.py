@@ -134,8 +134,6 @@ class Application(base.pidaobject):
                 opt_plugs.append(plugin)
        
         self.registry.load()
-        self.registry.save()
-      
 
         for pluginname in self.OPTPLUGINS:
             if not self.opts.get('plugins', pluginname):
