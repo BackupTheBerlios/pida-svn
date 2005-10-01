@@ -35,7 +35,7 @@ import gettext
 # we need to call this before anything else because in some Gazpacho classes
 # there are l10n strings and so they need the _ function in loading time
 #init_l10n()
-import application
+from gazpacho import application
 #from gazpacho.path import pixmaps_dir
 from gazpacho import palette, editor, project, catalog
 from gazpacho.palette import Palette
@@ -86,8 +86,14 @@ class GazpachoEmbedded(GazpachoApplication):
     def _change_action_state(self, sensitive=[], unsensitive=[]):
         return
 
+    def set_title(self, title):
+        pass
+
     def get_window(self):
         return self.cb.mainwindow
+
+    def get_container(self):
+        return self.window
 
     def _application_window_create(self):
         application_window = gtk.VBox()
