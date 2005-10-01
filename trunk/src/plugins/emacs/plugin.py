@@ -40,7 +40,7 @@ class Plugin(plugin.Plugin):
 
 
     def cb_alternative(self, *args):
-        self.cb.action_showconfig()
+        self.do_action('showconfig')
 
     def cb_launch(self, *args):
         self.emacs.launch()
