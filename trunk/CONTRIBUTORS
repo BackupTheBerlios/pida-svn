@@ -29,9 +29,7 @@ Archlinux packager <angeloth at tin dot it>
 T2 packager <amery at geeks dot cl> Alejandro Mery 
 
 (authors of integrated tools)
-Vim, Python, GTK, PyGTK, Gazpacho
-VTE
-XTerm
+Vim, Python, GTK, PyGTK, Gazpacho, VTE, XTerm
 
 And frankly, any user!
 
