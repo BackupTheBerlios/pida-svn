@@ -49,10 +49,6 @@ class Boss(object):
         self.__populate()
         self.__reset()
         self.command('editor', 'start-editor')
-        self.command('buffermanager', 'open-file', filename='/home/ali/goo.py')
-        self.command('buffermanager', 'open-file', filename='/home/ali/goo.py')
-        self.command('buffermanager', 'open-file', filename='/home/ali/linkser.py')
-        self.command('buffermanager', 'open-file', filename='/home/ali/goo.py')
 
     def register_command_group(self, name):
         """Register a top-level command group."""
