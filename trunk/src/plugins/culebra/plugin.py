@@ -72,7 +72,7 @@ class Plugin(plugin.Plugin):
         if not self.editor:
             self.editor = edit.EditWindow(self)
             self.pida.embedwindow.add(self.editor)
-            self.editor.show_all()
+            self.editor.show()
         
     def cb_alternative(self, *args):
         self.do_action('showconfig')
@@ -122,9 +122,6 @@ class Plugin(plugin.Plugin):
                 self.do_edit('openfile', frame.filename)
             self.do_edit('gotoline', frame.lineno - 1)
 
-    def evt_bufferchange(self, buffernumber, name):
-        self.editor.emit ("buffer-changed", self.editor.get_current())
-        
     ############################################################################
     def edit_getbufferlist(self):
         bl = [(i, v.filename) for (i, v) in enumerate(self.editor.entries)]
