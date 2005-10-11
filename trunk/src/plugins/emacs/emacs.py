@@ -86,7 +86,8 @@ class EmacsClient(object):
         self.send(s, callback)
         
     def edit_file(self, filename):
-        s = '''(gnuserv-edit-files '(x ":0.0") '((1 . "%s")) 'quick)''' % filename
+        #s = '''(gnuserv-edit-files '(x ":0.0") '((1 . "%s")) 'quick)''' % filename
+        s = """(find-file "%s")""" % filename
         self.send(s, None)
 
     def cb_readable(self, sock, condition):
