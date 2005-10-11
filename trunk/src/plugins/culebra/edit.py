@@ -33,32 +33,244 @@ import importsTipper
 import keyword
 import weakref
 import codecs
+
+from events import *
 from components import *
+import components as binding
 
 BLOCK_SIZE = 2048
 
-RESPONSE_FORWARD = 0
-RESPONSE_BACKWARD = 1
-RESPONSE_REPLACE = 2
+RESPONSE_FORWARD     = 0
+RESPONSE_BACK        = 1
+RESPONSE_REPLACE     = 2
 RESPONSE_REPLACE_ALL = 3
 
 KEY_ESCAPE = gtk.gdk.keyval_from_name ("Escape")
 
-class CulebraBuffer(gtksourceview.SourceBuffer):
+#################
+# gtk.TextBuffer utility functions
+def get_buffer_selection (buffer):
+    """Returns the selected text, when nothing is selected it returns the empty
+    string."""
+    bounds = buffer.get_selection_bounds()
+    if bounds == ():
+        return ""
+    else:
+        return buffer.get_slice(*bounds)
 
+def search_iterator (text_buffer, search_text, find_forward = True, start_in_cursor = True):
+    """
+    This function implements an iterator for searching a gtk.TextBuffer for
+    a certain string.
+    
+    It supports forward and backwards search.
+    
+    It also supports finding from the start or from where the cursor is located.
+    """
+
+    if start_in_cursor:
+        bounds = text_buffer.get_selection_bounds ()
+        if len (bounds) == 0:
+            text_iter = text_buffer.get_iter_at_mark(text_buffer.get_insert())
+        else:
+            text_iter = find_forward and bounds[1] or bounds[0]
+    else:
+        if find_forward:
+            text_iter = text_buffer.get_start_iter()
+        else:
+            text_iter = text_buffer.get_end_iter()
+    
+    first_iter = None
+    bounds = 1
+    while bounds is not None:
+        if find_forward:
+            search = text_iter.forward_search
+            
+        else:
+            search = text_iter.backward_search
+            
+        bounds = search (search_text, gtk.TEXT_SEARCH_TEXT_ONLY, limit = None)
+        
+        if bounds is None:
+            break
+            
+        yield bounds
+        
+        if find_forward:
+            text_iter = bounds[1]
+        else:
+            text_iter = bounds[0]
+    
+######################
+class SearchMethod (binding.Component, object):
+    buffer = binding.Obtain ("..")
+    can_find_forward = False
+    can_find_backwards = False
+    
+    __search_text = ""
+
+    def get_search_text (self):
+        return self.__search_text
+    
+    def set_search_text (self, search_text):
+        has_changed = self.__search_text != search_text
+        self.__search_text = search_text
+        
+        if has_changed:    
+            self._on_changed (search_text)
+            
+    search_text = property (get_search_text, set_search_text)
+        
+    def search_tag (self):
+        return self.buffer.create_tag(
+            "search_markers",
+            background="yellow",
+            foreground="black",
+        )
+    
+    search_tag = binding.Make (search_tag)
+    
+    def events (self):
+        events = EventsDispatcher ()
+        self._no_more_entries = events.create_event ("no-more-entries")
+        self._on_changed = events.create_event ("changed")
+        events.register ("changed", self.on_search_changed)
+        return events
+    
+    events = binding.Make (events, uponAssembly = True)
+    
+    changed_source = None
+
+    is_enabled = property (lambda self: self.changed_source is not None)
+
+    # Methods
+    def on_changed (self, *args):
+        # TODO: optimize this
+        
+        self.highlight_string (self.search_text)
+        
+    def disable (self):
+        # Clear old tags
+        self.buffer.remove_tag(
+            self.search_tag,
+            self.buffer.get_start_iter(),
+            self.buffer.get_end_iter()
+        )
+        if self.changed_source is not None:
+            gobject.source_remove (self.changed_source)
+
+    def enable (self):
+        self.on_changed()
+
+        if self.changed_source is not None:
+            return
+            
+        self.changed_source = self.buffer.connect("changed", self.on_changed)
+        
+    def highlight_string (self, search_text):
+        self.buffer.remove_tag(
+            self.search_tag,
+            self.buffer.get_start_iter(),
+            self.buffer.get_end_iter()
+        )
+        
+        if search_text is None or search_text == "":
+            return
+        
+        # Apply tag to found entries
+        bounds = search_iterator (self.buffer, search_text, start_in_cursor = False)
+        for start_iter, end_iter in bounds:
+            self.buffer.apply_tag (self.search_tag, start_iter, end_iter)
+        
+    def on_search_changed (self, search_text):
+        if not self.is_enabled:
+            return
+        self.on_changed ()
+        
+    def __call__(self, scroll=True, editor = None, find_forward = True):
+            
+        if self.search_text is None or self.search_text == "":
+            return False
+            
+        end_reached = False
+        bounds = search_iterator(self.buffer, self.search_text, find_forward = find_forward)
+        
+        try:
+            start_iter, end_iter = bounds.next ()
+            self.buffer.place_cursor (start_iter)
+            self.buffer.select_range (start_iter, end_iter)
+            return True
+        
+        except StopIteration:
+            self._no_more_entries ()
+            return False
+
+class ReplaceMethod (binding.Component):
+    buffer = binding.Obtain ("..")
+    search = binding.Obtain ("../search")
+
+    def events (self):
+        events = EventsDispatcher ()
+        self._on_changed = events.create_event ("changed")
+        return events
+    
+    events = binding.Make (events, uponAssembly = True)
+
+    _replace_text = ""
+    def get_replace_text (self):
+        return self._replace_text
+    
+    def set_replace_text (self, replace_text):
+        has_changed = self._replace_text != replace_text
+        self._replace_text = replace_text
+        if has_changed:
+            self._on_changed (replace_text)
+            
+    replace_text = property (get_replace_text, set_replace_text)
+    
+    def __call__ (self):
+        if get_buffer_selection (self.buffer) != self.search.search_text:
+            return False
+
+        start, end = self.buffer.get_selection_bounds ()
+        self.buffer.delete(start, end)
+        self.buffer.insert(start, self.replace_text)
+        start = self.buffer.get_iter_at_mark(self.buffer.get_insert())
+        start.backward_chars(len(self.replace_text))
+        
+        return True
+
+        
+class CulebraBuffer(gtksourceview.SourceBuffer, binding.Component):
+    
+    search = binding.Make (SearchMethod)
+    
+    replace = binding.Make (ReplaceMethod)
+    
     def __init__(self, filename = None, encoding = "utf-8"):
         gtksourceview.SourceBuffer.__init__(self)
+        Component.__init__ (self, None)
+        
         lm = gtksourceview.SourceLanguagesManager()
         self.languages_manager = lm
         language = lm.get_language_from_mime_type("text/x-python")
         self.set_highlight(True)
         self.set_language(language)
-        self.search_string = None
         self.search_mark = self.create_mark('search', self.get_start_iter())
         
         self.filename = filename
         self.encoding = encoding
-    
+
+    def replace_all (self):
+        # move cursor to the start of the buffer
+        start_iter = self.get_start_iter ()
+        self.place_cursor (start_iter)
+        
+        # Now search forward
+        while self.search():
+            # When we find an item replace it
+            self.replace()
+        
     def get_filename (self):
         if self.__filename is None:
             return "New File"
@@ -81,41 +293,8 @@ class CulebraBuffer(gtksourceview.SourceBuffer):
         return self.__filename is None
     
     is_new = property (get_is_new)
-        
-    def search(self, search_string, mark = None, scroll=True, editor = None):
-        if mark is None:
-            start = self.get_start_iter()
-        else:
-            start = self.get_iter_at_mark(mark)
-        i = 0
-        if search_string:
-            if self.search_string != search_string:
-                start = self.get_start_iter()
-            self.search_string = search_string
-            res = start.forward_search(search_string, gtk.TEXT_SEARCH_TEXT_ONLY)
-            if res:
-                match_start, match_end = res
-                if scroll and editor is not None:
-                    editor.scroll_to_iter(match_start, 0.25)
-                self.place_cursor(match_start)
-                self.select_range(match_start, match_end)
-                self.move_mark(self.search_mark, match_end)
-                return True
-            else:
-                start = self.get_start_iter()
-                res = start.forward_search(search_string, gtk.TEXT_SEARCH_TEXT_ONLY)
-                if res:
-                    match_start, match_end = res
-                    if scroll and editor is not None:
-                        editor.scroll_to_iter(match_start, 0.25)
-                    self.place_cursor(match_start)
-                    self.select_range(match_start, match_end)
-                    self.move_mark(self.search_mark, match_end)
-                    return True
-                self.search_string = None
-                self.move_mark(self.search_mark, self.get_start_iter())
-        return False
-        
+    
+    
     def get_context(self, it, sp=False):
         iter2 = it.copy()
         if sp:
@@ -194,15 +373,6 @@ class CulebraBuffer(gtksourceview.SourceBuffer):
                                     mod, 
                                     self.context_bounds)
 
-def get_buffer_selection (buffer):
-    """Returns the selected text, when nothing is selected it returns the empty
-    string."""
-    bounds = buffer.get_selection_bounds()
-    if bounds == ():
-        return ""
-    else:
-        return buffer.get_slice(*bounds)
-
 def hide_on_delete (window):
     """
     Makes a window hide it self instead of getting destroyed.
@@ -231,7 +401,14 @@ class CulebraView(gtksourceview.SourceView):
         if font_desc is not None:
             self.modify_font(font_desc)
 
-class GotoLineComponent (Component):
+class GotoLineComponent (binding.Component):
+
+    action_group = binding.Obtain ("../ag")
+    
+    goto_line = binding.Make (
+        lambda self: self.action_group.get_action ("GotoLine")
+    )
+
     def _init (self):
         
         dialog = gtk.Dialog("", self.parent.get_parent_window(),
@@ -264,7 +441,7 @@ class GotoLineComponent (Component):
         
         self.on_text_changed (self.line_text)
         
-        self.parent.connect ("goto-line-event", self.on_goto_line)
+        self.goto_line.connect ("activate", self.on_goto_line)
         
     def on_dialog_response (self, dialog, response_id):
         if response_id == gtk.RESPONSE_CLOSE:
@@ -296,231 +473,6 @@ class GotoLineComponent (Component):
         self.dialog.run()
         self.line_text.grab_focus()
 
-
-class SearchReplaceComponent (Component):
-    """
-    This class aggregates all code related to Search & Replace functionality.
-    """
-    
-    def _init (self):
-        # Construct the GUI
-        self.dialog = gtk.Dialog("", self.parent.get_parent_window(),
-                            gtk.DIALOG_DESTROY_WITH_PARENT,
-                            ("Replace", RESPONSE_REPLACE,
-                             "Replace All", RESPONSE_REPLACE_ALL,
-                             gtk.STOCK_FIND, RESPONSE_FORWARD))
-        
-        hide_on_delete (self.dialog)
-        self.dialog.set_has_separator (False)
-        self.dialog.vbox.set_border_width (12)
-        self.dialog.set_resizable (False)
-        self.dialog.set_default_response(RESPONSE_FORWARD)
-        self.dialog.connect ("response", self.replace_dialog_response_cb)
-        self.dialog.connect ("key-release-event", self.on_key_pressed)
-        self.dialog.set_modal(False)
-        
-        tbl = gtk.Table ()
-        tbl.set_border_width (12)
-        tbl.show ()
-        tbl.set_row_spacings (12)
-        tbl.set_col_spacings (6)
-        self.dialog.vbox.add (tbl)
-        
-        self.search_text = gtk.Entry()
-        self.search_text.show()
-        self.search_text.set_activates_default(True)
-        # The search entry affects the replace, replace all and find buttons
-        # when it has text they can be sensitive
-        self.search_text.connect("changed", self.on_search_text_changed)
-        self.search_text.connect ("focus", self.on_search_focus)
-
-        self.replace_text = gtk.Entry() 
-        self.replace_text.show()
-        self.replace_text.set_activates_default(True)
-        
-        lbl = gtk.Label("Search for:")
-        lbl.set_alignment (1, 0)
-        lbl.show ()
-        tbl.attach (lbl, 0, 1, 0, 1)
-        tbl.attach (self.search_text, 1, 2, 0, 1, gtk.SHRINK)
-
-        lbl = gtk.Label("Replace with:")
-        lbl.set_alignment (1, 0)
-        lbl.show ()
-        tbl.attach (lbl, 0, 1, 1, 2)
-        tbl.attach (self.replace_text, 1, 2, 1, 2, gtk.SHRINK)
-
-        self.replace_button = self.dialog.action_area.get_children ()[2]
-        self.replace_all_button = self.dialog.action_area.get_children ()[1]
-
-        self.find_button = self.dialog.action_area.get_children ()[0]
-        # The replace button should only be sensitive if there is selected
-        # text and if that text equals the searched text
-        self.find_button.connect ("clicked", self.on_find_clicked)
-
-        self.parent.connect ("search-replace-event", self.on_search_replace)
-
-        # Update sensitiveness
-        self.on_search_text_changed()
-    
-    buffer = ObjectPath("../get_current()")
-    
-    def get_buffer_selection (self):
-        return get_buffer_selection (self.buffer)
-        
-    buffer_selection = property(get_buffer_selection)
-    
-    def replace_button_sensitivity (self):
-        is_sensitive = self.buffer_selection == self.search_text.get_text () \
-                       and self.search_text.get_text () != ""
-                       
-        self.replace_button.set_sensitive (is_sensitive)
-    
-    def on_search_focus (self, *args):
-        # Select all
-        self.search_text.select_region (0, -1)
-    
-    def on_search_replace (self, *args):
-        if self.buffer_selection != "":
-            self.search_text.set_text(self.buffer_selection)
-        self.replace_button_sensitivity ()
-        self.search_text.select_region (0, -1)
-        self.search_text.grab_focus()
-        self.dialog.run ()
-    
-        
-    def on_search_text_changed (self, *args):
-        is_sensitive = len(self.search_text.get_text ()) > 0
-        self.replace_button.set_sensitive(False)
-        self.replace_all_button.set_sensitive(is_sensitive)
-        self.find_button.set_sensitive (is_sensitive)
-    
-    def on_find_clicked (self, *args):
-        selected_text = get_buffer_selection (self.buffer)
-        is_sensitive = selected_text != self.search_text.get_text ()
-        self.replace_button_sensitivity ()
-
-    def replace_dialog_response_cb (self, dialog, response_id):
-        search_text = self.search_text
-        replace_text = self.replace_text
-        buff = self.buffer
-            
-        if response_id == gtk.RESPONSE_CLOSE:
-            self.dialog.hide ()
-
-        elif response_id == RESPONSE_FORWARD:
-            buff.search(search_text.get_text(), buff.search_mark, editor=self.parent.editor)
-
-        elif response_id == RESPONSE_REPLACE:
-            # get selection
-            selected_text = self.buffer_selection
-
-            if selected_text != "" and selected_text != search_text.get_text ():
-                return
-                
-            start, end = self.buffer.get_selection_bounds ()
-            buff.delete(start, end)
-            buff.insert(start, replace_text.get_text())
-            start = buff.get_iter_at_mark(buff.get_insert())
-            start.backward_chars(len(replace_text.get_text()))
-            buff.search(search_text.get_text(), buff.search_mark, editor=self.parent.editor)
-
-        elif response_id == RESPONSE_REPLACE_ALL:
-            current_iter = buff.get_iter_at_mark(buff.get_insert())
-            while buff.search(search_text.get_text(), buff.search_mark, False, self.parent.editor):
-                start, end = buff.get_selection_bounds()
-                buff.delete(start, end)
-                buff.insert(start, replace_text.get_text())
-                start = buff.get_iter_at_mark(buff.get_insert())
-                start.backward_chars(len(replace_text.get_text()))
-                buff.select_range(start, buff.get_iter_at_mark(buff.search_mark))
-
-            if current_iter is not None:
-                buff.place_cursor(current_iter)
-        self.replace_button_sensitivity ()
-
-    def on_key_pressed (self, search_text, event):
-        global KEY_ESCAPE
-        
-        if event.keyval == KEY_ESCAPE:
-            self.dialog.hide ()
-
-class SearchComponent (Component):
-    
-    search_text = PropertyWrapper ("__search_text", "get_text", "set_text")
-    
-    def _init (self):
-        self.parent.connect ("search-event", self.on_search_dialog)
-        
-        self.dialog = gtk.Dialog("", self.parent.get_parent_window(),
-                            gtk.DIALOG_DESTROY_WITH_PARENT,
-                            (gtk.STOCK_FIND, RESPONSE_FORWARD))
-        hide_on_delete (self.dialog)
-        self.dialog.set_modal(False)
-        self.dialog.set_default_response(RESPONSE_FORWARD)
-        self.dialog.set_has_separator(False)
-        self.dialog.set_resizable(False)
-        self.dialog.connect("response", self.on_dialog_response)
-        self.dialog.connect ("key-release-event", self.on_key_pressed)
-
-        hbox = gtk.HBox ()
-        hbox.set_border_width (10)
-        hbox.set_spacing (6)
-        hbox.show ()
-        self.dialog.vbox.add (hbox)
-        
-        lbl = gtk.Label ("Search for:")
-        lbl.set_alignment (0, 0.5)
-        lbl.show ()
-        hbox.pack_start (lbl, False, False)
-        
-        self.__search_text = gtk.Entry()
-        self.__search_text.set_activates_default(True)
-        self.__search_text.show()
-        self.__search_text.grab_focus()
-        self.__search_text.connect ("changed", self.on_search_text_changed)
-        hbox.pack_start (self.__search_text, False, False)
-
-        find_button = self.dialog.action_area.get_children()[0]
-        self.find_next = self.parent.ag.get_action("EditFindNext")
-        self.find_next.connect_proxy(find_button)
-        
-        self.on_search_text_changed ()
-        
-        
-    
-    def on_dialog_response (self, dialog, response):
-        # Hide when the user closes the window
-        if response != RESPONSE_FORWARD:
-            dialog.hide ()
-        
-        # Search forward
-        if response == RESPONSE_FORWARD:
-            self.parent.get_current().search(
-                self.search_text, 
-                self.parent.get_current().search_mark, 
-                editor=self.parent.editor
-            )
-        
-    def on_search_dialog (self, *args):
-        # Update search text dialog
-        selected_text = get_buffer_selection (self.parent.get_current())
-        if selected_text != "":
-            self.search_text = selected_text 
-
-        self.__search_text.select_region (0, -1)
-        self.__search_text.grab_focus()
-
-        self.dialog.show ()
-    
-    def on_key_pressed (self, search_text, event):
-        global KEY_ESCAPE
-        
-        if event.keyval == KEY_ESCAPE:
-            self.dialog.hide ()
-    
-    def on_search_text_changed (self, entry = None):
-        self.find_next.set_sensitive (self.search_text != "")
 
 class ToolbarObserver (object):
     """We must use one instance of this class for each buffer that is assigned."""
@@ -559,7 +511,6 @@ class ToolbarObserver (object):
             
     def observe (self, buff):
         self.buffer = buff
-        
         self.sources = []
         self.sources.append(buff.connect("can-redo", self.on_can_redo))
         self.sources.append(buff.connect("can-undo", self.on_can_undo))
@@ -567,9 +518,9 @@ class ToolbarObserver (object):
             buff.connect("modified-changed", self.on_modified_changed)
         )
         self.sources.append(buff.connect("mark-set", self.on_mark_set))
-        self.sources.append (
-            self.edit_window.connect ("buffer-closed-event", self.update_close)
-        )
+        
+        self.events.register ("buffer-closed-event", self.update_close)
+        
         self.sources.append (
             self.save.connect ("activate", self.update_revert)
         )
@@ -587,6 +538,8 @@ class ToolbarObserver (object):
 
         for source_id in self.sources:
             gobject.source_remove (source_id)
+        
+        self.events.unregister ("buffer-closed-event", self.update_close)
         del self.sources
     
 class ToolbarSensitivityComponent (Component):
@@ -606,6 +559,7 @@ class ToolbarSensitivityComponent (Component):
             paste       = ag.get_action ("EditPaste"),
             copy        = ag.get_action ("EditCopy"),
             edit_window = self.parent,
+            events      = self.parent.events,
         )
         
         self.script_execute = ag.get_action ("RunScript")
@@ -614,85 +568,29 @@ class ToolbarSensitivityComponent (Component):
         self.prev_buffer    = ag.get_action ("PrevBuffer")
         self.revert         = ag.get_action ("FileRevert")
         
-        self.parent.connect ("buffer-changed", self.on_buffer_changed)
+        self.parent.events.register ("buffer-changed", self.on_buffer_changed)
         events = self.parent.entries.events
         events.register ("selection-changed", self.on_selection_changed)
         
         self.on_buffer_changed (self.parent, self.parent.get_current())
         self.on_selection_changed ()
     
-    def on_selection_changed (self, index = None):
+    def on_selection_changed (self, *args):
         self.next_buffer.set_sensitive (self.parent.entries.can_select_next ())
         self.prev_buffer.set_sensitive (self.parent.entries.can_select_previous())
 
-    def on_buffer_changed (self, parent, buff):
+    def on_buffer_changed (self, old_buff, buff):
         is_sensitive = buff.get_language ().get_name () == "Python"
         self.script_execute.set_sensitive (is_sensitive)
         self.script_break.set_sensitive (is_sensitive)
         
         self.revert.set_sensitive (not buff.is_new)
-        
         if self.observer is not None:
             self.observer.unobserve ()
 
         obs = ToolbarObserver (**self.elements)
         obs.observe (buff)
         self.observer = obs
-
-class EventsDispatcher(object):
-    """
-    An event dispatcher is the central events object. To use it you must first
-    create an event with the ``create_event`` method, this will return an
-    event source which is basically the function you'll use to trigger the
-    event. After that you register the callbacks. Its usage follows:
-    
-    >>> dispatcher = EventDispatcher()
-    >>> evt_src = dispatcher.create_event ("on-ring-event")
-    >>> 
-    >>> def callback1 ():
-    >>>     print "riiiing!"
-    >>> 
-    >>> dispatcher.register_callback ("on-ring-event", callback1)
-    >>> 
-    >>> evt_src ()
-    riiing
-    >>> 
-    """
-    def __init__ (self):
-        self.__events = {}
-        
-    def create_event (self, event_name):
-        self.__events[event_name] = []
-        
-        def event_source (*args, **kwargs):
-            for callback in self.__events[event_name]:
-                callback (*args, **kwargs)
-        
-        return event_source
-    
-    def create_events (self, event_names, event_sources = None):
-        """
-        This is a utility method that creates or fills a dict-like object
-        and returns it. The keys are the event names and the values are the
-        event sources.
-        """
-        if event_sources is None:
-            event_sources = {}
-            
-        for evt_name in event_names:
-            event_sources[evt_name] = self.create_event (evt_name)
-        return event_sources
-    
-    def event_exists (self, event_name):
-        return event_name in self.__events
-    
-    def register (self, event_name, callback):
-        assert self.event_exists (event_name)
-        self.__events[event_name].append (callback)
-    
-    def unregister (self, event_name, callback):
-        self.__events.remove (callback)
-
 
 class BufferManager (object):
     """
@@ -727,7 +625,7 @@ class BufferManager (object):
         self.__evts_srcs["add-entry"](buff)
     
     def remove (self, buff):
-        index = self.entries.index (buff)
+        old_index = self.__selected_index
         selected_entry = self.selected
         
         self.entries.remove (buff)
@@ -742,7 +640,7 @@ class BufferManager (object):
         self.__evts_srcs["remove-entry"](buff, index)
 
         if index != self.selected_index:
-            self.__evts_srcs["selection-changed"](self.selected_index)
+            self.__evts_srcs["selection-changed"](old_index, self.selected_index)
     
     def __delitem__ (self, index):
         buff = self.entries[index]
@@ -752,9 +650,11 @@ class BufferManager (object):
         # When the index maintained then do nothing
         if self.__selected_index == index:
             return
-            
+        old_index = self.__selected_index
+        old_value = self.get_selected()
+        
         self.__selected_index = index
-        self.__evts_srcs["selection-changed"](index)
+        self.__evts_srcs["selection-changed"](old_index, old_value, index, self.selected)
     
     def get_selected_index (self):
         return self.__selected_index
@@ -799,8 +699,7 @@ class BufferManager (object):
         self.selected_index += 1
     
     def can_select_previous (self):
-        return self.selected_index != -1 \
-               and self.selected_index > 0
+        return self.selected_index != -1 and self.selected_index > 0
     
     def select_previous (self):
         assert self.can_select_previous ()
@@ -812,9 +711,13 @@ class BufferManager (object):
     def __repr__ (self):
         return repr (self.__entries)
 
-class BufferManagerListener (Component):
-    use_autocomplete = ObjectPath("../use_autocomplete")
-    entries = ObjectPath("../entries")
+class BufferManagerListener (binding.Component):
+    entries = binding.Obtain("../entries")
+    
+    # This component depends on the 'events' object and both are created
+    # upon assembly, therefore obtaining the 'events' object upon this component's
+    # assembly we create the dependency 
+    __depends = binding.Obtain ("../events", uponAssembly = True)
     
     def _init (self):
         evts = self.entries.events
@@ -825,7 +728,8 @@ class BufferManagerListener (Component):
         
         self.entries.append (CulebraBuffer())
     
-    def on_selection_changed (self, index):
+    def on_selection_changed (self, old_index, old_value, index, value):
+        
         # If we lost our selection then select the last selected index
         if index == -1:
         
@@ -841,6 +745,8 @@ class BufferManagerListener (Component):
         # and add focus to it
         self.parent.editor.grab_focus()
         
+        self.parent._buffer_changed(old_value, self.entries.selected)
+        
     def on_add_entry (self, buff):
         # We move the focus to the last selected index
         self.entries.selected = buff
@@ -849,7 +755,7 @@ class BufferManagerListener (Component):
         
 
     def on_insert_text (self, buff, it, text, length):
-        if self.use_autocomplete:
+        if self.parent.use_autocomplete:
             buff.show_completion (text,
                                   it,
                                   self.parent.editor,
@@ -860,23 +766,265 @@ class BufferManagerListener (Component):
         if len (self.entries) == 0:
             self.entries.append (CulebraBuffer())
         
+class SearchBar (binding.Component):
+    action_group = binding.Obtain ("../ag")
+    
+    find_forward = binding.Make (
+        lambda self: self.action_group.get_action ("EditFindNext")
+    )
+    
+    find_backward = binding.Make (
+        lambda self: self.action_group.get_action ("EditFindBack")
+    )
+    
+    find = binding.Make (
+        lambda self: self.action_group.get_action ("EditFind")
+    )
+    
+    set_active = binding.Obtain ("find/set_active")
+    get_active = binding.Obtain ("find/get_active")
+    
+    def widget (self):
+
+        hbox = gtk.HBox (spacing = 6)
+        hbox.connect ("show", self.on_show)
+        hbox.connect ("hide", self.on_hide)
+        hbox.connect ("key-release-event", self.on_key_pressed)
         
-class EditWindow(gtk.EventBox, Component):
-    __gsignals__ = {
-        # Event called when the search-replace action is performed
-        "search-replace-event": (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
-        "search-event": (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
-        "goto-line-event": (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
-        "buffer-changed": (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_OBJECT,)),
-        "buffer-closed-event": (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ()),
-    }
+        lbl = gtk.Label ("Search:")
+        lbl.show ()
+        hbox.pack_start (lbl, expand = False, fill = False)
+        
+        entry = gtk.Entry ()
+        entry.connect ("changed", self.on_entry_changed)
+        entry.connect ("focus", self.on_entry_focus)
+        entry.connect ("activate", self.on_entry_activate)
+        entry.show ()
+        entry.set_activates_default(True)
+        self.entry = entry
+        hbox.pack_start (entry, expand = False, fill = False)
+
+        # Find backwards
+        btn_back = gtk.Button (stock = gtk.STOCK_GO_BACK)
+        btn_back.show ()
+        self.find_backward.connect_proxy (btn_back)
+        hbox.pack_start (btn_back, expand = False, fill = False)
+
+        # Find forward
+        btn_forward = gtk.Button (stock = gtk.STOCK_GO_FORWARD)
+        btn_forward.show ()
+        self.btn_forward = btn_forward
+        self.find_forward.connect_proxy (btn_forward)
+        hbox.pack_start (btn_forward, expand = False, fill = False)
+        
+        self.find.connect ("toggled", self.on_find)
+
+        self.parent.events.register ("buffer-changed", self.on_buffer_changed)
+
+        return hbox
+        
+    widget = binding.Make (widget)
+    
+    def bind (self, buff):
+        buff.search.events.register ("changed", self.on_search_changed)
+        buff.search.search_text = self.entry.get_text ()
+        buff.search.enable()
+    
+    def unbind (self, buff):
+        buff.search.events.unregister ("changed", self.on_search_changed)
+        buff.search.disable()
+    
+    def on_entry_changed (self, entry):
+        is_sensitive = entry.get_text () != ""
+        self.find_forward.set_sensitive (is_sensitive)
+        self.find_backward.set_sensitive (is_sensitive)
+        self.parent.get_current().search.search_text = entry.get_text ()
+    
+    def on_clicked (self, btn):
+        buff = self.parent.get_current ()
+        buff.search_text = self.entry.get_text ()
+    
+    def on_entry_activate (self, entry, *args):
+        self.btn_forward.activate ()
+
+    def on_show (self, dialog):
+        self.bind (self.parent.get_current())
+        self.entry.select_region(0, -1)
+        self.entry.grab_focus()
+
+    
+    def on_hide (self, dialog):
+        self.unbind (self.parent.get_current())
+    
+    def on_key_pressed (self, search_text, event):
+        global KEY_ESCAPE
+        
+        if event.keyval == KEY_ESCAPE:
+            self.set_active (False)
+    
+    def on_find (self, action):
+        if action.get_active():
+            self.widget.show()
+        else:
+            self.widget.hide()
+
+    def on_entry_focus (self, entry, *args):
+        # Select all
+        entry.select_region (0, -1)
+
+    def on_buffer_changed (self, old_buff, buff):
+        if old_buff is not None:
+            self.unbind(old_buff)
+        if buff is not None:
+            self.bind(buff)
+
+    def on_search_changed (self, text):
+        self.entry.set_text (text)
+         
+class ReplaceBar (binding.Component):
+    """
+    This component implements an event that validates when the selection is
+    synchronized with the selected text.
+    """
+    action_group = binding.Obtain ("../ag")
+
+    search_bar = binding.Obtain ("../search_bar")
+    
+    get_current = binding.Obtain ("../get_current")
+
+    def get_replace_text (self):
+        return self._replace_entry.get_text ()
+    
+    replace_text = property (get_replace_text)
+        
+    replace = binding.Make (
+        lambda self: self.action_group.get_action ("EditReplace")
+    )
+    replace_next = binding.Make (
+        lambda self: self.action_group.get_action ("EditReplaceNext")
+    )
+    replace_all = binding.Make (
+        lambda self: self.action_group.get_action ("EditReplaceAll")
+    )
+    
+    def widget (self):
+        hig_add = lambda container, widget: \
+                  container.pack_start (widget, expand = False, fill = False)
+        
+        hbox = gtk.HBox (spacing = 6)
+        hbox.connect ("key-release-event", self.on_key_pressed)
+        hbox.connect ("show", self.on_show)
+        hbox.connect ("hide", self.on_hide)
+        
+        lbl = gtk.Label("Replace")
+        lbl.show()
+        hig_add (hbox, lbl)
+        
+        entry = gtk.Entry()
+        entry.show ()
+        entry.connect("changed", self.on_entry_changed)
+        self._replace_entry = entry
+        hig_add (hbox, entry)
+        
+        btn = gtk.Button (stock = gtk.STOCK_FIND_AND_REPLACE)
+        self.replace_next.connect_proxy (btn)
+        btn.show()
+        hig_add (hbox, btn)
+        
+        btn = gtk.Button (stock = gtk.STOCK_FIND_AND_REPLACE)
+        btn.set_label ("Replace All")
+        self.replace_all.connect_proxy (btn)
+        btn.show()
+        hig_add (hbox, btn)
+
+        self.replace_next.connect ("activate", self.on_replace_curr)
+        self.replace_all.connect ("activate", self.on_replace_all)
+        self.parent.events.register ("buffer-changed", self.on_buffer_changed)
+
+        self.replace.connect ("toggled", self.on_replace)
+        self.search_bar.widget.connect ("key-release-event", self.on_key_pressed)
+        
+        return hbox
+        
+    widget = binding.Make (widget)
+
+    def bind (self, buff):
+        buff.replace.events.register ("changed", self.on_replace_changed)
+        buff.replace.replace_text = self._replace_entry.get_text ()
+    
+    def unbind (self, buff):
+        buff.replace.events.unregister ("changed", self.on_replace_changed)
+
+    def on_show (self, dialog):
+        self.search_bar.find.set_active (True)
+        self.search_bar.find.set_sensitive (False)
+        self.bind(self.get_current())
+    
+    def on_hide (self, dialog):
+        self.search_bar.find.set_active (False)
+        self.search_bar.find.set_sensitive (True)
+        self.unbind(self.get_current())
+    
+    def on_key_pressed (self, search_text, event):
+        global KEY_ESCAPE
+        
+        if event.keyval == KEY_ESCAPE:
+            self.replace.set_active (False)
+
+    def on_replace (self, action):
+        if action.get_active():
+            self.widget.show()
+        else:
+            self.widget.hide()
+        
+    def on_replace_curr (self, btn):
+        self.get_current().replace()
+        self.get_current().search()
+    
+    def on_replace_all (self, btn):
+        self.get_current().replace_all()
+        
+    def on_entry_changed (self, entry):
+        self.get_current().replace.replace_text = entry.get_text()
+    
+    def on_buffer_changed (self, old_buff, buff):
+        if old_buff is not None:
+            self.unbind(old_buff)
+        if buff is not None:
+            self.bind(buff)
+    
+    def on_replace_changed (self, text):
+        self._replace_entry.set_text (text)
+        
+        
+class EditWindow(Component, gtk.EventBox):
+    
+    # If the user access the event sources, the 'events' field is created
+    # and vice-versa
+    _buffer_changed = binding.Make (
+        lambda self: self.events.create_event("buffer-changed")
+    )
+    
+    _buffer_closed = binding.Make (
+        lambda self: self.events.create_event("buffer-changed")
+    )
+    
+    def events (self):
+        events = EventsDispatcher()
+        self._buffer_changed = events.create_event("buffer-changed")
+        self._buffer_closed  = events.create_event("buffer-closed-event")
+        return events
+        
+    events = binding.Make (events, uponAssembly = True)
     
     components = (
         BufferManagerListener, GotoLineComponent,
-        SearchReplaceComponent, SearchComponent, ToolbarSensitivityComponent,
+        SearchReplaceComponent, ToolbarSensitivityComponent,
         
     )
     
+    search_bar = binding.Make (SearchBar)
+    replace_bar = binding.Make (ReplaceBar)
     def __init__(self, plugin=None, quit_cb=None):
         gtk.EventBox.__init__(self)
         
@@ -923,7 +1071,13 @@ class EditWindow(gtk.EventBox, Component):
         self.editor.show()
         self.editor.grab_focus()
         
-        self.hpaned.add2(scrolledwin2)
+        vbox = gtk.VBox (spacing = 6)
+        vbox.show ()
+        vbox.add (scrolledwin2)
+        vbox.pack_start (self.search_bar.widget, expand = False, fill = False)
+        vbox.pack_start (self.replace_bar.widget, expand = False, fill = False)
+        
+        self.hpaned.add2(vbox)
         self.hpaned.set_position(200)
         self.dirty = 0
         self.clipboard = gtk.Clipboard(selection='CLIPBOARD')
@@ -1036,10 +1190,10 @@ class EditWindow(gtk.EventBox, Component):
              ('LowerSelection', None, 'Lower Selection Case', '<control><shift>u', 
                  None, self.lower_selection),
             ('FindMenu', None, '_Search'),
-            ('EditFind', gtk.STOCK_FIND, "Find...", None, "Search for text", self.edit_find),
-            ('EditFindNext', gtk.STOCK_FIND, 'Find _Next', 'F3', None, self.edit_find_next),
-            ('EditReplace', gtk.STOCK_FIND_AND_REPLACE, "_Replace...", '<control>h', 
-                "Search for and replace text", self.edit_replace),
+            ('EditFindNext', gtk.STOCK_FIND, 'Find Forward', 'F3', None, self.edit_find_next),
+            ('EditFindBack', gtk.STOCK_FIND, 'Find Backwards', None, None, self.edit_find_back),
+            ('EditReplaceNext', gtk.STOCK_FIND_AND_REPLACE, "_Replace", None, "Replace text and find next", None),
+            ('EditReplaceAll', gtk.STOCK_FIND_AND_REPLACE, "_Replace All", None,  "Replace all entries", None),
             ('GotoLine', gtk.STOCK_JUMP_TO, 'Goto Line', '<control>g', 
                  None, self.goto_line),
             ('RunMenu', None, '_Run'),
@@ -1057,6 +1211,11 @@ class EditWindow(gtk.EventBox, Component):
             ]
         self.ag = gtk.ActionGroup('edit')
         self.ag.add_actions(actions)
+        self.ag.add_toggle_actions ((
+            ('EditFind', gtk.STOCK_FIND, "Find...", None, "Search for text", None),
+            ('EditReplace', gtk.STOCK_FIND_AND_REPLACE, "_Replace...", '<control>h', 
+                "Search for and replace text", None),
+        ))
         for action_name in ("FileOpen", "FileSave", "EditUndo", "RunScript"):
             action = self.ag.get_action (action_name)
             action.set_property ("is-important", True)
@@ -1246,7 +1405,6 @@ class EditWindow(gtk.EventBox, Component):
         self.editor.grab_focus()
 
     def check_mime(self, buff):
-        print buff
         manager = buff.languages_manager
         if os.path.isabs(buff.filename):
             path = buff.filename
@@ -1440,18 +1598,12 @@ class EditWindow(gtk.EventBox, Component):
     def edit_redo(self, mi):
         self.get_current().redo()
 
-    def edit_find(self, mi):
-        self.emit("search-event")
-        
-    def edit_replace(self, mi):
-        self.emit("search-replace-event")
-            
-    def edit_find_next(self, mi):
-        buff = self.get_current()
-        buff.search(buff.search_string, 
-                                  buff.search_mark, 
-                                  editor = self.editor)
+    def edit_find_next(self, action = None):
+        self.get_current().search (editor = self)
     
+    def edit_find_back (self, action = None):
+        self.get_current().search (editor = self, find_forward = False)
+        
     def goto_line(self, mi=None):
         self.emit ("goto-line-event")
 
