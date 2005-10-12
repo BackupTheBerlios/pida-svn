@@ -602,48 +602,41 @@ class BufferManager (object):
     """
     
     def __init__ (self):
-        self.__entries = []
+        self._entries = []
 
         self.events = EventsDispatcher()
         self.__evts_srcs = self.events.create_events (("add-entry", "remove-entry", "selection-changed"))
         self.__selected_index = -1
         
-    def get_entries (self):
-        return self.__entries
-    
-    entries = property (get_entries)
-    
     def count_new (self):
         counter = 0
-        for entry in self.entries:
+        for entry in self:
             if entry.is_new:
                 counter += 1
         return counter
     
     def append (self, buff):
-        self.entries.append (buff)
+        self._entries.append (buff)
         self.__evts_srcs["add-entry"](buff)
     
     def remove (self, buff):
-        old_index = self.__selected_index
-        selected_entry = self.selected
+        old_index = self.selected_index
+        old_value = self.selected
         
-        self.entries.remove (buff)
+        self._entries.remove (buff)
         
-        index = self.selected_index
-        
-        if selected_entry is not buff:
-            self.__selected_index = self.entries.index (selected_entry)
-        else:
+        # If the old selected value was removed then clear the selection
+        if old_value is buff:
             self.__selected_index = -1
+            self.__evts_srcs["selection-changed"](old_index, old_value, -1, None)
         
-        self.__evts_srcs["remove-entry"](buff, index)
-
-        if index != self.selected_index:
-            self.__evts_srcs["selection-changed"](old_index, self.selected_index)
+        # If the selected value changed then make it equal again
+        elif old_value is not self.__selected_index:
+            self.__selected_index = self._entries.index (old_value)
+            self.__evts_srcs["selection-changed"](old_index, old_value, self.selected_index, old_value)
     
     def __delitem__ (self, index):
-        buff = self.entries[index]
+        buff = self._entries[index]
         self.remove (buff)
     
     def set_selected_index (self, index):
@@ -667,32 +660,32 @@ class BufferManager (object):
     def get_selected (self):
         if self.selected_index == -1:
             return None
-        assert self.selected_index < len (self.entries), "Selected index %d, %r" % (self.selected_index, self.entries)
-        return self.entries[self.selected_index]
+        assert self.selected_index < len (self._entries), "Selected index %d, %r" % (self.selected_index, self._entries)
+        return self._entries[self.selected_index]
     
     def unset_selected (self):
         del self[self.selected_index]
     
     def set_selected (self, entry):
-        self.selected_index = self.entries.index (entry)
+        self.selected_index = self._entries.index (entry)
     
     selected = property (get_selected, set_selected, unset_selected)
     
-    def __iter__ (self):
-        return iter (self.entries)
-    
     def __getitem__ (self, key):
-        return self.entries[key]
+        return self._entries[key]
     
     def __len__ (self):
-        return len (self.entries)
+        return len (self._entries)
     
     def __contains__ (self, entry):
         return entry in self.entries
+
+    def __iter__ (self):
+        return iter (self._entries)
     
     def can_select_next (self):
         return self.selected_index != -1 \
-               and self.selected_index + 1 < len (self.entries)
+               and self.selected_index + 1 < len (self._entries)
         
     def select_next (self):
         assert self.can_select_next ()
@@ -706,10 +699,10 @@ class BufferManager (object):
         self.selected_index -= 1
 
     def index (self, entry):
-        return self.__entries.index (entry)
+        return self._entries.index (entry)
 
     def __repr__ (self):
-        return repr (self.__entries)
+        return repr (self._entries)
 
 class BufferManagerListener (binding.Component):
     entries = binding.Obtain("../entries")
@@ -740,8 +733,11 @@ class BufferManagerListener (binding.Component):
        
         self.last_index = index
         
+        if value is None:
+            return
+            
         # Set bind the SourceView to the SourceBuffer
-        self.parent.editor.set_buffer (self.entries.selected)
+        self.parent.editor.set_buffer (value)
         # and add focus to it
         self.parent.editor.grab_focus()
         
@@ -1019,7 +1015,7 @@ class EditWindow(Component, gtk.EventBox):
     
     components = (
         BufferManagerListener, GotoLineComponent,
-        SearchReplaceComponent, ToolbarSensitivityComponent,
+        ToolbarSensitivityComponent,
         
     )
     
@@ -1337,7 +1333,6 @@ class EditWindow(Component, gtk.EventBox):
             new_entry = True
             buff = CulebraBuffer()
             buff.filename = fname
-            self.entries.append (buff)
             # We only update the contents of a new buffer
             try:
                 fd = open(fname)
@@ -1378,6 +1373,7 @@ class EditWindow(Component, gtk.EventBox):
                 resp = dlg.run()
                 dlg.hide()
                 return
+            self.entries.append (buff)
 
         else:
             new_entry = False
@@ -1566,7 +1562,7 @@ class EditWindow(Component, gtk.EventBox):
         del self.entries.selected
         self.plugin.do_edit('getbufferlist')
         self.plugin.do_edit('getcurrentbuffer')
-        self.emit ("buffer-closed-event")
+        self._buffer_closed ()
 
     def file_exit(self, mi=None, event=None):
         if self.chk_save(): return True
