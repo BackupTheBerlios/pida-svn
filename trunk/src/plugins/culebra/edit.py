@@ -470,7 +470,7 @@ class GotoLineComponent (binding.Component):
         self.line_text.select_region (0, -1)
         self.line_text.grab_focus()
        
-        self.dialog.run()
+        self.dialog.show()
         self.line_text.grab_focus()
 
 
@@ -1190,8 +1190,7 @@ class EditWindow(Component, gtk.EventBox):
             ('EditFindBack', gtk.STOCK_FIND, 'Find Backwards', None, None, self.edit_find_back),
             ('EditReplaceNext', gtk.STOCK_FIND_AND_REPLACE, "_Replace", None, "Replace text and find next", None),
             ('EditReplaceAll', gtk.STOCK_FIND_AND_REPLACE, "_Replace All", None,  "Replace all entries", None),
-            ('GotoLine', gtk.STOCK_JUMP_TO, 'Goto Line', '<control>g', 
-                 None, self.goto_line),
+            ('GotoLine', gtk.STOCK_JUMP_TO, 'Goto Line', '<control>g', None, None),
             ('RunMenu', None, '_Run'),
             ('RunScript', gtk.STOCK_EXECUTE, None, "F5","Run script", self.run_script),
             ('StopScript', gtk.STOCK_STOP, None, "<ctrl>F5","Stop script execution", self.stop_script),
@@ -1593,16 +1592,21 @@ class EditWindow(Component, gtk.EventBox):
         
     def edit_redo(self, mi):
         self.get_current().redo()
-
+    
+    def focus_line (self):
+        buff = self.get_current()
+        mark = buff.get_insert()
+        line_iter = buff.get_iter_at_mark(mark)
+        self.editor.scroll_to_iter(line_iter, 0.25)        
+    
     def edit_find_next(self, action = None):
-        self.get_current().search (editor = self)
+        line_iter = self.get_current().search (editor = self)
+        self.focus_line()
     
     def edit_find_back (self, action = None):
         self.get_current().search (editor = self, find_forward = False)
+        self.focus_line()
         
-    def goto_line(self, mi=None):
-        self.emit ("goto-line-event")
-
     def comment_block(self, mi=None):
         comment = "#"
         buf = self.get_current()
