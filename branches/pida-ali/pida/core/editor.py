@@ -93,7 +93,7 @@ class EditorManager(service.Service):
     BINDINGS = [('buffermanager', 'file-opened')]
 
     def init(self):
-        editor_type = import_editor('vim')
+        editor_type = import_editor('culebra')
         editor_type.boss = self.boss
         editor_type.manager = self
         self.__editor = editor_type()

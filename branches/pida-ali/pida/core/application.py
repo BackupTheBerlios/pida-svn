@@ -22,7 +22,7 @@
 #SOFTWARE.
 
 import sys
-sys.path.insert(2, '/home/ali/working/pida2')
+sys.path.insert(2, '/home/ali/working/pida/pida/branches/pida-ali/')
 import os
 import gtk
 import boss

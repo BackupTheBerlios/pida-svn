@@ -27,7 +27,8 @@ import pida.pidagtk.pyshell as pyshell
 import pty
 import sys
 import subprocess
-
+import gobject
+import os
 class TermContent(contentbook.ContentView):
     def __init__(self, fd):
         contentbook.ContentView.__init__(self)
@@ -48,9 +49,11 @@ class TerminalManager(service.Service):
 
     NAME = 'terminal'
     COMMANDS = [['execute-line',[('commandline', True)]],
-                ['execute-py-file',[('filename', True)]],
+                ['execute-py-file',[('filename', True), ('datacallback', True),
+                                    ('kwargs', False)]],
                 ['execute-py-shell',[]],
                 ['execute',[('cmdargs', True),('spkwargs', False)]],
+                ['execute-hidden',[('cmdargs', True),('spkwargs', False)]],
                 ['execute-vt',[('cmdargs', True),('vtkwargs', False)]],
                 ['execute-vt-shell',[]]]
 
@@ -66,11 +69,31 @@ class TerminalManager(service.Service):
     def cmd_execute_vt_shell(self):
         self.fork_vt(['bash'])
 
-    def cmd_execute_py_file(self, filename):
-        self.fork_py(['python', filename])
+    def cmd_execute_py_file(self, filename, **kw):
+        self.fork_py(['python', filename], **kw)
         
     def cmd_execute_py_shell(self):
         self.fork_py(['python'], shell=True)
+
+    def cmd_execute_hidden(self, cmdargs, datacallback, kwargs={}):
+        readbuf = []
+        console = subprocess.Popen(args=cmdargs, stdout=subprocess.PIPE,
+                                                 stderr=subprocess.STDOUT,
+                                                 **kwargs)
+        running = [1]
+        def read(fd, cond):
+            if cond == gobject.IO_IN:
+                data = os.read(fd.fileno(), 1024)
+                readbuf.append(data)
+                return running == [1]
+            elif cond == gobject.IO_HUP:
+                datacallback(''.join(readbuf))
+                running = False
+                return False
+
+        gobject.io_add_watch(console.stdout, gobject.IO_IN, read)
+        gobject.io_add_watch(console.stdout, gobject.IO_HUP, read)
+        
 
     def fork_py(self, cmdargs, **kw):
         self.__master, slave = pty.openpty()
@@ -84,5 +107,11 @@ class TerminalManager(service.Service):
         content.fork(cmdargs, **kw)
         self.boss.command('contentbook', 'add-page', contentview=content)
         
+
+class popen(object):
+    
+    def __init__(self, cmdargs):
+        self.__running = False
+        self
 
 Service = TerminalManager

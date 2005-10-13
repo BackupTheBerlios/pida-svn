@@ -31,7 +31,7 @@ import editor
 import events
 import plugins
 import commands
-import registry
+import configmanager
 import services
 
 
@@ -57,9 +57,9 @@ class Boss(object):
     def register_command(self, group, name, command):
         """Register a command."""
 
-    def register_option_group(self, name):
+    def register_option_group(self, name, doc):
         """Register and return top-level option group."""
-        return self.__registry.add_group(name)
+        return self.__config.add_group(name, doc)
 
     def register_option(seif, group, name, option):
         """Register a configuration option."""
@@ -79,8 +79,17 @@ class Boss(object):
         group = self.__commands.get(groupname)
         if group:
             command = group.get(name)
-            command(**kw)
+            if command:
+                command(**kw)
+            else:
+                self.log_warn('CMD', 'Command not found: (%s, %s)' % 
+                    (groupname, name))
     
+    def option(self, groupname, name):
+        """Get the option value for the grouped named option."""
+        return self.__config.get_value(groupname, name)
+        
+
     def get_command(self, name):
         """Get the named command."""
 
@@ -94,6 +103,10 @@ class Boss(object):
 
     def get_editor(self):
         return self.__editor
+
+    def get_plugins(self):
+        return self.__plugins
+    plugins = property(get_plugins)
 
     def get_main_window(self):
         return self.__window.view
@@ -117,7 +130,7 @@ class Boss(object):
 
     def __init(self):
         """Initialise components."""
-        self.__init_registry()
+        self.__init_config()
         self.__init_logging()
         # Can only use the log once it has been started
         self.log_debug('Boss', 'init()')
@@ -127,15 +140,15 @@ class Boss(object):
         self.__init_editor()
         self.__init_services()
         self.__init_plugins()
-        self.__load_registry()
+        self.__load_config()
 
-    def __init_registry(self):
+    def __init_config(self):
         """Initialize the registry."""
-        self.__registry = registry.Registry()
+        self.__config = configmanager.ConfigManager()
 
-    def __load_registry(self):
+    def __load_config(self):
         """Populate the registry."""
-        self.__registry.load()
+        self.__config.load()
 
     def __init_logging(self):
         """Initialize the logger."""
@@ -207,6 +220,8 @@ class Boss(object):
 
     def __populate_plugins(self):
         """Populate the plugins UI."""
+        self.__plugins.load_all()
+        self.__plugins.populate()
 
     def __populate_window(self):
         """Populate the window UI."""

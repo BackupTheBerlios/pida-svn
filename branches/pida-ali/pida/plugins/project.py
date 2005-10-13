@@ -21,33 +21,14 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import pida.core.service as service
-import pida.pidagtk.contentbook as contentbook
+import pida.core.plugin as plugin
 
-class Contentbook(service.GuiService):
-
-    NAME = 'contentbook'
-    COMMANDS = [['add-page', [('contentview', True)]]]
-
-    VIEW = contentbook.ContentBook
+class ProjectManager(plugin.Plugin):
+    """Project Management"""
+    NAME = 'projectmanager'
 
     def populate(self):
-        self.view.add_button('hello', 'hello')
-        self.view.add_button('hello2', 'hello2')
+        pass
 
-    def cmd_add_page(self, contentview):
-        self.view.append_page(contentview)
+Plugin = ProjectManager
 
-    def toolbar_action_hello(self):
-        print 'tbaction'
-        self.boss.command('manhole', 'run')
-
-    def toolbar_action_hello2(self):
-        def p(data):
-            self.log_debug('%s' % data)
-        self.boss.command('versioncontrol', 'get-statuses',
-                           datacallback=p,
-                           directory='/home/ali/working/pida/pida/trunk')
-
-
-Service = Contentbook

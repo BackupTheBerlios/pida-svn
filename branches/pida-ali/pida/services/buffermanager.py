@@ -90,7 +90,7 @@ class Buffermanager(service.Service):
     def evt_editor_started(self):
         for buf in self.__buffers:
             self.emit_event('file-opened', buffer=self.__buffers[buf])
-        self.__view.set_currentbuffer(filename)
+            self.__view.set_currentbuffer(buf.filename)
         #self.__view.set_selected(buf)
 
     def evt_editor_file_opened(self, filename):

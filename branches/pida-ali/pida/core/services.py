@@ -27,9 +27,9 @@ class IService(object):
     """The service interface."""
 
 SERVICES = ['buffermanager', 'contentbook', 'commandline', 'manhole',
-'terminal']
+'terminal', 'versioncontrol']
 
-def import_service(name):
+def import_service(self, name):
     """ Find a named plugin and instantiate it. """
     # import the module
     # The last arg [True] just needs to be non-empty
@@ -43,17 +43,19 @@ def import_service(name):
 
 class ServiceManager(components.ComponentGroup):
     """Top level services component group."""
-
+    IMPORT_FUNC = import_service
     def load(self, name):
         """Initialise the named service."""
         self.log_debug('Loading: %s.' % name)
-        svc = import_service(name)
+        svc = self.IMPORT_FUNC(name)
         if svc:
             svc.boss = self.boss
             inst = svc()
             if inst:
                 self.register(name, inst)
-        self.log_debug('Loaded: %s.' % name)
+                self.log_debug('Loaded: %s.' % name)
+                return inst
+        self.log_warn('Not Loaded: %s' % name)
 
     def load_all(self):
         """Initialise all the services."""

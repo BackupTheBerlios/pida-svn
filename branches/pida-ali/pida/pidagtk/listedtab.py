@@ -23,45 +23,49 @@
 
 import gtk
 import gobject
+import tree
 
-class ListedTab(gtk.HBox):
+import sys
+sys.path.insert(2, '/home/ali/working/pida/pida/branches/pida-ali/')
+
+class RegistryTreeItem(tree.TreeItem):
+    def __get_markup(self):
+        return self.value.name
+    markup = property(__get_markup)
+
+class ListedTab(gtk.VBox):
 
     __gsignals__ = {'clicked' : (
                     gobject.SIGNAL_RUN_LAST,
                     gobject.TYPE_NONE,
                     (gobject.TYPE_PYOBJECT,))}
-
-    def __init__(self):
-        self.__filename = None
-
-    def __set_filename(self, filename):
-        self.__filename = filename
     
-    def __get_filename(self):
-        return self.__filename
+    TREE = tree.Tree
+    TREE_ITEM = RegistryTreeItem
 
-    
-    def do_init(self, project_registry):
-        self.project_registry = project_registry
-        
-        self.win = gtk.Window()
-        self.win.set_title('PIDA Project Editor')
-        self.win.set_size_request(600,480)
-        self.win.set_transient_for(self.pida.mainwindow)
+    def __init__(self, registry):
+        gtk.VBox.__init__(self)
+        self.__registry = registry
+        self.__pages = {}
+        self.__populate()
+        self.__build_sectionlist()
 
+    def __populate(self):
         mainbox = gtk.HBox()
-        self.win.add(mainbox)
+        self.add(mainbox)
 
         leftbox = gtk.VBox()
         mainbox.pack_start(leftbox)
 
-        self.projects = ProjectTree()
-        leftbox.pack_start(self.projects.win)
-        self.projects.connect_select(self.cb_project_select)
-        self.projects.populate(self.project_registry)
+        self.__sectionview = self.TREE()
+        leftbox.pack_start(self.__sectionview)
+        self.__sectionview.connect("clicked", self.cb_section_clicked)
 
         rightbox = gtk.VBox()
         mainbox.pack_start(rightbox)
+
+        self.__notebook = gtk.Notebook()
+        rightbox.pack_start(self.__notebook)
 
         attrbox = gtk.VBox()
         rightbox.pack_start(attrbox)
@@ -74,17 +78,6 @@ class ListedTab(gtk.HBox):
         self.nameentry = gtk.Entry()
         hbox.pack_start(self.nameentry)
 
-        self.attribute_widgets = {}
-        for attribute in PROJECT_ATTRIBUTES:
-            hbox = gtk.HBox()
-            attrbox.pack_start(hbox, expand=False, padding=4)
-            name = attribute[0]
-            namelabel = gtk.Label(name)
-            hbox.pack_start(namelabel, expand=False, padding=4)
-            entry = attribute[3]()
-            hbox.pack_start(entry)
-            self.attribute_widgets[name] = entry
-        
         # Button Bar
         cb = gtk.HBox()
         rightbox.pack_start(cb, expand=False, padding=2)
@@ -112,28 +105,44 @@ class ListedTab(gtk.HBox):
         save_b = gtk.Button(stock=gtk.STOCK_SAVE)
         cb.pack_start(save_b, expand=False)
         save_b.connect('clicked', self.cb_save)
+
+    def __build_sectionlist(self):
+        for group in self.__registry.iter_groups():
+            treeitem = self.TREE_ITEM(group.get_name(), group)
+            self.__sectionview.add_item(treeitem)
     
     def new(self):
-        self.nameentry.set_text('')
-        for attribute in PROJECT_ATTRIBUTES:
-            attrname = attribute[0]
-            self.attribute_widgets[attrname].set_text('')
+        pass
 
-    def show(self):
-        self.win.show_all()
-
-    def display(self, projectname):
-        if self.project_registry.has_section(projectname):
-            self.nameentry.set_text(projectname)
-            for attribute in PROJECT_ATTRIBUTES:
-                attrname = attribute[0]
-                val = self.project_registry.get(projectname, attrname)
-                self.attribute_widgets[attribute[0]].set_text(val)
+    def create_page(self, section_name):
+        if not section_name in self.__pages:
+            group = self.__registry.get_group(section_name)
+            b = gtk.VBox()
+            b.pack_start(gtk.Label(section_name))
+            b.pack_start(gtk.Label(group.doc))
+            self.__pages[section_name] = b
+            for opt in group:
+                w = opt.DISPLAY_WIDGET(opt)
+                b.pack_start(w.win)
+                w.load()
+            b.show_all()
+        return self.__pages[section_name]
+            
+    def display_page(self, section_name):
+        page = self.create_page(section_name)
+        if self.__notebook.page_num(page) == -1:
+            self.__notebook.append_page(page)
+        page_num = self.__notebook.page_num(page)
+        self.__notebook.set_current_page(page_num)
             
     def projects_changed(self):
         self.project_registry.save()
         self.projects.populate(self.project_registry)
         self.do_evt('projectschanged')
+
+    def pages(self):
+        for page_num in xrange(self.__notebook.get_n_pages()):
+            yield self.__notebook.get_nth_page(page_num)
             
     def cb_project_select(self, *args):
         projname = self.projects.selected(0)
@@ -161,3 +170,31 @@ class ListedTab(gtk.HBox):
         self.projects_changed()
         self.projects.view.set_cursor(self.projects.model[0].path)
 
+    def cb_section_clicked(self, tree, item):
+        self.display_page(item.value.name)
+
+if __name__ == '__main__':
+    import pida.core.registry as registry
+    r = registry.Registry('/home/ali/tmp/reg')
+    g = r.add_group('first', 'The docs for first group')
+    e = g.add('blahA', 'docs for blahA', 1, registry.Boolean)
+    e.setdefault()
+    e = g.add('blahB', 'docs for blahB', 0, registry.Boolean)
+    e.setdefault()
+    g = r.add_group('sec', 'The docs for sec group')
+    e = g.add('blahA', 'docs for blahA', 2, registry.Boolean)
+    e.setdefault()
+    e = g.add('blahB', 'docs for blahB', 0, registry.Boolean)
+    e.setdefault()
+
+    w = gtk.Window()
+    t = ListedTab(r)
+    w.add(t)
+    w.show_all()
+
+    def tree(obj, ind):
+        print ind * " ", obj
+        if hasattr(obj, "get_children"):
+            for child in obj.get_children():
+                tree(child, ind + 2)
+    gtk.main()

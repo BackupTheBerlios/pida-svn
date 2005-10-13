@@ -29,12 +29,14 @@ class Service(base.pidaobject):
     COMMANDS = []
     EVENTS = []
     OPTIONS = []
+    OPTIONS_DOC = "Options for service %s" % NAME
     BINDINGS = []
 
     def __init__(self, *args, **kw):
         if self.NAME is None:
             raise Exception, 'Must have NAME %s' % self.__class__
         base.pidaobject.__init__(self, *args, **kw)
+        self.__register_options()
         self.__register_commands()
         self.__register_events()
     
@@ -48,8 +50,14 @@ class Service(base.pidaobject):
         else:
             self.log_debug("No callback - %s" % funcname)
 
-    def register_options(self):
-        pass
+    def __register_options(self):
+        if self.OPTIONS != []:
+            self.__options = self.boss.register_option_group(self.NAME,
+                                                             self.OPTIONS_DOC)
+            for name, doc, default, typ in self.OPTIONS:
+                print typ, 'ss'
+                opt = self.__options.add(name, doc, default, typ)
+                self.log_debug('new opt - %s' % name)
 
     def __register_commands(self):
         if self.COMMANDS != []:

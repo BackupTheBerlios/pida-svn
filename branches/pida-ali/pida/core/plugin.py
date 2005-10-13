@@ -21,46 +21,9 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import services
+import service
 import pida.pidagtk.contentbook as contentbook
 
-def import_plugin(self, name):
-    """ Find a named plugin and instantiate it. """
-    # import the module
-    # The last arg [True] just needs to be non-empty
-    try:
-        mod = __import__('pida.plugins.%s' % name, {}, {}, [True])
-        cls = mod.Plugin
-    except ImportError, e:
-        print ('Plugin "%s" failed to import with: %s' % (name, e))
-        cls = None
-    return cls
-
-class PluginManager(services.ServiceManager):
-    """The plugin manager"""
-    IMPORT_FUNC = import_plugin
-    
-    def init(self, name):
-        services.ServiceManager.init(self, name)
-        self.__view = contentbook.ContentBook()
-
-    def get_view(self):
-        return self.__view
-    view = property(get_view)
-
-    
-
-    def load_all(self):
-        """Initialise all the services."""
-        for name in ['project']:
-            self.load(name)
-        self.log_debug('Loaded all services.')
-
-    def load(self, name):
-        inst = services.ServiceManager.load(self, name)
-
-    def populate(self):
-        services.ServiceManager.populate(self)
-        for plugin in self:
-            self.__view.append_page(plugin.view)
-        
+class Plugin(service.GuiService):
+    """A pida plugin."""
+    VIEW = contentbook.ContentView

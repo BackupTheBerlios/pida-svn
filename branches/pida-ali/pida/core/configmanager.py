@@ -21,33 +21,24 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import pida.core.service as service
-import pida.pidagtk.contentbook as contentbook
+import service
+import registry
 
-class Contentbook(service.GuiService):
+class ConfigManager(service.Service):
+    NAME = 'configmanager'
+    def init(self):
+        self.__registry = registry.Registry('/home/ali/.pida2/conf/pida.conf')
 
-    NAME = 'contentbook'
-    COMMANDS = [['add-page', [('contentview', True)]]]
+    def load(self):
+        self.__registry.load()
 
-    VIEW = contentbook.ContentBook
+    def add_group(self, name, doc):
+        return self.__registry.add_group(name, doc)
 
-    def populate(self):
-        self.view.add_button('hello', 'hello')
-        self.view.add_button('hello2', 'hello2')
+    def get(self, group, name):
+        return self.__registry.get(group, name)
 
-    def cmd_add_page(self, contentview):
-        self.view.append_page(contentview)
-
-    def toolbar_action_hello(self):
-        print 'tbaction'
-        self.boss.command('manhole', 'run')
-
-    def toolbar_action_hello2(self):
-        def p(data):
-            self.log_debug('%s' % data)
-        self.boss.command('versioncontrol', 'get-statuses',
-                           datacallback=p,
-                           directory='/home/ali/working/pida/pida/trunk')
-
-
-Service = Contentbook
+    def get_value(self, group, name):
+        opt = self.get(group, name)
+        if opt:
+            return opt.value()

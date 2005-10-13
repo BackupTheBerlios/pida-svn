@@ -30,7 +30,7 @@ import os
 import pida.core.service as service
 import pida.pidagtk.pyshell as pyshell
 import pida.pidagtk.contentbook as contentbook
-
+import pida.core.registry as registry
 
 class Holder(object):
     def __init__(self, name):
@@ -46,10 +46,11 @@ class PytermContent(contentbook.ContentView):
         self.pack_start(self.__term)
 
 class Manhole(service.Service):
-    """Debugging Pythoon shell."""
+    """Debugging Python shell."""
     NAME = 'manhole'
     COMMANDS = [('run', [])]
     BUTTONS = [('commands', 'commands')]
+    OPTIONS = [('test', 'doc', 1, registry.Integer)]
 
     def init(self):
         pass
@@ -59,11 +60,13 @@ class Manhole(service.Service):
         __master, slave = pty.openpty()
         localdict = {'pida':self.boss,
                      'cmd':self.commands,
-                     'ex':self.ex, 'os':os}
+                     'ex':self.ex, 'os':os, 'vc': self.test_vcs,
+                     'h':self.test_hidden}
         interpreter = Interpreter(slave, localdict)
         content = PytermContent(__master, interpreter.completer)
         self.boss.command('contentbook', 'add-page', contentview=content)
         self.__master = __master
+        self.__slave = slave
 
     def get_commands(self, group=None):
         L = []
@@ -82,6 +85,17 @@ class Manhole(service.Service):
 
     def ex(self, commandline):
         self.boss.command('terminal', 'execute-line', commandline=commandline)
+
+    def test_vcs(self):
+        self.boss.command('versioncontrol', 'call', command='status',
+                           directory = '/home/ali/working/pida/pida/trunk')
+
+    def test_hidden(self):
+        def p(data):
+            self.log_debug("&&" + data)
+        self.boss.command('versioncontrol', 'get-statuses',
+                           datacallback=p,
+                           directory='/home/ali/working/pida/pida/trunk')
 
     def toolbar_action_commands(self):
         self.list_commands()

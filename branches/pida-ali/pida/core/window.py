@@ -37,8 +37,10 @@ class WindowManager(service.Service):
         """Populate the window."""
         bufferview = self.boss.get_service('buffermanager').view
         contentbook = self.boss.get_service('contentbook').view
+        pluginmanager = self.boss.plugins.view
         editor = self.boss.get_editor().view
-        self.__window.pack_ed_bl_cb(editor, bufferview, contentbook)
+        self.__window.pack(editor, bufferview, pluginmanager, contentbook,
+            False, False, False)
 
     def reset(self):
         """Display the window."""

@@ -67,7 +67,7 @@ class PidaWindow(gtk.Window):
             sidebar_on_right,
             contentbook_on_right):
         """Pack the required components."""
-        self.__pack_sidebar(bufferlist, pluginbook.win,
+        self.__pack_sidebar(bufferlist, pluginbook,
             sidebar_orientation_horizontal)
         if sidebar_on_right:
             self.__packTR(self.__pS)
@@ -91,6 +91,7 @@ class PidaWindow(gtk.Window):
     def pack_ed_bl_cb(self, ed, bl, cb):
         self.pack(ed, bl, fake('pb'), cb, True, True, True)
         bl.set_size_request(400, 400)
+    
 
 import unittest
 class test_window(unittest.TestCase):
