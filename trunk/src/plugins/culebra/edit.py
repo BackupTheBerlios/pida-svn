@@ -53,7 +53,7 @@ def get_buffer_selection (buffer):
     """Returns the selected text, when nothing is selected it returns the empty
     string."""
     bounds = buffer.get_selection_bounds()
-    if bounds == ():
+    if len(bounds) == 0:
         return ""
     else:
         return buffer.get_slice(*bounds)
@@ -202,7 +202,7 @@ class SearchMethod (binding.Component, object):
             return True
         
         except StopIteration:
-            self._no_more_entries ()
+            self._no_more_entries (find_forward)
             return False
 
 class ReplaceMethod (binding.Component):
@@ -498,7 +498,7 @@ class ToolbarObserver (object):
         self.close.set_sensitive (is_sensitive)
     
     def update_selection_sensitive (self, buff):
-        has_selection = buff.get_selection_bounds() != ()
+        has_selection = len(buff.get_selection_bounds()) != 0
         self.cut.set_sensitive (has_selection)
         self.copy.set_sensitive (has_selection)
     
@@ -803,6 +803,7 @@ class SearchBar (binding.Component):
         # Find backwards
         btn_back = gtk.Button (stock = gtk.STOCK_GO_BACK)
         btn_back.show ()
+        self.btn_backward = btn_back
         self.find_backward.connect_proxy (btn_back)
         hbox.pack_start (btn_back, expand = False, fill = False)
 
@@ -811,6 +812,7 @@ class SearchBar (binding.Component):
         btn_forward.show ()
         self.btn_forward = btn_forward
         self.find_forward.connect_proxy (btn_forward)
+        
         hbox.pack_start (btn_forward, expand = False, fill = False)
         
         self.find.connect ("toggled", self.on_find)
@@ -823,13 +825,21 @@ class SearchBar (binding.Component):
     
     def bind (self, buff):
         buff.search.events.register ("changed", self.on_search_changed)
+        buff.search.events.register ("no-more-entries", self.on_no_entries)
         buff.search.search_text = self.entry.get_text ()
         buff.search.enable()
     
     def unbind (self, buff):
         buff.search.events.unregister ("changed", self.on_search_changed)
+        buff.search.events.unregister ("no-more-entries", self.on_no_entries)
         buff.search.disable()
     
+    def on_no_entries (self, find_forward):
+        if find_forward:
+            self.btn_backward.grab_focus()
+        else:
+            self.btn_forward.grab_focus()
+
     def on_entry_changed (self, entry):
         is_sensitive = entry.get_text () != ""
         self.find_forward.set_sensitive (is_sensitive)
@@ -1599,13 +1609,25 @@ class EditWindow(Component, gtk.EventBox):
         line_iter = buff.get_iter_at_mark(mark)
         self.editor.scroll_to_iter(line_iter, 0.25)        
     
+    def find (self, find_forward):
+        buff = self.get_current()
+        found = buff.search (find_forward = find_forward)
+
+        if not found and len(buff.get_selection_bounds()) == 0:
+            found = buff.search (find_forward = not find_forward)
+
+        if not found:
+            return
+            
+        mark = buff.get_insert()
+        line_iter = buff.get_iter_at_mark(mark)
+        self.editor.scroll_to_iter(line_iter, 0.25)
+    
     def edit_find_next(self, action = None):
-        line_iter = self.get_current().search (editor = self)
-        self.focus_line()
+        self.find (find_forward = True)
     
     def edit_find_back (self, action = None):
-        self.get_current().search (editor = self, find_forward = False)
-        self.focus_line()
+        self.find (find_forward = False)
         
     def comment_block(self, mi=None):
         comment = "#"
