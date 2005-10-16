@@ -37,19 +37,20 @@ class VersionControl(service.Service):
     COMMANDS = [('call', [('command', True),
                           ('directory', True)]),
                 ('get-statuses', [('directory', True),
-                                  ('datacallback', True)])]
+                                  ('datacallback', True)]),
+                ('get-vcs-for-directory', [('directory', True)])]
     
     def init(self):
         self.__vcs = create_vcs_maps()
 
     def call_visual(self, basecmd, command, directory):
         self.boss.command('terminal', 'execute',
-                           cmdargs=[basecmd, command],
+                           cmdargs=[basecmd] + list(command),
                            spkwargs={'cwd': directory})
 
     def call_hidden(self, basecmd, command, directory, datacallback):
         self.boss.command('terminal', 'execute-hidden',
-                           cmdargs=[basecmd, command],
+                           cmdargs=[basecmd] + list(command),
                            kwargs={'cwd': directory},
                            datacallback=datacallback)
         
@@ -74,9 +75,18 @@ class VersionControl(service.Service):
 
     def cmd_get_statuses(self, directory, datacallback):
         def cb(status_data):
-            L = [line.split() for line in status_data.splitlines()]
-            datacallback(L)
+            L = (line.split() for line in status_data.splitlines())
+            D = {}
+            try:
+                for st, fn in L:
+                    D[fn] = st
+                datacallback(D)
+            except:
+                datacallback({})
         self.call('status', directory, False, cb)
+
+    def cmd_get_vcs_for_directory(self, directory):
+        return get_vcs_for_directory(directory)
         
         
 
@@ -89,9 +99,9 @@ def vcs_commands(**kw):
 class IVCSType(object):
     base_command = None
     default_args = None
-    commands = vcs_commands(commit="commit",
-                            update="update",
-                            status='status')
+    commands = vcs_commands(commit=("commit", ),
+                            update=("update", ),
+                            status=('status', ))
     extra_commands = vcs_commands()
 
 class Darcs(IVCSType):
@@ -99,6 +109,9 @@ class Darcs(IVCSType):
 
 class Subversion(IVCSType):
     base_command = 'svn'
+    commands = vcs_commands(commit=("commit", ),
+                            update=("update", ),
+                            status=('status', '-N'))
 
 class CVS(IVCSType):
     pass

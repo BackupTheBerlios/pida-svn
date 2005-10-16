@@ -27,7 +27,7 @@ class IService(object):
     """The service interface."""
 
 SERVICES = ['buffermanager', 'contentbook', 'commandline', 'manhole',
-'terminal', 'versioncontrol']
+'terminal', 'versioncontrol', 'filemanager', 'viewbook', 'topbar']
 
 def import_service(self, name):
     """ Find a named plugin and instantiate it. """
@@ -83,5 +83,9 @@ class ServiceManager(components.ComponentGroup):
         for service in self:
             service.populate_base()
             service.populate()
+
+    def reset(self):
+        for service in self:
+            service.reset()
 
 

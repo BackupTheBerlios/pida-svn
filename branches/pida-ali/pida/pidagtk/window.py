@@ -39,46 +39,53 @@ class PidaWindow(gtk.Window):
 
     def __packTL(self, widget):
         """Pack the widget in the top-left pane."""
-        self.__p1.pack1(widget)
+        self.__p1.pack1(widget, True, True)
 
     def __packBL(self, widget):
         """Pack the widget in the top-left pane."""
-        self.__p1.pack2(widget)
+        self.__p1.pack2(widget, True, True)
 
     def __packTR(self, widget):
         """Pack the widget in the top-left pane."""
-        self.__p2.pack1(widget)
+        self.__p2.pack1(widget, True, True)
 
     def __packBR(self, widget):
         """Pack the widget in the top-left pane."""
-        self.__p2.pack2(widget)
+        self.__p2.pack2(widget, True, True)
 
-    def __pack_sidebar(self, w1, w2, horizontal):
+    def __pack_sidebar(self, w1, w2, topbar, horizontal):
         """Create and pack the sidebar with the widgets."""
         if horizontal:
-            self.__pS = gtk.HPaned()
+            pS = gtk.HPaned()
         else:
-            self.__pS = gtk.VPaned()
-        self.__pS.pack1(w1)
-        self.__pS.pack2(w2)
+            pS = gtk.VPaned()
+        self.__pS = gtk.VBox()
+        pS.pack1(w1, True, True)
+        pS.pack2(w2, True, True)
+        self.__pS.pack_start(topbar, expand=False)
+        self.__pS.pack_start(pS)
 
-    def pack(self, editor, bufferlist, pluginbook, contentbook,
+    def pack(self, editor, bufferlist, pluginbook, contentbook, viewbook,
+            topbar,
             sidebar_orientation_horizontal,
-            sidebar_on_right,
-            contentbook_on_right):
+            sidebar_on_right):
         """Pack the required components."""
-        self.__pack_sidebar(bufferlist, pluginbook,
+        self.__pack_sidebar(bufferlist, pluginbook, topbar,
             sidebar_orientation_horizontal)
         if sidebar_on_right:
             self.__packTR(self.__pS)
+            self.__packBR(contentbook)
             self.__packTL(editor)
+            self.__packBL(viewbook)
+            viewbook.slider = self.__p1
+            contentbook.slider = self.__p2
         else:
             self.__packTL(self.__pS)
             self.__packTR(editor)
-        if contentbook_on_right:
-            self.__packBR(contentbook)
-        else:
             self.__packBL(contentbook)
+            self.__packBR(viewbook)
+            viewbook.slider = self.__p2
+            contentbook.slider = self.__p1
             
     def pack_bl_only(self, bufferlist):
         self.pack(fake('ed'), bufferlist, fake('pb'), fake('cb'), True, True, True)

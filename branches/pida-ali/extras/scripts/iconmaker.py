@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*- 
-
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 #Copyright (c) 2005 Ali Afshar aafshar@gmail.com
 
@@ -20,36 +19,52 @@
 #LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
+
+import os
 import gtk
-import gobject
-import icons
-class Toolbar(gtk.HBox):
+import shelve
+import shutil
 
-    
-    __gsignals__ = {'clicked' : (
-                    gobject.SIGNAL_RUN_LAST,
-                    gobject.TYPE_NONE,
-                    (gobject.TYPE_PYOBJECT, ))}
+I = gtk.IconTheme()
+I.set_custom_theme('Rodent')
 
-    def __init__(self):
-        gtk.HBox.__init__(self)
 
-    def add_button(self, name, icon, tooltip='None Set!', text=False):
-        evt = gtk.EventBox()
-        if text:
-            but = icons.icons.get_text_button(icon, name)
-        else:
-            but = icons.icons.get_button(name)
-        evt.add(but)
-        icons.tips.set_tip(evt, tooltip)
-        but.connect('clicked', self.cb_clicked, name)
-        self.pack_start(evt, expand=False, padding=0)
-        but.show_all()
-        return but
+f = open('iconmaker.data', 'r')
+try:
+    shutil.rmtree('iconbuild')
+except:
+    pass
+try:
+    os.remove('icons.dat')
+except:
+    pass
+os.mkdir('iconbuild')
+outfile = shelve.open('icons.dat')
+for line in f:
+    name, key = [s.strip() for s in line.split(' ')]
+    i = I.load_icon(name, 15, 0)
+    d = i.get_pixels()
+    cs = i.get_colorspace()
+    ha = i.get_has_alpha()
+    bp = i.get_bits_per_sample()
+    w = i.get_width()
+    h = i.get_height()
+    rs = i.get_rowstride()
+    outfile[key] = d, (ha, bp, w, h, rs)
+outfile.close()
+w = gtk.Window()
+w.connect('destroy', gtk.main_quit)
+b = gtk.HBox()
+w.add(b)
+outfile = shelve.open('icons.dat')
+cs = gtk.gdk.COLORSPACE_RGB
+for i in outfile:
+    d, a = outfile[i]
+    pb = gtk.gdk.pixbuf_new_from_data(d, cs, *a)
+    im = gtk.Image()
+    im.set_from_pixbuf(pb)
+    b.pack_start(im)
+outfile.close()
+w.show_all()
+gtk.main()
 
-    def add_separator(self):
-        sep = gtk.VSeparator()
-        self.pack_start(sep, padding=0, expand=False)
-
-    def cb_clicked(self, button, name):
-        self.emit('clicked', name)

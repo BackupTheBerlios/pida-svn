@@ -27,10 +27,11 @@ import registry
 class ConfigManager(service.Service):
     NAME = 'configmanager'
     def init(self):
-        self.__registry = registry.Registry('/home/ali/.pida2/conf/pida.conf')
+        self.__registry = registry.Registry()
 
     def load(self):
-        self.__registry.load()
+        print 'loading registry'
+        self.__registry.load_file('/home/ali/.pida2/conf/pida.conf')
 
     def add_group(self, name, doc):
         return self.__registry.add_group(name, doc)

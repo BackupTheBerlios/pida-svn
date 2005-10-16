@@ -59,6 +59,10 @@ class Service(base.pidaobject):
                 opt = self.__options.add(name, doc, default, typ)
                 self.log_debug('new opt - %s' % name)
 
+    def __get_options(self):
+        return self.__options
+    options = property(__get_options)
+
     def __register_commands(self):
         if self.COMMANDS != []:
             self.__commands = self.boss.register_command_group(self.NAME)
@@ -85,6 +89,9 @@ class Service(base.pidaobject):
 
     bind = __register_bindings
 
+    def reset(self):
+        pass
+
     def emit_event(self, event_name, **kw):
         if self.EVENTS != []:
             if self.__events.event_exists(event_name):
@@ -105,11 +112,16 @@ class Service(base.pidaobject):
 class GuiService(Service):
 
     VIEW = None
+    BUTTONS = []
+    ICON = None
 
     def populate_base(self):
         if self.VIEW is not None:
-            self.__view = self.VIEW()
+            self.__view = self.VIEW(self.ICON)
             self.__view.connect('action', self.cb_toolbar_action)
+            if self.BUTTONS != []:
+                for name, icon, doc in self.BUTTONS:
+                    self.__view.add_button(name, icon, doc)
 
     def cb_toolbar_action(self, view, name):
         cbname = 'toolbar_action_%s' % name

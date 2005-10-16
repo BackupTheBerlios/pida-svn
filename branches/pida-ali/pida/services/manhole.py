@@ -40,6 +40,8 @@ class Holder(object):
         return self.__name
 
 class PytermContent(contentbook.ContentView):
+    ICON = 'manhole'
+    ICON_TEXT = 'manhole'
     def __init__(self, fd, completer):
         contentbook.ContentView.__init__(self)
         self.__term = pyshell.PyTerm(fd, completer)
@@ -100,6 +102,14 @@ class Manhole(service.Service):
     def toolbar_action_commands(self):
         self.list_commands()
 
+    def cmd_view_log(self):
+        pass
+
+    def populate(self):
+        def run(button):
+            self.cmd_run()
+        self.boss.command('topbar', 'add-button', icon='manhole',
+                           tooltip='manhole', callback=run)
 
 import code
 import termios

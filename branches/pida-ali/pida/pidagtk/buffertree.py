@@ -23,14 +23,20 @@
 
 import tree
 import gtk
-
+import os
 class BufferItem(tree.IconTreeItem):
 
     def __get_markup(self):
         """Return the markup for the item."""
-        return self.value.filename
+        MU = ('<span size="small">'
+              '<span foreground="#0000c0">%s/</span>'
+              '<b>%s</b>'
+              '</span>')
+        fp = self.value.filename
+        fd, fn = os.path.split(fp)
+        dp, dn = os.path.split(fd)
+        return MU % (dn, fn)
     markup = property(__get_markup)
-    
 
 class BufferTree(tree.IconTree):
     

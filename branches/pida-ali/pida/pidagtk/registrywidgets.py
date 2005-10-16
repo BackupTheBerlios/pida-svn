@@ -26,6 +26,7 @@ print 'imported'
 import gtk
 # System imports
 import textwrap
+import filedialogs
 #Pida imports
 
 class ConfigWidget(object):
@@ -111,7 +112,7 @@ class ConfigEntry(ConfigWidget):
     """
     An entry widget for plain configuration strings.
     """
-    def do_init(self, option):
+    def __init__(self, option):
         """
         Constructor.
         
@@ -125,7 +126,7 @@ class ConfigEntry(ConfigWidget):
         @type key: string
         """
         widget = gtk.Entry()
-        ConfigWidget.do_init(self, widget, option)
+        ConfigWidget.__init__(self, widget, option)
 
     def load(self):
         """
@@ -184,7 +185,7 @@ class ConfigFont(ConfigWidget):
     """
     A font selection dialogue that takes its values from the config database.
     """
-    def do_init(self, option):
+    def __init__(self, option):
         """
         Constructor.
         
@@ -198,7 +199,7 @@ class ConfigFont(ConfigWidget):
         @type key: string
         """
         widget = gtk.FontButton()
-        ConfigWidget.do_init(self, widget, option)
+        ConfigWidget.__init__(self, widget, option)
         
     def load(self):
         """
@@ -217,7 +218,7 @@ class ConfigFile(ConfigWidget):
     """
     A widget that represents a file selection entry and dialogue button.
     """
-    def do_init(self, option):
+    def __init__(self, option):
         """
         Constructor.
         
@@ -230,8 +231,8 @@ class ConfigFile(ConfigWidget):
         @param key: The configuration key that the widget is for
         @type key: string
         """
-        widget = gtkextra.FileButton()
-        ConfigWidget.do_init(self, widget, option)
+        widget = filedialogs.FileButton()
+        ConfigWidget.__init__(self, widget, option)
         
     def load(self):
         """
@@ -252,7 +253,7 @@ class ConfigFolder(ConfigFile):
     
     (Note called "Folder" because GTK calls it a "Folder").
     """
-    def do_init(self, option):
+    def __init__(self, option):
         """
         Constructor.
         
@@ -265,14 +266,14 @@ class ConfigFolder(ConfigFile):
         @param key: The configuration key that the widget is for
         @type key: string
         """
-        widget = gtkextra.FolderButton()
-        ConfigWidget.do_init(self, widget, option)
+        widget = filedialogs.FolderButton()
+        ConfigWidget.__init__(self, widget, option)
        
 class ConfigColor(ConfigWidget):
     """
     A widget for a colour selection button and dialogue.
     """
-    def do_init(self, option):
+    def __init__(self, option):
         """
         Constructor.
         
@@ -286,7 +287,7 @@ class ConfigColor(ConfigWidget):
         @type key: string
         """
         widget = gtk.ColorButton()
-        ConfigWidget.do_init(self, widget, option)
+        ConfigWidget.__init__(self, widget, option)
 
     def load(self):
         """
@@ -309,14 +310,14 @@ class ConfigInteger(ConfigEntry):
     MAX = 99
     STEP = 1
     
-    def do_init(self, option):
+    def __init__(self, option):
         if hasattr(option, 'adjustment'):
             adjvals = option.adjustment
         else:
             adjvals = self.MIN, self.MAX, self.STEP
         adj = gtk.Adjustment(0, *adjvals)
         widget = gtk.SpinButton(adj)
-        ConfigWidget.do_init(self, widget, option)
+        ConfigWidget.__init_(self, widget, option)
 
     def load(self):
         """
@@ -331,12 +332,12 @@ class ConfigInteger(ConfigEntry):
         self.set_value(int(self.widget.get_value()))
 
 class ConfigList(ConfigEntry):
-    def do_init(self, option):
+    def __init__(self, option):
         widget = gtk.combo_box_new_text()
         if hasattr(option, 'choices'):
             for choice in getattr(option, 'choices'):
                 widget.append_text(choice)
-        ConfigWidget.do_init(self, widget, option)
+        ConfigWidget.__init__(self, widget, option)
                 
     def load(self):
         for i, row in enumerate(self.widget.get_model()):
@@ -355,7 +356,7 @@ class ListTree(gtk.TreeView):
     """
     A treeview control for switching a notebook's tabs.
     """
-    def do_init(self, configeditor):
+    def __init__(self, configeditor):
         """
         Constructor.
         

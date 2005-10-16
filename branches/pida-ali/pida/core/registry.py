@@ -74,7 +74,8 @@ class RegistryItem(object):
         try:
             self.set(value)
             return True
-        except BadRegistryEntry:
+        except BadRegistryValue:
+            self.setdefault()
             return False
 
     def set(self, value):
@@ -192,7 +193,7 @@ class Color(RegistryItem):
 
 class Registry(RegistryGroup):
 
-    def __init__(self, filename):
+    def __init__(self, filename=None):
         self.filename = filename
         self.optparseopts = {}
         self.__groups = {}
@@ -226,11 +227,21 @@ class Registry(RegistryGroup):
         for g, i in self.iter_items():
             yield '%s.%s = %s' % (g._name, i._name, i.value())
 
-    def load_file(self):
+
+    
+    def get_tempopts(self, filename):
+        self.filename = filename
         tempopts = configparser.ConfigParser()
         if os.path.exists(self.filename):
             f = open(self.filename, 'r')
             tempopts.readfp(f)
+            f.close()
+        return tempopts
+
+
+
+    def load_file(self, filename):
+        tempopts = self.get_tempopts(filename)
         for group, option in self.iter_items():
             if tempopts.has_option(group._name, option._name):
                 data = tempopts.get(group._name, option._name)
@@ -238,6 +249,22 @@ class Registry(RegistryGroup):
                     option.setdefault()
             else:
                 option.setdefault()
+
+    def load_file_with_schema(self, filename, schema):
+        tempopts = self.get_tempopts(filename)
+        for section in tempopts.sections():
+            group = self.add_group(section, section)
+            for name, doc, default, typ in schema:
+                opt = group.add(name, doc, default, typ)
+                if tempopts.has_option(group.get_name(), name):
+                    data = tempopts.get(group.get_name(), name)
+                    if not data:
+                        opt.setdefault()
+                    else:
+                        opt.load(data)
+                else:
+                    opt.setdefault()
+
 
     def load_opts(self):
         for k in self.optparseopts:
@@ -249,7 +276,7 @@ class Registry(RegistryGroup):
 
     def load(self):
         self.load_file()
-        self.load_opts()
+        #self.load_opts()
 
     def save(self):
         f = open(self.filename, 'w')

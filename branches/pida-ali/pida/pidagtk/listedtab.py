@@ -28,6 +28,9 @@ import tree
 import sys
 sys.path.insert(2, '/home/ali/working/pida/pida/branches/pida-ali/')
 
+class EditTree(tree.Tree):
+        EDIT_BUTTONS = True
+
 class RegistryTreeItem(tree.TreeItem):
     def __get_markup(self):
         return self.value.name
@@ -55,7 +58,8 @@ class ListedTab(gtk.VBox):
         self.add(mainbox)
 
         leftbox = gtk.VBox()
-        mainbox.pack_start(leftbox)
+        mainbox.pack_start(leftbox, expand=False)
+        leftbox.set_size_request(120, -1)
 
         self.__sectionview = self.TREE()
         leftbox.pack_start(self.__sectionview)
@@ -172,6 +176,9 @@ class ListedTab(gtk.VBox):
 
     def cb_section_clicked(self, tree, item):
         self.display_page(item.value.name)
+
+class NewItemTab(ListedTab):
+    TREE = EditTree
 
 if __name__ == '__main__':
     import pida.core.registry as registry

@@ -30,12 +30,16 @@ import subprocess
 import gobject
 import os
 class TermContent(contentbook.ContentView):
+    ICON = 'manhole'
+    ICON_TEXT = 'terminal'
     def __init__(self, fd):
         contentbook.ContentView.__init__(self)
         self.__term = pyshell.VteTerm(fd)
         self.pack_start(self.__term)
 
 class VtermContent(contentbook.ContentView):
+    ICON = 'terminal'
+    ICON_TEXT = 'terminal'
     def __init__(self):
         contentbook.ContentView.__init__(self)
         self.__term = pyshell.vte.Terminal()
@@ -76,23 +80,7 @@ class TerminalManager(service.Service):
         self.fork_py(['python'], shell=True)
 
     def cmd_execute_hidden(self, cmdargs, datacallback, kwargs={}):
-        readbuf = []
-        console = subprocess.Popen(args=cmdargs, stdout=subprocess.PIPE,
-                                                 stderr=subprocess.STDOUT,
-                                                 **kwargs)
-        running = [1]
-        def read(fd, cond):
-            if cond == gobject.IO_IN:
-                data = os.read(fd.fileno(), 1024)
-                readbuf.append(data)
-                return running == [1]
-            elif cond == gobject.IO_HUP:
-                datacallback(''.join(readbuf))
-                running = False
-                return False
-
-        gobject.io_add_watch(console.stdout, gobject.IO_IN, read)
-        gobject.io_add_watch(console.stdout, gobject.IO_HUP, read)
+        p = popen(cmdargs, datacallback, kwargs)
         
 
     def fork_py(self, cmdargs, **kw):
@@ -105,13 +93,42 @@ class TerminalManager(service.Service):
     def fork_vt(self, cmdargs, **kw):
         content = VtermContent()
         content.fork(cmdargs, **kw)
-        self.boss.command('contentbook', 'add-page', contentview=content)
+        self.boss.command('viewbook', 'add-page', contentview=content)
         
+    def populate(self):
+        def vt_shell(button):
+            self.cmd_execute_vt_shell()
+        self.boss.command('topbar', 'add-button', icon='terminal',
+                           tooltip='New shell.', callback=vt_shell)
 
 class popen(object):
     
-    def __init__(self, cmdargs):
+    def __init__(self, cmdargs, callback, kwargs):
         self.__running = False
-        self
+        self.__readbuf = []
+        self.__callback = callback
+        self.run(cmdargs, **kwargs)
+    
+    def run(self, cmdargs, **kwargs):
+        console = subprocess.Popen(args=cmdargs, stdout=subprocess.PIPE,
+                                                 stderr=subprocess.STDOUT,
+                                                 **kwargs)
+        self.__running = True
+        self.__readtag = gobject.io_add_watch(
+            console.stdout, gobject.IO_IN, self.cb_read)
+        self.__huptag = gobject.io_add_watch(
+            console.stdout, gobject.IO_HUP, self.cb_hup)
+
+    def cb_read(self, fd, cond):
+        data = os.read(fd.fileno(), 1024)
+        self.__readbuf.append(data)
+        return True
+
+    def cb_hup(self, fd, cond):
+        self.__callback(''.join(self.__readbuf))
+        self.__running = False
+        gobject.source_remove(self.__readtag)
+        return False
+
 
 Service = TerminalManager

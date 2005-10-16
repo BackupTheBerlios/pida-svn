@@ -178,6 +178,7 @@ class Boss(object):
     def __init_plugins(self):
         """Initialise the plugin manager."""
         self.__plugins = plugins.PluginManager('pida')
+        self.__plugins.load_all()
         self.log_debug('Boss', 'PluginManager is up.')
 
     def __init_window(self):
@@ -192,6 +193,7 @@ class Boss(object):
         self.log_debug('Boss', 'bind()')
         self.__editor.bind()
         self.__services.bind()
+        self.__plugins.bind()
 
     def __bind_services_events(self):
         """Bind events in the services."""
@@ -220,7 +222,6 @@ class Boss(object):
 
     def __populate_plugins(self):
         """Populate the plugins UI."""
-        self.__plugins.load_all()
         self.__plugins.populate()
 
     def __populate_window(self):
@@ -230,18 +231,20 @@ class Boss(object):
     def __reset(self):
         """Reset live configuration options."""
         self.log_debug('Boss', 'reset()')
+        self.__reset_window()
         self.__reset_services()
         self.__reset_plugins()
-        self.__reset_window()
 
     def __reset_services(self):
         """Reset the services live configuration options."""
+        self.__services.reset()
 
     def __reset_editor(self):
         """Reset the editor live configuration options."""
 
     def __reset_plugins(self):
         """Reset the services live configuration options."""
+        self.__plugins.reset()
 
     def __reset_window(self):
         """Reset the window."""

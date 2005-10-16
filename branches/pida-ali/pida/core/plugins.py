@@ -52,7 +52,7 @@ class PluginManager(services.ServiceManager):
 
     def load_all(self):
         """Initialise all the services."""
-        for name in ['project']:
+        for name in ['project', 'python']:
             self.load(name)
         self.log_debug('Loaded all services.')
 

@@ -22,6 +22,7 @@
 #SOFTWARE.
 import gtk
 import gobject
+import toolbar
 
 class TreeItem(object):
     """An item inside a tree-view."""
@@ -67,7 +68,23 @@ class Tree(gtk.VBox):
                     'right-clicked' : (
                         gobject.SIGNAL_RUN_LAST,
                         gobject.TYPE_NONE,
+                        (gobject.TYPE_PYOBJECT,)),
+                    'new-item' : (
+                        gobject.SIGNAL_RUN_LAST,
+                        gobject.TYPE_NONE,
+                        ()),
+                    'delete-item' : (
+                        gobject.SIGNAL_RUN_LAST,
+                        gobject.TYPE_NONE,
+                        (gobject.TYPE_PYOBJECT,)),
+                    'edit-item' : (
+                        gobject.SIGNAL_RUN_LAST,
+                        gobject.TYPE_NONE,
                         (gobject.TYPE_PYOBJECT,))}
+    
+    EDIT_BUTTONS = False
+
+    HEADERS_VISIBLE = False
 
     def __init__(self):
         self.__init_model()
@@ -79,10 +96,19 @@ class Tree(gtk.VBox):
         gtk.VBox.__init__(self)
         self.__sw = gtk.ScrolledWindow()
         self.pack_start(self.__sw)
+        self.__sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.__view = gtk.TreeView(self.__model)
+        self.__view.set_rules_hint(True)
         self.__sw.add(self.__view)
+        self.__view.set_headers_visible(False)
         for column in self.__init_renderers():
             self.__view.append_column(column)
+        if self.EDIT_BUTTONS == True:
+            self.__toolbar = toolbar.Toolbar()
+            self.__toolbar.add_button('new', 'new', 'new', True)
+            self.__toolbar.add_button('delete', 'delete', 'delete', True)
+            self.__toolbar.add_button('edit', 'edit', 'Edit this item.', True)
+            self.pack_start(self.__toolbar, expand=False)
         self.__init_signals()
         self.show_all()
 
@@ -92,22 +118,35 @@ class Tree(gtk.VBox):
         return self.__model
 
     def __init_signals(self):
+        def cb_toolbar_clicked(toolbar, action):
+            if action == 'new':
+                self.emit('new-item')
+            elif action == 'delete':
+                self.emit('delete-item', self.selected)
+            elif action == 'edit':
+                self.emit('edit-item', self.selected)
+            self.__toolbar.emit_stop_by_name('clicked')
+        if self.EDIT_BUTTONS == True:
+            self.__toolbar.connect('clicked', cb_toolbar_clicked)
         def cb_cursor_changed(view):
             self.emit('clicked', self.selected)
+            self.__view.emit_stop_by_name('cursor-changed')
+        self.__view.connect('cursor-changed', cb_cursor_changed)
         def cb_row_activated(view, path, column):
             self.emit('double-clicked', self.selected)
+            self.__view.emit_stop_by_name('row-activated')
+        self.__view.connect_after('row-activated', cb_row_activated)
         def cb_button_press_event(source, event):
             if event.button == 3:
-                if len(self.__model):
-                    path = self.__view.get_dest_row_at_pos(int(event.x),
-                                                           int(event.y))
-                if path:
-                    ite = self.__model.get_iter(path)
-                    self.emit('right-clicked', self.__get(ite, 1))
-        self.__view.connect('row-activated', cb_row_activated)
-        self.__view.connect('cursor-changed', cb_cursor_changed)
-        #self.__view.add_events(gtk.gdk.BUTTON_PRESS_MASK)
-        #self.__view.connect('button-press-event', cb_button_press_event)
+                pathinf = self.__view.get_path_at_pos(int(event.x), int(event.y))
+                if pathinf is not None:
+                    path, col, cellx, celly = pathinf
+                    self.__view.grab_focus()
+                    self.__view.set_cursor(path, None, 0)
+                    self.__view.emit_stop_by_name('button-press-event')
+                    self.emit('right-clicked', self.selected)
+        self.__view.add_events(gtk.gdk.BUTTON_PRESS_MASK)
+        self.__view.connect('button-press-event', cb_button_press_event)
 
     def __init_renderers(self):
         """Initialise the renderers."""
@@ -171,7 +210,11 @@ class Tree(gtk.VBox):
     def __get(self, niter, column):
         """Get a cell's vlue from the Tree Model."""
         return self.__model.get_value(niter, column)
+    get = __get
 
+    def __set(self, niter, column, value):
+        self.__model.set_value(niter, column, value)
+    set = __set
 
 class IconTreeItem(TreeItem):
     """I tree item with an icon."""
@@ -222,7 +265,7 @@ def test():
     gtk.main()
 
 def clicked(obj, o2):
-    print obj, o2.markup()
+    print obj, o2.markup
 
 import sys
 
@@ -242,8 +285,8 @@ def test_icon():
     w = gtk.Window()
     v = gtk.VBox()
     w.add(v)
-    t = IconTree()
-    t.connect('clicked', clicked)
+    t = Tree()
+    t.connect('right-clicked', clicked)
     v.pack_start(t)
     e = gtk.TextView()
     v.pack_start(e)
@@ -254,8 +297,8 @@ def test_icon():
 
     fn = "/usr/share/icons/hicolor/24x24/stock/generic/stock_book_open.png"
     im.set_from_file(fn)
-    ti = IconTreeItem("banana", 'banan', image=im)
-    t2 = IconTreeItem("b", 'bananass', icon_filename=fn)
+    ti = TreeItem("banana", 'banan')
+    t2 = TreeItem("b", 'bananass')
     t.set_items([ti, t2])
     print t.set_selected('b')
     gtk.main()

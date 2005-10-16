@@ -28,18 +28,15 @@ class Contentbook(service.GuiService):
 
     NAME = 'contentbook'
     COMMANDS = [['add-page', [('contentview', True)]]]
-
-    VIEW = contentbook.ContentBook
+    VIEW = contentbook.ContentBookInSlider
 
     def populate(self):
-        self.view.add_button('hello', 'hello')
-        self.view.add_button('hello2', 'hello2')
+        self.slider = None
 
     def cmd_add_page(self, contentview):
         self.view.append_page(contentview)
 
     def toolbar_action_hello(self):
-        print 'tbaction'
         self.boss.command('manhole', 'run')
 
     def toolbar_action_hello2(self):
@@ -48,6 +45,13 @@ class Contentbook(service.GuiService):
         self.boss.command('versioncontrol', 'get-statuses',
                            datacallback=p,
                            directory='/home/ali/working/pida/pida/trunk')
+
+    def toolbar_action_hello3(self):
+        self.boss.command('filemanager', 'browse',
+                           directory='/home/ali/working/pida/pida')
+
+    def reset(self):
+        self.view.shrink()
 
 
 Service = Contentbook

@@ -53,10 +53,9 @@ class Buffer(object):
         try:
             f = open(self.__filename)
         except IOError:
-            raise StopIteration
+            return
         for line in f:
             self.__lines.append(line)
-            yield line
         self.__string = ''.join(self.__lines)
         f.close()
 
@@ -79,7 +78,7 @@ class Buffer(object):
     
     def __get_string(self):
         if self.__string == '':
-            self.__load_lines
+            self.__load_lines()
         return self.__string
     string = property(__get_string)
         
