@@ -26,8 +26,9 @@ import shelve
 class Icons(object):
 
     def __init__(self, icon_file=None):
-        icon_file = ('/home/ali/working/pida/pida/branches/'
-                     'pida-ali/pida/pidagtk/icons.dat')
+        #icon_file = ('/home/ali/working/pida/pida/branches/'
+        #             'pida-ali/pida/pidagtk/icons.dat')
+        icon_file = "/usr/share/pida/icons.dat"
         self.d = shelve.open(icon_file, 'r')
         self.cs = gtk.gdk.COLORSPACE_RGB
     
@@ -50,7 +51,8 @@ class Icons(object):
 
     def get_text_button(self, icon, text):
         ic = self.get_image(icon)
-        il = gtk.Label(text)
+        il = gtk.Label()
+        il.set_markup('<span size="small">%s</span>' % text)
         ib = gtk.HBox()
         ib.pack_start(ic)
         ib.pack_start(il)

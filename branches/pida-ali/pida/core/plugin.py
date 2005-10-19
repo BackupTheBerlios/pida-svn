@@ -27,7 +27,7 @@ import pida.pidagtk.icons as icons
 
 class PluginView(contentbook.ContentView):
 
-    ICON_TYPE = icons.icons.get_image
+    ICON_TYPE = icons.icons.get_button
 
 class Plugin(service.GuiService):
     """A pida plugin."""

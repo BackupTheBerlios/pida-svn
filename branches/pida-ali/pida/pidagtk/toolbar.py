@@ -39,7 +39,7 @@ class Toolbar(gtk.HBox):
         if text:
             but = icons.icons.get_text_button(icon, name)
         else:
-            but = icons.icons.get_button(name)
+            but = icons.icons.get_button(icon)
         evt.add(but)
         icons.tips.set_tip(evt, tooltip)
         but.connect('clicked', self.cb_clicked, name)

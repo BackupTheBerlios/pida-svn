@@ -64,6 +64,7 @@ class PidaWindow(gtk.Window):
         pS.pack2(w2, True, True)
         self.__pS.pack_start(topbar, expand=False)
         self.__pS.pack_start(pS)
+        self.set_size_request(800, 600)
 
     def pack(self, editor, bufferlist, pluginbook, contentbook, viewbook,
             topbar,

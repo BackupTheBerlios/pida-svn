@@ -22,7 +22,8 @@
 #SOFTWARE.
 
 import sys
-sys.path.insert(1, '/home/ali/working/pida/pida/branches/pida-ali/')
+sys.path.insert(2, '../../')
+#sys.path.insert(1, '/home/ali/working/pida/pida/branches/pida-ali/')
 import pida.core.service as service
 
 import os

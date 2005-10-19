@@ -24,24 +24,6 @@ import gtk
 import gobject
 import icons
 import toolbar
-class IContentPage:
-
-    pass
-
-
-class ContenttabLabel(gtk.HBox):
-
-    def __init__(self, icon, text):
-        gtk.HBox.__init__(self)
-        icon = icons.icons.get_image(icon)
-        closebut = icons.icons.get_button('close', 'close this tab')
-        label = gtk.Label()
-        label.set_markup('<span size="small">%s</span>' % text)
-        self.pack_start(icon, padding=2)
-        self.pack_start(label)
-        self.pack_start(closebut)
-        self.show_all()
-        self.close_button = closebut
        
 class ContentView(gtk.VBox):
 
@@ -55,21 +37,39 @@ class ContentView(gtk.VBox):
                         ())}
 
     ICON = 'terminal'
-    ICON_TYPE = ContenttabLabel
     ICON_TEXT = ''
+
+    HAS_DETACH_BUTTON = True
+    HAS_CLOSE_BUTTON = True
+    HAS_LABEL = True
 
     def __init__(self, icon=None, text=''):
         gtk.VBox.__init__(self)
-        self.__toolbar = toolbar.Toolbar()
-        self.pack_start(self.__toolbar, expand=False, fill=False)
-        self.__toolbar.connect('clicked', self.cb_toolbar_clicked)
         if icon is None:
             icon = self.ICON
         if text == '':
             text = self.ICON_TEXT
-        self.__icon = self.ICON_TYPE(icon, text)
-        if hasattr(self.__icon, 'close_button'):
-            self.__icon.close_button.connect('clicked', self.cb_close)
+        barbox = gtk.HBox()
+        self.pack_start(barbox, expand=False)
+        self.__title = gtk.Label(text)
+        if self.HAS_LABEL:
+            barbox.pack_start(self.__title)
+        self.__toolbar = toolbar.Toolbar()
+        barbox.pack_start(self.__toolbar, expand=False, fill=False)
+        self.__toolbar.connect('clicked', self.cb_toolbar_clicked)
+        if self.HAS_DETACH_BUTTON or self.HAS_CLOSE_BUTTON:
+            barbox.pack_start(gtk.VSeparator(), expand=False)
+        self.__controlbar = toolbar.Toolbar()
+        barbox.pack_start(self.__controlbar, expand=False, fill=False)
+        self.__controlbar.connect('clicked', self.cb_controlbar_clicked)
+        if self.HAS_DETACH_BUTTON:
+            self.__controlbar.add_button('detach', 'fullscreen',
+                                         'detach this window')
+        if self.HAS_CLOSE_BUTTON:
+            self.__controlbar.add_button('close', 'close',
+                                         'close this window')
+        self.__icon = icon
+        self.__parent = None
         self.populate()
 
     def populate(self):
@@ -85,24 +85,55 @@ class ContentView(gtk.VBox):
     def add_menuitem(self):
         pass
 
+    def detach(self):
+        if self.__parent is None:
+            self.__parent = ContentHolderWindow(self)
+        else:
+            self.reattach()
+
+    def reattach(self):
+        if self.__parent is not None:
+            self.__parent.remove(self)
+            self.__parent.hide_all()
+            self.__parent = None
+            self.contentbook.append_page(self)
+
     def cb_toolbar_clicked(self, toolbar, name):
         self.emit('action', name)
 
-    def cb_close(self, button):
+    def cb_controlbar_clicked(self, toolbar, name):
+        if name == 'detach':
+            self.detach()
+        elif name == 'close':
+            self.close()
+            print 'close'
+        else:
+            print name
+        pass#self.emit('action', name)
+
+    def close(self):
         if hasattr(self, 'contentbook'):
             self.contentbook.remove_page(self)
+
+    def cb_switch(self, button):
+        if hasattr(self, 'contentbook'):
+            self.contentbook.set_page(self)
 
     def raise_tab(self):
         if hasattr(self, 'contentbook'):
             self.contentbook.set_page(self)
 
     def get_tab_label(self):
-        return self.__icon
-    tablabel = property(get_tab_label)
+        return icons.icons.get_image(self.__icon)
+    icon = property(get_tab_label)
     
 
 class ContentBook(ContentView):
     
+    HAS_CLOSE_BUTTON = False
+    HAS_DETACH_BUTTON = False
+    HAS_LABEL = False
+
     def __init__(self, *args, **kwargs):
         ContentView.__init__(self, *args, **kwargs)
         self.__notebook = gtk.Notebook()
@@ -115,8 +146,12 @@ class ContentBook(ContentView):
         self.__notebook.set_property('enable-popup', True)
         self.__notebook.set_show_border(False)
     
+    def build_tab_label(self, contentview):
+        return contentview.icon
+
     def append_page(self, contentview):
-        self.__notebook.append_page(contentview, tab_label=contentview.tablabel)
+        self.__notebook.append_page(contentview,
+                                    tab_label=self.build_tab_label(contentview))
         contentview.contentbook = self
         self.__notebook.show_all()
         self.set_page(contentview)
@@ -133,6 +168,21 @@ class ContentBook(ContentView):
     def __get_notebook(self):
         return self.__notebook
     notebook = property(__get_notebook)
+
+class ContentHolderWindow(gtk.Window):
+    
+    def __init__(self, child):
+        gtk.Window.__init__(self)
+        self.__child = child
+        self.__child.reparent(self)
+        self.connect('destroy', self.cb_destroy)
+        self.set_size_request(400, 300)
+        self.show_all()
+
+    def cb_destroy(self, window):
+        if self.__child is not None:
+            self.__child.reattach()
+            self.__child = None
 
 class ContentBookInSlider(ContentBook):
 
@@ -170,3 +220,10 @@ class ContentBookInSlider(ContentBook):
             return None
 
     slider_max = property(get_slider_max)
+
+if __name__ == '__main__':
+    w = gtk.Window()
+    c = ContentView(text="hello")
+    w.add(c)
+    w.show_all()
+    gtk.main()
