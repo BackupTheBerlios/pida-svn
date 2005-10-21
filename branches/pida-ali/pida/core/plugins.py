@@ -42,6 +42,7 @@ class PluginManager(services.ServiceManager):
     
     def init(self, name):
         services.ServiceManager.init(self, name)
+        print contentbook.__file__
         self.__view = contentbook.ContentBook()
 
     def get_view(self):
