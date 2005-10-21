@@ -80,7 +80,9 @@ class ServiceManager(components.ComponentGroup):
             service.bind()
 
     def populate(self):
+        self.log_debug('Populating')
         for service in self:
+            self.log_debug('Populating %s' % service)
             service.populate_base()
             service.populate()
 

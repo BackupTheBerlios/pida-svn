@@ -34,7 +34,7 @@ def import_editor(name):
     return cls
 
 import service
-
+import pida.pidagtk.contentbook as contentbook
 class Editor(service.Service):
     """ The editor interface. """
  
@@ -85,12 +85,14 @@ class Editor(service.Service):
         """Save the indexed buffer as the given filename"""
 
 
-class EditorManager(service.Service):
+class EditorManager(service.GuiService):
     NAME = 'editor'
     COMMANDS = [['open-file', [('filename', True)]],
-                ['start-editor', []]]
+                ['start-editor', []],
+                ['add-page', [('contentview', True)]]]
     EVENTS = ['started', 'file-opened', 'current-file-closed']
     BINDINGS = [('buffermanager', 'file-opened')]
+    VIEW = contentbook.ContentBook
 
     def init(self):
         editor_type = import_editor('culebra')
@@ -99,17 +101,19 @@ class EditorManager(service.Service):
         self.__editor = editor_type()
 
     def populate(self):
-        self.__editor.populate()
+        self.log_debug("Populating")
+        self.populate_base()
+
+    def cmd_add_page(self, contentview):
+        self.view.append_page(contentview)
 
     def cmd_start_editor(self):
-        self.__editor.launch()
+        self.cmd_open_file(filename="/usr/bin/alarm")
 
     def cmd_open_file(self, filename):
         self.__editor.open_file(filename)
+        self.emit_event('file-opened', filename=filename)
 
     def evt_buffermanager_file_opened(self, buffer):
-        self.__editor.open_file(buffer.filename)
+        self.cmd_open_file(buffer.filename)
 
-    def __get_view(self):
-        return self.__editor.view
-    view = property(__get_view)

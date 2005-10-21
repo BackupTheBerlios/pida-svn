@@ -27,23 +27,32 @@ import culebra.edit as edit
 class Editor(editor.Editor):
     NAME = 'culebra' 
 
-    def populate(self):
-        self.__view = edit.EditWindow(self)
-        self.__view.show_all()
+    def init(self):
+        self.__views = {}
 
-    def launch(self):
-        self.manager.emit_event('started')
+#    def launch(self):
+#        self.manager.emit_event('started')
 
     def open_file(self, filename):
-        self.__view.load_file(filename)
+        if not filename in self.__views:
+            view = edit.EditWindow(self)
+            view.load_file(filename)
+            view.show_all()
+            view.icon = None
+            self.boss.command('editor', 'add-page', contentview=view)
+            self.__views[filename] = view
+        else:
+            nb = self.__views[filename].get_parent()
+            nb.set_current_page(nb.page_num(self.__views[filename]))
+        return
         entries = self.__view.entries
         if entries.get_selected().filename != filename:
             for index, entry in enumerate(entries):
                 if entry.filename == filename:
                     entries.selected_index = index
                     buff = entries.selected
-                    self.__view.editor.scroll_to_mark(buff.get_insert(), 0.25)
-                    self.__view.editor.grab_focus()
+                    view.editor.scroll_to_mark(buff.get_insert(), 0.25)
+                    view.editor.grab_focus()
 
     def __get_view(self):
         return self.__view

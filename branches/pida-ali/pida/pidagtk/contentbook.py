@@ -169,6 +169,19 @@ class ContentBook(ContentView):
         return self.__notebook
     notebook = property(__get_notebook)
 
+    
+    def __init__(self, child):
+        gtk.Window.__init__(self)
+        self.__child = child
+        self.__child.reparent(self)
+        self.connect('destroy', self.cb_destroy)
+        self.show_all()
+
+    def cb_destroy(self, window):
+        if self.__child is not None:
+            self.__child.reattach()
+            self.__child = None
+
 class ContentHolderWindow(gtk.Window):
     
     def __init__(self, child):
