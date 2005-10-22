@@ -31,7 +31,6 @@ import dialogs
 import gtksourceview
 import gnomevfs
 import importsTipper
-import keyword
 import weakref
 import codecs
 
@@ -326,6 +325,8 @@ class BufferManager (object):
         elif old_value is not self.__selected_index:
             self.__selected_index = self._entries.index (old_value)
             self.__evts_srcs["selection-changed"](old_index, old_value, self.selected_index, old_value)
+
+        self.__evts_srcs["remove-entry"](old_value, old_index)
     
     def __delitem__ (self, index):
         buff = self._entries[index]
@@ -398,11 +399,12 @@ class BufferManager (object):
 
 class BufferManagerListener (binding.Component):
     entries = binding.Obtain("../entries")
+    plugin = binding.Obtain("../plugin")
     
     # This component depends on the 'events' object and both are created
     # upon assembly, therefore obtaining the 'events' object upon this component's
     # assembly we create the dependency 
-    __depends = binding.Obtain ("../events", uponAssembly = True)
+    __depends = binding.Obtain("../events", uponAssembly = True)
     
     def _init (self):
         evts = self.entries.events
@@ -434,12 +436,20 @@ class BufferManagerListener (binding.Component):
         self.parent.editor.grab_focus()
         
         self.parent._buffer_changed(old_value, self.entries.selected)
+        entry = self.entries.selected
+        index = self.entries.selected_index
+        self.plugin.do_edit('changebuffer', index)
+        self.plugin.do_evt('filetype', index, self.plugin.check_mime(entry.filename))
+        self.plugin.do_evt('bufferchange', index, entry.filename)
         
     def on_add_entry (self, buff):
         # We move the focus to the last selected index
         self.entries.selected = buff
 
         buff.connect('insert-text', self.on_insert_text)
+        self.plugin.do_edit('getbufferlist')
+        self.plugin.do_edit('getcurrentbuffer')
+        
         
 
     def on_insert_text (self, buff, it, text, length):
@@ -453,6 +463,9 @@ class BufferManagerListener (binding.Component):
         # If we have 0 entries then we add one
         if len (self.entries) == 0:
             self.entries.append (CulebraBuffer())
+
+        self.plugin.do_edit('getbufferlist')
+        self.plugin.do_edit('getcurrentbuffer')
 
 
 class EditWindow(Component, gtk.EventBox):
@@ -851,17 +864,7 @@ class EditWindow(Component, gtk.EventBox):
             if not new_entry.get_modified():
                 # Remove the new entry
                 self.entries.remove(new_entry)
-        
-        # If the opened entry is not the selected one then select it
-#        if buff is not self.get_current ():
-#            self.plugin.do_edit('changebuffer', self.entries.index (buff))
-#    
-        if new_entry:
-            self.plugin.do_edit('getbufferlist')
-            self.plugin.do_edit('getcurrentbuffer')
-            
-        self.plugin.do_edit('changebuffer', self.entries.index (buff))
-        
+                    
         self.editor.grab_focus()
 
     def check_mime(self, buff):
@@ -928,8 +931,6 @@ class EditWindow(Component, gtk.EventBox):
 
         self.entries.append (buff)
 
-        self.plugin.do_edit('getbufferlist')
-        self.plugin.do_edit('getcurrentbuffer')
         self.plugin.do_edit('changebuffer', len(self.entries) - 1)
 
     def file_open(self, mi=None):
@@ -993,10 +994,9 @@ class EditWindow(Component, gtk.EventBox):
             print sys.exc_info()[1]
             resp = dlg.run()
             dlg.hide()
+            ret = False
 
         self.check_mime(self.entries.selected)
-        self.plugin.do_edit('getbufferlist')
-        self.plugin.do_edit('getcurrentbuffer')
         buff.place_cursor(curr_mark)
         self.editor.grab_focus()
         return ret
@@ -1024,8 +1024,6 @@ class EditWindow(Component, gtk.EventBox):
     def file_close(self, mi=None, event=None):
         self.chk_save ()
         del self.entries.selected
-        self.plugin.do_edit('getbufferlist')
-        self.plugin.do_edit('getcurrentbuffer')
         self._buffer_closed ()
 
     def file_exit(self, mi=None, event=None):

@@ -57,7 +57,6 @@ class Plugin(plugin.Plugin):
         
     def do_init(self):
         self.editor = None
-        self.bufferlist = None
         self.currentbufnum = None
 
     def populate_widgets(self):
@@ -124,11 +123,16 @@ class Plugin(plugin.Plugin):
 
     ############################################################################
     def edit_getbufferlist(self):
-        bl = [(i, v.filename) for (i, v) in enumerate(self.editor.entries)]
-        self.bufferlist = bl
+        if self.editor is None:
+            bl = []
+        else:
+            bl = [(i, v.filename) for (i, v) in enumerate(self.editor.entries)]
         self.do_evt('bufferlist', bl)
 
     def edit_getcurrentbuffer(self):
+        if self.editor is None:
+            return
+            
         entries = self.editor.entries
         index = entries.selected_index
         entry = entries.selected
@@ -137,6 +141,9 @@ class Plugin(plugin.Plugin):
             self.do_evt('bufferchange', index, entry.filename)
 
     def edit_changebuffer(self, index):
+        if self.editor is None:
+            return
+            
         entries = self.editor.entries
         
         if entries.selected_index == index:
@@ -163,7 +170,6 @@ class Plugin(plugin.Plugin):
         self.editor.editor.grab_focus()
 
 	def edit_newfile(self):
-		print "new file..."
 		buf = self.editor.get_current()
 		b.set_text("")
 		self.editor.file_new()

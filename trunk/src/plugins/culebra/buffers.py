@@ -1,6 +1,8 @@
 import gtk
 import gtksourceview
 import gobject
+import keyword
+
 import components as binding
 from events import EventsDispatcher
 import keyword
