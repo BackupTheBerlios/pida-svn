@@ -57,48 +57,6 @@ def get_buffer_selection (buffer):
     else:
         return buffer.get_slice(*bounds)
 
-def search_iterator (text_buffer, search_text, find_forward = True, start_in_cursor = True):
-    """
-    This function implements an iterator for searching a gtk.TextBuffer for
-    a certain string.
-    
-    It supports forward and backwards search.
-    
-    It also supports finding from the start or from where the cursor is located.
-    """
-
-    if start_in_cursor:
-        bounds = text_buffer.get_selection_bounds ()
-        if len (bounds) == 0:
-            text_iter = text_buffer.get_iter_at_mark(text_buffer.get_insert())
-        else:
-            text_iter = find_forward and bounds[1] or bounds[0]
-    else:
-        if find_forward:
-            text_iter = text_buffer.get_start_iter()
-        else:
-            text_iter = text_buffer.get_end_iter()
-    
-    first_iter = None
-    bounds = 1
-    while bounds is not None:
-        if find_forward:
-            search = text_iter.forward_search
-            
-        else:
-            search = text_iter.backward_search
-            
-        bounds = search (search_text, gtk.TEXT_SEARCH_TEXT_ONLY, limit = None)
-        
-        if bounds is None:
-            break
-            
-        yield bounds
-        
-        if find_forward:
-            text_iter = bounds[1]
-        else:
-            text_iter = bounds[0]
     
 ######################
 
@@ -147,6 +105,7 @@ class GotoLineComponent (binding.Component):
         self.dialog = dialog
         hide_on_delete (dialog)
         dialog.connect("response", self.on_dialog_response)
+        dialog.connect("key-release-event", self.key_release_callback)
         dialog.set_default_response(RESPONSE_FORWARD)
         dialog.set_border_width (12)
         dialog.set_has_separator (False)
@@ -203,6 +162,9 @@ class GotoLineComponent (binding.Component):
         self.dialog.show()
         self.line_text.grab_focus()
 
+    def key_release_callback(self, widget, event):
+        if event.keyval == gtk.keysyms.Escape:
+            self.dialog.hide()
 
 class ToolbarObserver (object):
     """We must use one instance of this class for each buffer that is assigned."""
@@ -594,6 +556,8 @@ class EditWindow(Component, gtk.EventBox):
                         <menuitem action='FileSaveAs'/>
                         <menuitem action='FileRevert'/>
                         <separator/>
+                        <menuitem action='PrevBuffer'/>
+                        <menuitem action='NextBuffer'/>
                         <menuitem action='Close'/>
                         <menuitem action='FileExit'/>
                 </menu>
@@ -660,7 +624,8 @@ class EditWindow(Component, gtk.EventBox):
             ('FileSaveAs', gtk.STOCK_SAVE_AS, None, None, "Save the current file with a different name",
              self.file_saveas),
             ('FileRevert', gtk.STOCK_REVERT_TO_SAVED, None, None, "Revert to a saved version of the file", self.file_revert),
-            ('Close', gtk.STOCK_CLOSE, None, None, "Close current file", self.file_close),
+            ('PrevBuffer', gtk.STOCK_GO_UP, None, "<control>Page_Up","Previous buffer", self.prev_buffer),
+            ('NextBuffer', gtk.STOCK_GO_DOWN, None, "<control>Page_Down","Next buffer", self.next_buffer),            ('Close', gtk.STOCK_CLOSE, None, None, "Close current file", self.file_close),
             ('FileExit', gtk.STOCK_QUIT, None, None, None, self.file_exit),
             ('EditMenu', None, '_Edit'),
             ('EditUndo', gtk.STOCK_UNDO, None, "<control>z", "Undo the last action", self.edit_undo),
@@ -699,8 +664,6 @@ class EditWindow(Component, gtk.EventBox):
             ('DebugNext', None, "Next", "<shift>F7",None, self.next_script),
             ('DebugContinue', None, "Continue", "<control>F7", None, self.continue_script),
             ('BufferMenu', None, '_Buffers'),
-            ('PrevBuffer', gtk.STOCK_GO_UP, None, "<shift>F6","Previous buffer", self.prev_buffer),
-            ('NextBuffer', gtk.STOCK_GO_DOWN, None, "F6","Next buffer", self.next_buffer),
             ('HelpMenu', None, '_Help'),
             ('About', gtk.STOCK_ABOUT, None, None, None, self.about),
             ]
@@ -890,13 +853,15 @@ class EditWindow(Component, gtk.EventBox):
                 self.entries.remove(new_entry)
         
         # If the opened entry is not the selected one then select it
-        if buff is not self.get_current ():
-            self.plugin.do_edit('changebuffer', self.entries.index (buff))
-    
+#        if buff is not self.get_current ():
+#            self.plugin.do_edit('changebuffer', self.entries.index (buff))
+#    
         if new_entry:
             self.plugin.do_edit('getbufferlist')
             self.plugin.do_edit('getcurrentbuffer')
-
+            
+        self.plugin.do_edit('changebuffer', self.entries.index (buff))
+        
         self.editor.grab_focus()
 
     def check_mime(self, buff):
@@ -1241,7 +1206,7 @@ class EditWindow(Component, gtk.EventBox):
             self.plugin.do_edit('changebuffer', self.entries.selected_index)
 
 gobject.type_register(EditWindow)
-        
+
 
 class Cb:
     def __init__(self):

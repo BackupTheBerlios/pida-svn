@@ -52,7 +52,7 @@ class Plugin(plugin.Plugin):
         self.personal_registry.add('use_autocomplete',
             registry.Boolean,
             False,
-            "Use autocomplete"
+            "Use Autocompletion"
         )
         
     def do_init(self):
@@ -132,8 +132,9 @@ class Plugin(plugin.Plugin):
         entries = self.editor.entries
         index = entries.selected_index
         entry = entries.selected
-        self.do_evt('filetype', index, self.check_mime(entry.filename))
-        self.do_evt('bufferchange', index, entry.filename)
+        if not entry is None: 
+            self.do_evt('filetype', index, self.check_mime(entry.filename))
+            self.do_evt('bufferchange', index, entry.filename)
 
     def edit_changebuffer(self, index):
         entries = self.editor.entries
@@ -141,7 +142,7 @@ class Plugin(plugin.Plugin):
         if entries.selected_index == index:
             return
         
-        entries.selected_index = index
+        self.editor.entries.selected_index = index
         buff = entries.selected
         self.edit_getcurrentbuffer()
         self.editor.editor.scroll_to_mark(buff.get_insert(), 0.25)
@@ -149,6 +150,10 @@ class Plugin(plugin.Plugin):
 
     def edit_closebuffer(self):
         self.editor.file_close()
+        buf = self.editor.get_current()
+        if buf is None:
+            self.editor.file_new()
+
 
     def edit_gotoline(self, line):
         buf = self.editor.get_current()
@@ -157,6 +162,11 @@ class Plugin(plugin.Plugin):
         buf.place_cursor(titer)
         self.editor.editor.grab_focus()
 
+	def edit_newfile(self):
+		print "new file..."
+		buf = self.editor.get_current()
+		b.set_text("")
+		self.editor.file_new()
+
     def edit_openfile(self, filename):
         self.editor.load_file(filename)
-                
