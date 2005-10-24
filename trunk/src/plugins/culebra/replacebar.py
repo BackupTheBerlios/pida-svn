@@ -64,15 +64,15 @@ class ReplaceBar (binding.Component):
         hig_add (hbox, lbl)
         
         entry = gtk.Entry()
-        self.entry_completion = gtk.EntryCompletion()
-        entry.set_completion(self.entry_completion)
+        self.replace_completion = gtk.EntryCompletion()
+        entry.set_completion(self.replace_completion)
         try:
-            self.completion_model = self.parent.completion_model
+            self.replace_model = self.parent.replace_model
         except:
-            self.completion_model = gtk.ListStore(str)
-            self.parent.completion_model = self.completion_model
-        self.entry_completion.set_model(self.completion_model)
-        self.entry_completion.set_text_column(0)
+            self.replace_model = gtk.ListStore(str)
+            self.parent.replace_model = self.replace_model
+        self.replace_completion.set_model(self.replace_model)
+        self.replace_completion.set_text_column(0)
         entry.show ()
         entry.connect("changed", self.on_entry_changed)
         self._replace_entry = entry
@@ -121,7 +121,7 @@ class ReplaceBar (binding.Component):
         global KEY_ESCAPE
         
         if event.keyval == KEY_ESCAPE:
-            self.entry.set_text("")
+            self._replace_entry.set_text("")
             self.replace.set_active (False)
 
     def on_replace (self, action):
@@ -131,14 +131,14 @@ class ReplaceBar (binding.Component):
             self.widget.hide()
         
     def on_replace_curr (self, btn):
-        if not self.entry.get_text() in [x[0] for x in self.completion_model]:
-            self.completion_model.append((self.entry.get_text(),))
+        if not self._replace_entry.get_text() in [x[0] for x in self.replace_model]:
+            self.replace_model.append((self._replace_entry.get_text(),))
         self.get_current().replace()
         self.get_current().search()
     
     def on_replace_all (self, btn):
-        if not self.entry.get_text() in [x[0] for x in self.completion_model]:
-            self.completion_model.append((self.entry.get_text(),))
+        if not self._replace_entry.get_text() in [x[0] for x in self.replace_model]:
+            self.replace_model.append((self._replace_entry.get_text(),))
         self.get_current().replace_all()
         
     def on_entry_changed (self, entry):

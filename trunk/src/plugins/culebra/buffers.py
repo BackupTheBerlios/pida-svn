@@ -160,6 +160,17 @@ class AutoCompletionWindow(gtk.Window):
             self.hide()
         return not model.get_value(it, column).startswith(cp_text)
 
+#################
+# gtk.TextBuffer utility functions
+def get_buffer_selection (buffer):
+    """Returns the selected text, when nothing is selected it returns the empty
+    string."""
+    bounds = buffer.get_selection_bounds()
+    if len(bounds) == 0:
+        return ""
+    else:
+        return buffer.get_slice(*bounds)
+
 class SearchMethod (binding.Component, object):
     buffer = binding.Obtain ("..")
     can_find_forward = False
