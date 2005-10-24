@@ -28,6 +28,7 @@ import pida.pidagtk.toolbar as toolbar
 import pida.core.registry as registry
 
 import os
+import os.path
 
 REG_KEY = 'scripts'
 REG_DOC = 'The scripts for this context'
@@ -35,6 +36,8 @@ REG_DOC = 'The scripts for this context'
 REGISTRY_SCHEMA = [(REG_KEY, REG_DOC, '', registry.RegistryItem)]
 
 CONTEXTS = [('file', 'When an action is in the context of a single file')]
+
+CONTEXTS_CONF = os.path.join(os.path.expanduser("~"), ".pida2", "conf", "contexts.conf")
 
 class Context(object):
     scripts = None
@@ -45,7 +48,7 @@ class Contexts(service.Service):
     COMMANDS = [('get-toolbar', [('contextname', True)]),
                 ('show-editor', [])]
     OPTIONS = [('filename', 'The contexts file.',
-                '/home/ali/.pida2/conf/contexts.conf', registry.File)]
+                CONTEXTS_CONF, registry.File)]
 
     def init(self):
         self.__registry = registry.Registry()
@@ -76,7 +79,7 @@ class Contexts(service.Service):
                 self.__registry.filename= self.__filename
                 for context, doc in CONTEXTS:
                     group = self.__registry.add_group(context, doc)
-                    opt = group.add(*REGISTRY_SCHEMA)
+                    opt = group.add(*REGISTRY_SCHEMA[0])
                     opt.setdefault()
                 self.__registry.save()
     
