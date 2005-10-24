@@ -57,6 +57,15 @@ class SearchBar (binding.Component):
         entry.connect ("changed", self.on_entry_changed)
         entry.connect ("focus", self.on_entry_focus)
         entry.connect ("activate", self.on_entry_activate)
+        self.entry_completion = gtk.EntryCompletion()
+        entry.set_completion(self.entry_completion)
+        try:
+            self.completion_model = self.parent.completion_model
+        except:
+            self.completion_model = gtk.ListStore(str)
+            self.parent.completion_model = self.completion_model
+        self.entry_completion.set_model(self.completion_model)
+        self.entry_completion.set_text_column(0)
         entry.show ()
         entry.set_activates_default(True)
         self.entry = entry
@@ -89,6 +98,8 @@ class SearchBar (binding.Component):
         buff.search.events.register ("changed", self.on_search_changed)
         buff.search.events.register ("no-more-entries", self.on_no_entries)
         buff.search.search_text = self.entry.get_text ()
+        if not self.entry.get_text() in [x[0] for x in self.completion_model]:
+            self.completion_model.append((self.entry.get_text(),))
         buff.search.enable()
     
     def unbind (self, buff):
@@ -111,8 +122,12 @@ class SearchBar (binding.Component):
     def on_clicked (self, btn):
         buff = self.parent.get_current ()
         buff.search_text = self.entry.get_text ()
+        if not self.entry.get_text() in [x[0] for x in self.completion_model]:
+            self.completion_model.append((self.entry.get_text(),))
     
     def on_entry_activate (self, entry, *args):
+        if not self.entry.get_text() in [x[0] for x in self.completion_model]:
+            self.completion_model.append((self.entry.get_text(),))
         self.btn_forward.activate ()
 
     def on_show (self, dialog):
@@ -128,6 +143,7 @@ class SearchBar (binding.Component):
         global KEY_ESCAPE
         
         if event.keyval == KEY_ESCAPE:
+            self.entry.set_text("")
             self.set_active (False)
     
     def on_find (self, action):

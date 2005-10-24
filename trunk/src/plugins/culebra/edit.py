@@ -535,16 +535,16 @@ class EditWindow(Component, gtk.EventBox):
         # the gtksourceview
         self.editor = CulebraView ()
         self.plugin.pida.mainwindow.connect('delete-event', self.file_exit)
-        scrolledwin2 = gtk.ScrolledWindow()
-        scrolledwin2.add(self.editor)
+        self.scrolledwin = gtk.ScrolledWindow()
+        self.scrolledwin.add(self.editor)
         self.editor.connect('key-press-event', self.text_key_press_event_cb)
-        scrolledwin2.show()
+        self.scrolledwin.show()
         self.editor.show()
         self.editor.grab_focus()
         
         vbox = gtk.VBox (spacing = 6)
         vbox.show ()
-        vbox.add (scrolledwin2)
+        vbox.add (self.scrolledwin)
         vbox.pack_start (self.search_bar.widget, expand = False, fill = False)
         vbox.pack_start (self.replace_bar.widget, expand = False, fill = False)
         
@@ -1195,13 +1195,19 @@ class EditWindow(Component, gtk.EventBox):
         
     def next_buffer(self, mi):
         if self.entries.can_select_next ():
+            self.scrolledwin.freeze_child_notify()
             self.entries.select_next ()
+            self.plugin.edit_getbufferlist()            
             self.plugin.do_edit('changebuffer', self.entries.selected_index)
+            self.scrolledwin.thaw_child_notify()
 
     def prev_buffer(self, mi):
         if self.entries.can_select_previous ():
-            self.entries.select_previous ()
+            self.scrolledwin.freeze_child_notify()
+            self.entries.select_previous () 
+            self.plugin.edit_getbufferlist()
             self.plugin.do_edit('changebuffer', self.entries.selected_index)
+            self.scrolledwin.thaw_child_notify()
 
 gobject.type_register(EditWindow)
 

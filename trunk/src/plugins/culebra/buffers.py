@@ -53,7 +53,6 @@ def search_iterator (text_buffer, search_text, find_forward = True, start_in_cur
             text_iter = bounds[0]
 
 
-
 class AutoCompletionWindow(gtk.Window):
     
     def __init__(self,  source_view, trig_iter, text, lst, parent, mod, cbound):
@@ -205,7 +204,6 @@ class SearchMethod (binding.Component, object):
     # Methods
     def on_changed (self, *args):
         # TODO: optimize this
-        
         self.highlight_string (self.search_text)
         
     def disable (self):
