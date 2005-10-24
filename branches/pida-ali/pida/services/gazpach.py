@@ -21,35 +21,34 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+
 import pida.core.service as service
-import pida.pidagtk.icons as icons
-import gtk
-import pida.pidagtk.toolbar as toolbar
+import pida.pidagtk.contentbook as contentbook
 
-class Topbar(service.Service):
-    NAME = 'topbar'
-    COMMANDS = [('add-button', [('icon', True),
-                                ('callback',True),
-                                ('tooltip', True)])]
+from gazpacho import application
 
-    def init(self):
-        self.__view = gtk.HBox()
-        self.__toolbar = toolbar.Toolbar()
-        self.__view.pack_start(self.__toolbar)
-        self.__toolbar.connect('clicked', self.cb_clicked)
-        self.__callbacks = {}
-    
-    def cmd_add_button(self, icon, tooltip, callback):
-        self.__toolbar.add_button(icon, icon, tooltip)
-        self.__callbacks[icon] = callback
+class GazpachoApplication(application.Application):
+    pass
 
-    def cb_clicked(self, toolbar, name):
-        self.__callbacks[name](toolbar)
+class EmbeddedGazpacho(contentbook.ContentView):
 
-    def get_view(self):
-        return self.__view
-    view = property(get_view)
-    
-    
+    def populate(self):
+        self.__gazpacho = GazpachoApplication()
+        print dir(self.__gazpacho)
+        self.pack_start(self.__gazpacho.get_container())
 
-Service = Topbar
+class Gazpacho(service.Service):
+    NAME = 'gazpacho'
+
+    def populate(self):
+        self.__view = None
+        self.boss.command("buffermanager", "register-file-handler",
+                          filetype="*.glade", handler=self)
+
+    def open_file(self, filename):
+        if self.__view is None:
+            self.__view = EmbeddedGazpacho()
+            self.boss.command("editor", "add-page", contentview=self.__view)
+
+
+Service = Gazpacho

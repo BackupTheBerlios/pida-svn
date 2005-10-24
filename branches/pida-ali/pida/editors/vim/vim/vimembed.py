@@ -29,15 +29,20 @@ import os
 import pty
 import gobject
 
+import pida.pidagtk.contentbook as contentbook
 
-class Vim(object):
+import subprocess
+
+class PidaVim(contentbook.ContentView):
+
+    HAS_DETACH_BUTTON = False
 
     def __init__(self, command, args):
-        self.win = gtk.EventBox()
+        contentbook.ContentView.__init__(self)
         self.socket = gtk.Socket()
         self.socket.connect('plug-added', self.cb_plugged)
         self.socket.connect('plug-removed', self.cb_unplugged)
-        self.win.add(self.socket)
+        self.pack_start(self.socket)
         self.pid = None
         self.command = command
         self.args = args
@@ -45,17 +50,16 @@ class Vim(object):
         self.r_cb_unplugged = None
 
     def run(self):
+        print "running"
         xid = self.socket.get_id()
         args = self.args[:] # a copy
+        args.extend(['--socketid', '%s' % xid])
         if not xid:
             return
         if not self.pid:
-            pid, fd = pty.fork()
-            if pid == 0:
-                args.extend(['--socketid', '%s' % xid])
-                os.execvp(self.command, args)
-            else:
-                self.pid = pid
+            popen = subprocess.Popen([self.command, '--servername'] + args)
+            self.pid = popen.pid
+        self.show_all()
 
     def stop(self):
         try:
@@ -79,7 +83,7 @@ class Vim(object):
         self.r_cb_plugged = plugged
         self.r_cb_unplugged = unplugged
 
-class PidaVim(Vim, gtk.VBox):
+class iPidaVim(gtk.VBox):
     
     def __init__(self, command, name):
         self.__name = name

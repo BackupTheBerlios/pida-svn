@@ -24,6 +24,8 @@ import gtk
 import gobject
 import icons
 import toolbar
+
+TITLE_MU = """<span size="small" weight="bold">%s</span>"""
        
 class ContentView(gtk.VBox):
 
@@ -51,12 +53,13 @@ class ContentView(gtk.VBox):
             text = self.ICON_TEXT
         barbox = gtk.HBox()
         self.pack_start(barbox, expand=False)
-        self.__title = gtk.Label(text)
-        if self.HAS_LABEL:
-            barbox.pack_start(self.__title)
         self.__toolbar = toolbar.Toolbar()
         barbox.pack_start(self.__toolbar, expand=False, fill=False)
         self.__toolbar.connect('clicked', self.cb_toolbar_clicked)
+        self.__title = gtk.Label()
+        self.set_title(text)
+        if self.HAS_LABEL:
+            barbox.pack_start(self.__title)
         if self.HAS_DETACH_BUTTON or self.HAS_CLOSE_BUTTON:
             barbox.pack_start(gtk.VSeparator(), expand=False)
         self.__controlbar = toolbar.Toolbar()
@@ -127,11 +130,17 @@ class ContentView(gtk.VBox):
         return icons.icons.get_image(self.__icon)
     icon = property(get_tab_label)
 
+    def set_title(self, title):
+        self.__title.set_markup(TITLE_MU % title)
+    
+
 class ContentBook(ContentView):
     
     HAS_CLOSE_BUTTON = False
     HAS_DETACH_BUTTON = False
     HAS_LABEL = False
+
+    TABS_VISIBLE = True
 
     def __init__(self, *args, **kwargs):
         ContentView.__init__(self, *args, **kwargs)
@@ -139,7 +148,8 @@ class ContentBook(ContentView):
         self.pack_start(self.__notebook)
         self.__notebook.set_tab_pos(gtk.POS_TOP)
         self.__notebook.set_scrollable(True)
-        self.__notebook.set_property('show-border', False)
+        self.__notebook.set_show_border(False)
+        self.__notebook.set_show_tabs(self.TABS_VISIBLE)
         self.__notebook.set_property('tab-border', 2)
         self.__notebook.set_property('homogeneous', True)
         self.__notebook.set_property('enable-popup', True)
@@ -175,7 +185,6 @@ class ContentHolderWindow(gtk.Window):
         self.__child = child
         self.__child.reparent(self)
         self.connect('destroy', self.cb_destroy)
-        self.set_size_request(400, 300)
         self.show_all()
 
     def cb_destroy(self, window):
@@ -219,6 +228,15 @@ class ContentBookInSlider(ContentBook):
             return None
 
     slider_max = property(get_slider_max)
+
+class EditorView(ContentView):
+
+    def __init__(self, editor_widget):
+        ContentView.__init__(self)
+        self.pack_start(editor_widget)
+        self.editor = editor_widget
+        self.add_button('save', 'save', 'Save the current file.')
+        self.add_button('undo', 'undo', 'Undo the last change.')
 
 if __name__ == '__main__':
     w = gtk.Window()

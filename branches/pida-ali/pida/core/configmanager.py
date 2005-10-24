@@ -24,13 +24,20 @@
 import service
 import registry
 
+import pida.pidagtk.listedtab as listedtab
+import pida.pidagtk.contentbook as contentbook
+
 class ConfigManager(service.Service):
     NAME = 'configmanager'
+
+    COMMANDS = [("show-editor", []),
+                ("reload", [])]
+
     def init(self):
         self.__registry = registry.Registry()
+        self.__view = None
 
     def load(self):
-        print 'loading registry'
         self.__registry.load_file('/home/ali/.pida2/conf/pida.conf')
 
     def add_group(self, name, doc):
@@ -43,3 +50,36 @@ class ConfigManager(service.Service):
         opt = self.get(group, name)
         if opt:
             return opt.value()
+
+    def cmd_reload(self):
+        self.load()
+
+    def cmd_show_editor(self):
+        if self.__view is None:
+            notebook = listedtab.ListedTab(self.__registry)
+            notebook.connect("applied", self.cb_view_applied)
+            notebook.connect("closed", self.cb_view_closed)
+            self.__view = ConfigEditor()
+            self.__view.pack_start(notebook)
+            self.boss.command('viewbook', 'add-page', contentview=self.__view)
+        else:
+            self.__view.raise_tab()
+
+    def populate(self):
+        self.boss.command("topbar", "add-button", icon="configure",
+                          tooltip="configuration",
+                          callback=self.cb_show_editor)
+
+    def cb_show_editor(self, button):
+        self.cmd_show_editor()
+
+    def cb_view_closed(self, listedtab):
+        self.__view.close()
+
+    def cb_view_applied(self, listedtab):
+        self.boss.reset()
+
+class ConfigEditor(contentbook.ContentView):
+
+    ICON = "configure"
+    ICON_TEXT = "The pIDA configuration manager"

@@ -892,14 +892,14 @@ class EditWindow(gtk.EventBox, Component):
         self.vbox.show()
         self.menubar, self.toolbar = self.create_menu()
         
-        self.vbox.pack_start(self.menubar, expand=False)
-        self.menubar.show()
+        #self.vbox.pack_start(self.menubar, expand=False)
+        #self.menubar.show()
         
-        hdlbox = gtk.HandleBox()
-        self.vbox.pack_start(hdlbox, expand=False)
-        hdlbox.show()
-        hdlbox.add(self.toolbar)
-        self.toolbar.show()
+        #hdlbox = gtk.HandleBox()
+        #self.vbox.pack_start(hdlbox, expand=False)
+        #hdlbox.show()
+        #hdlbox.add(self.toolbar)
+        #self.toolbar.show()
         
         self.vpaned = gtk.VPaned()
         self.vbox.pack_start(self.vpaned, expand=True, fill = True)

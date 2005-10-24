@@ -21,7 +21,8 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 import buffer
-
+import glob
+import os
 import pida.core.service as service
 import pida.pidagtk.buffertree as buffertree
 
@@ -30,33 +31,39 @@ class Buffermanager(service.Service):
 
     COMMANDS = [['open-file', [('filename', True)]],
                 ['close-file', [('filename', True)]],
+                ['add-buffer', [('buffer', True)]],
+                ['rename-buffer', [('buffer', True), ('filename', True)]],
                 ['close-current-file', []],
+                ['open-new-file', []],
+                ['reset-current-buffer', []],
                 ['get-bufferlist', []],
+                ['register-file-handler', [('filetype', True), ('handler', True)]],
                 ['get-currentbuffer', []]]
 
-    EVENTS = ['file-opened']
+    EVENTS = ['file-opened', 'buffer-modified']
 
     BINDINGS = [('editor', 'started'),
                 ('editor', 'file-opened'),
                 ('editor', 'current-file-closed')]
+
     
     def init(self):
         self.__currentbuffer = None
         self.__buffers = {}
+        self.__handlers = {}
         self.__view = buffertree.BufferTree()
         self.__view.connect('clicked', self.cb_view_clicked)
-
-    def __stop_all_polling(self):
-        for filename, buf in self.__buffers.iteritems():
-            buf.stop_polling()
 
     def cb_view_clicked(self, view, bufitem):
         buf = bufitem.value
         if buf != self.__currentbuffer:
             #self.boss.command('editor', 'open-file', filename=buf.filename)
-            self.__currentbuffer = buf
-            self.__view.display_buffer(buf)
-            self.emit_event('file-opened', buffer=self.__currentbuffer)
+            self.cmd_open_file(buf.filename)
+
+    def set_current_buffer(self, filename):
+        self.__currentbuffer = self.__buffers[filename]
+        self.__view.set_currentbuffer(filename)
+        self.__view.display_buffer(self.__currentbuffer)
 
     def cmd_get_currentbuffer(self):
         return self.__currentbuffer
@@ -65,17 +72,38 @@ class Buffermanager(service.Service):
         return self.__bufferlist
 
     def cmd_open_file(self, filename):
+        assert(isinstance(filename, str))
         if self.__currentbuffer is None or self.__currentbuffer.filename != filename:
-            if not filename in self.__buffers:
-                self.__buffers[filename] = buffer.Buffer(filename)
-            self.__currentbuffer = self.__buffers[filename]
-            self.__view.set_bufferlist(self.__buffers)
-            self.__view.set_currentbuffer(filename)
-            self.__view.display_buffer(self.__currentbuffer)
-            self.__stop_all_polling()
-            self.__currentbuffer.start_polling()
-            self.emit_event('file-opened', buffer=self.__currentbuffer)
-            return self.__currentbuffer
+            matched = False
+            for match in self.__handlers:
+                print match, filename
+                if glob.fnmatch.fnmatch(filename, match):
+                    new_buffer = self.__handlers[match].open_file(filename)
+                    matched = True
+                    self.cmd_add_buffer(new_buffer)
+                    break
+            if not matched:
+                if not filename in self.__buffers:
+                    new_buffer = buffer.Buffer(filename)
+                    self.cmd_add_buffer(new_buffer)
+                    # replace with an editor command call?
+                else:
+                    self.set_current_buffer(filename)
+                    new_buffer = self.__buffers[filename]
+                self.emit_event('file-opened', buffer=new_buffer)
+        return self.__currentbuffer
+
+    def cmd_open_new_file(self):
+        new_buffer = buffer.TemporaryBuffer("* ", "new file")
+        self.cmd_add_buffer(new_buffer)
+        self.set_current_buffer(new_buffer.file)
+        self.emit_event('file-opened', buffer=new_buffer)
+
+    def cmd_add_buffer(self, buffer):
+        filename = buffer.filename
+        self.__buffers[filename] = buffer
+        self.__view.set_bufferlist(self.__buffers)
+        self.set_current_buffer(filename)
 
     def cmd_close_current_file(self):
         if self.__currentbuffer.filename in self.__buffers:
@@ -87,10 +115,31 @@ class Buffermanager(service.Service):
             del self.__buffers[filename]
             self.__view.set_bufferlist(self.__buffers)
 
+    def cmd_register_file_handler(self, filetype, handler):
+        self.__handlers[filetype] = handler
+
+    def cmd_rename_buffer(self, buffer, filename):
+        if buffer.filename in self.__buffers:
+            try:
+                self.cmd_close_file(buffer.filename)
+                os.rename(buffer.filename, filename)
+                self.cmd_open_file(filename)
+            except OSError:
+                raise
+            
+    def cmd_reset_current_buffer(self):
+        if self.__currentbuffer.poll():
+            self.emit_event('buffer-modified')
+            
+
     def evt_editor_started(self):
-        for buf in self.__buffers:
-            self.emit_event('file-opened', buffer=self.__buffers[buf])
-            self.__view.set_currentbuffer(buf.filename)
+        if len(self.__buffers):
+            for buf in self.__buffers:
+                self.emit_event('file-opened', buffer=self.__buffers[buf])
+                self.__view.set_currentbuffer(buf)
+        else:
+            self.cmd_open_new_file()
+
         #self.__view.set_selected(buf)
 
     def evt_editor_file_opened(self, filename):

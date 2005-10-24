@@ -29,6 +29,9 @@ import textwrap
 import filedialogs
 #Pida imports
 
+NAME_MU = """<span weight="bold" size="small">%s</span>"""
+DOC_MU = """<span size="small">%s</span>"""
+
 class ConfigWidget(object):
     """
     A widget holder which can save or load its state.
@@ -54,19 +57,18 @@ class ConfigWidget(object):
         self.win.pack_start(hb)
         # Name label
         self.name_l = gtk.Label()
-        self.name_l.set_markup('<span weight="bold">'
-                               '%s</span>' % self.get_name())
+        self.name_l.set_markup(NAME_MU % self.get_name())
         hb.pack_start(self.name_l, padding=4, expand=True)
         self.name_l.set_size_request(100, -1)
         # Actual widget
         self.widget = widget
-        hb.pack_start(widget, padding=4)
+        hb.pack_start(widget, padding=2)
         hb2 = gtk.HBox()
         self.win.pack_start(hb2)
         # Help label
         self.help_l = gtk.Label()
-        self.help_l.set_markup(self.get_help())
-        hb2.pack_start(self.help_l, expand=False, padding=4)
+        self.help_l.set_markup(DOC_MU % self.get_help())
+        hb2.pack_start(self.help_l, expand=False, padding=2)
 
     def get_name(self):
         """
@@ -78,8 +80,7 @@ class ConfigWidget(object):
         """
         Return the help for the option.
         """
-        help = self.option.doc
-        return '\n'.join(textwrap.wrap(help, 60))
+        return self.option.doc
 
     def set_value(self, value):
         """
@@ -317,7 +318,7 @@ class ConfigInteger(ConfigEntry):
             adjvals = self.MIN, self.MAX, self.STEP
         adj = gtk.Adjustment(0, *adjvals)
         widget = gtk.SpinButton(adj)
-        ConfigWidget.__init_(self, widget, option)
+        ConfigWidget.__init__(self, widget, option)
 
     def load(self):
         """
@@ -393,6 +394,36 @@ class ListTree(gtk.TreeView):
         for name, i in names:
             s = '%s' % name
             self.store.append((s, i))
+
+class ConfigEmbedFile(ConfigWidget):
+    
+    def __init__(self, option):
+        tagtable = gtk.TextTagTable()
+        tag = gtk.TextTag('default')
+        tag.set_property('font', 'Monospace 8')
+        tagtable.add(tag)
+        buffer = gtk.TextBuffer(tagtable)
+        widget = gtk.TextView(buffer)
+        widget.set_size_request(400,300)
+        ConfigWidget.__init__(self, widget, option)
+
+    def load(self):
+        filename = self.value()
+        f = open(filename)
+        buf = self.widget.get_buffer()
+        buf.set_text('')
+        buf.insert_with_tags_by_name(buf.get_start_iter(), f.read(), 'default')
+        f.close()
+
+    def save(self):
+        filename = self.value()
+        f = open(filename, 'w')
+        f.write(self.widget.get_buffer().get_text())
+        f.close()
+        
+
+
+
 
 class ConfigEditor(object):
     """

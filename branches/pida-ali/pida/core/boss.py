@@ -80,7 +80,7 @@ class Boss(object):
         if group:
             command = group.get(name)
             if command:
-                command(**kw)
+                return command(**kw)
             else:
                 self.log_warn('CMD', 'Command not found: (%s, %s)' % 
                     (groupname, name))
@@ -130,15 +130,15 @@ class Boss(object):
 
     def __init(self):
         """Initialise components."""
-        self.__init_config()
         self.__init_logging()
-        # Can only use the log once it has been started
         self.log_debug('Boss', 'init()')
         self.__init_commands()
+        self.__init_config()
+        # Can only use the log once it has been started
         self.__init_events()
         self.__init_window()
-        self.__init_editor()
         self.__init_services()
+        self.__init_editor()
         self.__init_plugins()
         self.__load_config()
 
@@ -173,7 +173,7 @@ class Boss(object):
 
     def __init_editor(self):
         """Initialise the editor."""
-        self.__editor = editor.EditorManager()
+        self.__editor = self.get_service('editormanager')
 
     def __init_plugins(self):
         """Initialise the plugin manager."""
@@ -207,6 +207,7 @@ class Boss(object):
     def __populate(self):
         """Populate the UI."""
         self.log_debug('Boss', 'populate()')
+        self.__config.populate()
         self.__populate_services()
         self.__populate_editor()
         self.__populate_plugins()
@@ -234,6 +235,7 @@ class Boss(object):
         self.__reset_window()
         self.__reset_services()
         self.__reset_plugins()
+    reset = __reset
 
     def __reset_services(self):
         """Reset the services live configuration options."""

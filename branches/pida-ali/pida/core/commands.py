@@ -68,7 +68,7 @@ class Command(base.pidaobject):
         for arg in self.__arguments:
             if arg.required and not arg.name in kw:
                 raise BadArgumentsError, 'Missing %s' % arg.name
-        self.__callback(**kw)
+        return self.__callback(**kw)
 
 class CommandGroup(components.ComponentGroup):
 

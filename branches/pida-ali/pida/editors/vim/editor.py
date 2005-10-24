@@ -24,25 +24,60 @@
 import pida.core.editor as editor
 import vim.gdkvim as gdkvim
 import vim.vimembed as vimembed
+import pida.core.registry as registry
 
 class Editor(editor.Editor):
     NAME = 'vim' 
 
+    OPTIONS = [('shortcut-leader', 'the lead key for pida shortcuts',
+                ',', registry.RegistryItem),
+               ('shortcut-execute', 'the lead key for pida shortcuts',
+                'x', registry.RegistryItem)]
+
+    def __load_shortcuts(self):
+        for mapc in ['n', 'v']:
+            if self.__old_shortcuts[mapc].setdefault(self.__srv, []):
+                for sc in self.__old_shortcuts[mapc][self.__srv]:
+                    self.__cw.send_ex(self.__srv, UNMAP_COM % (mapc, sc))
+            self.__old_shortcuts[mapc][self.__srv] = []
+            l = self.options.get('shortcut-leader').value()
+            for name, command in SHORTCUTS:
+                try:
+                    c = self.options.get(name).value()
+                    sc = ''.join([l, c])
+                    self.__old_shortcuts[mapc][self.__srv].append(sc)
+                    self.__cw.send_ex(self.__srv, NMAP_COM % (mapc, sc, command))
+                except registry.BadRegistryKey:
+                    pass
+
+    def reset(self):
+        self.boss.command('configmanager', 'reload')
+        self.__old_shortcuts = {'n':{}, 'v':{}}
+        self.__load_shortcuts()
+
     def populate(self):
-        self.__cw = gdkvim.VimWindow(self)
-        self.__srv = 'PIDA2VIM'
-        self.__view = vimembed.PidaVim('vim', self.__srv)
+        self.__cw = None
 
     def launch(self):
+        if self.__cw is None:
+            self.__cw = gdkvim.VimWindow(self)
+            self.__srv = 'PIDA2VIM'
+            self.__view = vimembed.PidaVim('gvim', [self.__srv])
+        self.boss.command("editor", "add-page", contentview=self.__view)
         self.__view.run()
 
     def new_serverlist(self, serverlist):
         if 'PIDA2VIM' in serverlist:
             self.__cw.send_ex(self.__srv, '%s' % VIMSCRIPT)
             self.manager.emit_event('started')
+            self.reset()
 
     def open_file(self, filename):
         self.__cw.open_file(self.__srv, filename)
+        self.__view.raise_tab()
+
+    def goto_line(self, linenumber):
+        self.__cw.change_cursor(self.__srv, 1, linenumber)
 
     def vim_bufferchange(self, index, filename):
         self.manager.emit_event('file-opened', filename=filename)
@@ -51,13 +86,16 @@ class Editor(editor.Editor):
     def vim_bufferunload(self, *args):
         self.manager.emit_event('current-file-closed')
 
+    def vim_filesave(self, *args):
+        self.boss.command('buffer-manager', 'reset-current-buffer')
+
     def __get_view(self):
         return self.__view
     view = property(__get_view)
 
 
 
-SHORTCUTS = [('shortcut_execute',
+SHORTCUTS = [('shortcut-execute',
                 'Async_event("bufferexecute,")'),
              ('shortcut_project_execute',
                 'Async_event("projectexecute,")'),

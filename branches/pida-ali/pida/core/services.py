@@ -26,8 +26,9 @@ import components
 class IService(object):
     """The service interface."""
 
-SERVICES = ['buffermanager', 'contentbook', 'commandline', 'manhole',
-'terminal', 'versioncontrol', 'filemanager', 'viewbook', 'topbar']
+SERVICES = ['editormanager', 'buffermanager', 'contexts', 'contentbook', 'commandline',
+            'manhole', 'terminal', 'versioncontrol', 'filemanager', 'viewbook', 'topbar',
+            'gazpach', 'meld', 'scripts']
 
 def import_service(self, name):
     """ Find a named plugin and instantiate it. """

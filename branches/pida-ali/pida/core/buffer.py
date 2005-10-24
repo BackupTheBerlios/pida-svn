@@ -24,11 +24,18 @@ import os
 import mimetypes
 import stat
 import gobject
-class Buffer(object):
+import base
+class Buffer(base.pidaobject):
+
+    actions = [('undo', 'undo', 'undo'),
+               ('redo', 'redo', 'redo'),
+               ('close', 'close', 'close'),
+               ('filemanager', 'filemanager', 'filemanager'),
+               ('terminal', 'terminal', 'terminal')]
+    contexts = ['file']
     
     def __init__(self, filename):
         self.__filename = filename
-        self.__is_polling = False
         self.__reset()
 
     def __reset(self):
@@ -96,20 +103,82 @@ class Buffer(object):
         return self.__mimetype
     mimetype = property(__get_mimetype)
 
+    def get_parent_directory(self):
+        directory = os.path.split(self.filename)[0]
+        return directory
+    directory = property(get_parent_directory)
+
     def poll(self):
         new_stat = self.__load_stat()
-        if new_stat != self.__stat:
+        if new_stat.st_mtime != self.__stat.st_mtime:
             self.__stat = new_stat
             self.__reset()
-            print "has changed"
-        return self.__is_polling
+            return True
+        else:
+            return False
+    
+    def get_markup(self):
+        """Return the markup for the item."""
+        MU = ('<span size="small">'
+              '<span foreground="#0000c0">%s/</span>'
+              '<b>%s</b>'
+              '</span>')
+        fp = self.filename
+        fd, fn = os.path.split(fp)
+        dp, dn = os.path.split(fd)
+        return MU % (dn, fn)
+    markup = property(get_markup)
 
-    def start_polling(self):
-        self.__is_polling = True
-        gobject.timeout_add(3000, self.poll)
+    def action_close(self):
+        self.boss.command('buffermanager', 'close-current-file')
 
-    def stop_polling(self):
-        self.__is_polling = True
+    def action_terminal(self):
+        self.boss.command('terminal', 'execute-vt-shell',
+        kwargs={'directory': self.directory})
+
+    def action_filemanager(self):
+        self.boss.command('filemanager', 'browse', directory=self.directory)
+
+        
+
+
+import tempfile
+
+class TemporaryBuffer(Buffer):
+
+    actions = [('save', 'save', 'save'),
+               ('undo', 'undo', 'undo'),
+               ('redo', 'redo', 'redo'),
+               ('close', 'close', 'close')]
+
+    contexts = []
+
+    def __init__(self, prefix, name):
+        self.__prefix = prefix
+        self.__name = name
+        self.__file, self.__filename = tempfile.mkstemp(prefix='%s_' % prefix,
+                                                        suffix='_%s' % name)
+        Buffer.__init__(self, self.__filename)
+        print self.boss
+
+    def get_file(self):
+        return self.__filename
+    file = property(get_file)
+
+    def get_markup(self):
+        """Return the markup for the item."""
+        MU = ('<span size="small">'
+              '<span foreground="#00c000">%s/</span>'
+              '<b>%s</b>'
+              '</span>')
+        return MU % (self.__prefix, self.__name)
+    markup = property(get_markup)
+    details = markup
+
+    def action_save(self):
+        self.boss.command('buffermanager', 'rename-buffer', buffer=self,
+                          filename='foo')
+
 
 
 #b = Buffer('/home/ali/linkser.pyi')

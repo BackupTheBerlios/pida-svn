@@ -27,6 +27,9 @@ import tree
 import gobject
 import contentbook
 
+def shorten_home_name(directory):
+    return directory.replace(os.path.expanduser('~'), '~')
+
 class FileTreeItem(tree.TreeItem):
     pass
     def __get_markup(self):
@@ -83,8 +86,10 @@ class FileBrowser(contentbook.ContentView):
 
 
     def display(self, directory, statuses=[], glob='*', hidden=True):
-        self.__currentdirectory = directory
+        
         if os.path.isdir(directory):
+            self.__currentdirectory = directory
+            self.set_title(shorten_home_name(directory))
             self.__fileview.clear()
             self.__dirview.clear()
             for filename in os.listdir(directory):

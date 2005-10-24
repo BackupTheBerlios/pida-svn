@@ -21,20 +21,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-def import_editor(name):
-    """ Find a named plugin and instantiate it. """
-    # import the module
-    # The last arg [True] just needs to be non-empty
-    try:
-        mod = __import__('pida.editors.%s.editor' % name, {}, {}, [True])
-        cls = mod.Editor
-    except ImportError, e:
-        print ('Plugin "%s" failed to import with: %s' % (name, e))
-        cls = None
-    return cls
-
 import service
-import pida.pidagtk.contentbook as contentbook
 class Editor(service.Service):
     """ The editor interface. """
  
@@ -83,37 +70,4 @@ class Editor(service.Service):
 
     def save_buffer_as_file(bufferindex, filename):
         """Save the indexed buffer as the given filename"""
-
-
-class EditorManager(service.GuiService):
-    NAME = 'editor'
-    COMMANDS = [['open-file', [('filename', True)]],
-                ['start-editor', []],
-                ['add-page', [('contentview', True)]]]
-    EVENTS = ['started', 'file-opened', 'current-file-closed']
-    BINDINGS = [('buffermanager', 'file-opened')]
-    VIEW = contentbook.ContentBook
-
-    def init(self):
-        editor_type = import_editor('culebra')
-        editor_type.boss = self.boss
-        editor_type.manager = self
-        self.__editor = editor_type()
-
-    def populate(self):
-        self.log_debug("Populating")
-        self.populate_base()
-
-    def cmd_add_page(self, contentview):
-        self.view.append_page(contentview)
-
-    def cmd_start_editor(self):
-        self.cmd_open_file(filename="/usr/bin/alarm")
-
-    def cmd_open_file(self, filename):
-        self.__editor.open_file(filename)
-        self.emit_event('file-opened', filename=filename)
-
-    def evt_buffermanager_file_opened(self, buffer):
-        self.cmd_open_file(buffer.filename)
 

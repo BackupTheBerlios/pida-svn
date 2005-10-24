@@ -99,7 +99,6 @@ class PythonView(plugin.PluginView):
             meparent = self.defs.add_item(i, parent)
             self.set_definitions(node.getChildNodes(), meparent)
 
-
 class Python(plugin.Plugin):
     NAME = 'python'
     ICON = 'python'
@@ -112,6 +111,13 @@ class Python(plugin.Plugin):
 
         #self.refs = self.refwin.tree
         
+    def populate(self):
+
+        self.view.defs.connect("clicked", self.cb_defs_selected)
+
+    def cb_defs_selected(self, treeview, item):
+        self.boss.command("editor", "goto-line", linenumber=item.value.linenum)
+
         #self.add_button('warning', self.cb_but_pydoc , 'Look up in Pydoc')
         #self.add_button('profile', self.cb_but_profile, 'Run in the Python profiler')
         #self.add_button('debug', self.cb_but_debug, 'Run in the Python debugger')

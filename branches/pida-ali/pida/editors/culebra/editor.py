@@ -23,37 +23,49 @@
 
 import pida.core.editor as editor
 import culebra.edit as edit
+import pida.pidagtk.contentbook as contentbook
 
 class Editor(editor.Editor):
     NAME = 'culebra' 
 
     def init(self):
         self.__views = {}
+        self.__currentview = None
 
-#    def launch(self):
-#        self.manager.emit_event('started')
+    def launch(self):
+        self.manager.emit_event('started')
 
     def open_file(self, filename):
         if not filename in self.__views:
             view = edit.EditWindow(self)
             view.load_file(filename)
             view.show_all()
-            view.icon = None
-            self.boss.command('editor', 'add-page', contentview=view)
-            self.__views[filename] = view
+            contentview = contentbook.EditorView(view)
+            self.boss.command('editor', 'add-page', contentview=contentview)
+            self.__views[filename] = contentview
+            contentview.connect('action', self.cb_view_action)
         else:
-            nb = self.__views[filename].get_parent()
-            nb.set_current_page(nb.page_num(self.__views[filename]))
-        return
-        entries = self.__view.entries
-        if entries.get_selected().filename != filename:
-            for index, entry in enumerate(entries):
-                if entry.filename == filename:
-                    entries.selected_index = index
-                    buff = entries.selected
-                    view.editor.scroll_to_mark(buff.get_insert(), 0.25)
-                    view.editor.grab_focus()
+            nb = self.__views[filename].raise_tab()
+        self.__currentview = self.__views[filename]
+
+    def goto_line(self, linenumber):
+        buf = self.__currentview.get_current()
+        titer = buf.get_iter_at_line(linenumber)
+        self.__currentview.editor.scroll_to_iter(titer, 0.25)
+        buf.place_cursor(titer)
+        self.__currentview.editor.grab_focus()
+
+    def save_current(self):
+        self.__currentview.editor.file_save()
+        self.boss.command('buffer-manager', 'reset-current-buffer')
+
+    def save_view(self, view):
+        view.editor.file_save()
 
     def __get_view(self):
         return self.__view
     view = property(__get_view)
+
+    def cb_view_action(self, contentview, action):
+        if action == 'save':
+            self.save_view(contentview)

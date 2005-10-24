@@ -188,8 +188,14 @@ class Integer(RegistryItem):
 class List(RegistryItem):
     DISPLAY_WIDGET = config.ConfigList
 
+class Editor(List):
+    choices = ['vim', 'culebra', 'emacs']
+
 class Color(RegistryItem):
     DISPLAY_WIDGET = config.ConfigColor
+
+class EmbedFile(RegistryItem):
+    DISPLAY_WIDGET = config.ConfigEmbedFile
 
 class Registry(RegistryGroup):
 
@@ -250,10 +256,13 @@ class Registry(RegistryGroup):
             else:
                 option.setdefault()
 
-    def load_file_with_schema(self, filename, schema):
+    def load_file_with_schema(self, filename, schema, groupdocs={}):
         tempopts = self.get_tempopts(filename)
         for section in tempopts.sections():
-            group = self.add_group(section, section)
+            groupdoc = ''
+            if section in groupdocs:
+                groupdoc = groupdocs[section]
+            group = self.add_group(section, groupdoc)
             for name, doc, default, typ in schema:
                 opt = group.add(name, doc, default, typ)
                 if tempopts.has_option(group.get_name(), name):

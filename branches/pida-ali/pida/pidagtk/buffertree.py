@@ -23,19 +23,12 @@
 
 import tree
 import gtk
+import toolbar
 import os
 class BufferItem(tree.IconTreeItem):
 
     def __get_markup(self):
-        """Return the markup for the item."""
-        MU = ('<span size="small">'
-              '<span foreground="#0000c0">%s/</span>'
-              '<b>%s</b>'
-              '</span>')
-        fp = self.value.filename
-        fd, fn = os.path.split(fp)
-        dp, dn = os.path.split(fd)
-        return MU % (dn, fn)
+        return self.value.markup
     markup = property(__get_markup)
 
 class BufferTree(tree.IconTree):
@@ -63,10 +56,44 @@ class BufferTree(tree.IconTree):
         return BufferItem(buf.filename, buf, None)
 
 
-class BufferDetails(gtk.Label):
+class BufferDetails(gtk.VBox):
 
     def __init__(self):
-        gtk.Label.__init__(self)
+        gtk.VBox.__init__(self)
+        self.__toolbar = None
+        self.__contextbars = []
+        self.__toolbarholder = gtk.HBox()
+        self.pack_start(self.__toolbarholder)
+        self.__title = gtk.Label()
+        self.pack_start(self.__title)
     
     def display_buffer(self, buf):
-        self.set_markup(buf.filename)
+        self.__currentbuffer = buf
+        if self.__toolbar is not None:
+            self.__toolbarholder.remove(self.__toolbar)
+            for bar in self.__contextbars:
+                self.__toolbarholder.remove(bar)
+        self.__create_toolbar(buf)
+
+    def __create_toolbar(self, buf):
+        self.__toolbar = toolbar.Toolbar()
+        self.__toolbarholder.pack_start(self.__toolbar)
+        self.__toolbar.connect('clicked', self.cb_toolbar_clicked)
+        for action, icon, tooltip in buf.actions:
+            self.__toolbar.add_button(action, icon, tooltip)
+        globaldict={'filename':buf.filename}
+        self.__contextbars = []
+        for context in buf.contexts:
+            contextbar = buf.boss.command('contexts', 'get-toolbar',
+                                             contextname=context,
+                                             globaldict=globaldict)
+            self.__contextbars.append(contextbar)
+            self.__toolbarholder.pack_start(contextbar)
+        self.show_all()
+        self.__title.set_markup(buf.markup)
+
+    def cb_toolbar_clicked(self, button, name):
+        if self.__currentbuffer is not None:
+            funcname = 'action_%s' % name
+            if hasattr(self.__currentbuffer, funcname):
+                getattr(self.__currentbuffer, funcname)()

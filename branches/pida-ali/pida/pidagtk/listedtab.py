@@ -24,6 +24,8 @@
 import gtk
 import gobject
 import tree
+import toolbar
+import icons
 
 import sys
 sys.path.insert(2, '/home/ali/working/pida/pida/branches/pida-ali/')
@@ -36,12 +38,16 @@ class RegistryTreeItem(tree.TreeItem):
         return self.value.name
     markup = property(__get_markup)
 
+
+SECTION_NAME_MU = """<span weight="bold" size="small">%s</span>"""
+SECTION_DOC_MU = """<span size="small">%s</span>"""
+
 class ListedTab(gtk.VBox):
 
-    __gsignals__ = {'clicked' : (
-                    gobject.SIGNAL_RUN_LAST,
-                    gobject.TYPE_NONE,
-                    (gobject.TYPE_PYOBJECT,))}
+    __gsignals__ = {'closed' : (gobject.SIGNAL_RUN_LAST,
+                                 gobject.TYPE_NONE, ()),
+                    'applied' : (gobject.SIGNAL_RUN_LAST,
+                                 gobject.TYPE_NONE, ())}
     
     TREE = tree.Tree
     TREE_ITEM = RegistryTreeItem
@@ -50,85 +56,67 @@ class ListedTab(gtk.VBox):
         gtk.VBox.__init__(self)
         self.__registry = registry
         self.__pages = {}
+        self.__widgets = []
         self.__populate()
         self.__build_sectionlist()
 
     def __populate(self):
         mainbox = gtk.HBox()
         self.add(mainbox)
-
         leftbox = gtk.VBox()
         mainbox.pack_start(leftbox, expand=False)
-        leftbox.set_size_request(120, -1)
-
+        leftbox.set_size_request(220, -1)
         self.__sectionview = self.TREE()
         leftbox.pack_start(self.__sectionview)
         self.__sectionview.connect("clicked", self.cb_section_clicked)
-
         rightbox = gtk.VBox()
         mainbox.pack_start(rightbox)
-
         self.__notebook = gtk.Notebook()
         rightbox.pack_start(self.__notebook)
-
-        attrbox = gtk.VBox()
-        rightbox.pack_start(attrbox)
-
-
-        hbox = gtk.HBox()
-        attrbox.pack_start(hbox, expand=False, padding=4)
-        namelabel = gtk.Label('name')
-        hbox.pack_start(namelabel, expand=False, padding=4)
-        self.nameentry = gtk.Entry()
-        hbox.pack_start(self.nameentry)
-
-        # Button Bar
+        self.__notebook.set_show_tabs(False)
+        self.__notebook.set_show_border(False)
         cb = gtk.HBox()
         rightbox.pack_start(cb, expand=False, padding=2)
-        
-        # separator
         sep = gtk.HSeparator()
         cb.pack_start(sep)
-        
-        # reset button
-        revert_b = gtk.Button(stock=gtk.STOCK_REVERT_TO_SAVED)
-        cb.pack_start(revert_b, expand=False)
-        revert_b.connect('clicked', self.cb_revert)
-
-        # cancel button
-        delete_b = gtk.Button(stock=gtk.STOCK_DELETE)
-        cb.pack_start(delete_b, expand=False)
-        delete_b.connect('clicked', self.cb_delete)
-        
-        # apply button
-        new_b = gtk.Button(stock=gtk.STOCK_NEW)
-        cb.pack_start(new_b, expand=False)
-        new_b.connect('clicked', self.cb_new)
-        
-        # save button
-        save_b = gtk.Button(stock=gtk.STOCK_SAVE)
-        cb.pack_start(save_b, expand=False)
-        save_b.connect('clicked', self.cb_save)
+        self.__cancelbutton = icons.icons.get_text_button('close', 'Close')
+        cb.pack_start(self.__cancelbutton, expand=False)
+        self.__cancelbutton.connect('clicked', self.cb_close)
+        self.__applybutton = icons.icons.get_text_button('apply', 'Apply')
+        cb.pack_start(self.__applybutton, expand=False)
+        self.__applybutton.connect('clicked', self.cb_apply)
+        self.__savebutton = icons.icons.get_text_button('save', 'Save')
+        cb.pack_start(self.__savebutton, expand=False)
+        self.__savebutton.connect('clicked', self.cb_save)
 
     def __build_sectionlist(self):
+        first = True
         for group in self.__registry.iter_groups():
             treeitem = self.TREE_ITEM(group.get_name(), group)
             self.__sectionview.add_item(treeitem)
-    
-    def new(self):
-        pass
+            if first:
+                first = False
+                self.__sectionview.set_selected(group.get_name())
+        
 
     def create_page(self, section_name):
         if not section_name in self.__pages:
             group = self.__registry.get_group(section_name)
             b = gtk.VBox()
-            b.pack_start(gtk.Label(section_name))
-            b.pack_start(gtk.Label(group.doc))
+            name_label = gtk.Label()
+            name_label.set_markup(SECTION_NAME_MU % section_name)
+            name_label.set_justify(gtk.JUSTIFY_LEFT)
+            b.pack_start(name_label, expand=False)
+            doc_label = gtk.Label()
+            doc_label.set_markup(SECTION_DOC_MU % group.doc)
+            b.pack_start(doc_label, expand=False)
+            b.pack_start(gtk.HSeparator(), expand=False, padding=4)
             self.__pages[section_name] = b
             for opt in group:
                 w = opt.DISPLAY_WIDGET(opt)
-                b.pack_start(w.win)
+                b.pack_start(w.win, expand=False)
                 w.load()
+                self.__widgets.append(w)
             b.show_all()
         return self.__pages[section_name]
             
@@ -139,40 +127,24 @@ class ListedTab(gtk.VBox):
         page_num = self.__notebook.page_num(page)
         self.__notebook.set_current_page(page_num)
             
-    def projects_changed(self):
-        self.project_registry.save()
-        self.projects.populate(self.project_registry)
-        self.do_evt('projectschanged')
-
     def pages(self):
         for page_num in xrange(self.__notebook.get_n_pages()):
             yield self.__notebook.get_nth_page(page_num)
             
-    def cb_project_select(self, *args):
-        projname = self.projects.selected(0)
-        self.display(projname)
-         
-    def cb_new(self, *args):
-        self.new()
+    def __apply(self):
+        for widget in self.__widgets:
+            widget.save()
+        self.emit("applied")
 
-    def cb_revert(self, *args):
-        self.project_registry.load()
-        self.projects_changed()
+    def cb_close(self, button):
+        self.emit("closed")
 
-    def cb_save(self, *args):
-        name = self.nameentry.get_text()
-        if name:
-            kw = {}
-            for attrname in self.attribute_widgets:
-                kw[attrname] = self.attribute_widgets[attrname].get_text()
-            self.project_registry.set_project(name, **kw)
-            self.projects_changed()
+    def cb_save(self, button):
+        self.__apply()
+        self.__registry.save()
 
-    def cb_delete(self, *args):
-        projname = self.projects.selected(0)
-        self.project_registry.delete(projname)
-        self.projects_changed()
-        self.projects.view.set_cursor(self.projects.model[0].path)
+    def cb_apply(self, button):
+        self.__apply()
 
     def cb_section_clicked(self, tree, item):
         self.display_page(item.value.name)
