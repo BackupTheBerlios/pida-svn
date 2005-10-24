@@ -26,6 +26,9 @@ import registry
 
 import pida.pidagtk.listedtab as listedtab
 import pida.pidagtk.contentbook as contentbook
+import os.path
+
+PIDA_CONF = os.path.join(os.path.expanduser("~"), ".pida2", "conf", "pida.conf")
 
 class ConfigManager(service.Service):
     NAME = 'configmanager'
@@ -38,7 +41,7 @@ class ConfigManager(service.Service):
         self.__view = None
 
     def load(self):
-        self.__registry.load_file('/home/ali/.pida2/conf/pida.conf')
+        self.__registry.load_file(PIDA_CONF)
 
     def add_group(self, name, doc):
         return self.__registry.add_group(name, doc)

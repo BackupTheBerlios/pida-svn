@@ -28,6 +28,10 @@ import pida.pidagtk.listedtab as listedtab
 import pida.pidagtk.contentbook as contentbook
 import gtk
 import os
+import os.path
+
+PROJECT_CONF = os.path.join(os.path.expanduser("~"), ".pida2", "conf", "projects.conf")
+
 class Project(object):
 
     name = None
@@ -62,7 +66,7 @@ class ProjectManager(plugin.Plugin):
     """Project Management"""
     NAME = 'projectmanager'
     OPTIONS = [('filename', 'The project file.',
-                '/home/ali/.pida2/conf/projects.conf', registry.File)]
+                PROJECT_CONF, registry.File)]
     ICON = 'project'
 
     def init(self):

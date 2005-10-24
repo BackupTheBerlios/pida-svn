@@ -28,13 +28,16 @@ import pida.core.service as service
 
 import pida.core.registry as registry
 import os
+import os.path
+
+SCRIPTS_CONF = os.path.join(os.path.expanduser("~"), ".pida2", "scripts")
 
 class Scripts(service.Service):
 
     NAME = 'scripts'
 
     OPTIONS = [('directory', 'The scripts directory',
-                '/home/ali/.pida2/scripts/', registry.CreatingDirectory)]
+                SCRIPTS_CONF, registry.CreatingDirectory)]
 
     COMMANDS = [('execute', [('scriptname', True),
                              ('globaldict', False)]),
