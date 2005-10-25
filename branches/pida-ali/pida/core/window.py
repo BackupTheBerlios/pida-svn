@@ -42,7 +42,7 @@ class WindowManager(service.Service):
         pluginmanager = self.boss.plugins.view
         editor = self.boss.get_editor().view
         self.__window.pack(editor, bufferview, pluginmanager, contentbook,
-            viewbook, topbar, True, True)
+            viewbook, topbar, False, True)
 
     def reset(self):
         """Display the window."""
