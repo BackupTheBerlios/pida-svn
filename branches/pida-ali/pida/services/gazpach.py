@@ -326,17 +326,29 @@ class Gazpacho(service.Service):
     def open_file(self, filename):
         if self.__view is None:
             self.__view = EmbeddedGazpacho(self.boss.get_main_window())
-            self.__view.open_file(filename)
-            buffer = GazpachoBuffer(filename)
-            buffer.boss = self.boss
-            self.boss.command("buffermanager", "add-buffer", buffer=buffer)
             self.boss.command("editor", "add-page",
                               contentview=self.__view)
+        self.__view.open_file(filename)
+        buffer = GazpachoBuffer(filename)
+        buffer.boss = self.boss
+        self.boss.command("buffermanager", "add-buffer", buffer=buffer)
+        self.__view.raise_tab()
             
 
 import pida.core.buffer as buffer
+import os
 
 class GazpachoBuffer(buffer.Buffer):
-    pass
+    def get_markup(self):
+        """Return the markup for the item."""
+        MU = ('<span size="small">'
+              '<span foreground="#c00000">%s/</span>'
+              '<b>%s</b>'
+              '</span>')
+        fp = self.filename
+        fd, fn = os.path.split(fp)
+        dp, dn = os.path.split(fd)
+        return MU % (dn, fn)
+    markup = property(get_markup)
 
 Service = Gazpacho
