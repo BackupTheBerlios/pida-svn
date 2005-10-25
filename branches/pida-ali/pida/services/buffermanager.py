@@ -76,11 +76,10 @@ class Buffermanager(service.Service):
         if self.__currentbuffer is None or self.__currentbuffer.filename != filename:
             matched = False
             for match in self.__handlers:
-                print match, filename
                 if glob.fnmatch.fnmatch(filename, match):
                     new_buffer = self.__handlers[match].open_file(filename)
                     matched = True
-                    self.cmd_add_buffer(new_buffer)
+                    #self.cmd_add_buffer(new_buffer)
                     break
             if not matched:
                 if not filename in self.__buffers:

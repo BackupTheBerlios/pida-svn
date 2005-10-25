@@ -39,7 +39,7 @@ def import_editor(name):
 
 class EditorBook(contentbook.ContentBook):
 
-    TABS_VISIBLE = False
+    TABS_VISIBLE = True
 
     def shrink(self):
         pass

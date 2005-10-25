@@ -118,7 +118,8 @@ class Meld(service.Service):
     NAME = 'meld'
     COMMANDS = [('diff-files', [('filename', True)])]
 
-    def cmd_diff_one_file(self, filename):
+    def cmd_diff_files(self, filename):
+        """docstring"""
         self.view =  MeldView()
         self.view.app.append_diff([filename, F])
         self.boss.command('buffermanager', 'add-buffer',
