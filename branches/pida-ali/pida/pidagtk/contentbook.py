@@ -44,6 +44,7 @@ class ContentView(gtk.VBox):
     HAS_DETACH_BUTTON = True
     HAS_CLOSE_BUTTON = True
     HAS_LABEL = True
+    HAS_SEPARATOR = True
 
     def __init__(self, icon=None, text=''):
         gtk.VBox.__init__(self)
@@ -59,8 +60,11 @@ class ContentView(gtk.VBox):
         self.__title = gtk.Label()
         self.set_title(text)
         if self.HAS_LABEL:
-            barbox.pack_start(self.__title)
-        if self.HAS_DETACH_BUTTON or self.HAS_CLOSE_BUTTON:
+            barbox.pack_start(self.__title, expand=False)
+        self.__bar_area = gtk.HBox()
+        barbox.pack_start(self.__bar_area)
+        if (self.HAS_SEPARATOR and
+            (self.HAS_DETACH_BUTTON or self.HAS_CLOSE_BUTTON)):
             barbox.pack_start(gtk.VSeparator(), expand=False)
         self.__controlbar = toolbar.Toolbar()
         barbox.pack_start(self.__controlbar, expand=False, fill=False)
@@ -132,6 +136,10 @@ class ContentView(gtk.VBox):
 
     def set_title(self, title):
         self.__title.set_markup(TITLE_MU % title)
+
+    def get_bar_area(self):
+        return self.__bar_area
+    bar_area = property(get_bar_area)
     
 
 class ContentBook(ContentView):
