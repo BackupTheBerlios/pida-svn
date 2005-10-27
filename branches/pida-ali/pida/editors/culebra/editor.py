@@ -39,33 +39,42 @@ class Editor(editor.Editor):
         if not filename in self.__views:
             view = edit.EditWindow(self)
             view.load_file(filename)
+            view.get_main_window = lambda: self.boss.get_main_window()
             view.show_all()
-            contentview = contentbook.EditorView(view)
+            contentview = contentbook.EditorView(view, filename)
+            contentview.connect('action', self.cb_view_action)
             self.boss.command('editor', 'add-page', contentview=contentview)
             self.__views[filename] = contentview
-            contentview.connect('action', self.cb_view_action)
         else:
-            nb = self.__views[filename].raise_tab()
+            self.__views[filename].raise_tab()
         self.__currentview = self.__views[filename]
 
     def goto_line(self, linenumber):
-        buf = self.__currentview.get_current()
-        titer = buf.get_iter_at_line(linenumber)
-        self.__currentview.editor.scroll_to_iter(titer, 0.25)
+        buf = self.__currentview.editor.get_current()
+        titer = buf.get_iter_at_line(linenumber - 1)
+        self.__currentview.editor.editor.scroll_to_iter(titer, 0.25)
         buf.place_cursor(titer)
         self.__currentview.editor.grab_focus()
 
-    def save_current(self):
-        self.__currentview.editor.file_save()
-        self.boss.command('buffer-manager', 'reset-current-buffer')
-
     def save_view(self, view):
         view.editor.file_save()
+        self.boss.command('buffer-manager', 'reset-current-buffer')
+
+    def save_current(self):
+        self.__save_view(self.__currentview)
+
+    def save_file(self, filename):
+        if filename in self.__views:
+            self.__save_view(self.__views[filename])
+        else:
+            self.log_warn("File is not loaded.")
 
     def __get_view(self):
         return self.__view
     view = property(__get_view)
 
     def cb_view_action(self, contentview, action):
-        if action == 'save':
+        if action == 'open':
+            self.boss.command('filemanager', 'browse', directory='')
+        elif action == 'save':
             self.save_view(contentview)

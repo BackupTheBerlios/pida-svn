@@ -57,6 +57,7 @@ class ConfigWidget(object):
         self.win.pack_start(hb)
         # Name label
         self.name_l = gtk.Label()
+        self.name_l.set_alignment(0, 1)
         self.name_l.set_markup(NAME_MU % self.get_name())
         hb.pack_start(self.name_l, padding=4, expand=True)
         self.name_l.set_size_request(100, -1)
@@ -404,7 +405,6 @@ class ConfigEmbedFile(ConfigWidget):
         tagtable.add(tag)
         buffer = gtk.TextBuffer(tagtable)
         widget = gtk.TextView(buffer)
-        widget.set_size_request(400,300)
         ConfigWidget.__init__(self, widget, option)
 
     def load(self):

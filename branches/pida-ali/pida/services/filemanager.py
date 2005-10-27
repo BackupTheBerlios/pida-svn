@@ -49,7 +49,9 @@ class FileManager(service.Service):
             self.__content = content
             self.__content.connect('removed', self.cb_content_removed)
             self.boss.command('contentbook', 'add-page', contentview=content)
-        self.__content.display(directory)
+            directory = os.path.expanduser('~')
+        if directory != '':
+            self.__content.display(directory)
         self.__content.raise_tab()
 
     def cb_content_removed(self, contentview):

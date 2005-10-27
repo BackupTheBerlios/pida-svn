@@ -84,8 +84,8 @@ class GazpachoApplication(application.Application):
         hbox.pack_start(vpaned, True, True)
 
         notebook = gtk.Notebook()
-        notebook.append_page(widget_view, gtk.Label(_('Widgets')))
-        notebook.append_page(self.gactions_view, gtk.Label(_('Actions')))
+        notebook.append_page(widget_view, gtk.Label(('Widgets')))
+        notebook.append_page(self.gactions_view, gtk.Label(('Actions')))
 
         vpaned.set_position(150)
 

@@ -115,6 +115,11 @@ class RegistryGroup(object):
         for child in self.__items:
             obj = self.__items[child]
             yield obj
+
+    def iter_alphabetically(self):
+        keys = self.__items.keys()
+        for name in keys:
+            yield self.__items[name]
         
     def get(self, childname):
         if childname in self.__items:
@@ -222,6 +227,12 @@ class Registry(RegistryGroup):
 
     def iter_groups(self):
         for name in self.__groups:
+            yield self.__groups[name]
+
+    def iter_groups_alphabetically(self):
+        keys = self.__groups.keys()
+        keys.sort()
+        for name in keys:
             yield self.__groups[name]
 
     def iter_items(self):

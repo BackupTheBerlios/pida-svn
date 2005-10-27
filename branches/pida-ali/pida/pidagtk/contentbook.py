@@ -231,12 +231,18 @@ class ContentBookInSlider(ContentBook):
 
 class EditorView(ContentView):
 
-    def __init__(self, editor_widget):
+    def __init__(self, editor_widget, filename):
         ContentView.__init__(self)
+        self.__filename = filename
         self.pack_start(editor_widget)
         self.editor = editor_widget
+        self.add_button('open', 'open', 'Open a file.')
         self.add_button('save', 'save', 'Save the current file.')
         self.add_button('undo', 'undo', 'Undo the last change.')
+
+    def get_file_name(self):
+        return self.__filename
+    filename = property(get_file_name)
 
 if __name__ == '__main__':
     w = gtk.Window()

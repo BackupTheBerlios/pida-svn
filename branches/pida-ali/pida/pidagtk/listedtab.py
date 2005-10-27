@@ -91,7 +91,7 @@ class ListedTab(gtk.VBox):
 
     def __build_sectionlist(self):
         first = True
-        for group in self.__registry.iter_groups():
+        for group in self.__registry.iter_groups_alphabetically():
             treeitem = self.TREE_ITEM(group.get_name(), group)
             self.__sectionview.add_item(treeitem)
             if first:
@@ -101,6 +101,7 @@ class ListedTab(gtk.VBox):
 
     def create_page(self, section_name):
         if not section_name in self.__pages:
+            size_group = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
             group = self.__registry.get_group(section_name)
             b = gtk.VBox()
             name_label = gtk.Label()
@@ -112,9 +113,10 @@ class ListedTab(gtk.VBox):
             b.pack_start(doc_label, expand=False)
             b.pack_start(gtk.HSeparator(), expand=False, padding=4)
             self.__pages[section_name] = b
-            for opt in group:
+            for opt in group.iter_alphabetically():
                 w = opt.DISPLAY_WIDGET(opt)
-                b.pack_start(w.win, expand=False)
+                b.pack_start(w.win, expand=False, padding=6)
+                size_group.add_widget(w.widget)
                 w.load()
                 self.__widgets.append(w)
             b.show_all()

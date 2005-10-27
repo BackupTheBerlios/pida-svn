@@ -65,6 +65,7 @@ class Contexts(service.Service):
                                   globaldict=globaldict)
             tb.connect('clicked', clicked)
             for script in scripts:
+                print script
                 tb.add_button(script, script, 'run this')
             return tb
 

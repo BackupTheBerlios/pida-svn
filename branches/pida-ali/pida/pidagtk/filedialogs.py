@@ -63,7 +63,7 @@ class FolderButton(gtk.HBox):
         entrytext = self.entry.get_text()
         if entrytext:
             self.dialog.set_filename(self.entry.get_text())
-        self.dialog.set_transient_for(self.pida.mainwindow)
+        #self.dialog.set_transient_for(self.pida.mainwindow)
         self.dialog.show()
 
     def cb_response(self, d, resp):
