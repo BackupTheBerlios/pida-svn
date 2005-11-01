@@ -21,14 +21,12 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import service
-import pida.pidagtk.contentbook as contentbook
-import pida.pidagtk.icons as icons
+import pida.core.service as service
+import pida.core.registry as registry
 
-class PluginView(contentbook.ContentView):
+class Service(service.Service):
 
-    ICON_TYPE = icons.icons.get_button
+    NAME = "External Commands"
 
-class Plugin(service.GuiServiceWithListedTab):
-    """A pida plugin."""
-    VIEW = PluginView
+    OPTIONS = [('shell', 'command to run the shell',
+                'bash', registry.RegistryItem)]

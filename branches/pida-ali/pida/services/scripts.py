@@ -32,7 +32,12 @@ import os.path
 
 SCRIPTS_CONF = os.path.join(os.path.expanduser("~"), ".pida2", "scripts")
 
-class Scripts(service.Service):
+class ScriptView(contentbook.TabView):
+
+    ICON = 'scripts'
+
+
+class Scripts(service.ServiceWithListedTab):
 
     NAME = 'scripts'
 
@@ -43,6 +48,8 @@ class Scripts(service.Service):
                              ('globaldict', False)]),
                 ('execute-file', [('scriptname', True),
                              ('globaldict', False)])]
+
+    EDITOR_VIEW = ScriptView
     
     def reset(self):
         directory = self.options.get('directory').value()
@@ -98,10 +105,7 @@ class Scripts(service.Service):
         exec script in globaldict
 
     def cmd_show_editor(self):
-        self.__view = contentbook.ContentView()
-        self.__tab = listedtab.ListedTab(self.__registry)
-        self.__view.pack_start(self.__tab)
-        self.boss.command('viewbook', 'add-page', contentview=self.__view)
+        self.create_editorview(self.__registry)
 
     def cb_show_editor(self, button):
         self.cmd_show_editor()

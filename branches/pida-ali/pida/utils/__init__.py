@@ -21,14 +21,3 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import service
-import pida.pidagtk.contentbook as contentbook
-import pida.pidagtk.icons as icons
-
-class PluginView(contentbook.ContentView):
-
-    ICON_TYPE = icons.icons.get_button
-
-class Plugin(service.GuiServiceWithListedTab):
-    """A pida plugin."""
-    VIEW = PluginView

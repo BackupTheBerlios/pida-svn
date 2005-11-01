@@ -112,11 +112,13 @@ class Python(plugin.Plugin):
         #self.refs = self.refwin.tree
         
     def populate(self):
-
         self.view.defs.connect("clicked", self.cb_defs_selected)
 
     def cb_defs_selected(self, treeview, item):
-        self.boss.command("editor", "goto-line", linenumber=item.value.linenum)
+        print dir(item.value)
+        self.boss.command("editor", "open-file-line",
+                          linenumber=item.value.linenum,
+                          filename=self.__currentbuffer.filename)
 
         #self.add_button('warning', self.cb_but_pydoc , 'Look up in Pydoc')
         #self.add_button('profile', self.cb_but_profile, 'Run in the Python profiler')
@@ -154,13 +156,14 @@ class Python(plugin.Plugin):
         self.refwin.show(s)
 
     def execute(self):
-        #py = self.prop_main_registry.commands.python.value()
-        #dirn = os.path.split(self.fn)[0]
-        #self.do_action('newterminal', '%s %s' % (py, self.fn), directory=dirn)
         self.do_action('command', 'python_execute', [self.fn])
 
     def evt_buffermanager_file_opened(self, buffer):
-        root = fastparser.fastparser(buffer.string)
+        self.__currentbuffer = buffer
+        self.refresh()
+
+    def refresh(self):
+        root = fastparser.fastparser(self.__currentbuffer.string)
         self.view.set_definitions(root.getChildNodes())
 
     def cb_sort_changed(self, *args):

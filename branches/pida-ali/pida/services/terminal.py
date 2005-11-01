@@ -29,6 +29,8 @@ import sys
 import subprocess
 import gobject
 import os
+import gtk
+import threading
 
 import pida.core.registry as registry
 
@@ -39,10 +41,25 @@ class TermContent(contentbook.ContentView):
         contentbook.ContentView.__init__(self)
         self.__term = pyshell.VteTerm(fd)
         self.pack_start(self.__term)
+        self.__fd = fd
 
     def get_term(self):
         return self.__term
     term = property(get_term)
+
+    def exited(self, retcode):
+        self.feed('Child exited with code %s\r\n' % retcode, '1;34')
+        self.feed('Press any key to close.')
+        self.__term.connect('commit', self.cb_press_any_key)
+
+    def cb_press_any_key(self, term, data, datalen):
+        self.close()
+
+    def feed(self, text, color=None):
+        """ Feed text to the terminal, optionally coloured."""
+        if color is not None:
+            text = '\x1b[%sm%s\x1b[0m' % (color, text)
+        self.__term.feed(text)
 
 class VtermContent(contentbook.ContentView):
     ICON = 'terminal'
@@ -50,14 +67,32 @@ class VtermContent(contentbook.ContentView):
     def __init__(self):
         contentbook.ContentView.__init__(self)
         self.__term = pyshell.vte.Terminal()
+        self.__term.connect('child-exited', self.cb_child_exited)
         self.pack_start(self.__term)
 
+    def cb_child_exited(self, term):
+        self.exited('')
+
     def fork(self, args, **kw):
-        self.__term.fork_command(args[0], args, **kw)
-        
+        self.pid = self.__term.fork_command(args[0], args, **kw)
+
     def get_term(self):
         return self.__term
     term = property(get_term)
+
+    def exited(self, retcode):
+        self.feed('Child exited\r\n', '1;34')
+        self.feed('Press any key to close.')
+        self.__term.connect('commit', self.cb_press_any_key)
+
+    def cb_press_any_key(self, term, data, datalen):
+        self.close()
+
+    def feed(self, text, color=None):
+        """ Feed text to the terminal, optionally coloured."""
+        if color is not None:
+            text = '\x1b[%sm%s\x1b[0m' % (color, text)
+        self.__term.feed(text)
 
 class TerminalManager(service.Service):
 
@@ -86,9 +121,10 @@ class TerminalManager(service.Service):
 
     def init(self):
         self.__contentpages = []
+        self.__pids = []
 
-    def cmd_execute(self, cmdargs, spkwargs={}):
-        self.fork_py(cmdargs, **spkwargs)
+    def cmd_execute(self, cmdargs, viewbook=False, spkwargs={}):
+        self.fork_py(cmdargs, viewbook, **spkwargs)
 
     def cmd_execute_vt(self, cmdargs, vtkwargs={}):
         self.fork_vt(cmdargs, **vtkwargs)
@@ -107,19 +143,35 @@ class TerminalManager(service.Service):
 
     def cmd_execute_hidden(self, cmdargs, datacallback, kwargs={}):
         p = popen(cmdargs, datacallback, kwargs)
+        self.__pids.append(p.pid)
 
-    def fork_py(self, cmdargs, **kw):
-        self.__master, slave = pty.openpty()
-        self.__console = subprocess.Popen(args=cmdargs, stdin=slave, stdout=slave,
+    def fork_py(self, cmdargs, viewbook=False, **kw):
+        def _fork_py():
+            master, slave = pty.openpty()
+            console = subprocess.Popen(args=cmdargs, stdin=slave, stdout=slave,
                                           stderr=slave, **kw)
-        content = TermContent(self.__master)
-        self.__configure_term(content)
-        self.boss.command('contentbook', 'add-page', contentview=content)
+            gtk.threads_enter()
+            self.__pids.append(console.pid)
+            content = TermContent(master)
+            content.pid = console.pid
+            self.__configure_term(content)
+            book = 'contentbook'
+            if viewbook:
+                book = 'viewbook'
+            self.boss.command(book, 'add-page', contentview=content)
+            gtk.threads_leave()
+            retcode = console.wait()
+            gtk.threads_enter()
+            content.exited(retcode)
+            gtk.threads_leave()
+        t = threading.Thread(target=_fork_py)
+        t.start()
         
     def fork_vt(self, cmdargs, **kw):
         content = VtermContent()
         self.__configure_term(content)
         content.fork(cmdargs, **kw)
+        self.__pids.append(content.pid)
         self.boss.command('viewbook', 'add-page', contentview=content)
         
     def populate(self):
@@ -127,6 +179,10 @@ class TerminalManager(service.Service):
             self.cmd_execute_vt_shell()
         self.boss.command('topbar', 'add-button', icon='terminal',
                            tooltip='New shell.', callback=vt_shell)
+        def py_shell(button):
+            self.cmd_execute_py_shell()
+        self.boss.command('topbar', 'add-button', icon='python',
+                           tooltip='New python shell.', callback=py_shell)
 
     def __configure_term(self, content):
         term = content.term
@@ -144,6 +200,10 @@ class TerminalManager(service.Service):
         term.set_size(60, 10)
         term.set_size_request(-1, 50)
         self.__connect_term(content)
+        content.connect('removed', self.cb_term_closed)
+
+    def cb_term_closed(self, view):
+        self.kill_pid(view.pid)
 
     def __connect_term(self, content):
         term = content.term
@@ -152,6 +212,18 @@ class TerminalManager(service.Service):
             content.set_title(title)
         term.connect('window-title-changed', title_changed)
 
+    def stop(self):
+        for pid in self.__pids:
+            self.kill_pid(pid)
+
+    def kill_pid(self, pid):
+        try:
+            os.kill(pid, 9)
+        except:
+            try:
+                os.kill(pid, 15)
+            except:
+                pass
 
 class popen(object):
     
@@ -170,6 +242,7 @@ class popen(object):
             console.stdout, gobject.IO_IN, self.cb_read)
         self.__huptag = gobject.io_add_watch(
             console.stdout, gobject.IO_HUP, self.cb_hup)
+        self.pid = console.pid
 
     def cb_read(self, fd, cond):
         data = os.read(fd.fileno(), 1024)

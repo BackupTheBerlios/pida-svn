@@ -42,13 +42,22 @@ CONTEXTS_CONF = os.path.join(os.path.expanduser("~"), ".pida2", "conf", "context
 class Context(object):
     scripts = None
 
-class Contexts(service.Service):
+class ContextView(contentbook.TabView):
+
+    ICON = 'contexts'
+
+
+class Contexts(service.ServiceWithListedTab):
 
     NAME = 'contexts'
     COMMANDS = [('get-toolbar', [('contextname', True)]),
                 ('show-editor', [])]
     OPTIONS = [('filename', 'The contexts file.',
                 CONTEXTS_CONF, registry.File)]
+
+    EDITOR_VIEW = ContextView
+
+    ICON = 'contexts'
 
     def init(self):
         self.__registry = registry.Registry()
@@ -65,12 +74,15 @@ class Contexts(service.Service):
                                   globaldict=globaldict)
             tb.connect('clicked', clicked)
             for script in scripts:
-                print script
-                tb.add_button(script, script, 'run this')
+                tb.add_button(script, 'scripts',
+                    'Click to execute script: %s' % script)
             return tb
 
     def reset(self):
         if self.registry_filename != self.__filename:
+            self.reload()
+
+    def reload(self):
             self.__filename = self.registry_filename
             if os.path.exists(self.__filename):
                 groupdocs = dict(CONTEXTS)
@@ -96,15 +108,12 @@ class Contexts(service.Service):
     registry_filename = property(__get_registry_filename)
 
     def populate(self):
-        self.boss.command('topbar', 'add-button', icon='contexts',
+        self.boss.command('topbar', 'add-button', icon=self.ICON,
                           tooltip='edit the shortcut contexts',
                           callback=self.cb_show_editor)
 
     def cmd_show_editor(self):
-        self.__view = contentbook.ContentView()
-        self.__tab = listedtab.ListedTab(self.__registry)
-        self.__view.pack_start(self.__tab)
-        self.boss.command('viewbook', 'add-page', contentview=self.__view)
+        self.create_editorview(self.__registry)
 
     def cb_show_editor(self, button):
         self.cmd_show_editor()

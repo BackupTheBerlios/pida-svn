@@ -24,6 +24,7 @@ import gtk
 import gobject
 import icons
 import toolbar
+import listedtab
 
 TITLE_MU = """<span size="small" weight="bold">%s</span>"""
        
@@ -113,10 +114,7 @@ class ContentView(gtk.VBox):
             self.detach()
         elif name == 'close':
             self.close()
-            print 'close'
-        else:
-            print name
-        pass#self.emit('action', name)
+        toolbar.emit_stop_by_name('clicked')
 
     def close(self):
         if hasattr(self, 'contentbook'):
@@ -178,9 +176,9 @@ class ContentBook(ContentView):
         self.__notebook.set_current_page(pagenum)
 
     def remove_page(self, contentview):
-        contentview.emit('removed')
         pagenum = self.__notebook.page_num(contentview)
         self.__notebook.remove_page(pagenum)
+        contentview.emit('removed')
 
     def __get_notebook(self):
         return self.__notebook
@@ -251,6 +249,23 @@ class EditorView(ContentView):
     def get_file_name(self):
         return self.__filename
     filename = property(get_file_name)
+
+
+class TabView(ContentView):
+
+    TAB_VIEW = listedtab.ListedTab
+
+    def __init__(self, registry):
+        ContentView.__init__(self)
+        self.__tab = self.TAB_VIEW(registry)
+        self.pack_start(self.__tab)
+
+    def display_page(self, name):
+        self.__tab.display_page(name)
+
+    def get_tab(self):
+        return self.__tab
+    tab = property(get_tab)
 
 if __name__ == '__main__':
     w = gtk.Window()

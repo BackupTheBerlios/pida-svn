@@ -109,6 +109,9 @@ class Service(base.pidaobject):
     def populate_base(self):
         pass
 
+    def stop(self):
+        pass
+
 class GuiService(Service):
 
     VIEW = None
@@ -131,4 +134,77 @@ class GuiService(Service):
     def __get_view(self):
         return self.__view
     view = property(__get_view)
+
+class ServiceWithEditorMixin(object):
+
+    EDITOR_VIEW = None
+    PARENT_VIEW = 'viewbook'
+
+    def populate_base(self):
+        self.__editorview = None
+
+    def create_editorview(self, *args, **kwargs):
+        if self.__editorview is None:
+            if self.EDITOR_VIEW is None:
+                raise NotImplementedError, "Must specify a EDITORVIEW."
+            self.__editorview = self.EDITOR_VIEW(*args, **kwargs)
+            self.__editorview.boss = self.boss
+            self.__editorview.connect('removed', self.cb_editorview_closed)
+            self.__editorview.connect("action", self.__cb_editorview_action)
+            self.boss.command(self.PARENT_VIEW,
+                              'add-page', contentview=self.__editorview)
+        self.__editorview.raise_tab()
+
+    def display_editorpage(self, name):
+        self.__editorview.display_page(name)
+
+    def cb_editorview_closed(self, view):
+        assert(view is self.__editorview)
+        self.__editorview.destroy()
+        self.__editorview = None
+        view.emit_stop_by_name('removed')
+
+    def __cb_editorview_action(self, view, name):
+        self.cb_view_action(view, name)
+        view.emit_stop_by_name('action')
+
+    def cb_editorview_action(self, view, name):
+        pass
+
+    def get_editor(self):
+        return self.__editorview
+    editorview = property(get_editor)
+
+class ServiceWithSingleView(Service, ServiceWithEditorMixin):
+
+
+    def populate_base(self):
+        Service.populate_base(self)
+        ServiceWithEditorMixin.populate_base(self)
+
+class ServiceWithListedTab(ServiceWithSingleView):
+
+    def create_editorview(self, *args, **kwargs):
+        ServiceWithSingleView.create_editorview(self, *args, **kwargs)
+        self.editorview.tab.connect('reverted', self.cb_reverted)
+        self.editorview.tab.connect('closed', self.cb_closed)
+
+    def cb_closed(self):
+        raise NotImplementedError
+
+    def cb_reverted(self):
+        self.reload()
+        self.editorview.reset()
+
+    def reload(self):
+        pass
+
+
+class GuiServiceWithListedTab(GuiService, ServiceWithListedTab):
+
+    def populate_base(self):
+        GuiService.populate_base(self)
+        ServiceWithListedTab.populate_base(self)
+
+
 

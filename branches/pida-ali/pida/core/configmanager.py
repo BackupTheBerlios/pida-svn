@@ -30,18 +30,27 @@ import os.path
 
 PIDA_CONF = os.path.join(os.path.expanduser("~"), ".pida2", "conf", "pida.conf")
 
-class ConfigManager(service.Service):
+
+class ConfigEditor(contentbook.TabView):
+    ICON = "configure"
+    ICON_TEXT = "The pIDA configuration manager"
+
+class ConfigManager(service.ServiceWithListedTab):
     NAME = 'configmanager'
 
     COMMANDS = [("show-editor", []),
                 ("reload", [])]
 
+    EDITOR_VIEW = ConfigEditor
+
     def init(self):
         self.__registry = registry.Registry()
         self.__view = None
+        self.populate_base()
 
     def load(self):
         self.__registry.load_file(PIDA_CONF)
+    reload = load
 
     def add_group(self, name, doc):
         return self.__registry.add_group(name, doc)
@@ -58,15 +67,16 @@ class ConfigManager(service.Service):
         self.load()
 
     def cmd_show_editor(self):
-        if self.__view is None:
-            notebook = listedtab.ListedTab(self.__registry)
-            notebook.connect("applied", self.cb_view_applied)
-            notebook.connect("closed", self.cb_view_closed)
-            self.__view = ConfigEditor()
-            self.__view.pack_start(notebook)
-            self.boss.command('viewbook', 'add-page', contentview=self.__view)
-        else:
-            self.__view.raise_tab()
+        self.create_editorview(self.__registry)
+        #if self.__view is None:
+        #    notebook = listedtab.ListedTab(self.__registry)
+        #    notebook.connect("applied", self.cb_view_applied)
+        #    notebook.connect("closed", self.cb_view_closed)
+        #    self.__view = ConfigEditor()
+        #    self.__view.pack_start(notebook)
+        #    self.boss.command('viewbook', 'add-page', contentview=self.__view)
+        #else:
+       ##     self.__view.raise_tab()
 
     def populate(self):
         self.boss.command("topbar", "add-button", icon="configure",
@@ -76,13 +86,6 @@ class ConfigManager(service.Service):
     def cb_show_editor(self, button):
         self.cmd_show_editor()
 
-    def cb_view_closed(self, listedtab):
-        self.__view.close()
-
     def cb_view_applied(self, listedtab):
         self.boss.reset()
 
-class ConfigEditor(contentbook.ContentView):
-
-    ICON = "configure"
-    ICON_TEXT = "The pIDA configuration manager"

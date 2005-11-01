@@ -32,6 +32,10 @@ class WindowManager(service.Service):
     
     def init(self):
         self.__window = window.PidaWindow()
+        self.__window.connect('destroy', self.cb_destroy)
+
+    def cb_destroy(self, window):
+        self.boss.stop()
 
     def populate(self):
         """Populate the window."""

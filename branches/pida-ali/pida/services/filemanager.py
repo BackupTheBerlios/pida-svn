@@ -24,38 +24,39 @@ import os
 import pida.core.service as service
 import pida.pidagtk.filemanager as filemanager
 
-class FileManager(service.Service):
+class FileManager(service.ServiceWithSingleView):
     NAME = 'filemanager'
     COMMANDS = [('browse', [('directory', True),
                             ('filters', False),
-                            ('glob', False)])]
+                            ('glob', False)]),
+                ('get-current-selection', [])]
+
+    EDITOR_VIEW = filemanager.FileBrowser
+    PARENT_VIEW = 'contentbook'
 
     def init(self):
         self.__content = None
 
     def cmd_browse(self, directory, filters=[], glob='*'):
-        if self.__content is None:
-            content = filemanager.FileBrowser()
-            def activated(filebrowser, filename):
-                self.boss.command('buffermanager', 'open-file', filename=filename)
-            def changed(filebrowser, dirname):
-                def setstatuses(statuses):
-                    filebrowser.set_statuses(statuses)
-                self.boss.command('versioncontrol', 'get-statuses',
-                    datacallback=setstatuses,
-                    directory=dirname)
-            content.connect('file-activated', activated)
-            content.connect('directory-changed', changed)
-            self.__content = content
-            self.__content.connect('removed', self.cb_content_removed)
-            self.boss.command('contentbook', 'add-page', contentview=content)
+        self.create_editorview()
+        if directory == '':
             directory = os.path.expanduser('~')
-        if directory != '':
-            self.__content.display(directory)
-        self.__content.raise_tab()
+        self.editorview.display(directory)
 
-    def cb_content_removed(self, contentview):
-        self.__content.emit_stop_by_name('removed')
-        self.__content = None
+    def create_editorview(self):
+        service.ServiceWithSingleView.create_editorview(self)
+        def activated(filebrowser, filename):
+            self.boss.command('buffermanager', 'open-file', filename=filename)
+        def changed(filebrowser, dirname):
+            def setstatuses(statuses):
+                filebrowser.set_statuses(statuses)
+            #self.boss.command('versioncontrol', 'get-statuses',
+            #                   datacallback=setstatuses,
+            #                   directory=dirname)
+        self.editorview.connect('file-activated', activated)
+        self.editorview.connect('directory-changed', changed)
+
+    def cmd_get_current_selection(self):
+        pass
 
 Service = FileManager

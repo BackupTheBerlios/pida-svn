@@ -1198,7 +1198,7 @@ class EditWindow(gtk.EventBox, Component):
                 
                 buff.set_text(enc_data)
                 buff.set_modified(False)
-                buff.place_cursor(buff.get_start_iter())
+                #buff.place_cursor(buff.get_start_iter())
                 buff.end_not_undoable_action()
                 fd.close()
 
@@ -1222,6 +1222,8 @@ class EditWindow(gtk.EventBox, Component):
 
         else:
             new_entry = False
+        
+        self.plugin.culebra_file_opened(fname)
             
             
         # Replace a not modified new buffer when we open
@@ -1332,7 +1334,6 @@ class EditWindow(gtk.EventBox, Component):
             
         self.load_file(fname)
         self.get_parent_window().set_title(os.path.split(fname)[1])
-        self.plugin.manager.emit_event('file-opened', filename=fname)
 
     def file_save(self, mi=None, fname=None):
             

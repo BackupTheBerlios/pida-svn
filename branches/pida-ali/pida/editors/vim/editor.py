@@ -57,6 +57,7 @@ class Editor(editor.Editor):
 
     def populate(self):
         self.__cw = None
+        self.__bufferevents = []
 
     def launch(self):
         if self.__cw is None:
@@ -76,12 +77,20 @@ class Editor(editor.Editor):
         self.__cw.open_file(self.__srv, filename)
         self.__view.raise_tab()
 
+    def open_file_line(self, filename, linenumber):
+        self.open_file(filename)
+        self.__bufferevents.append([self.goto_line, (linenumber, )])
+
     def goto_line(self, linenumber):
         self.__cw.change_cursor(self.__srv, 1, linenumber)
 
     def vim_bufferchange(self, index, filename):
+        print 'bufferchange'
+        for fcall, args in self.__bufferevents:
+            fcall(*args)
+        self.__bufferevents = []
         self.manager.emit_event('file-opened', filename=filename)
-        print filename
+            
 
     def vim_bufferunload(self, *args):
         self.manager.emit_event('current-file-closed')

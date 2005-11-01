@@ -742,7 +742,7 @@ class Pygrep:
 
 	    # we are now ready to print out the results
 	    # for this file.
-
+            return
             if not self.s_flag: 	#silent
                 if (len(indices) == 0):
 		    if self.d_flag:
@@ -776,7 +776,7 @@ class Pygrep:
 		       print lines[indices[-1]-1],
 		       if self.show_dashes:
 			   print "---"
-
+        return
         if not self.s_flag:
             if self.c_flag:
                 print "total = ",self.line_count

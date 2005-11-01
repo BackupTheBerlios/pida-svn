@@ -218,7 +218,9 @@ class Registry(RegistryGroup):
         if groupname in self.__groups:
             return self.__groups[groupname]
         
-
+    def delete_group(self, groupname):
+        if groupname in self.__groups:
+            del self.__groups[groupname]
 
     def add_group(self, name, doc):
         group = RegistryGroup(name, doc)

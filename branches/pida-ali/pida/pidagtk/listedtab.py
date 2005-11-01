@@ -47,6 +47,8 @@ class ListedTab(gtk.VBox):
     __gsignals__ = {'closed' : (gobject.SIGNAL_RUN_LAST,
                                  gobject.TYPE_NONE, ()),
                     'applied' : (gobject.SIGNAL_RUN_LAST,
+                                 gobject.TYPE_NONE, ()),
+                    'reverted' : (gobject.SIGNAL_RUN_LAST,
                                  gobject.TYPE_NONE, ())}
     
     TREE = tree.Tree
@@ -58,7 +60,7 @@ class ListedTab(gtk.VBox):
         self.__pages = {}
         self.__widgets = []
         self.__populate()
-        self.__build_sectionlist()
+        self.reset()
 
     def __populate(self):
         mainbox = gtk.HBox()
@@ -69,6 +71,9 @@ class ListedTab(gtk.VBox):
         self.__sectionview = self.TREE()
         leftbox.pack_start(self.__sectionview)
         self.__sectionview.connect("clicked", self.cb_section_clicked)
+        self.__sectionview.connect('new-item', self.cb_new_item)
+        self.__sectionview.connect('edit-item', self.cb_edit_item)
+        self.__sectionview.connect('delete-item', self.cb_delete_item)
         rightbox = gtk.VBox()
         mainbox.pack_start(rightbox)
         self.__notebook = gtk.Notebook()
@@ -82,6 +87,9 @@ class ListedTab(gtk.VBox):
         self.__cancelbutton = icons.icons.get_text_button('close', 'Close')
         cb.pack_start(self.__cancelbutton, expand=False)
         self.__cancelbutton.connect('clicked', self.cb_close)
+        self.__revert_button = icons.icons.get_text_button('undo', 'Revert')
+        cb.pack_start(self.__revert_button, expand=False)
+        self.__revert_button.connect('clicked', self.cb_revert)
         self.__applybutton = icons.icons.get_text_button('apply', 'Apply')
         cb.pack_start(self.__applybutton, expand=False)
         self.__applybutton.connect('clicked', self.cb_apply)
@@ -90,6 +98,7 @@ class ListedTab(gtk.VBox):
         self.__savebutton.connect('clicked', self.cb_save)
 
     def __build_sectionlist(self):
+        self.__sectionview.clear()
         first = True
         for group in self.__registry.iter_groups_alphabetically():
             treeitem = self.TREE_ITEM(group.get_name(), group)
@@ -97,13 +106,18 @@ class ListedTab(gtk.VBox):
             if first:
                 first = False
                 self.__sectionview.set_selected(group.get_name())
-        
+
+    def reset(self):
+        self.__build_sectionlist()
 
     def create_page(self, section_name):
         if not section_name in self.__pages:
             size_group = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
             group = self.__registry.get_group(section_name)
             b = gtk.VBox()
+            sw = gtk.ScrolledWindow()
+            sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+            sw.add_with_viewport(b)
             name_label = gtk.Label()
             name_label.set_markup(SECTION_NAME_MU % section_name)
             name_label.set_justify(gtk.JUSTIFY_LEFT)
@@ -112,17 +126,19 @@ class ListedTab(gtk.VBox):
             doc_label.set_markup(SECTION_DOC_MU % group.doc)
             b.pack_start(doc_label, expand=False)
             b.pack_start(gtk.HSeparator(), expand=False, padding=4)
-            self.__pages[section_name] = b
+            self.__pages[section_name] = sw
             for opt in group.iter_alphabetically():
                 w = opt.DISPLAY_WIDGET(opt)
                 b.pack_start(w.win, expand=False, padding=6)
                 size_group.add_widget(w.widget)
                 w.load()
                 self.__widgets.append(w)
-            b.show_all()
+            sw.show_all()
         return self.__pages[section_name]
             
     def display_page(self, section_name):
+        if section_name != self.__sectionview.get_selected_key():
+            self.__sectionview.set_selected(section_name)
         page = self.create_page(section_name)
         if self.__notebook.page_num(page) == -1:
             self.__notebook.append_page(page)
@@ -141,6 +157,9 @@ class ListedTab(gtk.VBox):
     def cb_close(self, button):
         self.emit("closed")
 
+    def cb_revert(self, button):
+        self.emit('reverted')
+
     def cb_save(self, button):
         self.__apply()
         self.__registry.save()
@@ -150,6 +169,17 @@ class ListedTab(gtk.VBox):
 
     def cb_section_clicked(self, tree, item):
         self.display_page(item.value.name)
+
+    def cb_delete_item(self, tab):
+        self.__registry.delete_group(self.__sectionview.get_selected_key())
+        self.reset()
+
+    def cb_edit_item(self, tab):
+        pass
+
+    def cb_new_item(self, tab):
+        pass
+
 
 class NewItemTab(ListedTab):
     TREE = EditTree

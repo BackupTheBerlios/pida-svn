@@ -24,39 +24,58 @@
 import os
 import gtk
 import tree
+import icons
 import gobject
 import contentbook
 
 def shorten_home_name(directory):
     return directory.replace(os.path.expanduser('~'), '~')
 
-class FileTreeItem(tree.TreeItem):
-    pass
+class FileTreeItem(tree.IconTreeItem):
+    DIRECTORY = False
     def __get_markup(self):
-        return '<span size="small" foreground="black">%s</span>' % (self.value)
+        return ('<span size="small" foreground="black"><tt>%s</tt></span>' %
+                (self.value[:10]))
     markup = property(__get_markup)
 
 
-class DirTreeItem(tree.TreeItem):
+class DirTreeItem(tree.IconTreeItem):
+    DIRECTORY = True
     def __get_markup(self):
-        return '<span size="small" foreground="blue">%s/</span>' % (self.value)
+        return ('<span size="small" color="blue"><tt>%s</tt></span>' %
+                (self.value[:10]))
     markup = property(__get_markup)
 
-
-class FileTree(tree.Tree):
+class FileTree(gtk.IconView):
     FIELDS =   (gobject.TYPE_STRING,
-              gobject.TYPE_PYOBJECT,
-              gobject.TYPE_STRING,
-              gobject.TYPE_STRING)
-    
-    COLUMNS = [[gtk.CellRendererText, 'markup', 3],
-               [gtk.CellRendererText, 'markup', 2]]
+                gobject.TYPE_STRING,
+                gobject.TYPE_BOOLEAN,
+                gtk.gdk.Pixbuf)
 
-    def add_item(self, item, parent=None):
-        filename = item.value
+    def __init__(self):
+        gtk.IconView.__init__(self)
+        self.__model = gtk.ListStore(*self.FIELDS)
+        self.set_model(self.__model)
+        self.set_markup_column(1)
+        self.set_pixbuf_column(-1)
+        #self.set_orientation(gtk.ORIENTATION_HORIZONTAL)
+
+
+    def add_item(self, item):
+        filename = item.key
         markup = item.markup
-        self.model.append(parent, [filename, item, markup, ''])
+        pixbuf = item.pixbuf
+        isdir = item.DIRECTORY
+        self.__model.append([filename, markup, isdir, pixbuf])
 
+    def clear(self):
+        self.__model.clear()
+
+    def get_model(self):
+        return self.__model
+    model = property(get_model)
+
+DIR_ICON = icons.icons.get_image('filebrowser')
 
 class FileBrowser(contentbook.ContentView):
 
@@ -75,14 +94,16 @@ class FileBrowser(contentbook.ContentView):
     def populate(self):
         hbox = gtk.HPaned()
         self.pack_start(hbox)
-        self.__dirview = FileTree()
-        hbox.pack1(self.__dirview, False, False)
+        sw = gtk.ScrolledWindow()
+        sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        hbox.pack2(sw)
         self.__fileview = FileTree()
-        hbox.pack2(self.__fileview, False, False)
-        self.__fileview.connect('double-clicked', self.cb_file_activated)
-        self.__dirview.connect('double-clicked', self.cb_dir_activated)
+        sw.add(self.__fileview)
+        self.__fileview.connect('item-activated', self.cb_file_activated)
+        #self.__dirview.connect('double-clicked', self.cb_dir_activated)
         self.__currentdirectory = None
         add_but = self.add_button("up", "up", 'go to the parent directory')
+        add_but = self.add_button("find", "find", 'find things here')
 
 
     def display(self, directory, statuses=[], glob='*', hidden=True):
@@ -91,12 +112,11 @@ class FileBrowser(contentbook.ContentView):
             self.__currentdirectory = directory
             self.set_title(shorten_home_name(directory))
             self.__fileview.clear()
-            self.__dirview.clear()
             for filename in os.listdir(directory):
                 path = os.path.join(self.__currentdirectory, filename)
                 if os.path.isdir(path):
-                    i = DirTreeItem(path, filename)
-                    self.__dirview.add_item(i)
+                    i = DirTreeItem(path, filename, image=DIR_ICON)
+                    self.__fileview.add_item(i)
                 else:
                     i = FileTreeItem(path, filename)
                     self.__fileview.add_item(i)
@@ -115,9 +135,15 @@ class FileBrowser(contentbook.ContentView):
                 column = 3
                 self.__fileview.set(niter, column, statuses[row[0]])
 
-    def cb_file_activated(self, tree, item):
-        newpath = item.key
-        self.emit('file-activated', newpath)
+    def cb_file_activated(self, view, path):
+        niter = self.__fileview.model.get_iter(path)
+        if niter:
+            filepath = self.__fileview.model.get_value(niter, 0)
+            print filepath
+            if self.__fileview.model.get_value(niter, 2):
+                self.display(filepath)
+            else:
+                self.emit('file-activated', filepath)
 
     def cb_dir_activated(self, tree, item):
         self.display(item.key)
@@ -130,6 +156,11 @@ class FileBrowser(contentbook.ContentView):
 
     def toolbar_action_up(self):
         self.go_up()
+
+    def toolbar_action_find(self):
+        if self.__currentdirectory is not None:
+            self.boss.command('grepper', 'find-interactive',
+                               directories=[self.__currentdirectory])
 
 if __name__ == '__main__':
     w = gtk.Window()

@@ -31,6 +31,7 @@ class Editor(editor.Editor):
     def init(self):
         self.__views = {}
         self.__currentview = None
+        self.__bufferevents = []
 
     def launch(self):
         self.manager.emit_event('started')
@@ -49,10 +50,17 @@ class Editor(editor.Editor):
             self.__views[filename].raise_tab()
         self.__currentview = self.__views[filename]
 
+    def open_file_line(self, filename, linenumber):
+        #self.__bufferevents.append([self.goto_line, (linenumber, )])
+        self.open_file(filename)
+        self.goto_line(linenumber)
+
     def goto_line(self, linenumber):
+        print 'goto', linenumber
         buf = self.__currentview.editor.get_current()
+        print buf.filename
         titer = buf.get_iter_at_line(linenumber - 1)
-        self.__currentview.editor.editor.scroll_to_iter(titer, 0.25)
+        self.__currentview.editor.editor.scroll_to_iter(titer, 0.1)
         buf.place_cursor(titer)
         self.__currentview.editor.grab_focus()
 
@@ -78,3 +86,11 @@ class Editor(editor.Editor):
             self.boss.command('filemanager', 'browse', directory='')
         elif action == 'save':
             self.save_view(contentview)
+
+    def culebra_file_opened(self, filename):
+        print filename, self.__bufferevents
+        for fcall, args in self.__bufferevents:
+            fcall(*args)
+        self.__bufferevents = []
+        self.manager.emit_event('file-opened', filename=filename)
+       

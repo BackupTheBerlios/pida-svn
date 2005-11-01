@@ -28,7 +28,8 @@ class IService(object):
 
 SERVICES = ['editormanager', 'buffermanager', 'contexts', 'contentbook',
             'commandline', 'manhole', 'terminal', 'versioncontrol', 'filemanager',
-            'viewbook', 'topbar', 'gazpach', 'meld', 'scripts', 'grepper']
+            'viewbook', 'topbar', 'gazpach', 'meld', 'scripts', 'grepper',
+            'externalcommands', 'rpc']
 
 def import_service(self, name):
     """ Find a named plugin and instantiate it. """
@@ -64,18 +65,6 @@ class ServiceManager(components.ComponentGroup):
             self.load(name)
         self.log_debug('Loaded all services.')
 
-    def register_events(self, name):
-        """Register the events for the named service."""
-
-    def register_events_all(self):
-        """Register the events for all services."""
-
-    def register_commands(self, name):
-        """Register the commands for the named service."""
-
-    def register_commands_all(self):
-        """Register the commands for all services."""
-
     def bind(self):
         for service in self:
             service.bind()
@@ -90,5 +79,11 @@ class ServiceManager(components.ComponentGroup):
     def reset(self):
         for service in self:
             service.reset()
+
+    def stop(self):
+        for service in self:
+            service.stop()
+            
+        
 
 

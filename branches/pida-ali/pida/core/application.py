@@ -24,6 +24,12 @@
 import sys
 sys.path.insert(2, '../../')
 #sys.path.insert(1, '/home/ali/working/pida/pida/branches/pida-ali/')
+
+from twisted.internet import gtk2reactor
+gtk2reactor.install()
+from twisted.internet import reactor
+
+
 import pida.core.service as service
 
 import os
@@ -38,15 +44,16 @@ class Application(object):
     def __init__(self):
         self.dirs = create_home_tree()
         self.boss = boss.Boss()
+        self.boss.application = self
 
     def start(self):
         """Start PIDA."""
         self.boss.start()
-        gtk.main()
+        reactor.run()
 
     def stop(self):
         """Stop PIDA."""
-        gtk.main_quit()
+        reactor.stop()
 
 def create_home_tree(root=None):
     dirs = {}
@@ -54,7 +61,7 @@ def create_home_tree(root=None):
         root = os.path.expanduser('~/.pida2')
     mkdir(root)
     dirs['root'] = root
-    for name in ['conf', 'log', 'run', 'vcs']:
+    for name in ['conf', 'log', 'run', 'vcs', 'sockets']:
         path = os.path.join(root, name)
         mkdir(path)
         dirs[name] = path

@@ -50,6 +50,12 @@ class Boss(object):
         self.__reset()
         self.command('editor', 'start-editor')
 
+    def stop(self):
+        self.__editor.stop()
+        self.__plugins.stop()
+        self.__services.stop()
+        self.application.stop()
+
     def register_command_group(self, name):
         """Register a top-level command group."""
         return self.__commands.add_group(name)
@@ -75,20 +81,25 @@ class Boss(object):
 
     def command(self, groupname, name, **kw):
         """Call the named command with the keyword arguments."""
-        self.log_debug('CMD', 'calling - %s: %s' % (groupname, name))
         group = self.__commands.get(groupname)
         if group:
             command = group.get(name)
             if command:
+                self.log_debug('CMD', 'calling - %s: %s' % (groupname, name))
                 return command(**kw)
             else:
                 self.log_warn('CMD', 'Command not found: (%s, %s)' % 
                     (groupname, name))
+                return
+        else:
+            self.log_warn('CMD', 'Command not found: (%s, %s)' % 
+                           (groupname, name))
+            return
+
     
     def option(self, groupname, name):
         """Get the option value for the grouped named option."""
         return self.__config.get_value(groupname, name)
-        
 
     def get_command(self, name):
         """Get the named command."""

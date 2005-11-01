@@ -45,7 +45,6 @@ class Buffermanager(service.Service):
     BINDINGS = [('editor', 'started'),
                 ('editor', 'file-opened'),
                 ('editor', 'current-file-closed')]
-
     
     def init(self):
         self.__currentbuffer = None
@@ -71,7 +70,7 @@ class Buffermanager(service.Service):
     def cmd_get_bufferlist(self):
         return self.__bufferlist
 
-    def cmd_open_file(self, filename):
+    def cmd_open_file(self, filename, emit=True):
         assert(isinstance(filename, str))
         if self.__currentbuffer is None or self.__currentbuffer.filename != filename:
             matched = False
@@ -79,24 +78,26 @@ class Buffermanager(service.Service):
                 if glob.fnmatch.fnmatch(filename, match):
                     new_buffer = self.__handlers[match].open_file(filename)
                     matched = True
-                    #self.cmd_add_buffer(new_buffer)
                     break
             if not matched:
                 if not filename in self.__buffers:
                     new_buffer = buffer.Buffer(filename)
                     self.cmd_add_buffer(new_buffer)
-                    # replace with an editor command call?
                 else:
                     self.set_current_buffer(filename)
                     new_buffer = self.__buffers[filename]
-                self.emit_event('file-opened', buffer=new_buffer)
+                if emit:
+                    self.boss.command('editor', 'open-file',
+                        filename=new_buffer.filename)
+            self.emit_event('file-opened', buffer=self.__currentbuffer)
         return self.__currentbuffer
 
     def cmd_open_new_file(self):
         new_buffer = buffer.TemporaryBuffer("* ", "new file")
         self.cmd_add_buffer(new_buffer)
         self.set_current_buffer(new_buffer.file)
-        self.emit_event('file-opened', buffer=new_buffer)
+        self.boss.command('editor', 'open-file',
+            filename=new_buffer.file)
 
     def cmd_add_buffer(self, buffer):
         filename = buffer.filename
@@ -129,20 +130,18 @@ class Buffermanager(service.Service):
     def cmd_reset_current_buffer(self):
         if self.__currentbuffer.poll():
             self.emit_event('buffer-modified')
-            
 
     def evt_editor_started(self):
         if len(self.__buffers):
             for buf in self.__buffers:
-                self.emit_event('file-opened', buffer=self.__buffers[buf])
+                self.boss.command('editor', 'open-file',
+                    filename=buf.filename)
                 self.__view.set_currentbuffer(buf)
         else:
             self.cmd_open_new_file()
 
-        #self.__view.set_selected(buf)
-
     def evt_editor_file_opened(self, filename):
-        self.cmd_open_file(filename)
+        self.cmd_open_file(filename, emit=False)
 
     def evt_editor_current_file_closed(self):
         return

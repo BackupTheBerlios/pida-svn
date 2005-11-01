@@ -31,6 +31,8 @@ VCS_CVS = 2
 VCS_SVN = 3
 VCS_MERC = 4
 
+VCS_NAMES = {0: '', 1: 'darcs', 2: 'CVS', 3: 'Subversion', 4: 'Mercurial'}
+
 class VersionControl(service.Service):
     
     NAME = 'versioncontrol'
@@ -38,26 +40,33 @@ class VersionControl(service.Service):
                           ('directory', True)]),
                 ('get-statuses', [('directory', True),
                                   ('datacallback', True)]),
-                ('get-vcs-for-directory', [('directory', True)])]
+                ('get-vcs-for-directory', [('directory', True)]),
+                ('up', [('directory', True)]),
+                ('commit-directory', [('directory', True), ('message', True)]),
+                ('commit-files', [('files', True)]),
+                ('status', [('directory', True)]),
+                ]
     
     def init(self):
         self.__vcs = create_vcs_maps()
 
-    def call_visual(self, basecmd, command, directory):
-        self.boss.command('terminal', 'execute',
-                           cmdargs=[basecmd] + list(command),
+    def call_visual(self, basecmd, command, directory, files=[]):
+        self.boss.command('terminal', 'execute', viewbook=True,
+                           cmdargs=[basecmd] + list(command) + files,
                            spkwargs={'cwd': directory})
 
-    def call_hidden(self, basecmd, command, directory, datacallback):
+    def call_hidden(self, basecmd, command, directory, datacallback, files=[],
+                    msg=[]):
         self.boss.command('terminal', 'execute-hidden',
-                           cmdargs=[basecmd] + list(command),
+                           cmdargs=[basecmd] + list(command) + msg + files,
                            kwargs={'cwd': directory},
                            datacallback=datacallback)
         
     def cmd_call(self, command, directory):
         self.call(command, directory, True)
 
-    def call(self, command, directory, visual=True, cbfunc=lambda *a: None):
+    def call(self, command, directory, files=[], msg=[], visual=True,
+             cbfunc=lambda *a: None):
         vcstype = get_vcs_for_directory(directory)
         if vcstype != VCS_NONE:
             vcs = self.__vcs[vcstype]
@@ -65,9 +74,9 @@ class VersionControl(service.Service):
                 action = vcs.commands[command]
                 basecmd = vcs.base_command
                 if visual:
-                    self.call_visual(basecmd, action, directory)
+                    self.call_visual(basecmd, action, directory, files)
                 else:
-                    self.call_hidden(basecmd, action, directory, cbfunc)
+                    self.call_hidden(basecmd, action, directory, cbfunc, files)
             else:
                 self.log_warn('Bad command: %s' % command)
         else:
@@ -86,9 +95,25 @@ class VersionControl(service.Service):
         self.call('status', directory, False, cb)
 
     def cmd_get_vcs_for_directory(self, directory):
-        return get_vcs_for_directory(directory)
+        vcs = get_vcs_for_directory(directory)
+        return vcs, VCS_NAMES[vcs]
+
+    def cmd_up(self, directory):
+        self.call('update', directory)
         
-        
+    def cmd_message_and_commit(self, directory):
+        pass
+
+    def cmd_commit_directory(self, directory, message='aa'):
+        self.call('commit', directory, msg=['-m', message])
+
+    def cmd_commit_files(self, files):
+        self.call('up', directory)
+        self.call('commit', '/', files)
+
+    def cmd_status(self, directory):
+        self.call('status', directory)
+
 
 Service = VersionControl
 
@@ -98,7 +123,7 @@ def vcs_commands(**kw):
 
 class IVCSType(object):
     base_command = None
-    default_args = None
+    default_args = []
     commands = vcs_commands(commit=("commit", ),
                             update=("update", ),
                             status=('status', ))
@@ -106,15 +131,24 @@ class IVCSType(object):
 
 class Darcs(IVCSType):
     base_command = 'darcs'
+    commands = vcs_commands(commit=("record", ),
+                            update=("pull", ),
+                            status=('whatsnew', '--summary'))
 
 class Subversion(IVCSType):
     base_command = 'svn'
     commands = vcs_commands(commit=("commit", ),
                             update=("update", ),
-                            status=('status', '-N'))
+                            status=('status', ),
+                            rstatus=('status', ),
+                            up=('up', ))
 
 class CVS(IVCSType):
-    pass
+    commands = vcs_commands(commit=("commit", ),
+                            update=("update", ),
+                            status=('status', ),
+                            rstatus=('status', ),
+                            up=('up', ))
 
 class Mercurial(IVCSType):
     pass

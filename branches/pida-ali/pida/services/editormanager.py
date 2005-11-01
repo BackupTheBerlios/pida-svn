@@ -47,9 +47,9 @@ class EditorBook(contentbook.ContentBook):
 class EditorManager(contentbookservice.Service):
     NAME = 'editor'
     COMMANDS = [['open-file', [('filename', True)]],
+                ['open-file-line', [('filename', True), ('linenumber', True)]],
                 ['start-editor', []],
                 ['save-current', []],
-                ['goto-line', [('linenumber', True)]],
                 ['add-page', [('contentview', True)]]]
     EVENTS = ['started', 'file-opened', 'current-file-closed']
     BINDINGS = [('buffermanager', 'file-opened')]
@@ -72,17 +72,19 @@ class EditorManager(contentbookservice.Service):
     def cmd_start_editor(self):
         self.__editor.launch()
 
-    def cmd_goto_line(self, linenumber):
-        self.__editor.goto_line(linenumber)
-
     def cmd_open_file(self, filename):
         self.__editor.open_file(filename)
-        self.emit_event('file-opened', filename=filename)
+
+    def cmd_open_file_line(self, filename, linenumber):
+        self.__editor.open_file_line(filename, linenumber)
 
     def cmd_save_current(self):
         self.__editor.save_current()
 
-    def evt_buffermanager_file_opened(self, buffer):
-        self.cmd_open_file(buffer.filename)
+    def stop(self):
+        pass
+
+    #def evt_buffermanager_file_opened(self, buffer):
+    #    self.cmd_open_file(buffer.filename)
 
 Service = EditorManager

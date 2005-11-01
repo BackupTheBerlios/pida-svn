@@ -43,7 +43,7 @@ class ProjectTreeItem(tree.TreeItem):
 
     def __get_markup(self):
         directory = self.value.directory
-        vcs = self.value.vcs
+        vcs = self.value.vcsname
         wd = directory
         wd = wd.replace(os.path.expanduser('~'), '~')
         b = ('<span size="small"><b>%s</b> ('
@@ -62,6 +62,19 @@ class ProjectTree(tree.Tree):
 REGISTRY_SCHEMA = [('directory', 'the directory', '/', registry.Directory),
                    ('environment', 'the environment', '', registry.RegistryItem)]
 
+class ProjectEditorTree(tree.Tree):
+
+    EDIT_BUTTONS = True
+
+class ProjectEditor(listedtab.ListedTab):
+    
+    TREE = ProjectEditorTree
+
+class ProjectEditorView(contentbook.TabView):
+
+    TAB_VIEW = ProjectEditor
+
+
 class ProjectManager(plugin.Plugin):
     """Project Management"""
     NAME = 'projectmanager'
@@ -69,30 +82,41 @@ class ProjectManager(plugin.Plugin):
                 PROJECT_CONF, registry.File)]
     ICON = 'project'
 
+    BUTTONS = [('find', 'find', 'Search for text in this directory'),
+               ('vcsup', 'vcs_update',
+                'Update the version control for this directory'),
+               ('vcscommit', 'vcs_commit',
+                'Commit the directory to version control'),
+               ('vcsstatus', 'vcs_diff',
+                'Get the status for files in this project.')]
+
+    EDITOR_VIEW = ProjectEditorView
+
     def init(self):
         self.__registry = registry.Registry()
         self.__filename = None
+        self.__current_directory = None
+        self.__project_editor = None
 
     def populate(self):
         self.__projectlist = ProjectTree()
         self.view.pack_start(self.__projectlist)
         self.__projectlist.connect('new-item', self.cb_new_project)
+        self.__projectlist.connect('edit-item', self.cb_edit_project)
         self.__projectlist.connect('delete-item', self.cb_delete_project)
         self.__projectlist.connect('clicked', self.cb_project_clicked)
 
     def cb_project_clicked(self, tree, item):
         directory = item.value.directory
+        self.__current_directory = directory
         self.boss.command('filemanager', 'browse', directory=directory)
 
     def cb_new_project(self, treeview):
-        self.__project_editor = ProjectEditor(self.__registry)
-        self.__content = contentbook.ContentView()
-        self.__content.pack_start(self.__project_editor)
-        self.boss.command('viewbook', 'add-page',
-                           contentview=self.__content)
+        self.create_editorview(self.__registry)
 
-    def cb_edit_project(self):
-        pass
+    def cb_edit_project(self, treeview):
+        self.create_editorview(self.__registry)
+        self.display_editorpage(self.__projectlist.get_selected_key())
 
     def cb_delete_project(self, treeview, treeitem):
         if treeitem is not None:
@@ -100,17 +124,20 @@ class ProjectManager(plugin.Plugin):
 
     def reset(self):
         if self.registry_filename != self.__filename:
-            self.__registry.load_file_with_schema(
-                self.registry_filename, REGISTRY_SCHEMA)
-            self.__filename = self.registry_filename
-            self.__projectlist.set_projects(self.__adapt_registry())
+            self.reload()
+
+    def reload(self):
+        self.__registry.load_file_with_schema(
+            self.registry_filename, REGISTRY_SCHEMA)
+        self.__filename = self.registry_filename
+        self.__projectlist.set_projects(self.__adapt_registry())
     
     def __adapt_registry(self):
         for group in self.__registry.iter_groups():
             p = Project()
             p.name = group._name
             p.directory = group.get('directory').value()
-            p.vcs = self.boss.command('versioncontrol',
+            p.vcs, p.vcsname = self.boss.command('versioncontrol',
                         'get-vcs-for-directory', directory=p.directory)
             p.environment = group.get('environment').value()
             yield p
@@ -118,11 +145,28 @@ class ProjectManager(plugin.Plugin):
     def __get_registry_filename(self):
         return self.options.get('filename').value()
     registry_filename = property(__get_registry_filename)
+
+    def toolbar_action_find(self):
+        if self.__current_directory is not None:
+            self.boss.command('grepper', 'find-interactive',
+                               directories=[self.__current_directory])
+    
+    def toolbar_action_vcsup(self):
+        if self.__current_directory is not None:
+            self.boss.command('versioncontrol', 'up',
+                               directory=self.__current_directory)
+
+    def toolbar_action_vcscommit(self):
+        if self.__current_directory is not None:
+            self.boss.command('versioncontrol', 'commit-directory',
+                               directory=self.__current_directory)
+
+    def toolbar_action_vcsstatus(self):
+        if self.__current_directory is not None:
+            self.boss.command('versioncontrol', 'status',
+                               directory=self.__current_directory)
+
         
-
-class ProjectEditor(listedtab.ListedTab):
-    pass
-
     
 
 Plugin = ProjectManager

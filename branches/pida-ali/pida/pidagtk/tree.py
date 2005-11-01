@@ -76,11 +76,11 @@ class Tree(gtk.VBox):
                     'delete-item' : (
                         gobject.SIGNAL_RUN_LAST,
                         gobject.TYPE_NONE,
-                        (gobject.TYPE_PYOBJECT,)),
+                        ()),
                     'edit-item' : (
                         gobject.SIGNAL_RUN_LAST,
                         gobject.TYPE_NONE,
-                        (gobject.TYPE_PYOBJECT,))}
+                        ())}
     
     EDIT_BUTTONS = False
 
@@ -108,6 +108,7 @@ class Tree(gtk.VBox):
             self.__toolbar.add_button('new', 'new', 'new', True)
             self.__toolbar.add_button('delete', 'delete', 'delete', True)
             self.__toolbar.add_button('edit', 'edit', 'Edit this item.', True)
+            self.__toolbar.connect('clicked', self.cb_toolbar_clicked)
             self.pack_start(self.__toolbar, expand=False)
         self.__init_signals()
         self.show_all()
@@ -122,9 +123,9 @@ class Tree(gtk.VBox):
             if action == 'new':
                 self.emit('new-item')
             elif action == 'delete':
-                self.emit('delete-item', self.selected)
+                self.emit('delete-item')
             elif action == 'edit':
-                self.emit('edit-item', self.selected)
+                self.emit('edit-item')
             self.__toolbar.emit_stop_by_name('clicked')
         if self.EDIT_BUTTONS == True:
             self.__toolbar.connect('clicked', cb_toolbar_clicked)
@@ -188,6 +189,9 @@ class Tree(gtk.VBox):
         if ite:
             return self.__get(ite, column)
     selected = property(__get_selected)
+    
+    def get_selected_key(self):
+        return self.__get_selected(0)
 
     def set_selected(self, key):
         """Set the selected item to the first item matching the key."""
@@ -215,6 +219,15 @@ class Tree(gtk.VBox):
     def __set(self, niter, column, value):
         self.__model.set_value(niter, column, value)
     set = __set
+
+    def cb_toolbar_clicked(self, toolbar, action):
+        if action == 'new':
+            self.emit('new-item')
+        elif action == 'edit':
+            self.emit('edit-item')
+        elif action == 'delete':
+            self.emit('delete-item')
+        toolbar.emit_stop_by_name('clicked')
 
 class IconTreeItem(TreeItem):
     """I tree item with an icon."""
@@ -254,6 +267,9 @@ class IconTree(Tree):
         
 # Don't forget to register
 gobject.type_register(Tree)
+
+
+
 
 def test():
     w = gtk.Window()
