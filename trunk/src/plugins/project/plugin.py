@@ -441,6 +441,31 @@ class FileTree(gtkextra.Tree):
         shell = self.prop_main_registry.commands.shell.value()
         self.do_action('newterminal', shell, directory=root)
 
+    def change_buffer(self, bufname):
+        if not self.root: return
+        if not bufname.startswith("/"):
+            bufname = os.path.join(self.root, bufname)
+        root = self.root.split("/")
+        path = bufname.split("/")
+        comp = 0
+        for r,p in zip(root, path):
+            if r != p:
+                return
+            comp += 1
+        cur = self.model.get_iter_root()
+        while cur:
+            bits = self.model.get_value(cur,1).split("/")
+            if bits[comp] == path[comp]:
+                comp += 1
+                self.view.expand_row( self.model.get_path(cur), False)
+                if self.model.iter_has_child(cur):
+                    cur = self.model.iter_children(cur)
+                else:
+                    self.view.set_cursor( self.model.get_path(cur) )
+                    break
+            else:
+                cur = self.model.iter_next(cur)
+
 class ProjectTree(gtkextra.Tree):
     COLUMNS = [('Name', gobject.TYPE_STRING, gtk.CellRendererText, False,
                 'text'),
@@ -507,6 +532,12 @@ class Plugin(plugin.Plugin):
                           registry.RegistryItem,
                           '^(CVS|_darcs|\.svn|\..*\.swp)$',
                           'The files to be excluded from the file tree view.')
+
+        self.registry.add('jump_with_currentbuffer',
+                          registry.Boolean,
+                          True,
+                          'Whether the file manager will jump to the current '
+                          'buffer.')
 
 
     def do_init(self):
@@ -635,6 +666,8 @@ class Plugin(plugin.Plugin):
         cwd = os.path.split(name)[0]
         self.current_directory = cwd
         self.projects.change_cwd(cwd)
+        if self.registry.jump_with_currentbuffer.value():
+            self.files.change_buffer(name)
 
     def evt_projectexecute(self, arg):
         name = self.projects.selected(0)
