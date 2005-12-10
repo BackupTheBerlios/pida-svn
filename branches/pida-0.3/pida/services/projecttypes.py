@@ -36,6 +36,9 @@ class project_types(service.service):
         self.__action_groups = {}
         self.__projectsdir = os.path.join(self.boss.pida_home, 'projects')
 
+    class project_type_registered(defs.event):
+        pass
+
     def cmd_register_project_type(self, handler_type):
         handler = handler_type(handler_type.service)
         project_name = handler_type.__name__
@@ -43,6 +46,8 @@ class project_types(service.service):
         type_dir = os.path.join(self.__projectsdir, project_name)
         if not os.path.exists(type_dir):
             os.mkdir(type_dir)
+        print 'emittinf'
+        self.events.emit('project_type_registered')
 
     def cmd_get_project_type_names(self):
         for project_name in self.__types:
@@ -51,8 +56,8 @@ class project_types(service.service):
     def cmd_load_project(self, project_type_name, project_file_name):
         if project_type_name in self.__types:
             project_type = self.__types[project_type_name]
-            project = project.project(project_type, project_file_name)
-            return project
+            proj = project.project(project_type, project_file_name)
+            return proj
         else:
             self.log.info('no handler associated with this project type')
         

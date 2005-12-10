@@ -62,14 +62,12 @@ class ProjectTree(tree.Tree):
     EDIT_BUTTONS = True
     SORT_BY = 'name'
 
-    markup_format_string = ('<b>%(name)s</b> '
-                            '<span color="#0000c0">(%(vcsname)s)</span>\n'
-                            '%(directory)s')
+    markup_format_string = ('<b>%(name)s</b>')
 
     def set_projects(self, projects):
         self.clear()
         for project in projects:
-            self.add_item(project, project.key)
+            self.add_item(project, project.name)
 
 #REGISTRY_SCHEMA = [('directory', 'the directory', '/', registry.Directory),
 #                   ('environment', 'the environment', '', registry.RegistryItem)]
@@ -115,8 +113,17 @@ class ProjectManager(service.service):
     
     def init(self):
         self.__projectsdir = os.path.join(self.boss.pida_home, 'projects')
+
+    def __update(self):
+        print 'updateing'
         self.__load_projects()
         self.plugin_view.set_projects()
+
+    def bnd_projectcreator_project_created(self):
+        self.__update()
+
+    def bnd_projecttypes_project_type_registered(self):
+        self.__update()
 
     def cb_data_view_applied(self, dataname):
         self.plugin_view.set_projects()
@@ -165,7 +172,6 @@ class ProjectManager(service.service):
 
     def cb_data_changed(self, dataname):
         self.plugin_view.set_projects()
-    
 
     def __load_projects(self):
         self.__projects = []
@@ -174,7 +180,7 @@ class ProjectManager(service.service):
             # check if type exists
             for filename in os.listdir(typedir):
                 filepath = os.path.join(typedir, filename)
-                project = self.boss.call_command('projectttypes',
+                project = self.boss.call_command('projecttypes',
                         'load_project', project_type_name=projecttype,
                         project_file_name=filepath)
                 if project is not None:
@@ -185,15 +191,13 @@ class ProjectManager(service.service):
             yield project
     projects = property(get_projects)
 
-
     def cmd_edit(self):
         view = self.create_single_view()
-        view.set_registries(self.project_registries)
-        
+        view.set_registries([(p.name, p.options) for p in self.projects])
 
     def act_new_project(self, action):
         """Create a new project."""
-        self.call('edit')
+        self.boss.call_command('projectcreator', 'create_interactive')
 
     def act_properties(self, action):
         """See or edit the properties for this project."""

@@ -272,7 +272,7 @@ class events_mixin(object):
     
     def init(self):
         self.__events = event.event()
-        for evtlass in self.__events__:
+        for evtclass in self.__events__:
             evtname = evtclass.__name__
             self.__events.create_event(evtname)
 
@@ -290,12 +290,16 @@ class bindings_mixin(object):
 
     def bind(self):
         for bndfunc in self.__bindings__:
+            print 'binding', bndfunc
             evtstring = split_function_name(bndfunc.func_name)
             servicename, eventname = evtstring.split('_', 1)
             svc = self.get_service(servicename)
             if svc is not None:
                 func = getattr(self, bndfunc.func_name)
-                svc.events.register(eventname, func)
+                try:
+                    svc.events.register(eventname, func)
+                except AssertionError:
+                    self.log.info('event "%s" does not exist', eventname)
 
 
 class document_type_mixin(object):
@@ -477,8 +481,7 @@ service_base_classes =  [options_mixin,
                          project_type_mixin]
 
 
-binding_base_classes = [bindings_mixin,
-                        document_type_mixin,
+binding_base_classes = [document_type_mixin,
                         language_type_mixin,
                         project_type_mixin]
 
@@ -562,6 +565,9 @@ class service_base(base.pidacomponent):
     
     def start(self):
         pass
+
+    def bind_events(self):
+        bindings_mixin.bind(self)
 
     def bind(self):
         for baseclass in binding_base_classes:

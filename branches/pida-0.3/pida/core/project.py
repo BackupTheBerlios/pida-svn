@@ -24,12 +24,13 @@
 import actions
 import registry
 import base
+import os
 
 import pida.utils.servicetemplates as servicetemplates
 
 def get_first_base(classobj):
-    if getattr(item, '__bases__', []):
-        return item.__bases__[0].__name__
+    if getattr(classobj, '__bases__', []):
+        return classobj.__bases__[0].__name__
 
 def is_first_base_option(classobj):
     firstbase = get_first_base(classobj)
@@ -44,7 +45,16 @@ class project(base.pidacomponent):
         self.__project_type = project_type
         self.__options_file = file_name
         self.__registry = project_type.build_raw_registry()
-        self.__registry.load_file(file_name)
+        self.__registry.load(file_name)
+    
+    def get_name(self):
+        return os.path.basename(self.__options_file)
+    name = property(get_name)
+
+    def get_options(self):
+        return self.__registry
+    options = property(get_options)
+    
 
 class project_type(actions.action_handler):
 
@@ -58,7 +68,7 @@ class project_type(actions.action_handler):
         for attr in dir(self):
             classobj = getattr(self, attr)
             if is_first_base_option(classobj):
-                servicetemplates.build_optiongroup_from_class(reg, classobj)
+                servicetemplates.build_optiongroup_from_class(classobj, reg)
         return reg
                 
 
