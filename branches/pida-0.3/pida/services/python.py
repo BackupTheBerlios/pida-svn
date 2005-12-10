@@ -21,6 +21,8 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import os
+
 from pida.core import service
 
 import pida.pidagtk.contentview as contentview
@@ -67,4 +69,13 @@ class python(service.service):
             root_node = pythonparser.get_nodes_from_string(document.string)
             self.service.lang_view.set_source_nodes(root_node)
 
+    class python(defs.project_type):
+    
+        class general(defs.optiongroup):
+            """General options for Python projects"""
+            class source_directory(defs.optiongroup):
+                """The directory containing source code."""
+                rtype = types.directory
+                default = os.path.expanduser('~')
+                
 Service = python
