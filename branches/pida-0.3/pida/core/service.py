@@ -193,7 +193,7 @@ class data_mixin(object):
         if self.has_database(dataname):
             if dataname not in self.__views:
                 schema = self.__schemas[dataname]
-                view_type = self.__dataviews[dataname]
+                view_type = self.__dataview_types[dataname]
                 if view_type is not None:
                     view = view_type(self, prefix='data_view')
                     view.set_database(dataname, self.databases[dataname], schema)
@@ -337,7 +337,7 @@ class project_type_mixin(object):
 
     def bind(self):
         for handler_type in self.__class__.__projecttypes__:
-            handler_tyep.service = self
+            handler_type.service = self
             self.boss.call_command('projecttypes',
                                    'register_project_type',
                                    handler_type=handler_type)
