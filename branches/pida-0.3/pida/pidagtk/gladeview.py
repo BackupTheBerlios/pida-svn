@@ -73,6 +73,7 @@ class glade_view(contentview.content_view):
             top_level.unparent()
         self.widget.pack_start(top_level)
         top_level.show_all()
+        self.__glade_buld = glade_build
 
     def __auto_connect(self, glade_build):
         self.__connect_signals(glade_build, self, prefix='')
@@ -119,4 +120,7 @@ class glade_view(contentview.content_view):
         except KeyError:
             glade_file = None
         return glade_file
+
+    def get_widget(self, name):
+        return self.__glade_buld.get_widget(name)
 

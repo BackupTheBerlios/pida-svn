@@ -83,7 +83,7 @@ setup(name='pida',
     scripts=['scripts/pida'],
     data_files=[
                 ('images', ['data/icons.dat']),
-                ('glade', ['glade/foo.glade'])
+                ('glade', ['glade/project-creator.glade'])
                 ],
     entry_points = {
         'console_scripts': [
