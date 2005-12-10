@@ -1,0 +1,32 @@
+<?xml version="1.0" standalone="no"?> <!--*- mode: xml -*-->
+<!DOCTYPE glade-interface SYSTEM "http://gazpacho.sicem.biz/gazpacho-0.1.dtd">
+<glade-interface>
+    <widget class="GtkWindow" id="window1">
+        <property name="default_height">250</property>
+        <property name="default_width">440</property>
+        <child>
+            <widget class="GtkVBox" id="pida_view">
+                <child>
+                    <widget class="GtkLabel" id="label1">
+                        <property name="label" context="yes" translatable="yes">You are the human stone</property>
+                        <property name="visible">True</property>
+                    </widget>
+                </child>
+                <child>
+                    <widget class="GtkButton" id="foo_but">
+                        <property name="label" context="yes" translatable="yes">foo</property>
+                    </widget>
+                    <packing>
+                        <property name="position">1</property>
+                    </packing>
+                </child>
+                <child>
+                    <widget class="pida+pidagtk+tree+Tree" id="pidatree1"/>
+                    <packing>
+                        <property name="position">2</property>
+                    </packing>
+                </child>
+            </widget>
+        </child>
+    </widget>
+</glade-interface>
