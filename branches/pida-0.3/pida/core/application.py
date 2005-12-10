@@ -65,7 +65,7 @@ class environment(base.pidacomponent):
     def __create_home_tree(self, root):
         dirs = {}
         self.__mkdir(root)
-        for name in ['conf', 'log', 'run', 'vcs', 'sockets', 'data']:
+        for name in ['conf', 'log', 'run', 'vcs', 'sockets', 'data', 'projects']:
             path = os.path.join(root, name)
             self.__mkdir(path)
             dirs[name] = path
