@@ -68,14 +68,36 @@ class python(service.service):
         def load_document(self, document):
             root_node = pythonparser.get_nodes_from_string(document.string)
             self.service.lang_view.set_source_nodes(root_node)
+        
+        def act_python(self, action):
+            pass
+
+        def act_execute_current_file(self, action):
+            pass
+
+        def get_menu_definition(self):
+            return """
+            <menubar>
+            <menu name="python_base" action="python+language+python" >
+            <menuitem name="Ex" action="python+language+execute_current_file" />
+            <menuitem name="Ex" action="python+language+execute_current_file" />
+            <menuitem name="Ex" action="python+language+execute_current_file" />
+            </menu>
+            </menubar>
+            """
 
     class python(defs.project_type):
     
         class general(defs.optiongroup):
             """General options for Python projects"""
-            class source_directory(defs.optiongroup):
+            class source_directory(defs.option):
                 """The directory containing source code."""
                 rtype = types.directory
                 default = os.path.expanduser('~')
+            class python_binary_location(defs.option):
+                """The location of the python binary"""
+                rtype = types.file
+                default = '/usr/bin/python'
+
                 
 Service = python

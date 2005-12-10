@@ -42,6 +42,10 @@ class language_types(service.service):
 
     def cmd_register_language_handler(self, handler_type):
         handler = handler_type(handler_type.service)
+        self.boss.call_command('window', 'register_action_group',
+                               actiongroup=handler.action_group,
+                               uidefinition=handler.get_menu_definition())
+        handler.action_group.set_visible(False)
         self.__register_patterns(self.__langs, handler, 'file_name_globs')
         self.__register_patterns(self.__firsts, handler, 'first_line_globs')
 

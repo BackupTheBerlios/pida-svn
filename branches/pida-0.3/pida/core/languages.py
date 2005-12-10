@@ -25,7 +25,7 @@ import actions
 
 class language_handler(actions.action_handler):
 
-    type_name = 'laguage'
+    type_name = 'language'
 
     file_name_globs = []
     first_line_globs = []
