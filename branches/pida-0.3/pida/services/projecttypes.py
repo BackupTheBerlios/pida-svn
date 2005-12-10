@@ -21,7 +21,10 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import os
+
 import pida.core.service as service
+import pida.core.project as project
 
 defs = service.definitions
 types = service.types
@@ -31,17 +34,28 @@ class project_types(service.service):
     def init(self):
         self.__types = {}
         self.__action_groups = {}
+        self.__projectsdir = os.path.join(self.boss.pida_home, 'projects')
 
     def cmd_register_project_type(self, handler_type):
         handler = handler_type(handler_type.service)
         project_name = handler_type.__name__
         self.__types[project_name] = handler
+        type_dir = os.path.join(self.__projectsdir, project_name)
+        if not os.path.exists(type_dir):
+            os.mkdir(type_dir)
 
     def cmd_get_project_type_names(self):
         for project_name in self.__types:
             yield project_name
 
-    def cmd_create_project(self, project_type_name):
-        pass
+    def cmd_load_project(self, project_type_name, project_file_name):
+        if project_type_name in self.__types:
+            project_type = self.__types[project_type_name]
+            project = project.project(project_type, project_file_name)
+            return project
+        else:
+            self.log.info('no handler associated with this project type')
+        
+    
 
 Service = project_types
