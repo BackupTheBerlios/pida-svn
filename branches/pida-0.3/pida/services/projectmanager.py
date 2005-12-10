@@ -22,7 +22,7 @@
 #SOFTWARE.
 
 import pida.pidagtk.tree as tree
-import pida.pidagtk.dataview as dataview
+import pida.pidagtk.configview as configview
 import pida.pidagtk.contentbook as contentbook
 import pida.pidagtk.contentview as contentview
 
@@ -75,12 +75,6 @@ class ProjectTree(tree.Tree):
 #                   ('environment', 'the environment', '', registry.RegistryItem)]
 
 
-class ProjectEditorView(dataview.data_view):
-
-    LONG_TITLE = 'pIDA project editor'
-    SHORT_TITLE = 'Projects'
-    pass
-
 class project_view(contentview.content_view):
     SHORT_TITLE = 'Projects'
     ICON_NAME = 'project'
@@ -115,21 +109,13 @@ class ProjectManager(service.service):
     """Project Management"""
 
     plugin_view_type = project_view
-    
-    class project_data(defs.database):
-        """A database to store fruits.""" 
-        DATA_VIEW = ProjectEditorView
-        class name(defs.field):
-            rtype = types.string
-            default = ''
-        class directory(defs.field):
-            rtype = types.directory
-            default = os.path.expanduser('~')
-        class environment(defs.field):
-            rtype = types.string
-            default = ''
 
+    single_view_type = configview.config_view
+    single_view_book = 'view'
+    
     def init(self):
+        self.__projectsdir = os.path.join(self.boss.pida_home, 'projects')
+        self.__load_projects()
         self.plugin_view.set_projects()
 
     def cb_data_view_applied(self, dataname):
@@ -180,22 +166,29 @@ class ProjectManager(service.service):
     def cb_data_changed(self, dataname):
         self.plugin_view.set_projects()
     
-    def adapt_registry(self):
-        for key in self.databases['project_data']:
-            project = self.databases['project_data'][key]
-            project.name = key
-            project.key = key
-            #p.directory = group.get('directory').value()
-            #p.vcs, p.vcsname = self.boss.command('versioncontrol',
-            #            'get-vcs-for-directory', directory=p.directory)
-            #p.environment = group.get('environment').value()
-            project.vcs = project.vcsname = None
+
+    def __load_projects(self):
+        self.__projects = []
+        for projecttype in os.listdir(self.__projectsdir):
+            typedir = os.path.join(self.__projectsdir, projecttype)
+            # check if type exists
+            for filename in os.listdir(typedir):
+                filepath = os.path.join(typedir, filename)
+                project = self.boss.call_command('projectttypes',
+                        'load_project', project_type_name=projecttype,
+                        project_file_name=filepath)
+                if project is not None:
+                    self.__projects.append(project)
+                
+    def get_projects(self):
+        for project in self.__projects:
             yield project
-    projects = property(adapt_registry)
+    projects = property(get_projects)
 
 
     def cmd_edit(self):
-        self.create_data_view('project_data')
+        view = self.create_single_view()
+        view.set_registries(self.project_registries)
         
 
     def act_new_project(self, action):
@@ -206,6 +199,15 @@ class ProjectManager(service.service):
         """See or edit the properties for this project."""
         self.call('edit')
 
+    def act_commit_project(self, action):
+        pass
+
+    def act_get_project_statuses(self, action):
+        pass
+
+    def act_update_project(self, action):
+        pass
+
     def get_menu_definition(self):
         return """
                 <menubar>
@@ -214,13 +216,27 @@ class ProjectManager(service.service):
                 <menu name="base_edit" action="base_edit_menu">
                 </menu>
                 <menu name="base_project" action="base_project_menu">
-                <menuitem name="newproj" action="project+new_project" />
+                <menuitem name="newproj" action="projectmanager+new_project" />
                 <separator />
-                <menuitem name="propproj" action="project+properties" />
+                <menuitem name="statproj"
+                    action="projectmanager+get_project_statuses" />
+                <menuitem name="upproj" action="projectmanager+update_project" />
+                <menuitem name="comproj" action="projectmanager+commit_project" />
+                <separator />
+                <menuitem name="propproj" action="projectmanager+properties" />
                 </menu>
                 <menu name="base_tools" action="base_tools_menu">
                 </menu>
                 </menubar>
+                <toolbar>
+                <separator />
+                <toolitem name="tstatproj"
+                    action="projectmanager+get_project_statuses" />
+                <toolitem name="tupproj" action="projectmanager+update_project" />
+                <toolitem name="tcomproj"
+                    action="projectmanager+commit_project" />
+                <separator />
+                </toolbar>
         """
 
 
