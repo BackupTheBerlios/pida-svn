@@ -115,7 +115,6 @@ class ProjectManager(service.service):
         self.__projectsdir = os.path.join(self.boss.pida_home, 'projects')
 
     def __update(self):
-        print 'updateing'
         self.__load_projects()
         self.plugin_view.set_projects()
 
@@ -125,12 +124,17 @@ class ProjectManager(service.service):
     def bnd_projecttypes_project_type_registered(self):
         self.__update()
 
-    def cb_data_view_applied(self, dataname):
-        self.plugin_view.set_projects()
-        
     def cb_plugin_view_project_clicked(self, tree, item):
-        directory = item.value.directory
-        self.__current_directory = directory
+        gen_opts = item.value.options.get('general')
+        if gen_opts is not None:
+            diropt = gen_opts.get('source_directory')
+            if diropt is not None:
+                source_dir = diropt.value
+                self.boss.call_command('filemanager', 'browse',
+                                       directory=source_dir)
+                
+        #directory = item.value.directory
+        #self.__current_directory = directory
         #for child in self.view.bar_area.get_children():
         #    self.plugin_view.bar_area.remove(child)
         #    child.destroy()
@@ -138,7 +142,6 @@ class ProjectManager(service.service):
         #                       contextname='directory',
         #                       globaldict={'directory': directory})
         #self.plugin_view.bar_area.pack_start(tb, expand=False)
-        self.boss.call_command('filemanager', 'browse', directory=directory)
 
     def cb_plugin_view_new_clicked(self, treeview):
         self.create_data_view('project_data')
@@ -154,24 +157,8 @@ class ProjectManager(service.service):
             self.databases['project_data'].sync()
             self.cb_data_changed('project_data')
 
-    def cb_editor_applied(self, view):
-        self.__projectlist.set_projects(self.__adapt_registry())
-
-    def cb_editor_newitem(self, view, name):
-        newitem = self.__registry.add_group(name, '')
-        for option in REGISTRY_SCHEMA:
-            opt = newitem.add(*option)
-            opt.setdefault()
-        self.__registry.save()
-        self.__projectlist.set_projects(self.__adapt_registry())
-        self.editorview.tab.reset()
-        self.editorview.tab.display_page(name)
-
-    def reset(self):
-        pass
-
-    def cb_data_changed(self, dataname):
-        self.plugin_view.set_projects()
+    def cb_data_changed(self, configview):
+        self.__update()
 
     def __load_projects(self):
         self.__projects = []
@@ -193,6 +180,7 @@ class ProjectManager(service.service):
 
     def cmd_edit(self):
         view = self.create_single_view()
+        view.connect('data-changed', self.cb_data_changed)
         view.set_registries([(p.name, p.options) for p in self.projects])
 
     def act_new_project(self, action):
@@ -211,6 +199,8 @@ class ProjectManager(service.service):
 
     def act_update_project(self, action):
         pass
+
+    
 
     def get_menu_definition(self):
         return """
