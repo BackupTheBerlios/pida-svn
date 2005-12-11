@@ -28,9 +28,10 @@ import toolbar
 import icons
 import contentview
 import sys
-sys.path.insert(2, '/home/ali/working/pida/pida/branches/pida-ali/')
 
 import registrywidgets
+
+from pida.utils.kiwiutils import gsignal
 
 class EditTree(tree.Tree):
         EDIT_BUTTONS = True
@@ -108,6 +109,8 @@ def create_notebook_from_registry(reg, regname):
 
 class config_view(contentview.content_view):
 
+    gsignal('data-changed')
+
     def init(self):
         self.__registries = {}
         self.__pages = {}
@@ -134,12 +137,16 @@ class config_view(contentview.content_view):
         holder.add(box)
         but = gtk.Button(stock=gtk.STOCK_UNDO)
         box.pack_start(but)
+        but.connect('clicked', self.cb_undo_clicked)
         but = gtk.Button(stock=gtk.STOCK_APPLY)
         box.pack_start(but)
+        but.connect('clicked', self.cb_apply_clicked)
         but = gtk.Button(stock=gtk.STOCK_SAVE)
         box.pack_start(but)
+        but.connect('clicked', self.cb_save_clicked)
         but = gtk.Button(stock=gtk.STOCK_CANCEL)
         box.pack_start(but)
+        but.connect('clicked', self.cb_cancel_clicked)
 
     def __build_list(self):
         for name in self.__registries:
@@ -165,6 +172,14 @@ class config_view(contentview.content_view):
         pagenum = self.__notebook.page_num(page)
         self.__notebook.set_current_page(pagenum)
 
+    def __apply(self):
+        for group, name in self.__widgets:
+            self.__widgets[(group, name)].save()
+
+    def __save(self):
+        for name, registry in self.__registries.iteritems():
+            registry.save()
+
     def set_registries(self, registries):
         for name, reg in registries:
             if len(reg):
@@ -174,190 +189,17 @@ class config_view(contentview.content_view):
     def cb_list_clicked(self, listview, item):
         self.__build_page(item.key)
 
-
-
-class ListedTab(gtk.VBox):
-
-    __gsignals__ = {'closed' : (gobject.SIGNAL_RUN_LAST,
-                                 gobject.TYPE_NONE, ()),
-                    'applied' : (gobject.SIGNAL_RUN_LAST,
-                                 gobject.TYPE_NONE, ()),
-                    'reverted' : (gobject.SIGNAL_RUN_LAST,
-                                 gobject.TYPE_NONE, ()),
-                    'new-item' : (gobject.SIGNAL_RUN_LAST,
-                                 gobject.TYPE_NONE, (gobject.TYPE_STRING, ))}
-    
-    TREE = tree.Tree
-    TREE_ITEM = RegistryTreeItem
-
-    def __init__(self, registry):
-        gtk.VBox.__init__(self)
-        self.__registry = registry
-        self.__populate()
-        self.__reset()
-
-    def __populate(self):
-        mainbox = gtk.HBox()
-        self.add(mainbox)
-        leftbox = gtk.VBox()
-        mainbox.pack_start(leftbox, expand=False)
-        leftbox.set_size_request(220, -1)
-        self.__sectionview = self.TREE()
-        leftbox.pack_start(self.__sectionview)
-        self.__sectionview.connect("clicked", self.cb_section_clicked)
-        self.__sectionview.connect('new-item', self.cb_new_item)
-        self.__sectionview.connect('edit-item', self.cb_edit_item)
-        self.__sectionview.connect('delete-item', self.cb_delete_item)
-        rightbox = gtk.VBox()
-        mainbox.pack_start(rightbox)
-        self.__notebook = gtk.Notebook()
-        rightbox.pack_start(self.__notebook)
-        self.__notebook.set_show_tabs(False)
-        self.__notebook.set_show_border(False)
-        cb = gtk.HBox()
-        rightbox.pack_start(cb, expand=False, padding=2)
-        sep = gtk.HSeparator()
-        cb.pack_start(sep)
-        self.__cancelbutton = icons.icons.get_text_button('close', 'Close')
-        cb.pack_start(self.__cancelbutton, expand=False)
-        self.__cancelbutton.connect('clicked', self.cb_close)
-        self.__revert_button = icons.icons.get_text_button('undo', 'Revert')
-        cb.pack_start(self.__revert_button, expand=False)
-        self.__revert_button.connect('clicked', self.cb_revert)
-        self.__applybutton = icons.icons.get_text_button('apply', 'Apply')
-        cb.pack_start(self.__applybutton, expand=False)
-        self.__applybutton.connect('clicked', self.cb_apply)
-        self.__savebutton = icons.icons.get_text_button('save', 'Save')
-        cb.pack_start(self.__savebutton, expand=False)
-        self.__savebutton.connect('clicked', self.cb_save)
-
-
-    def __build_sectionlist(self):
-        self.__sectionview.clear()
-        first = True
-        for group in self.__registry.iter_groups():#_alphabetically():
-            treeitem = self.TREE_ITEM(group.get_name(), group)
-            self.__sectionview.add_item(treeitem)
-            if first:
-                first = False
-                self.__sectionview.set_selected(group.get_name())
-
-    def __reset(self):
-        self.__pages = {}
-        self.__widgets = []
-        def remove(page):
-            self.__notebook.remove(page)
-        self.__notebook.foreach(remove)
-        self.__build_sectionlist()
-
-    def reset(self):
-        current_name = self.__sectionview.get_selected_key()
-        self.__reset()
-        self.__sectionview.set_selected(current_name)
-
-    def create_page(self, section_name):
-
-
-        if not section_name in self.__pages:
-            size_group = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
-            group = self.__registry.get_group(section_name)
-            b = gtk.VBox()
-            sw = gtk.ScrolledWindow()
-            sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-            sw.add_with_viewport(b)
-            name_label = gtk.Label()
-            name_label.set_markup(SECTION_NAME_MU % section_name)
-            name_label.set_justify(gtk.JUSTIFY_LEFT)
-            b.pack_start(name_label, expand=False)
-            doc_label = gtk.Label()
-            doc_label.set_markup(SECTION_DOC_MU % group.doc)
-            b.pack_start(doc_label, expand=False)
-            b.pack_start(gtk.HSeparator(), expand=False, padding=4)
-            self.__pages[section_name] = sw
-            for opt in group.iter_alphabetically():
-                w = opt.DISPLAY_WIDGET(opt)
-                b.pack_start(w.win, expand=False, padding=6)
-                size_group.add_widget(w.widget)
-                w.load()
-                self.__widgets.append(w)
-            sw.show_all()
-        return self.__pages[section_name]
-            
-    def display_page(self, section_name):
-        if section_name != self.__sectionview.get_selected_key():
-            self.__sectionview.set_selected(section_name)
-        page = self.create_page(section_name)
-        if self.__notebook.page_num(page) == -1:
-            self.__notebook.append_page(page)
-        page_num = self.__notebook.page_num(page)
-        self.__notebook.set_current_page(page_num)
-            
-    def pages(self):
-        for page_num in xrange(self.__notebook.get_n_pages()):
-            yield self.__notebook.get_nth_page(page_num)
-            
-    def __apply(self):
-        for widget in self.__widgets:
-            widget.save()
-        self.emit("applied")
-
-    def cb_close(self, button):
-        self.emit("closed")
-
-    def cb_revert(self, button):
-        self.emit('reverted')
-
-    def cb_save(self, button):
-        self.__apply()
-        self.__registry.save()
-
-    def cb_apply(self, button):
-        self.__apply()
-
-    def cb_section_clicked(self, tree, item):
-        self.display_page(item.value.name)
-
-    def cb_delete_item(self, tab):
-        self.__registry.delete_group(self.__sectionview.get_selected_key())
-        self.reset()
-
-    def cb_edit_item(self, tab):
+    def cb_undo_clicked(self, button):
         pass
 
-    def new(self, name):
-        self.emit('new-item', name)
+    def cb_apply_clicked(self, button):
+        self.__apply()
 
-    def cb_new_item(self, tab):
-        def new(name):
-            self.emit('new-item', name)
-        self.__sectionview.question(self.new, 'foo')
+    def cb_save_clicked(self, button):
+        self.__apply()
+        self.__save()
 
-gobject.type_register(ListedTab)
+    def cb_cancel_clicked(self, button):
+        pass
 
-class NewItemTab(ListedTab):
-    TREE = EditTree
 
-if __name__ == '__main__':
-    import pida.core.registry as registry
-    r = registry.Registry('/home/ali/tmp/reg')
-    g = r.add_group('first', 'The docs for first group')
-    e = g.add('blahA', 'docs for blahA', 1, registry.Boolean)
-    e.setdefault()
-    e = g.add('blahB', 'docs for blahB', 0, registry.Boolean)
-    e.setdefault()
-    g = r.add_group('sec', 'The docs for sec group')
-    e = g.add('blahA', 'docs for blahA', 2, registry.Boolean)
-    e.setdefault()
-    e = g.add('blahB', 'docs for blahB', 0, registry.Boolean)
-    e.setdefault()
-
-    w = gtk.Window()
-    t = ListedTab(r)
-    w.add(t)
-    w.show_all()
-
-    def tree(obj, ind):
-        if hasattr(obj, "get_children"):
-            for child in obj.get_children():
-                tree(child, ind + 2)
-    gtk.main()
