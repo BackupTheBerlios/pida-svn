@@ -55,7 +55,7 @@ class project(base.pidacomponent):
     
     def get_name(self):
         filename =  os.path.basename(self.__options_file)
-        name = filename.split('.')[0]
+        name = filename.rsplit('.', 1)[0]
         return name
     name = property(get_name)
 
