@@ -66,7 +66,6 @@ class command(base.pidacomponent):
 
     def __call__(self, **kw):
         """Call the command with the keyword args."""
-        print self.__arguments, 'EEEEEEEEEEEEEE'
         #for arg in self.__arguments:
         #    if arg.required and arg.name not in kw:
         #        raise exceptions.bad_arguments_error, 'Missing %s' % arg.name
