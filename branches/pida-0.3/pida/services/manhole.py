@@ -43,9 +43,11 @@ class Holder(object):
 
 class PytermContent(contentview.content_view):
 
-    ICON_NAME = 'manohole'
+    ICON_NAME = 'manhole'
 
-    SHORT_TITLE = 'pIDA shell'
+    SHORT_TITLE = 'manhole'
+
+    LONG_TITLE = 'pIDA internal shell'
 
     BORDER = 4
 

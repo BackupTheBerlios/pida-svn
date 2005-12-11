@@ -35,6 +35,10 @@ types = service.types
 
 class python_source_view(contentview.content_view):
 
+    ICON_NAME = 'list'
+
+    LONG_TITLE_NAME = 'python source browser'
+
     def init(self):
         self.__nodes = tree.Tree()
         self.__nodes.set_property('markup-format-string',
@@ -58,21 +62,32 @@ class python(service.service):
 
     lang_view_type = python_source_view
 
+    def cmd_execute_file(self, filename):
+        command_args=['python', filename]
+        self.boss.call_command('terminal', 'execute',
+                               command_args=command_args,
+                               icon_name='execute')
+
     class python_language(defs.language_handler):
 
         file_name_globs = ['*.py']
 
         first_line_globs = ['*/bin/python']
 
+        def init(self):
+            self.__document = None
+
         def act_execute_current_file(self, action):
             pass
 
         def load_document(self, document):
+            self.__document = document
             root_node = pythonparser.get_nodes_from_string(document.string)
             self.service.lang_view.set_source_nodes(root_node)
         
         def act_execute_current_file(self, action):
-            pass
+            self.service.call('execute_file',
+                              filename=self.__document.filename)
 
         def act_debug_current_file(self, action):
             pass
