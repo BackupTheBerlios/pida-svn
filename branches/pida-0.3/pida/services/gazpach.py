@@ -383,12 +383,13 @@ class Gazpacho(service.service):
         def act_copy(self, action):
             pass
 
+        def act_edit(self, action):
+            pass
+
         def get_menu_definition(self):
             return """
                 <menubar>
-                <menu name="base_file" action="base_file_menu">
-                </menu>
-                <menu name="base_edit" action="base_edit_menu">
+                <menu name="base_edit" action="gazpachdocument+edit">
                 <menuitem name="gazcopy" action="gazpach+document+copy" />
                 </menu>
                 <menu name="base_project" action="base_project_menu">

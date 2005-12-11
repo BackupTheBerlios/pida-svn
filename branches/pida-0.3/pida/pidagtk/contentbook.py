@@ -25,6 +25,7 @@ import gtk
 import gobject
 import expander
 import widgets
+import icons
 
 class Contentholder(gtk.VBox):
 
@@ -47,7 +48,7 @@ class Contentholder(gtk.VBox):
         self.__notebook.set_tab_pos(gtk.POS_TOP)
         self.__notebook.set_scrollable(True)
         self.__notebook.set_show_border(False)
-        #self.__notebook.set_show_tabs(False)
+        self.__notebook.set_show_tabs(False)
         self.__notebook.set_property('tab-border', 2)
         self.__notebook.set_property('homogeneous', True)
         self.__notebook.set_property('enable-popup', True)
@@ -118,17 +119,24 @@ class ContentholderList(content_list):
     def init(self):
         self.__views = {}
         self.__buttons = {}
+        self.__currentuid = None
 
     def append_page(self, contentview):
-        label = widgets.hyperlink('', icon=contentview.icon)
-        button = gtk.ToolButton()
+        #label = widgets.hyperlink('', icon=contentview.icon)
+        label = contentview.icon
+        group = None
+        if len(self.__buttons):
+            group = self.__buttons.values()[0]
+        button = gtk.RadioToolButton(group)
+        #button.set_icon_widget(label)
+        #button.set_mode(False)
+        button.set_active(True)
         button.set_icon_widget(label)
-        
-        button.connect('clicked', self.cb_button_clicked, contentview.unique_id)
+        button.connect('toggled', self.cb_button_clicked, contentview.unique_id)
         self.__views[contentview.unique_id] = label
         self.__buttons[contentview.unique_id] = button
-        self.pack_start(button)
-        self.set_title(contentview)
+        self.pack_start(button, expand=False)
+        #self.set_title(contentview)
 
     def remove_page(self, contentview):
         button = self.__buttons[contentview.unique_id]
@@ -145,14 +153,20 @@ class ContentholderList(content_list):
     def __set_selected_uid(self, uid):
         for closeuid in self.__views:
             if uid == closeuid:
-                self.__views[closeuid].set_selected()
+                self.__currentuid = closeuid
+                button = self.__buttons[closeuid]
+                #self.__views[closeuid].set_selected()
+                #button.set_active(True)
             else:
-                self.__views[closeuid].set_unselected()
+                pass
+                #self.__views[closeuid].set_unselected()
             
 
     def cb_button_clicked(self, button, unique_id):
-        self.__set_selected_uid(unique_id)
-        self.emit('clicked', unique_id)
+        if unique_id != self.__currentuid:
+            self.__set_selected_uid(unique_id)
+            self.emit('clicked', unique_id)
+            return True
 
 class contentbook(expander.expander):
 

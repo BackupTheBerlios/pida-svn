@@ -73,11 +73,11 @@ class hyperlink(gtk.EventBox):
         self.connect('button-release-event', self.cb_mouse_released)
         self.__label = gtk.Label()
         self.__label.set_property('justify', gtk.JUSTIFY_CENTER)
-        self.set_size_request(50, -1)
+        #self.set_size_request(50, -1)
         self.__icon = None
         if icon is not None:
             self.__icon = icon
-            self.__b.pack_start(self.__icon, expand=False, padding=4)
+            self.__b.pack_start(self.__icon, expand=False, padding=0)
         self.__b.pack_start(self.__label, expand=False, fill=True, padding=4)
         self.__text = label
         self.set_normal()
