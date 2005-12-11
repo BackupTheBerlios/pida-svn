@@ -69,26 +69,52 @@ class python(service.service):
             root_node = pythonparser.get_nodes_from_string(document.string)
             self.service.lang_view.set_source_nodes(root_node)
         
-        def act_python(self, action):
+        def act_execute_current_file(self, action):
             pass
 
-        def act_execute_current_file(self, action):
+        def act_debug_current_file(self, action):
+            pass
+
+        def act_profile_current_file(self, action):
+            pass
+
+        def act_file(self, action):
+            pass
+
+        def act_edit(self, action):
+            pass
+
+        def act_project(self, action):
+            pass
+
+        def act_tools(self, action):
+            pass
+
+        def act_python(self, action):
             pass
 
         def get_menu_definition(self):
             return """
-            <menubar>
-            <menu name="python_base" action="python+language+python" >
-            <menuitem name="Ex" action="python+language+execute_current_file" />
-            <menuitem name="Ex" action="python+language+execute_current_file" />
-            <menuitem name="Ex" action="python+language+execute_current_file" />
-            </menu>
-            </menubar>
-            """
+                <menubar>
+                <menu name="base_file" action="python+language+file">
+                </menu>
+                <menu name="base_edit" action="python+language+edit">
+                </menu>
+                <menu name="base_project" action="python+language+project">
+                </menu>
+                <menu name="base_tools" action="python+language+tools">
+                </menu>
+                <menu name="python_base" action="python+language+python" >
+                <menuitem name="expyfile" action="python+language+execute_current_file" />
+                <menuitem name="debpyfile" action="python+language+debug_current_file" />
+                <menuitem name="propyfile" action="python+language+profile_current_file" />
+                </menu>
+                </menubar>
+                """
 
     class python(defs.project_type):
 
-        type_name = 'python'
+        project_type_name = 'python'
     
         class general(defs.optiongroup):
             """General options for Python projects"""
@@ -101,5 +127,20 @@ class python(service.service):
                 rtype = types.file
                 default = '/usr/bin/python'
 
-                
+        def act_execute_current_project(self, action):
+            pass
+
+        def act_project(self):
+            """Project menu entries."""
+            pass
+
+        def get_menu_definition(self):
+            return """
+                <menubar>
+                <menu name="base_project" action="python+project+project">
+                <menuitem name="expyproj" action="python+project+execute_current_project" />
+                </menu>
+                </menubar>
+                """
+
 Service = python

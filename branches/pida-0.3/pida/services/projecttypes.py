@@ -46,7 +46,10 @@ class project_types(service.service):
         type_dir = os.path.join(self.__projectsdir, project_name)
         if not os.path.exists(type_dir):
             os.mkdir(type_dir)
-        print 'emittinf'
+        self.boss.call_command('window', 'register_action_group',
+                               actiongroup=handler.action_group,
+                               uidefinition=handler.get_menu_definition())
+        handler.action_group.set_visible(False)
         self.events.emit('project_type_registered')
 
     def cmd_get_project_type_names(self):

@@ -79,7 +79,7 @@ class window_manager(service.service):
         self.__window.remove_pages(bookname)
 
     def cmd_register_action_group(self, actiongroup, uidefinition):
-        self.__uim.insert_action_group(actiongroup, 0)
+        self.__uim.insert_action_group(actiongroup, -1)
         self.__uim.add_ui_from_string(uidefinition)
         self.__uim.ensure_update()
 

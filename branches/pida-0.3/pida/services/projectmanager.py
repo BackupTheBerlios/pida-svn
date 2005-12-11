@@ -63,8 +63,9 @@ class ProjectTree(tree.Tree):
     EDIT_BUTTONS = True
     SORT_BY = 'name'
 
-    markup_format_string = ('<b>%(name)s</b>(%(vcs_name)s)\n'
-                            '%(source_directory)s')
+    markup_format_string = ('<b>%(name)s</b> ('
+                            '<span color="#0000c0">%(vcs_name)s</span>'
+                            ')\n%(source_directory)s')
 
     def set_projects(self, projects):
         self.clear()
@@ -149,7 +150,6 @@ class ProjectManager(service.service):
         for filename in self.__history:
             project = self.boss.call_command('projecttypes',
                         'load_project', project_file_name=filename)
-            print project
             if project is not None:
                 self.__projects.append(project)
              
@@ -163,7 +163,16 @@ class ProjectManager(service.service):
 
     def __current_project_changed(self, project):
         self.__current_project = project
-        pass
+        for project in self.projects:
+            project.project_type.action_group.set_visible(False)
+            print 'setting agroup invis'
+        print 'setting agroup vis'
+        self.__current_project.project_type.action_group.set_visible(True)
+        self.boss.call_command('window', 'update_action_groups')
+        a = self.__current_project.project_type.action_group.list_actions()
+        print [i.get_name() for i in a]
+        a = project.project_type.service.action_group.list_actions()
+        print [i.get_name() for i in a]
 
 
     # external interface
@@ -210,13 +219,11 @@ class ProjectManager(service.service):
     # view callbacks
 
     def cb_plugin_view_project_clicked(self, tree, item):
-        gen_opts = item.value.options.get('general')
-        if gen_opts is not None:
-            diropt = gen_opts.get('source_directory')
-            if diropt is not None:
-                source_dir = diropt.value
-                self.boss.call_command('filemanager', 'browse',
-                                       directory=source_dir)
+        directory = item.value.source_directory
+        if directory is not None:
+            self.boss.call_command('filemanager', 'browse',
+                                       directory=directory)
+        self.__current_project_changed(item.value)
 
     def cb_plugin_view_new_clicked(self, treeview):
         self.create_data_view('project_data')

@@ -56,6 +56,8 @@ class language_types(service.service):
         return set(handlers)
 
     def cmd_show_handlers(self, document):
+        for handler in self.__langs.values():
+            handler.action_group.set_visible(False)
         self.boss.call_command('window', 'remove_pages', bookname='language')
         handlers = self.call('get_language_handlers', document=document)
         for handler in handlers:

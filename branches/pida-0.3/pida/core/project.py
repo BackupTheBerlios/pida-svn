@@ -48,6 +48,10 @@ class project(base.pidacomponent):
         self.__registry = project_type.build_raw_registry()
         self.__registry.load(file_name)
         self.__registry.file_intro = '#%s' % project_type.name
+
+    def get_project_type(self):
+        return self.__project_type
+    project_type = property(get_project_type)
     
     def get_name(self):
         filename =  os.path.basename(self.__options_file)
@@ -96,6 +100,7 @@ class project(base.pidacomponent):
 class project_type(actions.action_handler):
 
     type_name = 'project'
+    project_type_name = 'project'
 
     def create_project(self, file_name):
         pass
@@ -109,7 +114,7 @@ class project_type(actions.action_handler):
         return reg
 
     def get_name(self):
-        return self.type_name
+        return self.project_type_name
     name = property(get_name)
                 
 
