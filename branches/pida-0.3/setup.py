@@ -43,7 +43,8 @@ packages = ['pida',
             'pida.editors',
             'pida.plugins',
             'pida.utils',
-            'pida.utils.vim']
+            'pida.utils.vim',
+            'pida.utils.vc']
 
 #log('Preparing editors')
 #plugindir = os.path.join('pida', 'editors')

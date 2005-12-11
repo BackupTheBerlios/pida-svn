@@ -44,16 +44,53 @@ class project(base.pidacomponent):
     def init(self, project_type, file_name):
         self.__project_type = project_type
         self.__options_file = file_name
+        self.__vcs = None
         self.__registry = project_type.build_raw_registry()
         self.__registry.load(file_name)
+        self.__registry.file_intro = '#%s' % project_type.name
     
     def get_name(self):
-        return os.path.basename(self.__options_file)
+        filename =  os.path.basename(self.__options_file)
+        name = filename.split('.')[0]
+        return name
     name = property(get_name)
 
     def get_options(self):
         return self.__registry
     options = property(get_options)
+
+    def get_option(self, group, name):
+        group = self.options.get(group)
+        if group is not None:
+            option = group.get(name)
+            return option
+
+    def get_option_value(self, group, name):
+        option = self.get_option(group, name)
+        if option is not None:
+            return option.value
+
+    def get_source_directory(self):
+        return self.get_option_value('general', 'source_directory')
+    source_directory = property(get_source_directory)
+
+    def get_vcs_name(self):
+        if self.vcs is None or self.vcs.NAME == 'Null':
+            return 'no version control'
+        else:
+            return self.vcs.NAME
+    vcs_name= property(get_vcs_name)
+
+    def get_vcs(self):
+        source_dir = self.source_directory
+        if source_dir is not None:
+            if self.__vcs is None:
+                self.__vcs = self.boss.call_command('versioncontrol',
+                                                    'get_vcs_for_directory',
+                                                    directory=source_dir)
+            return self.__vcs
+    vcs = property(get_vcs)
+
     
 
 class project_type(actions.action_handler):
@@ -70,6 +107,10 @@ class project_type(actions.action_handler):
             if is_first_base_option(classobj):
                 servicetemplates.build_optiongroup_from_class(classobj, reg)
         return reg
+
+    def get_name(self):
+        return self.type_name
+    name = property(get_name)
                 
 
 

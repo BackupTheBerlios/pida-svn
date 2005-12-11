@@ -111,6 +111,8 @@ class config_view(contentview.content_view):
 
     gsignal('data-changed')
 
+    has_apply_button = False
+
     def init(self):
         self.__registries = {}
         self.__pages = {}
@@ -139,7 +141,8 @@ class config_view(contentview.content_view):
         box.pack_start(but)
         but.connect('clicked', self.cb_undo_clicked)
         but = gtk.Button(stock=gtk.STOCK_APPLY)
-        box.pack_start(but)
+        if self.has_apply_button:
+            box.pack_start(but)
         but.connect('clicked', self.cb_apply_clicked)
         but = gtk.Button(stock=gtk.STOCK_SAVE)
         box.pack_start(but)
@@ -175,10 +178,11 @@ class config_view(contentview.content_view):
     def __apply(self):
         for group, name in self.__widgets:
             self.__widgets[(group, name)].save()
-
+        
     def __save(self):
         for name, registry in self.__registries.iteritems():
             registry.save()
+        self.emit('data-changed')
 
     def set_registries(self, registries):
         for name, reg in registries:

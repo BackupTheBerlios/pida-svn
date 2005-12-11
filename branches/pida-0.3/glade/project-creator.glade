@@ -15,9 +15,9 @@
                         <property name="label" context="yes" translatable="yes">&lt;big&gt;&lt;b&gt;Create New Project&lt;/b&gt;&lt;/big&gt;</property>
                         <property name="use_markup">True</property>
                         <property name="visible">True</property>
-                        <property name="xalign">0.0</property>
+                        <property name="xalign">0.899999976158</property>
                         <property name="xpad">12</property>
-                        <property name="ypad">12</property>
+                        <property name="ypad">1</property>
                     </widget>
                     <packing>
                         <property name="expand">False</property>
@@ -26,13 +26,13 @@
                 </child>
                 <child>
                     <widget class="GtkTable" id="type_combo">
-                        <property name="column_spacing">6</property>
-                        <property name="row_spacing">6</property>
+                        <property name="column_spacing">24</property>
+                        <property name="row_spacing">12</property>
                         <property name="visible">True</property>
                         <child>
-                            <widget class="GtkLabel" id="label1">
-                                <property name="label" context="yes" translatable="yes">Project Name</property>
-                                <property name="mnemonic_widget">name_entry</property>
+                            <widget class="GtkLabel" id="label3">
+                                <property name="label" context="yes" translatable="yes">&lt;b&gt;Name&lt;/b&gt;</property>
+                                <property name="use_markup">True</property>
                                 <property name="visible">True</property>
                                 <property name="xalign">0.0</property>
                             </widget>
@@ -41,8 +41,9 @@
                             </packing>
                         </child>
                         <child>
-                            <widget class="GtkLabel" id="label2">
-                                <property name="label" context="yes" translatable="yes">Project Type</property>
+                            <widget class="GtkLabel" id="label1">
+                                <property name="label" context="yes" translatable="yes">&lt;b&gt;Location&lt;/b&gt;</property>
+                                <property name="use_markup">True</property>
                                 <property name="visible">True</property>
                                 <property name="xalign">0.0</property>
                             </widget>
@@ -53,13 +54,37 @@
                             </packing>
                         </child>
                         <child>
-                            <widget class="GtkEntry" id="name_entry">
-                                <property name="is_focus">True</property>
+                            <widget class="GtkLabel" id="label2">
+                                <property name="label" context="yes" translatable="yes">&lt;b&gt;Type&lt;/b&gt;</property>
+                                <property name="use_markup">True</property>
                                 <property name="visible">True</property>
+                                <property name="xalign">0.0</property>
                             </widget>
+                            <packing>
+                                <property name="bottom_attach">3</property>
+                                <property name="top_attach">2</property>
+                                <property name="x_options">fill</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkEntry" id="name_entry"/>
                             <packing>
                                 <property name="left_attach">1</property>
                                 <property name="right_attach">2</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkFileChooserButton" id="filename_chooser">
+                                <property name="action">select-folder</property>
+                                <property name="do_overwrite_confirmation">True</property>
+                                <property name="title" context="yes" translatable="yes">Project file to save</property>
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="bottom_attach">2</property>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">1</property>
                             </packing>
                         </child>
                         <child>
@@ -67,10 +92,10 @@
                                 <property name="visible">True</property>
                             </widget>
                             <packing>
-                                <property name="bottom_attach">2</property>
+                                <property name="bottom_attach">3</property>
                                 <property name="left_attach">1</property>
                                 <property name="right_attach">2</property>
-                                <property name="top_attach">1</property>
+                                <property name="top_attach">2</property>
                             </packing>
                         </child>
                     </widget>
@@ -78,128 +103,6 @@
                         <property name="expand">False</property>
                         <property name="fill">False</property>
                         <property name="position">1</property>
-                    </packing>
-                </child>
-                <child>
-                    <widget class="GtkVBox" id="vbox1">
-                        <property name="spacing">12</property>
-                        <property name="visible">True</property>
-                        <child>
-                            <widget class="GtkCheckButton" id="checkout_checkbox">
-                                <property name="is_focus">True</property>
-                                <property name="label" context="yes" translatable="yes">Check out source code</property>
-                                <property name="visible">True</property>
-                            </widget>
-                            <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                            </packing>
-                        </child>
-                        <child>
-                            <widget class="GtkTable" id="checkout_table">
-                                <property name="column_spacing">6</property>
-                                <property name="row_spacing">6</property>
-                                <property name="sensitive">False</property>
-                                <property name="visible">True</property>
-                                <child>
-                                    <widget class="GtkLabel" id="label3">
-                                        <property name="label" context="yes" translatable="yes">Command</property>
-                                        <property name="visible">True</property>
-                                    </widget>
-                                    <packing>
-                                        <property name="x_options">fill</property>
-                                    </packing>
-                                </child>
-                                <child>
-                                    <widget class="GtkLabel" id="label4">
-                                        <property name="label" context="yes" translatable="yes">Directory</property>
-                                        <property name="visible">True</property>
-                                    </widget>
-                                    <packing>
-                                        <property name="bottom_attach">2</property>
-                                        <property name="top_attach">1</property>
-                                        <property name="x_options">fill</property>
-                                    </packing>
-                                </child>
-                                <child>
-                                    <widget class="GtkEntry" id="entry1">
-                                        <property name="is_focus">True</property>
-                                        <property name="visible">True</property>
-                                    </widget>
-                                    <packing>
-                                        <property name="left_attach">1</property>
-                                        <property name="right_attach">2</property>
-                                    </packing>
-                                </child>
-                                <child>
-                                    <widget class="GtkEntry" id="entry2">
-                                        <property name="is_focus">True</property>
-                                        <property name="visible">True</property>
-                                    </widget>
-                                    <packing>
-                                        <property name="bottom_attach">2</property>
-                                        <property name="left_attach">1</property>
-                                        <property name="right_attach">2</property>
-                                        <property name="top_attach">1</property>
-                                    </packing>
-                                </child>
-                            </widget>
-                            <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">1</property>
-                            </packing>
-                        </child>
-                        <child>
-                            <widget class="GtkCheckButton" id="createdir_checkbox">
-                                <property name="is_focus">True</property>
-                                <property name="label" context="yes" translatable="yes">Create  new directory</property>
-                                <property name="visible">True</property>
-                            </widget>
-                            <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">2</property>
-                            </packing>
-                        </child>
-                        <child>
-                            <widget class="GtkTable" id="createdir_table">
-                                <property name="column_spacing">6</property>
-                                <property name="row_spacing">6</property>
-                                <property name="sensitive">False</property>
-                                <property name="visible">True</property>
-                                <child>
-                                    <widget class="GtkLabel" id="label5">
-                                        <property name="label" context="yes" translatable="yes">Directory</property>
-                                        <property name="visible">True</property>
-                                    </widget>
-                                    <packing>
-                                        <property name="x_options">fill</property>
-                                    </packing>
-                                </child>
-                                <child>
-                                    <widget class="GtkEntry" id="entry3">
-                                        <property name="is_focus">True</property>
-                                        <property name="visible">True</property>
-                                    </widget>
-                                    <packing>
-                                        <property name="left_attach">1</property>
-                                        <property name="right_attach">2</property>
-                                    </packing>
-                                </child>
-                            </widget>
-                            <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="padding">6</property>
-                                <property name="position">3</property>
-                            </packing>
-                        </child>
-                    </widget>
-                    <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">False</property>
-                        <property name="position">2</property>
                     </packing>
                 </child>
                 <child>
@@ -228,7 +131,7 @@
                     <packing>
                         <property name="expand">False</property>
                         <property name="fill">False</property>
-                        <property name="position">3</property>
+                        <property name="position">2</property>
                     </packing>
                 </child>
             </widget>

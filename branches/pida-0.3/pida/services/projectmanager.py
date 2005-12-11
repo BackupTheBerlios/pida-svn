@@ -26,6 +26,7 @@ import pida.pidagtk.configview as configview
 import pida.pidagtk.contentbook as contentbook
 import pida.pidagtk.contentview as contentview
 
+import pida.core.registry as registry
 import pida.core.service as service
 types = service.types
 defs = service.definitions
@@ -62,15 +63,16 @@ class ProjectTree(tree.Tree):
     EDIT_BUTTONS = True
     SORT_BY = 'name'
 
-    markup_format_string = ('<b>%(name)s</b>')
+    markup_format_string = ('<b>%(name)s</b>(%(vcs_name)s)\n'
+                            '%(source_directory)s')
 
     def set_projects(self, projects):
         self.clear()
         for project in projects:
-            self.add_item(project, project.name)
-
-#REGISTRY_SCHEMA = [('directory', 'the directory', '/', registry.Directory),
-#                   ('environment', 'the environment', '', registry.RegistryItem)]
+            print project
+            # remove
+            project.key = project.name
+            self.add_item(project, key=project.name)
 
 
 class project_view(contentview.content_view):
@@ -84,15 +86,9 @@ class project_view(contentview.content_view):
 
     def init(self):
         self.__projectlist = ProjectTree()
+        self.widget.pack_start(self.__projectlist)
         self.__projectlist.set_property('markup-format-string',
             self.__projectlist.markup_format_string)
-        self.widget.pack_start(self.__projectlist)
-        self.__projectlist.connect('new-item',
-            self.service.cb_plugin_view_new_clicked)
-        self.__projectlist.connect('edit-item',
-            self.service.cb_plugin_view_edit_clicked)
-        self.__projectlist.connect('delete-item',
-            self.service.cb_plugin_view_delete_clicked)
         self.__projectlist.connect('clicked',
             self.service.cb_plugin_view_project_clicked)
 
@@ -106,82 +102,93 @@ class project_view(contentview.content_view):
 class ProjectManager(service.service):
     """Project Management"""
 
+    # view definitions
+
     plugin_view_type = project_view
 
     single_view_type = configview.config_view
     single_view_book = 'view'
-    
+   
+    # life cycle
+ 
     def init(self):
-        self.__projectsdir = os.path.join(self.boss.pida_home, 'projects')
+        self.__history = []
+        self.__history_file = os.path.join(self.boss.pida_home,
+            'projects', 'projectlist.conf')
+        if not os.path.exists(self.__history_file):
+            self.__write_history()
+
+    def reset(self):
+        pass
+
+    def stop(self):
+        pass
+
+    # private interface
+
+    def __read_history(self):
+        self.__history = []
+        f = open(self.__history_file, 'r')
+        for filename in f:
+            self.__history.append(filename.strip())
+        f.close()
+
+    def __write_history(self):
+        f = open(self.__history_file, 'w')
+        for filename in self.__history:
+            f.write('%s\n' % filename)
+        f.close()
 
     def __update(self):
+        self.__read_history()
         self.__load_projects()
         self.plugin_view.set_projects()
 
-    def bnd_projectcreator_project_created(self):
-        self.__update()
-
-    def bnd_projecttypes_project_type_registered(self):
-        self.__update()
-
-    def cb_plugin_view_project_clicked(self, tree, item):
-        gen_opts = item.value.options.get('general')
-        if gen_opts is not None:
-            diropt = gen_opts.get('source_directory')
-            if diropt is not None:
-                source_dir = diropt.value
-                self.boss.call_command('filemanager', 'browse',
-                                       directory=source_dir)
-                
-        #directory = item.value.directory
-        #self.__current_directory = directory
-        #for child in self.view.bar_area.get_children():
-        #    self.plugin_view.bar_area.remove(child)
-        #    child.destroy()
-        #tb = self.boss.command('contexts', 'get-toolbar',
-        #                       contextname='directory',
-        #                       globaldict={'directory': directory})
-        #self.plugin_view.bar_area.pack_start(tb, expand=False)
-
-    def cb_plugin_view_new_clicked(self, treeview):
-        self.create_data_view('project_data')
-
-    def cb_plugin_view_edit_clicked(self, treeview):
-        self.create_editorview(self.__registry)
-        self.display_editorpage(self.__projectlist.get_selected_key())
-
-    def cb_plugin_view_delete_clicked(self, toolbar):
-        treeitem = self.plugin_view.get_selected()
-        if treeitem is not None:
-            del self.databases['project_data'][treeitem.key]
-            self.databases['project_data'].sync()
-            self.cb_data_changed('project_data')
-
-    def cb_data_changed(self, configview):
-        self.__update()
-
     def __load_projects(self):
         self.__projects = []
-        for projecttype in os.listdir(self.__projectsdir):
-            typedir = os.path.join(self.__projectsdir, projecttype)
-            # check if type exists
-            for filename in os.listdir(typedir):
-                filepath = os.path.join(typedir, filename)
-                project = self.boss.call_command('projecttypes',
-                        'load_project', project_type_name=projecttype,
-                        project_file_name=filepath)
-                if project is not None:
-                    self.__projects.append(project)
-                
+        for filename in self.__history:
+            project = self.boss.call_command('projecttypes',
+                        'load_project', project_file_name=filename)
+            print project
+            if project is not None:
+                self.__projects.append(project)
+             
+
+    def __launch_editor(self, projects=None):
+        if projects is None:
+            projects = self.projects
+        view = self.create_single_view()
+        view.connect('data-changed', self.cb_data_changed)
+        view.set_registries([(p.name, p.options) for p in projects])
+
+    def __current_project_changed(self, project):
+        self.__current_project = project
+        pass
+
+
+    # external interface
+   
     def get_projects(self):
         for project in self.__projects:
             yield project
     projects = property(get_projects)
 
-    def cmd_edit(self):
-        view = self.create_single_view()
-        view.connect('data-changed', self.cb_data_changed)
-        view.set_registries([(p.name, p.options) for p in self.projects])
+    # bindings
+    
+    def bnd_projecttypes_project_type_registered(self):
+        self.__update()
+
+    #commands
+
+    def cmd_edit(self, projects=None):
+        self.__launch_editor(projects)
+
+    def cmd_add_project(self, project_file):
+        self.__history.append(project_file)
+        self.__write_history()
+        self.__update()
+
+    # Actions
 
     def act_new_project(self, action):
         """Create a new project."""
@@ -200,7 +207,36 @@ class ProjectManager(service.service):
     def act_update_project(self, action):
         pass
 
-    
+    # view callbacks
+
+    def cb_plugin_view_project_clicked(self, tree, item):
+        gen_opts = item.value.options.get('general')
+        if gen_opts is not None:
+            diropt = gen_opts.get('source_directory')
+            if diropt is not None:
+                source_dir = diropt.value
+                self.boss.call_command('filemanager', 'browse',
+                                       directory=source_dir)
+
+    def cb_plugin_view_new_clicked(self, treeview):
+        self.create_data_view('project_data')
+
+    def cb_plugin_view_edit_clicked(self, treeview):
+        self.create_editorview(self.__registry)
+        self.display_editorpage(self.__projectlist.get_selected_key())
+
+    def cb_plugin_view_delete_clicked(self, toolbar):
+        treeitem = self.plugin_view.get_selected()
+        if treeitem is not None:
+            del self.databases['project_data'][treeitem.key]
+            self.databases['project_data'].sync()
+            self.cb_data_changed('project_data')
+
+    def cb_data_changed(self, configview):
+        print 'datachanged'
+        self.__update()
+
+    # ui definition
 
     def get_menu_definition(self):
         return """
@@ -222,15 +258,6 @@ class ProjectManager(service.service):
                 <menu name="base_tools" action="base_tools_menu">
                 </menu>
                 </menubar>
-                <toolbar>
-                <separator />
-                <toolitem name="tstatproj"
-                    action="projectmanager+get_project_statuses" />
-                <toolitem name="tupproj" action="projectmanager+update_project" />
-                <toolitem name="tcomproj"
-                    action="projectmanager+commit_project" />
-                <separator />
-                </toolbar>
         """
 
 

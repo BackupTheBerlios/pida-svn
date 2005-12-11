@@ -34,26 +34,27 @@ import gobject
 class project_creator_view(gladeview.glade_view):
     
     SHORT_TITLE = 'Create Project'
-    LONG_TITLE = 'pIDA new project wizard'
+    LONG_TITLE = ''
 
     glade_file_name = 'project-creator.glade'
 
-    def on_checkout_checkbox__clicked(self, checkbox):
-        act = checkbox.get_active()
-        self.get_widget('checkout_table').set_sensitive(act)
-
-    def on_createdir_checkbox__clicked(self, checkbox):
-        act = checkbox.get_active()
-        self.get_widget('createdir_table').set_sensitive(act)
+    def init_glade(self):
+        self.__name_entry = self.get_widget('name_entry')
+        self.__file_chooser = self.get_widget('filename_chooser')
+        self.__type_combo = self.get_widget('projecttype_combo')
 
     def on_ok_button__clicked(self, button):
-        name = self.get_widget('name_entry').get_text()
-        combo = self.get_widget('projecttype_combo')
+        project_name = self.__name_entry.get_text()
+        project_dir = self.__file_chooser.get_filename()
+        typename = self.get_combo_active_text(self.__type_combo)
+        self.service.call('create', project_name=project_name,
+                                    project_directory=project_dir,
+                                    project_type_name=typename)
+
+    def get_combo_active_text(self, combo):
         model = combo.get_model()
         aiter = combo.get_active_iter()
-        typename = model.get_value(aiter, 0)
-        self.service.call('create', project_name=name,
-                                    project_type = typename)
+        return model.get_value(aiter, 0)
 
     def set_project_types(self, types):
         combo = self.get_widget('projecttype_combo')
@@ -70,7 +71,7 @@ class project_creator_view(gladeview.glade_view):
 class project_creator(service.service):
 
     single_view_type = project_creator_view
-    single_view_book = 'view'
+    single_view_book = 'content'
 
     def init(self):
         self.__projectsdir = os.path.join(self.boss.pida_home, 'projects')
@@ -84,15 +85,13 @@ class project_creator(service.service):
             'get_project_type_names')
         view.set_project_types(types)
 
-    def cmd_create(self, project_name, project_type):
-        typedir = os.path.join(self.__projectsdir, project_type)
-        if os.path.isdir(typedir):
-            filepath = os.path.join(typedir, project_name)
-            f = open(filepath, 'w')
-            f.write('# Pida Project File\n')
-            f.close()
-            self.events.emit('project_created')
-        else:
-            self.log.info('project directory "%s" vanished', typedir)
+    def cmd_create(self, project_name, project_directory, project_type_name):
+        project_file_name = os.path.join(project_directory,
+                                         '%s.pidaproject' % project_name)
+        f = open(project_file_name, 'w')
+        f.write('#%s\n' % project_type_name)
+        f.close()
+        self.boss.call_command('projectmanager', 'add_project',
+            project_file=project_file_name)
 
 Service = project_creator

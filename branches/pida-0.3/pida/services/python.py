@@ -87,6 +87,8 @@ class python(service.service):
             """
 
     class python(defs.project_type):
+
+        type_name = 'python'
     
         class general(defs.optiongroup):
             """General options for Python projects"""

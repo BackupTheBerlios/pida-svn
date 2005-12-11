@@ -53,13 +53,24 @@ class project_types(service.service):
         for project_name in self.__types:
             yield project_name
 
-    def cmd_load_project(self, project_type_name, project_file_name):
+    def cmd_load_project(self, project_file_name):
+        try:
+            f = open(project_file_name, 'r')
+            project_type_name = 'project'
+            for line in f:
+                project_type_name = line.strip().strip('#')
+                break
+            f.close()
+        except OSError, IOError:
+            self.log.info('unable to read "%s"', project_file_name)
+            return
         if project_type_name in self.__types:
             project_type = self.__types[project_type_name]
             proj = project.project(project_type, project_file_name)
             return proj
         else:
-            self.log.info('no handler associated with this project type')
+            self.log.info('no handler associated with "%s" project type',
+                          project_type_name)
         
     
 
