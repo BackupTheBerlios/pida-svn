@@ -47,7 +47,7 @@ class Contentholder(gtk.VBox):
         self.__notebook.set_tab_pos(gtk.POS_TOP)
         self.__notebook.set_scrollable(True)
         self.__notebook.set_show_border(False)
-        self.__notebook.set_show_tabs(False)
+        #self.__notebook.set_show_tabs(False)
         self.__notebook.set_property('tab-border', 2)
         self.__notebook.set_property('homogeneous', True)
         self.__notebook.set_property('enable-popup', True)
