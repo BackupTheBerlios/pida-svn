@@ -140,13 +140,13 @@ class registry(base.pidamanager):
     def save(self):
         f = open(self.filename, 'w')
         f.write(CONFIG_FILE_INTRO)
-        for group in self.iter_groups(hide=False):
-            f.write('\n[%s]\n' % group._name)
+        for group in self.iter_groups():
+            f.write('\n[%s]\n' % group.name)
             for option in group:
-                f.write('# %s\n' % option._name)
+                f.write('# %s\n' % option.name)
                 f.write('# %s\n' % option.doc)
-                f.write('# default value = %s\n' % option._default)
-                f.write('%s = %s\n\n' % (option._name, option.value))
+                f.write('# default value = %s\n' % option.default)
+                f.write('%s = %s\n\n' % (option.name, option.value))
         f.close()
 
 
