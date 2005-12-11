@@ -26,7 +26,7 @@ import gtk
 import tree
 import icons
 import gobject
-import kiwi.tasklet as gtasklet
+import threading
 import contentview
 import mimetypes
 
@@ -169,7 +169,6 @@ class FileBrowser(contentview.content_view):
             def listdir():
                 images = {}
                 for filename in os.listdir(directory):
-                    timeout = gtasklet.WaitForTimeout(10)
                     path = os.path.join(directory, filename)
                     fsi = FileSystemItem(path)
                     if os.path.isdir(path):
@@ -189,13 +188,12 @@ class FileBrowser(contentview.content_view):
                         
                         i = FileTreeItem(path, fsi, image=image)
                         self.__fileview.add_item(i, get_root())
-                    yield timeout
-                    gtasklet.get_event()
                 for childpath in childnodes:
                     childiter = self.__fileview.model.get_iter(childpath)
                     self.__fileview.model.remove(childiter)
 
-            gtasklet.run(listdir())
+            t = threading.Thread(target=listdir)
+            t.run()
             
 
 
