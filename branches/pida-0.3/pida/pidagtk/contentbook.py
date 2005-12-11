@@ -117,6 +117,7 @@ class ContentholderList(content_list):
 
     def init(self):
         self.__views = {}
+        self.__buttons = {}
 
     def append_page(self, contentview):
         label = widgets.hyperlink('', icon=contentview.icon)
@@ -125,11 +126,12 @@ class ContentholderList(content_list):
         
         button.connect('clicked', self.cb_button_clicked, contentview.unique_id)
         self.__views[contentview.unique_id] = label
+        self.__buttons[contentview.unique_id] = button
         self.pack_start(button)
         self.set_title(contentview)
 
     def remove_page(self, contentview):
-        button = self.__views[contentview.unique_id]
+        button = self.__buttons[contentview.unique_id]
         self.remove(button)
         button.destroy()
 
