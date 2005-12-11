@@ -118,6 +118,8 @@ class registry(base.pidamanager):
 
     group_type = registry_group
 
+    file_intro = '# pida generated ini file'
+
     def __get_tempopts(self, filename):
         self.filename = filename
         tempopts = configparser.ConfigParser()
@@ -139,7 +141,7 @@ class registry(base.pidamanager):
 
     def save(self):
         f = open(self.filename, 'w')
-        f.write(CONFIG_FILE_INTRO)
+        f.write(self.file_intro)
         for group in self.iter_groups():
             f.write('\n[%s]\n' % group.name)
             for option in group:
