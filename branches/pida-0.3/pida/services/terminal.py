@@ -38,11 +38,11 @@ class terminal_view(contentview.content_view):
 
     SHORT_TITLE = 'Terminal'
 
-    def init(self, term_type, command_line, **kw):
+    def init(self, term_type, command_args, **kw):
         terminal, kw = make_terminal(term_type)
         self.widget.pack_start(terminal.widget)
-        terminal.execute(command_line, **kw)
-        self.set_long_title(command_line)
+        terminal.execute(command_args, **kw)
+        self.set_long_title(' '.join(command_args))
         
 
 class terminal_manager(service.service):
@@ -64,16 +64,18 @@ class terminal_manager(service.service):
             default = 'moo'
             rtype = types.stringlist('vte', 'moo')
 
-    def cmd_execute(self, command_line, term_type=None, kwdict={}):
+    def cmd_execute(self, command_args=[], command_line='',
+                    term_type=None, icon_name='terminal', kwdict={}):
         if term_type == None:
             term_type = self.opt('terminal', 'terminal_type')
         self.create_multi_view(term_type=term_type,
-                               command_line=command_line,
+                               command_args=command_args,
+                               icon_name=icon_name,
                                **kwdict)
 
     def cmd_execute_shell(self, term_type=None):
         shellcommand = self.opt('shell', 'command')
-        self.call('execute', command_line=shellcommand, term_type=term_type)
+        self.call('execute', command_args=[shellcommand], term_type=term_type)
 
     def act_shell(self, action):
         """Start a shell in a terminal emulator."""
@@ -81,7 +83,7 @@ class terminal_manager(service.service):
 
     def act_python_shell(self, action):
         """Start an interactive python shell."""
-        self.call('execute', command_line='python')
+        self.call('execute', command_args=['python'])
 
     def get_menu_definition(self):
         return """
@@ -99,7 +101,7 @@ Service = terminal_manager
 
 class pida_terminal(base.pidacomponent):
     
-    def execute(self, commandline, **kw):
+    def execute(self, commandargs, **kw):
         pass
 
     @staticmethod
@@ -131,8 +133,9 @@ class vte_terminal(pida_terminal):
         return self.__term
     widget = property(get_widget)
 
-    def execute(self, commandline, **kw):
-        self.__term.fork_command(commandline, **kw)
+    def execute(self, command_args, **kw):
+        command = command_args[0]
+        self.__term.fork_command(command, command_args, **kw)
 
     def connect_child_exit(self):
         pass
@@ -143,8 +146,8 @@ class moo_terminal(pida_terminal):
         import moo
         self.__term = moo.term.Term()
 
-    def execute(self, command_line, **kw):
-        self.__term.fork_command_line(command_line, **kw)
+    def execute(self, command_args, **kw):
+        self.__term.fork_argv(command_args, **kw)
 
     def get_widget(self):
         return self.__term
