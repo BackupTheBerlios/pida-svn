@@ -64,7 +64,7 @@ class Buffermanager(service.service):
         self.create_single_view()
         self.__editor = None
 
-    def act_open_file(self):
+    def act_open_file(self, action):
         self.boss.call_command('filemanager', 'browse')
 
     def act_save_file(self):
