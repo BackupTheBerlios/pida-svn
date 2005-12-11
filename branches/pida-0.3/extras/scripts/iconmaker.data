@@ -15,7 +15,6 @@ gtk-go-forward-ltr right
 gtk-go-back-ltr left
 #stock_import import
 stock_refresh refresh
-python2.4-16 python
 stock_disconnect connect
 stock_undo undo
 #stock_convert rename
@@ -33,7 +32,7 @@ gtk-delete delete
 #media-play step
 #media-next jump
 #media-forward continue
-#rox-show-details list
+rox-show-details list
 gtk-stop stop
 file-manager filemanager
 xfce-graphics preview
@@ -50,10 +49,11 @@ gtk-paste paste
 gtk-save save
 stock_redo redo
 gtk-cut cut
-sun-java manhole
+rox-show-hidden manhole
 gnome-starthere scripts
 gnome-desktop-config contexts
 meld-icon meld
 gazpacho gazpacho
 gtk-edit edit
 gtk-new new
+view_detailed sourcetree
