@@ -36,11 +36,6 @@ import pida.pidagtk.gladeview as gladeview
 
 class Contexts(service.service):
 
-    plugin_view_type = gladeview.glade_view_builder('foo.glade')
-    def on_plugin_view_foo_but__clicked(self, button):
-        print 'clicked!'
-
-
     class contexts(defs.database):
         DATA_VIEW = dataview.data_view
         class scripts(defs.field):
