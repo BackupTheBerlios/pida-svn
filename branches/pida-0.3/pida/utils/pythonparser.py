@@ -51,6 +51,25 @@ class source_code_node(object):
         return self.__nodename
     name = property(get_name)
 
+    def get_node_type(self):
+        return self.__nodetype
+    node_type = property(get_node_type)
+
+    def get_node_type_short(self):
+        return self.node_type[0]
+    node_type_short = property(get_node_type_short)
+
+    def get_additional_info(self):
+        return self.__additional
+    additional_info = property(get_additional_info)
+
+    def get_node_colour(self):
+        if self.node_type == 'Class':
+            return '#c00000'
+        else:
+            return '#0000c0'
+    node_colour = property(get_node_colour)
+
 
 try:
     from bike.parsing import fastparser
@@ -59,11 +78,13 @@ except ImportError:
 
 
 def adapt_brm_node(node):
+    firstline = node.getLine(0).strip()
+    argnames = firstline.split(' ', 1)[-1].replace(node.name, '', 1)
     pida_node = source_code_node(node.filename,
                                  node.linenum,
                                  node.name,
                                  node.type,
-                                 'additional')
+                                 argnames)
     return pida_node
 
 

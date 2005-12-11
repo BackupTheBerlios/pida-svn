@@ -38,7 +38,9 @@ class python_source_view(contentview.content_view):
     def init(self):
         self.__nodes = tree.Tree()
         self.__nodes.set_property('markup-format-string',
-            "%(name)s")
+            '<tt><b><i><span color="%(node_colour)s">'
+            '%(node_type_short)s </span></i></b>'
+            '<b>%(name)s</b>\n%(additional_info)s</tt>')
         self.widget.pack_start(self.__nodes)
 
     def set_source_nodes(self, root_node):
@@ -47,7 +49,7 @@ class python_source_view(contentview.content_view):
         
     def __set_nodes(self, root_node, piter=None):
         if root_node.linenumber is not None:
-            piter = self.__nodes.add_item(root_node, parent=parent,
+            piter = self.__nodes.add_item(root_node, parent=piter,
                 key=(root_node.filename, root_node.linenumber))
         for node in root_node.children:
             self.__set_nodes(node, piter)
@@ -130,15 +132,14 @@ class python(service.service):
         def act_execute_current_project(self, action):
             pass
 
-        def act_project(self):
-            """Project menu entries."""
-            pass
 
         def get_menu_definition(self):
             return """
                 <menubar>
                 <menu name="base_project" action="python+project+project">
+                <separator />
                 <menuitem name="expyproj" action="python+project+execute_current_project" />
+                <separator />
                 </menu>
                 </menubar>
                 """
