@@ -75,20 +75,22 @@ class content_view(gtk.VBox):
 
     BUTTONS = []
 
-    def __init__(self, service, prefix, widget=None, **kw):
+    def __init__(self, service, prefix, widget=None, icon_name=None, **kw):
         gtk.VBox.__init__(self)
         self.__uid = time.time()
         self.__service = service
         self.__prefix = prefix
-        self.__init_icon()
+        self.__init_icon(icon_name)
         self.__init_short_title()
         self.__init_long_title()
         self.__init_widgets(widget)
         self.__holder = None
         self.init(**kw)
 
-    def __init_icon(self):
-        if self.ICON_NAME is not None:
+    def __init_icon(self, icon_name):
+        if icon_name is not None:
+            self.icon_name = icon_name
+        elif self.ICON_NAME is not None:
             self.icon_name = self.ICON_NAME
         else:
             self.icon_name = 'terminal'
@@ -237,3 +239,5 @@ class content_view(gtk.VBox):
     def get_prefix(self):
         return self.__prefix
     prefix = property(get_prefix)
+
+gobject.type_register(content_view)
