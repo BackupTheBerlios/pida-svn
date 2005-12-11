@@ -25,7 +25,6 @@ import gtk
 import gobject
 import toolbar
 from pida.utils.kiwiutils import gsignal, gproperty
-from kiwi.datatypes import *
 
 class TreeItem(object):
     """An item inside a tree-view."""
