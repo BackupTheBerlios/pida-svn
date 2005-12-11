@@ -380,7 +380,7 @@ class types(object):
             """
             Set the option database value to the widgets text.
             """
-            self.set_value(int(self.widget.value))
+            self.set_value(int(self.widget.get_value()))
 
     class list(entry):
         def __init__(self, option):
