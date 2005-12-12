@@ -28,33 +28,32 @@ import toolbar
 class context_toolbar(toolbar.Toolbar):
 
     def set_contexts(self, contexts):
-        self.clear()
+        self.remove_buttons()
         callbacks = {}
         for name, icon, ltext, func, args in contexts:
             callbacks[name] = func
-            tb.add_button(name, icon, ltext)
+            self.add_button(name, icon, ltext)
         def clicked(toolbar, name):
             callbacks[name](args)
         self.connect('clicked', clicked)
+        self.show_all()
 
-class context_menu(gtk.Menu):
-
-    def get_menu(self, globaldict):
-        callbacks = {}
-        def clicked(menuitem, name):
-            callbacks[name](args)
-        menu = gtk.Menu()
-        for name, icon, ltext, func, args in contexts:
-            callbacks[name] = func
-            menuitem = gtk.MenuItem()
-            menubox = gtk.HBox(spacing=4)
-            icon = icons.icons.get_image(icon)
-            menubox.pack_start(icon, expand=False)
-            label = gtk.Label(ltext)
-            label.set_alignment(0, 0.5)
-            menubox.pack_start(label)
-            menuitem.add(menubox)
-            menu.append(menuitem)
-            menuitem.connect('activate', clicked, name)
+def get_menu(self, contexts, globaldict):
+    callbacks = {}
+    def clicked(menuitem, name):
+        callbacks[name](args)
+    menu = gtk.Menu()
+    for name, icon, ltext, func, args in contexts:
+        callbacks[name] = func
+        menuitem = gtk.MenuItem()
+        menubox = gtk.HBox(spacing=4)
+        icon = icons.icons.get_image(icon)
+        menubox.pack_start(icon, expand=False)
+        label = gtk.Label(ltext)
+        label.set_alignment(0, 0.5)
+        menubox.pack_start(label)
+        menuitem.add(menubox)
+        menu.append(menuitem)
+        menuitem.connect('activate', clicked, name)
         menu.show_all()
         return menu

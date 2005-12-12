@@ -148,24 +148,24 @@ class directory_context(default_context):
         return globaldict['directory']
 
     def command_filemanager(self, directory):
-        self.boss.command('filemanager', 'browse', directory=directory)
+        self.boss.call_command('filemanager', 'browse', directory=directory)
 
     def command_find(self, directory):
-        self.boss.command('grepper', 'find-interactive',
+        self.boss.call_command('grepper', 'find-interactive',
                            directories=[directory])
 
     def command_new(self, directory):
-        self.boss.command('newfile', 'create-interactive',
+        self.boss.call_command('newfile', 'create-interactive',
                           directory=directory)
 
     def command_terminal(self, directory):
-        self.boss.command('terminal', 'execute-vt-shell',
-                          kwargs={'directory': directory})
+        self.boss.call_command('terminal', 'execute_shell',
+                          kwdict={'directory': directory})
 
     def command_up(self, directory):
         if directory != '/':
             parent = os.path.split(directory)[0]
-            self.boss.command('filemanager', 'browse', directory=parent)
+            self.boss.call_command('filemanager', 'browse', directory=parent)
 
 
 CONTEXTS = [('file', 'When an action is in the context of a single file'),

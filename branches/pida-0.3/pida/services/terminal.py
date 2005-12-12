@@ -39,7 +39,7 @@ class terminal_view(contentview.content_view):
     SHORT_TITLE = 'Terminal'
 
     def init(self, term_type, command_args, **kw):
-        terminal, kw = make_terminal(term_type)
+        terminal, kw = make_terminal(term_type, **kw)
         self.widget.pack_start(terminal.widget)
         terminal.execute(command_args, **kw)
         self.set_long_title(' '.join(command_args))
@@ -66,6 +66,7 @@ class terminal_manager(service.service):
 
     def cmd_execute(self, command_args=[], command_line='',
                     term_type=None, icon_name='terminal', kwdict={}):
+        print kwdict
         if term_type == None:
             term_type = self.opt('terminal', 'terminal_type')
         self.create_multi_view(term_type=term_type,
@@ -73,9 +74,10 @@ class terminal_manager(service.service):
                                icon_name=icon_name,
                                **kwdict)
 
-    def cmd_execute_shell(self, term_type=None):
+    def cmd_execute_shell(self, term_type=None, kwdict={}):
         shellcommand = self.opt('shell', 'command')
-        self.call('execute', command_args=[shellcommand], term_type=term_type)
+        self.call('execute', command_args=[shellcommand],
+                  term_type=term_type, kwdict=kwdict)
 
     def act_shell(self, action):
         """Start a shell in a terminal emulator."""
@@ -140,6 +142,14 @@ class vte_terminal(pida_terminal):
     def connect_child_exit(self):
         pass
 
+    def translate_kwargs(self, **kw):
+        kwdict = {}
+        if 'directory' in kw:
+            kwdict['directory'] = kw['directory']
+        print kwdict
+        return kwdict
+        
+
 class moo_terminal(pida_terminal):
 
     def init(self):
@@ -166,10 +176,11 @@ TERMINAL_TYPES = {TT_HIDDEN: hidden_terminal,
                   TT_MOO: moo_terminal}
 
 def make_terminal(terminal_type_name, **kw):
+    print kw
     if terminal_type_name in TERMINAL_TYPES:
         terminal_type = TERMINAL_TYPES[terminal_type_name]
-        kw = terminal_type.translate_kwargs(**kw)
         terminal = terminal_type()
+        kw = terminal.translate_kwargs(**kw)
         return terminal, kw
 
 def test_terminal(terminal_type_names, command_line, **kw):
