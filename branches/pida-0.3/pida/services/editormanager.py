@@ -28,7 +28,8 @@ types = service.types
 
 class editor_manager(service.service):
 
-    NAME = 'editor'
+    class started(defs.event):
+        pass
 
     class general(defs.optiongroup):
         """General editor options"""

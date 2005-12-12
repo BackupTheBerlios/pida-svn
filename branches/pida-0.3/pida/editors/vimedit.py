@@ -64,11 +64,10 @@ class vim_editor(service.service):
         if self.single_view.servername in serverlist and not self.started:
             self.__srv = self.single_view.servername
             self.__cw.send_ex(self.__srv, '%s' % VIMSCRIPT)
-            self.started = True
-            gobject.timeout_add(3000, self.reset)
+            #gobject.timeout_add(3000, self.reset)
             self.reset()
-            self.manager.emit_event('started')
             self.__files = []
+            self.get_service('editormanager').events.emit('started')
 
     def confirm_single_view_controlbar_clicked_close(self, view):
         self.__cw.close_current_buffer(self.__srv)
@@ -84,7 +83,7 @@ class vim_editor(service.service):
                 for sc in self.__old_shortcuts[mapc][self.__srv]:
                     self.__cw.send_ex(self.__srv, UNMAP_COM % (mapc, sc))
             self.__old_shortcuts[mapc][self.__srv] = []
-            l = self.options.get('shortcut-leader').value()
+            #l = self.options.get('shortcut-leader').value
             globalkpsopts = self.boss.option_group('keyboardshortcuts')
             globalkps = []
             for opt in globalkpsopts:
@@ -107,7 +106,8 @@ class vim_editor(service.service):
 
     def reset(self):
         if self.started:
-            self.__load_shortcuts()
+            pass
+            #self.__load_shortcuts()
 
     def open_file_line(self, filename, linenumber):
         if self.__currentfile != filename:

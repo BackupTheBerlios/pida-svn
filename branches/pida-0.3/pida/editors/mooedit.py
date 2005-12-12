@@ -58,7 +58,7 @@ class moo_editor(service.service):
         self.__files[filename].raise_page()
 
     def cmd_start(self):
-        self.call('edit_file')
+        self.get_service('editormanager').events.emit('started')
 
     def cb_multiview_closed(self, view):
         if view.unique_id in self.__views:

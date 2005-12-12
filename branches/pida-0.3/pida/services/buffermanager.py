@@ -62,6 +62,10 @@ class Buffermanager(service.service):
     class document_changed(defs.event):
         pass
 
+    def bnd_editormanager_started(self):
+        for filename in self.boss.positional_args:
+            self.call('open_file', filename=filename)
+
     def init(self):
         self.__currentdocument = None
         self.__documents = {}
