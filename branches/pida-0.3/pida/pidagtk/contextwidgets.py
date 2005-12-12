@@ -23,7 +23,7 @@
 
 import gtk
 import toolbar
-
+import icons
 
 class context_toolbar(toolbar.Toolbar):
 
@@ -32,7 +32,7 @@ class context_toolbar(toolbar.Toolbar):
 
     def disconnect_callbacks(self):
         if self.__handlerid is not None:
-            self.disconnect(self__handlerid)
+            self.disconnect(self.__handlerid)
 
     def set_contexts(self, contexts):
         self.disconnect_callbacks()
@@ -46,7 +46,7 @@ class context_toolbar(toolbar.Toolbar):
         self.__handlerid = self.connect('clicked', clicked)
         self.show_all()
 
-def get_menu(self, contexts, globaldict):
+def get_menu(contexts):
     callbacks = {}
     def clicked(menuitem, name):
         callbacks[name](args)
@@ -63,5 +63,5 @@ def get_menu(self, contexts, globaldict):
         menuitem.add(menubox)
         menu.append(menuitem)
         menuitem.connect('activate', clicked, name)
-        menu.show_all()
-        return menu
+    menu.show_all()
+    return menu

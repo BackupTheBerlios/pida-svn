@@ -239,13 +239,17 @@ class FileBrowser(contentview.content_view):
     def cb_file_rightclicked(self, view, fileitem, event):
         fsi = fileitem.value
         if fsi.directory:
-            menu = self.boss.command('contexts', 'get-menu',
-                                     contextname='directory',
-                                     globaldict={'directory':fsi.path})
+            globaldict={'directory':fsi.path}
+            contextname = 'directory'
         else:
-            menu = self.boss.command('contexts', 'get-menu',
-                                     contextname='file',
-                                     globaldict={'filename':fsi.path})
+            globaldict={'filename':fsi.path}
+            contextname = 'file'
+
+        contexts = self.service.boss.call_command('contexts', 'get_contexts',
+                                     contextname=contextname,
+                                     globaldict=globaldict
+                                     )
+        menu = contextwidgets.get_menu(contexts)
         menu.popup(None, None, None, event.button, event.time)
        
 
