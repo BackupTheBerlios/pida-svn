@@ -98,3 +98,11 @@ class boss(base.pidacomponent):
         return self.__env.home_dir
     pida_home = property(get_pida_home)
 
+    def get_version(self):
+        return self.__env.version
+    version = property(get_version)
+
+    def get_positional_args(self):
+        return self.__env.positional_args
+    positional_args = property(get_positional_args)
+

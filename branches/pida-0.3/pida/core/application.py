@@ -35,6 +35,12 @@ import optparse
 import gtk
 
 
+pida_version = '0.29.0'
+
+def print_version_and_die():
+    print 'pIDA version %s' % pida_version
+    sys.exit(0)
+
 class environment(base.pidacomponent):
     """Handle environment variable and command line arguments"""
     def init(self):
@@ -48,8 +54,12 @@ class environment(base.pidacomponent):
                       help='The location of the pida home directory',
                       default=os.path.expanduser('~/.pida2'))
         op.add_option('-o', '--option', type='string', nargs=1,
-                      action='append')
+                      action='append', help='Set an option')
+        op.add_option('-v', '--version', action='store_true',
+                      help='Print version information and exit.')
         opts, args = op.parse_args()
+        if opts.version is not None:
+            print_version_and_die()
         envhome = self.__parseenv()
         if envhome is not None:
             home_dir_option = envhome
@@ -57,6 +67,7 @@ class environment(base.pidacomponent):
             home_dir_option = opts.home_directory
         self.__home_dir = home_dir_option
         self.__create_home_tree(self.__home_dir)
+        self.__args = args
 
     def __parseenv(self):
         if 'PIDA_HOME' in os.environ:
@@ -79,9 +90,17 @@ class environment(base.pidacomponent):
         if self.__opts.registry_file:
             return self.__opts.registry_file
 
+    def get_positional_args(self):
+        return self.__args
+    positional_args = property(get_positional_args)
+
     def get_home_dir(self):
         return self.__home_dir
     home_dir = property(get_home_dir)
+
+    def get_version(self):
+        return pida_version
+    version = property(get_version)
 
 
 class application(object):
