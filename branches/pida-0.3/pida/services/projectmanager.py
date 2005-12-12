@@ -25,6 +25,7 @@ import pida.pidagtk.tree as tree
 import pida.pidagtk.configview as configview
 import pida.pidagtk.contentbook as contentbook
 import pida.pidagtk.contentview as contentview
+import pida.pidagtk.contextwidgets as contextwidgets
 
 import pida.core.registry as registry
 import pida.core.service as service
@@ -86,6 +87,8 @@ class project_view(contentview.content_view):
     HAS_TITLE = False
 
     def init(self):
+        self.__toolbar = contextwidgets.context_toolbar()
+        self.widget.pack_start(self.__toolbar, expand=False)
         self.__projectlist = ProjectTree()
         self.widget.pack_start(self.__projectlist)
         self.__projectlist.set_property('markup-format-string',
@@ -98,6 +101,9 @@ class project_view(contentview.content_view):
 
     def get_selected(self):
         return self.__projectlist.selected
+
+    def set_contexts(self, contexts):
+        self.__toolbar.set_contexts(contexts)
 
 
 class ProjectManager(service.service):
@@ -113,6 +119,7 @@ class ProjectManager(service.service):
     # life cycle
  
     def init(self):
+        self.__current_project = None
         self.__history = []
         self.__history_file = os.path.join(self.boss.pida_home,
             'projects', 'projectlist.conf')
@@ -162,17 +169,19 @@ class ProjectManager(service.service):
         view.set_registries([(p.name, p.options) for p in projects])
 
     def __current_project_changed(self, project):
-        self.__current_project = project
-        for project in self.projects:
-            project.project_type.action_group.set_visible(False)
-            print 'setting agroup invis'
-        print 'setting agroup vis'
-        self.__current_project.project_type.action_group.set_visible(True)
-        self.boss.call_command('window', 'update_action_groups')
-        a = self.__current_project.project_type.action_group.list_actions()
-        print [i.get_name() for i in a]
-        a = project.project_type.service.action_group.list_actions()
-        print [i.get_name() for i in a]
+        if self.__current_project is None or (project.project_type is not
+                self.__current_project.project_type):
+            if self.__current_project is not None:
+                self.__current_project.project_type.action_group.\
+                    set_visible(False)
+            self.__current_project = project
+            self.__current_project.project_type.action_group.set_visible(True)
+            self.boss.call_command('window', 'update_action_groups')
+        contexts = self.boss.call_command('contexts', 'get_contexts',
+                                          contextname='directory',
+                                          globaldict={'directory':
+                                            project.source_directory})
+        self.plugin_view.set_contexts(contexts)
 
 
     # external interface
