@@ -83,4 +83,7 @@ class event(base.pidacomponent):
     def get(self, event_name):
         return self.__events[event_name]
 
+    def list_events(self):
+        return self.__events.keys()
+
 
