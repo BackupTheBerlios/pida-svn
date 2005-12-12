@@ -142,9 +142,11 @@ class directory_context(default_context):
                 ('new', 'new', 'New',
                  'Create a new file in this directory'),
                 ('terminal', 'terminal', 'Terminal',
-                'Open a terminal in the parent directory of this file'),
+                'Open a terminal in this directory'),
                 ('vcs_diff', 'vcs_diff', 'VCS Statuses',
-                 'Get the version statuses of this directory')]
+                 'Get the version statuses of this directory'),
+                ('vcs_commit', 'vcs_commit', 'VCS Commit',
+                 'commit this directory to version control.')]
 
     def globals_modifier(self, globaldict):
         return globaldict['directory']
@@ -172,6 +174,10 @@ class directory_context(default_context):
     def command_vcs_diff(self, directory):
         self.boss.call_command('versioncontrol', 'statuses',
                                directory=directory)
+
+    def command_vcs_commit(self, directory):
+        self.boss.call_command('versioncontrol', 'commit',
+                                directory=directory)
 
 
 CONTEXTS = [('file', 'When an action is in the context of a single file'),
