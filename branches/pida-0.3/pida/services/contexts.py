@@ -142,7 +142,9 @@ class directory_context(default_context):
                 ('new', 'new', 'New',
                  'Create a new file in this directory'),
                 ('terminal', 'terminal', 'Terminal',
-                'Open a terminal in the parent directory of this file')]
+                'Open a terminal in the parent directory of this file'),
+                ('vcs_diff', 'vcs_diff', 'VCS Statuses',
+                 'Get the version statuses of this directory')]
 
     def globals_modifier(self, globaldict):
         return globaldict['directory']
@@ -166,6 +168,10 @@ class directory_context(default_context):
         if directory != '/':
             parent = os.path.split(directory)[0]
             self.boss.call_command('filemanager', 'browse', directory=parent)
+
+    def command_vcs_diff(self, directory):
+        self.boss.call_command('versioncontrol', 'statuses',
+                               directory=directory)
 
 
 CONTEXTS = [('file', 'When an action is in the context of a single file'),

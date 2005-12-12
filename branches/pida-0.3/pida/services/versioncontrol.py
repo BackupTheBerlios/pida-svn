@@ -33,6 +33,10 @@ class version_control(service.service):
     def cmd_get_vcs_for_directory(self, directory):
         print directory
         return vc.Vc(directory)
+
+    def cmd_statuses(self, directory):
+        self.boss.call_command('meldembed', 'browse',
+                               directory=directory)
         
 
 Service = version_control

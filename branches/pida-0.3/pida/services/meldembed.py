@@ -189,8 +189,8 @@ class MeldDirBuffer(MeldBuffer):
 
 class Meld(service.service):
 
-    MULTI_VIEW = MeldView
-    MULTI_VIEW_BOOK = 'edit'
+    multi_view_type = MeldView
+    multi_view_book = 'edit'
     
     class meld_handler(document.document_handler):
 
