@@ -95,33 +95,10 @@ class python(service.service):
         def act_profile_current_file(self, action):
             pass
 
-        def act_file(self, action):
-            pass
-
-        def act_edit(self, action):
-            pass
-
-        def act_project(self, action):
-            pass
-
-        def act_tools(self, action):
-            pass
-
-        def act_python(self, action):
-            pass
-
         def get_menu_definition(self):
             return """
                 <menubar>
-                <menu name="base_file" action="python+language+file">
-                </menu>
-                <menu name="base_edit" action="python+language+edit">
-                </menu>
-                <menu name="base_project" action="python+language+project">
-                </menu>
-                <menu name="base_tools" action="python+language+tools">
-                </menu>
-                <menu name="python_base" action="python+language+python" >
+                <menu name="python_base" action="python" >
                 <menuitem name="expyfile" action="python+language+execute_current_file" />
                 <menuitem name="debpyfile" action="python+language+debug_current_file" />
                 <menuitem name="propyfile" action="python+language+profile_current_file" />
@@ -147,11 +124,10 @@ class python(service.service):
         def act_execute_current_project(self, action):
             pass
 
-
         def get_menu_definition(self):
             return """
                 <menubar>
-                <menu name="base_project" action="python+project+project">
+                <menu name="base_project" action="base_project_menu">
                 <separator />
                 <menuitem name="expyproj" action="python+project+execute_current_project" />
                 <separator />
@@ -159,4 +135,13 @@ class python(service.service):
                 </menubar>
                 """
 
+    def act_python(self, action):
+        pass
+
+    def get_menu_definition(self):
+        return """
+            <menubar>
+            <menu name="python_base" action="python+python" />
+            </menubar>
+            """
 Service = python

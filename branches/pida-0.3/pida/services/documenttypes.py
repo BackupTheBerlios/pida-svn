@@ -61,6 +61,9 @@ class document_type_handler(service.service):
                 <menu name="base_file" action="base_file_menu">
                 </menu>
                 <menu name="base_edit" action="base_edit_menu">
+                <menuitem name="Cut" action="documenttypes+document+cut" />
+                <menuitem name="Copy" action="documenttypes+document+copy" />
+                <menuitem name="Paste" action="documenttypes+document+paste" />
                 </menu>
                 <menu name="base_project" action="base_project_menu">
                 </menu>

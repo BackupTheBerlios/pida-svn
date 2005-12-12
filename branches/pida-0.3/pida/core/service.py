@@ -256,6 +256,12 @@ class actions_mixin(object):
         self.__action_group = gtk.ActionGroup(self.NAME)
         self.__init()
 
+    def bind(self):
+        menudef = self.get_menu_definition()
+        if menudef:
+            self.boss.call_command('window', 'register_action_group',
+                actiongroup=self.action_group, uidefinition=menudef)
+
     def __init(self):
         for action in get_actions_for_funcs(self.__class__.__actions__,
                                                 self):
@@ -568,10 +574,14 @@ class service_base(base.pidacomponent):
 
     def bind_events(self):
         bindings_mixin.bind(self)
+        actions_mixin.bind(self)
 
-    def bind(self):
+    def bind_bases(self):
         for baseclass in binding_base_classes:
             baseclass.bind(self)
+
+    def bind(self):
+        pass
 
     def reset(self):
         pass

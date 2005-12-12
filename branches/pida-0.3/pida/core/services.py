@@ -88,6 +88,8 @@ class service_manager(base.pidagroup):
             service.bind_events()
         for service in self:
             service.bind()
+        for service in self:
+            service.bind_bases()
 
     def reset(self):
         for service in self:

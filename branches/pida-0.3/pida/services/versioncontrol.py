@@ -27,16 +27,26 @@ import pida.core.service as service
 import pida.utils.vc as vc
 
 defs = service.definitions
+types = service.types
 
 class version_control(service.service):
+
+    class meld_integration(defs.optiongroup):
+        """How much meld will be used."""
+        class use_meld_for_statuses(defs.option):
+            rtype = types.boolean
+            default = True
 
     def cmd_get_vcs_for_directory(self, directory):
         print directory
         return vc.Vc(directory)
 
     def cmd_statuses(self, directory):
-        self.boss.call_command('meldembed', 'browse',
-                               directory=directory)
+        if self.opt('meld_integration', 'use_meld_for_statuses'):
+            self.boss.call_command('meldembed', 'browse',
+                                    directory=directory)
+        else:
+            print 'not using meld'
         
 
 Service = version_control

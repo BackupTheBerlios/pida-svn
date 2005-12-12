@@ -57,13 +57,13 @@ class window_manager(service.service):
         self.toolbar = self.__uim.get_widget('/toolbar')
         tp.pack_start(self.toolbar)
         
-        #print self.__uim.get_ui()
+        print self.__uim.get_ui()
         ag = self.__uim.get_action_groups()
         for a in ag:
-            #print a.get_name(), a.get_visible()
+            print a.get_name(), a.get_visible()
             acts = a.list_actions()
-            #for act in acts:
-                #print '\t', act, act.get_name(), act.get_visible()
+            for act in acts:
+                print '\t', act, act.get_name(), act.get_visible()
 
     def cmd_shrink_content(self, bookname):
         self.__window.shrinkbook(bookname)
@@ -79,7 +79,7 @@ class window_manager(service.service):
         self.__window.remove_pages(bookname)
 
     def cmd_register_action_group(self, actiongroup, uidefinition):
-        self.__uim.insert_action_group(actiongroup, -1)
+        self.__uim.insert_action_group(actiongroup, 0)
         self.__uim.add_ui_from_string(uidefinition)
         self.__uim.ensure_update()
 
@@ -92,6 +92,29 @@ class window_manager(service.service):
         self.__window = window.pidawindow(self)
         self.__window.connect('destroy', self.cb_destroy)
         self.__uim = gtk.UIManager()
+        ag = gtk.ActionGroup('baseactions')
+        ag.add_actions([
+            ('base_file_menu', None, '_File'),
+            ('base_edit_menu', None, '_Edit'),
+            ('base_project_menu', None, '_Project'),
+            ('base_tools_menu', None, '_Tools')
+            ])
+            
+        menudef = """
+                <menubar>
+                <menu name="base_file" action="base_file_menu">
+                </menu>
+                <menu name="base_edit" action="base_edit_menu">
+                </menu>
+                <menu name="base_project" action="base_project_menu">
+                </menu>
+                <menu name="base_tools" action="base_tools_menu">
+                </menu>
+                </menubar>
+                """
+        self.call('register_action_group',
+                    actiongroup=ag,
+                    uidefinition=menudef)
 
     def cb_destroy(self, window):
         self.boss.stop()
@@ -109,16 +132,17 @@ class window_manager(service.service):
 
         self.buffermanager = self.get_service('buffermanager').single_view
         pluginmanager = contentbook.contentbook()#self.boss.plugins.view
-        uim = self.__uim
+        #uim = self.__uim
         for service in self.boss.services:
             if service.plugin_view_type is not None:
                 pluginmanager.append_page(service.plugin_view)
-            menu_def = service.get_menu_definition()
-            if menu_def:
-                uim.add_ui_from_string(menu_def)
-            ag = service.action_group
-            uim.insert_action_group(ag, 0)
-        uim.ensure_update()
+        #    menu_def = service.get_menu_definition()
+        #    if menu_def:
+        #        uim.add_ui_from_string(menu_def)
+        #    ag = service.action_group
+        #    uim.insert_action_group(ag, 0)
+        self.__uim.ensure_update()
+        uim = self.__uim
         self.pluginmanager = pluginmanager
         self.menubar = uim.get_toplevels(gtk.UI_MANAGER_MENUBAR)[0]
         self.toolbar = uim.get_toplevels(gtk.UI_MANAGER_TOOLBAR)[0]

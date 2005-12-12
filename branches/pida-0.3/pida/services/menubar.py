@@ -37,14 +37,9 @@ class Menubar(service.service):
         #m = self.get_service('window').uimanager.get_widget('FileMenu')
         self.__menu = None#m
         self.__toplevels = {}
-        
-        self.action_group.add_actions([
-            ('base_file_menu', None, '_File'),
-            ('base_edit_menu', None, '_Edit'),
-            ('base_project_menu', None, '_Project'),
-            ('base_tools_menu', None, '_Tools')
-            ])
-        
+    
+    def bind(self):
+        pass 
 
     def __create_item(self, text, icon, commandargs=None):
         item = gtk.MenuItem()
