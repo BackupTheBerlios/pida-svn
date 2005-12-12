@@ -78,16 +78,13 @@ class language_types(service.service):
         
     def __get_lang_handler(self, filename):
         matches = []
-        print self.__langs, 'LANGS'
         for pattern in self.__langs:
-            print pattern, filename
             if pattern.match(filename):
                 matches.append(self.__langs[pattern])
         return matches
 
     def __get_first_handler(self, lines):
         matches = []
-        print self.__firsts
         for line in lines:
             for pattern in self.__firsts:
                 if pattern.match(line):
