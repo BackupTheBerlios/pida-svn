@@ -210,7 +210,7 @@ class Meld(service.service):
     def init(self):
         self.__views = {}
 
-    def cmd_diff_file(self, filename):
+    def cmd_diff(self, filename):
         mangled = self.__manglepath(filename)
         self.boss.call_command('buffermanager', 'open_file',
                                 filename=mangled)

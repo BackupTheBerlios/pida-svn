@@ -33,6 +33,10 @@ class Toolbar(gtk.HBox):
 
     def __init__(self):
         gtk.HBox.__init__(self)
+        self.init()
+
+    def init(self):
+        pass
 
     def add_button(self, name, icon, tooltip='None Set!', text=False):
         evt = gtk.EventBox()

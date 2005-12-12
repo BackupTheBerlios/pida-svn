@@ -383,24 +383,56 @@ class Gazpacho(service.service):
         def act_copy(self, action):
             pass
 
-        def act_edit(self, action):
+        def act_save(self, action):
+            pass
+
+        def act_save_as(self, action):
+            pass
+
+        def act_undo(self, action):
+            pass
+
+        def act_redo(self, action):
             pass
 
         def get_menu_definition(self):
             return """
-                <menubar>
-                <menu name="base_edit" action="gazpachdocument+edit">
-                <menuitem name="gazcopy" action="gazpach+document+copy" />
+              <menubar>
+                <menu name="base_file" action="base_file_menu">
+                  <separator />
+                  <menuitem action="gazpach+document+save"/>
+                  <menuitem action="gazpach+document+save_as"/>
+                  <separator />
                 </menu>
-                <menu name="base_project" action="base_project_menu">
+                <menu action="base_edit_menu">
+                  <menuitem action="gazpach+document+undo"/>
+                  <menuitem action="gazpach+document+redo"/>
+                  <separator name="EM1"/>
+                  <menuitem action="Cut"/>
+                  <menuitem action="Copy"/>
+                  <menuitem action="Paste"/>
+                  <menuitem action="Delete"/>
                 </menu>
-                <menu name="base_tools" action="base_tools_menu">
+                <menu action="base_project_menu">
                 </menu>
-                </menubar>
-                <toolbar>   
-                <toolitem name="tgazcopy" action="gazpach+document+copy" />
-                </toolbar>
-                """
+                <menu action="base_help_menu">
+                  <menuitem action="About"/>
+                </menu>
+              </menubar>
+              <toolbar name="MainToolbar">
+                <toolitem action="gazpach+document+save"/>
+                <toolitem action="gazpach+document+undo"/>
+                <toolitem action="gazpach+document+redo"/>    
+              </toolbar>
+              <toolbar name="EditBar">
+                <toolitem action="Cut"/>
+                <toolitem action="Copy"/>
+                <toolitem action="Paste"/>
+                                <toolitem action="Delete"/>
+                              </toolbar>
+                            """
+
+    
 
     def cmd_open(self, filename):
         self.boss.call_command('buffermanager', 'open_file',

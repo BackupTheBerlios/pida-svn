@@ -36,9 +36,19 @@ class version_control(service.service):
         class use_meld_for_statuses(defs.option):
             rtype = types.boolean
             default = True
+        class use_meld_for_diff(defs.option):
+            rtype = types.boolean
+            default = True
+
+    def init(self):
+        self.__currentfile = None
+        self.action_group.set_sensitive(False)
+
+    def bnd_buffermanager_document_changed(self, document):
+        self.__currentfile = document.filename
+        self.action_group.set_sensitive(True)
 
     def cmd_get_vcs_for_directory(self, directory):
-        print directory
         return vc.Vc(directory)
 
     def cmd_statuses(self, directory):
@@ -47,6 +57,28 @@ class version_control(service.service):
                                     directory=directory)
         else:
             print 'not using meld'
+
+    def cmd_diff_file(self, filename):
+        if self.opt('meld_integration', 'use_meld_for_diff'):
+            self.boss.call_command('meldembed', 'diff',
+                                    filename=filename)
+        else:
+            print 'not using meld'
+
+    def act_diff_file(self, action):
+        self.call('diff_file', filename=self.__currentfile)
+
+    def get_menu_definition(self):
+        return """
+            <menubar>
+            <menu name="base_file" action="base_file_menu">
+            <separator />
+            <menuitem name="diff_file" action="versioncontrol+diff_file" />
+            <separator />
+            </menu>
+            </menubar>
+            """
+        
         
 
 Service = version_control

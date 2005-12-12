@@ -29,6 +29,8 @@ import gobject
 
 import pida.pidagtk.contentview as contentview
 
+defs = service.definitions
+
 class BufferView(contentview.content_view):
 
     HAS_CONTROL_BOX = False
@@ -57,6 +59,9 @@ class Buffermanager(service.service):
     
     single_view_type = BufferView
     
+    class document_changed(defs.event):
+        pass
+
     def init(self):
         self.__currentdocument = None
         self.__documents = {}
@@ -136,6 +141,7 @@ class Buffermanager(service.service):
         if (self.single_view.bufferview.get_selected_key()
                 != document.unique_id):
             self.single_view.bufferview.set_selected(document.unique_id)
+        self.events.emit('document_changed', document=document)
 
     def __disable_all_handlers(self):
         for filename, document in self.__documents.iteritems():
@@ -159,7 +165,7 @@ class Buffermanager(service.service):
                 <menubar>
                 <menu name="base_file" action="base_file_menu">
                 <menuitem name="New" action="buffermanager+open_file" />
-                <placeholder name="FileMenuAdditions" />
+                <separator name="F1" />
                 </menu>
                 </menubar>
                 <toolbar>

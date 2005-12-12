@@ -27,7 +27,15 @@ import toolbar
 
 class context_toolbar(toolbar.Toolbar):
 
+    def init(self):
+        self.__handlerid = None
+
+    def disconnect_callbacks(self):
+        if self.__handlerid is not None:
+            self.disconnect(self__handlerid)
+
     def set_contexts(self, contexts):
+        self.disconnect_callbacks()
         self.remove_buttons()
         callbacks = {}
         for name, icon, ltext, func, args in contexts:
@@ -35,7 +43,7 @@ class context_toolbar(toolbar.Toolbar):
             self.add_button(name, icon, ltext)
         def clicked(toolbar, name):
             callbacks[name](args)
-        self.connect('clicked', clicked)
+        self.__handlerid = self.connect('clicked', clicked)
         self.show_all()
 
 def get_menu(self, contexts, globaldict):

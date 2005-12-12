@@ -103,6 +103,9 @@ class window_manager(service.service):
         menudef = """
                 <menubar>
                 <menu name="base_file" action="base_file_menu">
+                <separator name="F1" />
+                <separator name="F2" />
+                <separator name="F3" />
                 </menu>
                 <menu name="base_edit" action="base_edit_menu">
                 </menu>

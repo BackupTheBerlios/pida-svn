@@ -77,9 +77,6 @@ class python(service.service):
         def init(self):
             self.__document = None
 
-        def act_execute_current_file(self, action):
-            pass
-
         def load_document(self, document):
             self.__document = document
             root_node = pythonparser.get_nodes_from_string(document.string)
