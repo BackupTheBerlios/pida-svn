@@ -43,8 +43,8 @@ class moo_editor(service.service):
 
     NAME = 'mooedit'
 
-    MULTI_VIEW = moo_view
-    MULTI_VIEW_BOOK = 'edit'
+    multi_view_type = moo_view
+    multi_view_book = 'edit'
 
     def init(self):
         self.__files = {}
