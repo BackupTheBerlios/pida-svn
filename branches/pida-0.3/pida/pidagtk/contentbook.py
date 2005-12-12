@@ -142,6 +142,8 @@ class ContentholderList(content_list):
         button = self.__buttons[contentview.unique_id]
         self.remove(button)
         button.destroy()
+        del self.__views[contentview.unique_id]
+        del self.__buttons[contentview.unique_id]
 
     def set_page(self, contentview):
         self.__set_selected_uid(contentview.unique_id)
