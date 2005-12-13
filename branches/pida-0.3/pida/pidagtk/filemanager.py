@@ -155,11 +155,14 @@ class FileBrowser(contentview.content_view):
                 self.set_long_title(shorten_home_name(directory))
                 self.__currentdirectory = directory
                 globaldict = {'directory':directory}
-                contexts = self.service.boss.call_command('contexts',
-                                                  'get_contexts',
+                try:
+                    contexts = self.service.boss.call_command('contexts',
+                                                              'get_contexts',
                                                   contextname='directory',
                                                   globaldict=globaldict)
-                self.__toolbar.set_contexts(contexts)
+                    self.__toolbar.set_contexts(contexts)
+                except self.service.boss.ServiceNotFoundError:
+                    pass
                 #tb = self.boss.command('contexts', 'get-toolbar',
                 #                       contextname='directory',
                 #                       globaldict={'directory': directory})
