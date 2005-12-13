@@ -180,22 +180,161 @@ class sizer(gtk.EventBox):
 class clickable_eventbox(gtk.EventBox):
 
     gsignal('clicked')
+    gsignal('popup')
+    gsignal('active')
+    gsignal('unactive')
 
-    def __init__(self, widget=None):
+    def __init__(self, widget=None, menu=None):
         gtk.EventBox.__init__(self)
+        # initialise the event box
         self.add_events(gtk.gdk.BUTTON_PRESS_MASK)
         self.add_events(gtk.gdk.BUTTON_RELEASE_MASK)
-        self.connect('button-press-event', self.cb_pressed)
-        self.connect('button-release-event', self.cb_released)
+        self.connect('button-press-event', self.on_button_press_event)
+        self.connect('button-release-event', self.on_button_release_event)
+        self.__widget = widget
         if widget is not None:
             self.add(widget)
+        self.__menu = menu
+        self.__clickedstate = False
 
-    def cb_pressed(self, eventbox, event):
-        pass
+    # public API
 
-    def cb_released(self, eventbox, event):
+    def popup(self, event, menu=None):
+        """Popup the menu."""
+        if menu is None:
+            menu = self.__menu
+        if menu is not None:
+            menu.popup(None, None, None, event.button, event.time)
+        self.emit('popup')
+
+    def set_menu(self, menu):
+        """Set the menu."""
+        self.__menu = menu
+
+    def has_menu(self):
+        """Whether the widget has a menu set."""
+        return self.__menu is not None
+
+    def clicked(self):
+        self.emit('clicked')
+
+    def get_widget(self):
+        return self.__widget
+
+    def on_button_press_event(self, eventbox, event):
         if event.button == 1:
-            self.emit('clicked')
+            self.grab_add()
+            self.__clickedstate = True
+            self.emit('active')
+        elif event.button == 3:
+            self.popup(event)
+
+    def on_button_release_event(self, eventbox, event):
+        if event.button == 1:
+            self.grab_remove()
+            if self.__clickedstate:
+                self.clicked()
+                self.__clickedstate = False
+                self.emit('unactive')
+
+import gobject
+from cgi import escape
+
+class hyper_link(clickable_eventbox):
+
+    gproperty('normal-markup', str,
+              '<span color="#0000c0">%s</span>')
+    gproperty('active-markup', str,
+              '<span color="#c00000">%s</span>')
+    gproperty('hover-markup', str,
+              '<u><span color="#0000c0">%s</span></u>')
+
+    def __init__(self, text=''):
+        self.__gproperties = {}
+        self.__label = gtk.Label()
+        clickable_eventbox.__init__(self, self.__label)
+        self.set_border_width(1)
+        self.add_events(gtk.gdk.ENTER_NOTIFY_MASK |
+                        gtk.gdk.LEAVE_NOTIFY_MASK)
+        self.connect('enter-notify-event', self.on_hover_changed, True)
+        self.connect('leave-notify-event', self.on_hover_changed, False)
+        self.connect('active', self.on_active_changed, True)
+        self.connect('unactive', self.on_active_changed, False)
+        self.__text = None
+        self.__is_active = False
+        self.__is_hover = False
+        self.set_text(text)
+
+    def do_set_property(self, prop, value):
+        self.__gproperties[prop.name] = value
+
+    def do_get_property(self, prop):
+        return self.__gproperties.setdefault(prop.name, prop.default_value)
+
+    def set_text(self, text):
+        self.__text = text
+        self.__update_look()
+
+    def on_hover_changed(self, eb, event, hover):
+        self.__is_hover = hover
+        self.__update_look()
+        
+    def on_active_changed(self, eb, active):
+        self.__is_active = active
+        self.__update_look()
+
+    def __update_look(self):
+        if self.__is_active:
+            state = 'active'
+        elif self.__is_hover:
+            state = 'hover'
+        else:
+            state = 'normal'
+        markup_string = self.get_property('%s-markup' % state)
+        self.__label.set_markup(markup_string % escape(self.__text))
+
+
+
+def demo():
+    w = gtk.Window()
+    w.connect('destroy', lambda win: gtk.main_quit())
+    h1 = gtk.HBox()
+    v1 = gtk.VBox()
+    w.add(v1)
+    e = gtk.Label('nothing clicked yet')
+    def clicked(hyperlink, i):
+        e.set_label('hyperlink-%s' % i)
+    def popup(hyperlink, i):
+        e.set_label('link popup %s' % i)
+    links = ['Hyperlinks!', 'for', 'pygtk', 'I have a popup menu',
+             'me too right click me!']
+    for i in range(5):
+        hl = hyper_link(links[i])
+        hl.connect('clicked', clicked, i)
+        hl.connect('popup', clicked, i)
+        v1.pack_start(hl)
+        if i > 2:
+            m = gtk.Menu()
+            mi = gtk.MenuItem()
+            mi.add(gtk.Label('menus can be'))
+            m.add(mi)
+            mi = gtk.MenuItem()
+            mi.add(gtk.Label('set by using'))
+            m.add(mi)
+            mi = gtk.MenuItem()
+            mi.add(gtk.Label('hyperlink.set_menu'))
+            m.add(mi)
+            m.show_all()
+            hl.set_menu(m)
+    v1.pack_start(e)
+    w.show_all()
+    gtk.main()
+    
+
+
+
+
+
         
 
 class control_box(gtk.HBox):

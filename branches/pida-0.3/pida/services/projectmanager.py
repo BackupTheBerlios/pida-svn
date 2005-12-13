@@ -61,7 +61,6 @@ class ProjectTreeItem(tree.TreeItem):
 
 class ProjectTree(tree.Tree):
 
-    EDIT_BUTTONS = True
     SORT_BY = 'name'
 
     markup_format_string = ('<b>%(name)s</b> ('
