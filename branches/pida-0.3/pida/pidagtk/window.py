@@ -26,9 +26,25 @@ import toolbar
 import expander
 import contentbook
 import contentview
+import multipaned
 
 # gtk import(s)
 import gtk
+import gobject
+
+
+class pida_v_paned(gtk.VPaned):
+
+    def __init__(self):
+        gtk.VPaned.__init__(self)
+        
+    def on_pane_notify(self, pane, gparamspec):
+        # A widget property has changed.  Ignore unless it is 'position'.
+        print gparamspec.name
+        def clear():
+            pane.set_property('position-set', False)
+        if gparamspec.name == 'position-set':
+            gobject.timeout_add(1000, clear)
 
 class pidawindow(gtk.Window):
 
@@ -52,15 +68,17 @@ class pidawindow(gtk.Window):
             book.detach_pages()
 
     def __create_sidebar(self):
-        bar = gtk.VBox()
+        bar = multipaned.multi_paned()
         bufferlist = self.__manager.buffermanager
-        bar.pack_start(bufferlist)
-        bar.pack_start(self.__manager.pluginmanager)
-        for name in ['language', 'content']:
-            vb = self.__viewbooks[name] = contentbook.contentbook()
-            bar.pack_start(vb)
+        bar.add_pane(bufferlist)
+        bar.add_pane(self.__manager.pluginmanager)
+        vb = self.__viewbooks['language'] = contentbook.contentbook()
+        bar.add_pane(vb)
+        vb.collapse()
+        vb = self.__viewbooks['content'] = contentbook.contentbook()
+        bar.add_pane(vb)
+        vb.collapse()
         return bar
-
 
     def reset(self):
         """Pack the required components."""
@@ -76,6 +94,11 @@ class pidawindow(gtk.Window):
         toolbar.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
         mainbox.pack_start(topbar, expand=False)
         self.__p0 = gtk.HPaned()
+        def on_pane_notify(pane, gparamspec):
+            # A widget property has changed.  Ignore unless it is 'position'.
+            if gparamspec.name == 'position':
+                print 'pane position is now', pane.get_property('position')
+        self.__p0.connect('notify', on_pane_notify)
         mainbox.pack_start(self.__p0)
         bufferlist = gtk.Label('tb')
         pluginbook = gtk.Label('pluginbook')
@@ -84,15 +107,13 @@ class pidawindow(gtk.Window):
         
 
         editor = contentbook.Contentholder()
-        ew = gtk.VPaned()
+        ew = pida_v_paned()
         ew.pack1(editor, resize=True, shrink=True)
 
         self.__viewbooks['edit'] = editor
 
         viewbook = contentbook.contentbook()
-        vb = gtk.VBox()
-        vb.pack_start(viewbook)
-        ew.pack2(vb, resize=True, shrink=False)
+        ew.pack2(viewbook, resize=True, shrink=False)
 
         self.__viewbooks['view'] = viewbook
 

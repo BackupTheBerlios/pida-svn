@@ -173,13 +173,15 @@ class ContentholderList(content_list):
 class contentbook(expander.expander):
 
     def populate(self):
-        contentholderlist = ContentholderList()
-        self.set_label_widget(contentholderlist)
-        self.__contentholder = Contentholder(contentholderlist)
+        self.__contentholderlist = ContentholderList()
+        self.set_label_widget(self.__contentholderlist)
+        self.__contentholder = Contentholder(self.__contentholderlist)
         self.set_body_widget(self.__contentholder)
+        self.set_sensitive(False)
 
     def append_page(self, contentview):
         self.expand()
+        self.set_sensitive(True)
         return self.__contentholder.append_page(contentview)
 
     def detach_pages(self):

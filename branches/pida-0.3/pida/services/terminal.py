@@ -166,6 +166,12 @@ class moo_terminal(pida_terminal):
     def connect_child_exit(self):
         pass
 
+    def translate_kwargs(self, **kw):
+        kwdict = {}
+        if 'directory' in kw:
+            kwdict['working_dir'] = kw['directory']
+        return kwdict
+
 
 TT_HIDDEN = 'hidden'
 TT_VTE = 'vte'

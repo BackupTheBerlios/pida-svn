@@ -32,7 +32,7 @@ class expander(gtk.VBox):
     def __init__(self, right_way_up = True):
         gtk.VBox.__init__(self)
         self.__resizer = widgets.sizer()
-        self.__resizer.connect('dragged', self.cb_resized)
+        #self.__resizer.connect('dragged', self.cb_resized)
         self.__bodyarea = gtk.EventBox()
         self.__hiddenarea = gtk.EventBox()
         self.__bodywidget = None
@@ -48,7 +48,7 @@ class expander(gtk.VBox):
         self.__labelholder = gtk.EventBox()
         self.__labelcontainer.pack_start(self.__labelholder)
 
-        self.pack_start(self.__resizer, expand=False)
+        #self.pack_start(self.__resizer, expand=False)
 
         if right_way_up:
             self.pack_start(self.__labelarea, expand=False, padding=0)
@@ -71,7 +71,12 @@ class expander(gtk.VBox):
         self.toggle()
 
     def cb_resized(self, button, diff):
-        self.toggle()
+        if not self.__expanded:
+            self.expand()
+        else:
+            y = self.get_size_request()[1]
+            self.set_size_request(-1, y + diff)
+        
 
     def set_label_widget(self, widget):
         self.__labelholder.add(widget)
@@ -89,16 +94,21 @@ class expander(gtk.VBox):
             self.__bodyarea.hide()
             self.__expanded = False
             self.__arrow.set(gtk.ARROW_RIGHT, gtk.SHADOW_ETCHED_IN)
-            parent = self.get_parent()
             self.__set_expand(False)
 
     def __set_expand(self, expand):
         parent = self.get_parent()
+        print parent.__class__.__name__
         if parent is not None:
             if hasattr(parent, 'set_child_packing'):
                 parent.set_child_packing(self, expand=expand, fill=True,
                                      padding=0, pack_type=gtk.PACK_START)
-                               
+            if hasattr(self, 'pane_id'):
+                ggparent = parent.get_parent().get_parent()
+                if not expand:
+                    ggparent.shrink_pane(self.pane_id)
+                else:
+                    ggparent.unshrink_pane(self.pane_id)
 
     def toggle(self):
         def unwait():

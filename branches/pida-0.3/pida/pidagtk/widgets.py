@@ -154,21 +154,27 @@ class sizer(gtk.EventBox):
         self.__vb.pack_start(downarrow, expand=False)
         self.connect('button-press-event', self.cb_press)
         self.connect('button-release-event', self.cb_release)
+        self.connect('motion-notify-event', self.cb_motion)
+        def mapped(slf, eb, *args):
+            cursor = gtk.gdk.Cursor(gtk.gdk.DOUBLE_ARROW)
+            self.window.set_cursor(cursor)
+        self.connect('map-event', mapped)
         self.set_size_request(-1, 6)
 
     def cb_release(self, eb, ev):
-        if self.__dragging:
-            self.__dragging = False
-            diff = ev.y - self.__dragy
-            self.emit('dragged', diff)
         self.drag_unhighlight()
+        self.emit('dragged', self.__y - ev.y)
         return True
 
     def cb_press(self, eb, ev):
         self.__dragging = True
-        self.__dragy = ev.y
+        self.__y = ev.y
         self.drag_highlight()
         return True
+
+    def cb_motion(self, eb, event):
+        print event.x, event.y
+        pass
 
 
 class clickable_eventbox(gtk.EventBox):

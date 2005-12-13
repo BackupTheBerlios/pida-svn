@@ -58,12 +58,59 @@ class version_control(service.service):
         else:
             print 'not using meld'
 
+    def cmd_get_statuses(self, directory):
+        vcs = self.call('get_vcs_for_directory', directory=directory)
+        if vcs.NAME == 'Null':
+            self.log.info('"%s" is not version controlled', directory)
+        else:
+            try:
+                statuses = vcs.lookup_files([directory], [])
+                return statuses
+            except NotImplementedError:
+                self.log.info('"%s" is not version controlled', directory)
+
     def cmd_diff_file(self, filename):
         if self.opt('meld_integration', 'use_meld_for_diff'):
             self.boss.call_command('meldembed', 'diff',
                                     filename=filename)
         else:
             print 'not using meld'
+
+    def cmd_update(self, directory):
+        vcs = self.call('get_vcs_for_directory', directory=directory)
+        if vcs.NAME == 'Null':
+            self.log.info('"%s" is not version controlled', directory)
+        else:
+            try:
+                commandargs = vcs.update_command()
+                self.boss.call_command('terminal', 'execute',
+                                        command_args=commandargs,
+                                        icon_name='vcs_update',
+                                        kwdict = {'directory':
+                                                   directory})
+            except NotImplementedError:
+                self.log.info('"%s" is not version controlled', directory)
+
+    def cmd_commit(self, directory):
+        print directory
+        vcs = self.call('get_vcs_for_directory', directory=directory)
+        print vcs.get_working_directory()
+        if vcs.NAME == 'Null':
+            self.log.info('"%s" is not version controlled', directory)
+        else:
+            print vcs.NAME
+            statuses = self.call('get_statuses', directory=directory)
+            #try:
+            #    commandargs = vcs.update_command()
+            #    self.boss.call_command('terminal', 'execute',
+            #                            command_args=commandargs,
+            #                            icon_name='vcs_update',
+            #                            kwdict = {'directory':
+            #                                       directory})
+            #except NotImplementedError:
+            #    self.log.info('"%s" is not version controlled', directory)
+        
+                
 
     def act_diff_file(self, action):
         self.call('diff_file', filename=self.__currentfile)

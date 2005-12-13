@@ -145,6 +145,8 @@ class directory_context(default_context):
                 'Open a terminal in this directory'),
                 ('vcs_diff', 'vcs_diff', 'VCS Statuses',
                  'Get the version statuses of this directory'),
+                ('vcs_update', 'vcs_update', 'VCS Update',
+                 'update this directory from version control.'),
                 ('vcs_commit', 'vcs_commit', 'VCS Commit',
                  'commit this directory to version control.')]
 
@@ -177,6 +179,10 @@ class directory_context(default_context):
 
     def command_vcs_commit(self, directory):
         self.boss.call_command('versioncontrol', 'commit',
+                                directory=directory)
+
+    def command_vcs_update(self, directory):
+        self.boss.call_command('versioncontrol', 'update',
                                 directory=directory)
 
 

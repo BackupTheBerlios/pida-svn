@@ -30,5 +30,9 @@ class document_view(contentview.content_view):
 
     def init(self, document):
         self.__document = document
+        self.__fnlabel = gtk.Label()
+        self.wiget.pack_start(self.__fnlabel)
+        self.__fnlabel.set_markup(document.markup)
+
         
         
