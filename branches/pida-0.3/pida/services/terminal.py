@@ -130,6 +130,7 @@ class vte_terminal(pida_terminal):
     def init(self):
         import vte
         self.__term = vte.Terminal()
+        self.__term.set_size_request(-1, 10)
 
     def get_widget(self):
         return self.__term
