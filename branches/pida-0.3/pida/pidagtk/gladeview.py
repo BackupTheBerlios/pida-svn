@@ -29,7 +29,7 @@ import gtk
 
 # gazpacho import(s)
 try:
-    from gazpacho.loader.loader import ObjectBuilder
+    from pida.utils.gazpacholoader import ObjectBuilder
 except:
     ObjectBuilder = None
 
