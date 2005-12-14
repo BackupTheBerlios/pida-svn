@@ -26,12 +26,8 @@ import pida.pidagtk.contentview as contentview
 
 # gtk import(s)
 import gtk
+import gtk.glade as glade
 
-# gazpacho import(s)
-try:
-    from pida.utils.gazpacholoader import ObjectBuilder
-except:
-    ObjectBuilder = None
 
 def glade_view_builder(glade_file_name, top_level_name='pida_view'):
     def __init__(self, svc, prefix, **kw):
@@ -51,7 +47,6 @@ class glade_view(contentview.content_view):
     def init(self, glade_file_name=None, top_level_name=None):
         assert (self.glade_file_name or glade_file_name,
                 'must provide a glade file')
-        assert ObjectBuilder, 'gazpacho must be installed'
         if glade_file_name is None:
             glade_file_name = self.glade_file_name
         else:
@@ -62,7 +57,7 @@ class glade_view(contentview.content_view):
             not_found = gtk.Label('this glade file was not found')
             self.widget.pack_start(not_found)
             return
-        glade_build = ObjectBuilder(glade_file)
+        glade_build = glade.XML(glade_file)
         self.__auto_connect(glade_build)
         if top_level_name is None:
             top_level_name = self.top_level_name
