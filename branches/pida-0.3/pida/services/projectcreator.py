@@ -40,8 +40,11 @@ class project_creator_view(gladeview.glade_view):
 
     def init_glade(self):
         self.__name_entry = self.get_widget('name_entry')
-        self.__file_chooser = self.get_widget('filename_chooser')
         self.__type_combo = self.get_widget('projecttype_combo')
+        holder = self.get_widget('filename_holder')
+        self.__file_chooser = gtk.FileChooserButton('Project file location')
+        holder.pack_start(self.__file_chooser)
+        holder.show_all()
 
     def on_ok_button__clicked(self, button):
         project_name = self.__name_entry.get_text()

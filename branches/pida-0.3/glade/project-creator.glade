@@ -67,17 +67,20 @@
                             </packing>
                         </child>
                         <child>
-                            <widget class="GtkEntry" id="name_entry"/>
+                            <widget class="GtkEntry" id="name_entry">
+                                <property name="visible">True</property>
+                            </widget>
                             <packing>
                                 <property name="left_attach">1</property>
                                 <property name="right_attach">2</property>
                             </packing>
                         </child>
                         <child>
-                            <widget class="GtkFileChooserButton" id="filename_chooser">
-                                <property name="action">select-folder</property>
-                                <property name="title" context="yes" translatable="yes">Project file to save</property>
+                            <widget class="GtkVBox" id="filename_holder">
                                 <property name="visible">True</property>
+                                <child>
+                                    <placeholder/>
+                                </child>
                             </widget>
                             <packing>
                                 <property name="bottom_attach">2</property>
