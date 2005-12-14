@@ -39,6 +39,10 @@ class moo_view(contentview.content_view):
         self.__editor = editor_instance.create_doc(filename)
         sw.add(self.__editor)
 
+    def get_editor(self):
+        return self.__editor
+    editor = property(get_editor)
+
 class moo_editor(service.service):
 
     NAME = 'mooedit'
@@ -52,13 +56,38 @@ class moo_editor(service.service):
 
     def cmd_edit(self, filename=None):
         if filename not in self.__files:
-            view = self.create_multi_view(filename=filename)
-            self.__files[filename] = view
-            self.__views[view.unique_id] = filename
+            self.__load_file(filename)
+        self.__view_file(filename)
+
+    def __load_file(self, filename):
+        view = self.create_multi_view(filename=filename)
+        self.__files[filename] = view
+        self.__views[view.unique_id] = filename
+
+    def __view_file(self, filename):
+        self.__currentview = self.__files[filename]
         self.__files[filename].raise_page()
 
     def cmd_start(self):
         self.get_service('editormanager').events.emit('started')
+
+    def cmd_save(self):
+        self.__currentview.editor.save()
+
+    def cmd_undo(self):
+        self.__currentview.editor.undo()
+
+    def cmd_redo(self):
+        self.__currentview.editor.redo()
+
+    def cmd_cut(self):
+        self.__currentview.editor.emit('cut-clipboard')
+
+    def cmd_copy(self):
+        self.__currentview.editor.emit('copy-clipboard')
+
+    def cmd_paste(self):
+        self.__currentview.editor.emit('paste-clipboard')
 
     def cb_multiview_closed(self, view):
         if view.unique_id in self.__views:

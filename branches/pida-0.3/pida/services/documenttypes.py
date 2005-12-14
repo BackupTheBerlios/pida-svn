@@ -46,21 +46,35 @@ class document_type_handler(service.service):
             self.service.get_service('editormanager').call('edit',
                                       filename=document.filename)
 
+        def act_redo(self, action):
+            self.service.boss.call_command('editormanager', 'redo')
+
+        def act_undo(self, action):
+            """Undo the last edit."""
+            self.service.boss.call_command('editormanager', 'undo')
+
         def act_cut(self, action):
-            pass
+            self.service.boss.call_command('editormanager', 'cut')
 
         def act_copy(self, action):
-            pass
+            self.service.boss.call_command('editormanager', 'copy')
 
         def act_paste(self, action):
-            pass
+            self.service.boss.call_command('editormanager', 'paste')
+
+        def act_save(self, action):
+            self.service.boss.call_command('editormanager', 'save')
 
         def get_menu_definition(self):
             return """
                 <menubar>
                 <menu name="base_file" action="base_file_menu">
+                <menuitem name="Save" action="documenttypes+document+save" />
                 </menu>
                 <menu name="base_edit" action="base_edit_menu">
+                <menuitem name="Undo" action="documenttypes+document+undo" />
+                <menuitem name="Redo" action="documenttypes+document+redo" />
+                <separator />
                 <menuitem name="Cut" action="documenttypes+document+cut" />
                 <menuitem name="Copy" action="documenttypes+document+copy" />
                 <menuitem name="Paste" action="documenttypes+document+paste" />
@@ -71,6 +85,10 @@ class document_type_handler(service.service):
                 </menu>
                 </menubar>
                 <toolbar>
+                <toolitem name="Save" action="documenttypes+document+save" />
+                <separator />
+                <toolitem name="Undo" action="documenttypes+document+undo" />
+                <toolitem name="Redo" action="documenttypes+document+redo" />
                 <separator />
                 <toolitem name="Cut" action="documenttypes+document+cut" />
                 <toolitem name="Copy" action="documenttypes+document+copy" />

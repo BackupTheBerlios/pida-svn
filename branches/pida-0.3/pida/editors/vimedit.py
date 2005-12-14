@@ -56,6 +56,21 @@ class vim_editor(service.service):
         self.single_view.raise_page()
         self.single_view.long_title = filename
 
+    def cmd_undo(self):
+        self.__cw.undo(self.__srv)
+
+    def cmd_redo(self):
+        self.__cw.redo(self.__srv)
+
+    def cmd_cut(self):
+        self.__cw.cut(self.__srv)
+
+    def cmd_copy(self):
+        self.__cw.copy(self.__srv)
+
+    def cmd_paste(self):
+        self.__cw.paste(self.__srv)
+
     def has_started(self):
         return self.__srv is not None
     started = property(has_started)

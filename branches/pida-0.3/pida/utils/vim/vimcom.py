@@ -558,6 +558,24 @@ class communication_window(gtk.Window):
         #self.get_cwd(server)
         self.send_expr(server, "bufnr('%').','.bufname('%')", cb)
 
+    def undo(self, server):
+        self.send_esc(server)
+        self.send_keys(server, 'u')
+
+    def redo(self, server):
+        self.send_esc(server)
+        self.send_keys(server, '<C-r>')
+
+    def cut(self, server):
+        self.send_keys(server, '"+x')
+
+    def copy(self, server):
+        self.send_keys(server, '"+y')
+
+    def paste(self, server):
+        self.send_esc(server)
+        self.send_keys(server, 'p')
+
     def quit(self, server):
         self.send_ex(server, 'q')
 

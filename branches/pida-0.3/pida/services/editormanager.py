@@ -44,6 +44,21 @@ class editor_manager(service.service):
     def cmd_edit(self, filename):
         self.editor.call('edit', filename=filename)
 
+    def cmd_undo(self):
+        self.editor.call('undo')
+
+    def cmd_redo(self):
+        self.editor.call('redo')
+
+    def cmd_cut(self):
+        self.editor.call('cut')
+
+    def cmd_copy(self):
+        self.editor.call('copy')
+
+    def cmd_paste(self):
+        self.editor.call('paste')
+
     def get_editor(self):
         editor = self.opt('general', 'editor_type')
         return self.get_service(editor)

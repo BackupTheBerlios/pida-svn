@@ -76,18 +76,6 @@ class Buffermanager(service.service):
     def act_open_file(self, action):
         self.boss.call_command('filemanager', 'browse')
 
-    def act_save_file(self):
-        pass
-
-    def act_cut(self):
-        pass
-
-    def act_copy(self):
-        pass
-
-    def act_paste(self):
-        pass
-
     def cmd_open_file(self, filename):
         if (len(filename) and (self.__currentdocument is None or
                 filename != self.__currentdocument.filename)):
