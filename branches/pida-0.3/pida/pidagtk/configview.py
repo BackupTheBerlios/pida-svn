@@ -124,6 +124,7 @@ class config_view(contentview.content_view):
         self.widget.pack_start(pane)
         self.__list = tree.Tree()
         pane.pack1(self.__list)
+        self.__list.set_size_request(140, -1)
         self.__list.connect('clicked', self.cb_list_clicked)
         self.__notebook = gtk.Notebook()
         pane.pack2(self.__notebook)
@@ -185,10 +186,15 @@ class config_view(contentview.content_view):
         self.emit('data-changed')
 
     def set_registries(self, registries):
+        first = None
         for name, reg in registries:
             if len(reg):
+                if not first:
+                    first = name
                 self.__registries[name] = reg
         self.__build_list()
+        print registries[0][0]
+        self.__list.set_selected(first)
 
     def cb_list_clicked(self, listview, item):
         self.__build_page(item.key)
@@ -206,4 +212,4 @@ class config_view(contentview.content_view):
     def cb_cancel_clicked(self, button):
         pass
 
-
+gobject.type_register(config_view)
