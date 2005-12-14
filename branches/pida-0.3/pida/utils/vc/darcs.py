@@ -63,7 +63,8 @@ class Vc(_vc.Vc):
     def update_command(self):
         # This will not work while passing the files parameter after it
         # This hack allows you to update in the root directory
-        return [self.CMD, "pull", "-a", "-p"]
+        # but we don't need the hack in pida
+        return [self.CMD, "pull"]
 
     def add_command(self, binary=0):
         return [self.CMD, "add"]

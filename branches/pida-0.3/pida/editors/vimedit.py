@@ -71,6 +71,9 @@ class vim_editor(service.service):
     def cmd_paste(self):
         self.__cw.paste(self.__srv)
 
+    def cmd_save(self):
+        self.__cw.save(self.__srv)
+
     def has_started(self):
         return self.__srv is not None
     started = property(has_started)

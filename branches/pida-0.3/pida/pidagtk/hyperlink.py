@@ -21,13 +21,19 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import gtk
+"""A module containing a hyper link widget."""
+
+
 from cgi import escape
+
+import gtk
 
 from kiwi.utils import gsignal, gproperty
 
+
 class HyperLink(gtk.EventBox):
-    """A hyperlink widget.
+    """
+    A hyperlink widget.
 
     This widget behaves much like a hyperlink from a browser. The markup that
     will be displayed is contained in the properties normal-markup
@@ -37,18 +43,28 @@ class HyperLink(gtk.EventBox):
     Additionally, the user may set a menu that will be popped up when the user
     right clicks the hyperlink.
     """
-    gproperty('normal-markup', str,
-              '<span color="#0000c0">%s</span>')
 
-    gproperty('active-markup', str,
-              '<u><span color="#c00000">%s</span></u>')
+    gproperty('normal-color', str, '#0000c0')
 
-    gproperty('hover-markup', str,
-              '<u><span color="#0000c0">%s</span></u>')
+    gproperty('normal-underline', bool, False)
+
+    gproperty('normal-bold', bool, False)
+
+    gproperty('hover-color', str, '#0000c0')
+
+    gproperty('hover-underline', bool, True)
+
+    gproperty('hover-bold', bool, False)
+
+    gproperty('active-color', str, '#c00000')
+
+    gproperty('active-underline', bool, True)
+
+    gproperty('active-bold', bool, False)
 
     gsignal('clicked')
 
-    gsignal('popup')
+    gsignal('right-clicked')
 
     def __init__(self, text='', menu=None):
         """
@@ -133,7 +149,7 @@ class HyperLink(gtk.EventBox):
             menu = self._menu
         if menu is not None:
             menu.popup(None, None, None, button, etime)
-        self.emit('popup')
+        self.emit('right-clicked')
 
     def clicked(self):
         """
@@ -157,19 +173,49 @@ class HyperLink(gtk.EventBox):
             state = 'hover'
         else:
             state = 'normal'
-        markup_string = self.get_property('%s-markup' % state)
-        self._label.set_markup(markup_string % escape(self._text))
+        color =  self.get_property('%s-color' % state)
+        underline =  self.get_property('%s-underline' % state)
+        bold =  self.get_property('%s-bold' % state)
+        markup_string = self._build_markup(self._text, color, underline, bold)
+        self._label.set_markup(markup_string)
+
+    def _build_markup(self, text, color, underline, bold):
+        """
+        Build a marked up string depending on parameters.
+        """
+        out = '<span color="%s">%s</span>' % (color, escape(text))
+        if underline:
+            out = '<u>%s</u>' % out
+        if bold:
+            out = '<b>%s</b>' % out
+        return out
+
     # signal callbacks
 
     def _on_button_press_event(self, eventbox, event):
+        """
+        Called on mouse down.
+        
+        Behaves in 2 ways.
+            1. if left-button, register the start of a click and grab the
+                mouse.
+            1. if right-button, emit a right-clicked signal +/- popup the
+                menu.
+        """
         if event.button == 1:
             self.grab_add()
             self._is_active = True
             self._update_look()
         elif event.button == 3:
-            self.popup(button=event.button)
+            self.popup(button=event.button, etime=event.time)
 
     def _on_button_release_event(self, eventbox, event):
+        """
+        Called on mouse up.
+    
+        If the left-button is released and the widget was earlier activated by
+        a mouse down event a clicked signal is fired.
+        """
         if event.button == 1:
             self.grab_remove()
             if self._is_active:
@@ -178,14 +224,21 @@ class HyperLink(gtk.EventBox):
                 self._update_look()
 
     def _on_hover_changed(self, eb, event, hover):
-        self._is_hover = hover
-        self._update_look()
+        """
+        Called when the mouse pinter enters or leaves the widget.
         
-    def _on_active_changed(self, eb, active):
-        self._is_active = active
+        @param hover: Whether the mouse has entered the widget.
+        @type hover: boolean
+        """
+        self._is_hover = hover
         self._update_look()
 
     def _on_map_event(self, eventbox, event):
+        """
+        Called on initially mapping the widget.
+
+        Used here to set the cursor type.
+        """
         cursor = gtk.gdk.Cursor(gtk.gdk.HAND1)
         self.window.set_cursor(cursor)
 
@@ -207,7 +260,6 @@ def demo():
         w.show_all()
         hl = HyperLink(links[i])
         hl.connect('clicked', clicked, i)
-        hl.connect('popup', clicked, i)
         v1.pack_start(hl)
         if i > 2:
             m = gtk.Menu()

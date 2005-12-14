@@ -558,6 +558,9 @@ class communication_window(gtk.Window):
         #self.get_cwd(server)
         self.send_expr(server, "bufnr('%').','.bufname('%')", cb)
 
+    def save(self, server):
+        self.send_ex(server, 'w')
+
     def undo(self, server):
         self.send_esc(server)
         self.send_keys(server, 'u')
