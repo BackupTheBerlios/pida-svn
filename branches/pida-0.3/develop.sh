@@ -11,4 +11,10 @@ version=`grep '^Version:' pida.egg-info/PKG-INFO | cut -d' ' -f2-`
 egg="$distdir/pida-$version-py$pyver.egg"
 export PYTHONPATH=$egg:$PYTHONPATH
 echo "built and added $egg to '\$PYTHONPATH'"
-exec python scripts/pida "$@"
+
+if [ "$1" == "-remote" ]; then
+       shift
+       exec python pida/utils/pida-remote.py "$@" &
+else
+       exec python scripts/pida "$@"
+fi
