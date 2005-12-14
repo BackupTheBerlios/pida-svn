@@ -125,5 +125,6 @@ class reactor(gobject.GObject):
         command = args.pop(0)
         self.local(address, command, *args)
 
+gobject.type_register(reactor)
 
 Service = rpc
