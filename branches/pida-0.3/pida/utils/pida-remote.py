@@ -55,7 +55,8 @@ import gtk
 def main():
     socdir = os.path.join(os.path.expanduser('~'), '.pida2', 'sockets')
     def reply(reactor, (address, command, args)):
-        print command
+        if command != 'OK':
+            print command
         gtk.main_quit()
     for f in os.listdir(socdir):
         path = os.path.join(socdir, f)
@@ -69,6 +70,6 @@ def main():
             #os.unlink(path)
             c.disconnect(cid)
             continue
-    sys.exit(1)
+
 if __name__ == '__main__':
     main()
