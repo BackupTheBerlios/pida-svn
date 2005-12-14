@@ -25,51 +25,71 @@ import pida.core.service as service
 
 defs = service.definitions
 
-import pida.pidagtk.gladeview as gladeview
+import pida.pidagtk.contentview as contentview
 
 import os
 import gtk
 import gobject
 
-class project_creator_view(gladeview.glade_view):
+class project_creator_view(contentview.content_view):
     
     SHORT_TITLE = 'Create Project'
     LONG_TITLE = ''
 
-    glade_file_name = 'project-creator.glade'
-
-    def init_glade(self):
-        self.__name_entry = self.get_widget('name_entry')
-        self.__type_combo = self.get_widget('projecttype_combo')
-        holder = self.get_widget('filename_holder')
-        self.__file_chooser = gtk.FileChooserButton('Project file location')
-        holder.pack_start(self.__file_chooser)
-        holder.show_all()
+    def init(self):
+        self.widget.set_border_width(6)
+        title = gtk.Label()
+        self.widget.pack_start(title, expand=False, padding=6)
+        title.set_markup('<big><b>Create new project</b></big>')
+        title.set_alignment(0, 0.5)
+        lsz = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
+        wsz = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
+        hb = gtk.HBox()
+        self.widget.pack_start(hb, expand=False, padding=3)
+        name_label = gtk.Label('Project name')
+        hb.pack_start(name_label, expand=False, padding=3)
+        lsz.add_widget(name_label)
+        name_label.set_alignment(0, 0.5)
+        self.__name_entry = gtk.Entry()
+        hb.pack_start(self.__name_entry)
+        wsz.add_widget(self.__name_entry)
+        hb = gtk.HBox()
+        self.widget.pack_start(hb, expand=False, padding=3)
+        file_label = gtk.Label('Project file name')
+        hb.pack_start(file_label, expand=False, padding=3)
+        lsz.add_widget(file_label)
+        file_label.set_alignment(0, 0.5)
+        self.__file_chooser = gtk.FileChooserButton('Project file directory')
+        hb.pack_start(self.__file_chooser)
+        wsz.add_widget(self.__file_chooser)
+        self.__file_chooser.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
+        hb = gtk.HBox()
+        self.widget.pack_start(hb, expand=False, padding=3)
+        type_label = gtk.Label('Type of project')
+        hb.pack_start(type_label, expand=False, padding=3)
+        lsz.add_widget(type_label)
+        type_label.set_alignment(0, 0.5)
+        self.__type_combo = gtk.combo_box_new_text()
+        hb.pack_start(self.__type_combo)
+        wsz.add_widget(self.__type_combo)
+        bb = gtk.HButtonBox()
+        self.widget.pack_start(bb, expand=False)
+        self.__ok_but = gtk.Button(stock=gtk.STOCK_OK)
+        bb.pack_start(self.__ok_but, padding=6)
+        self.__ok_but.connect('clicked', self.on_ok_button__clicked)
 
     def on_ok_button__clicked(self, button):
         project_name = self.__name_entry.get_text()
         project_dir = self.__file_chooser.get_filename()
-        typename = self.get_combo_active_text(self.__type_combo)
+        typename = self.__type_combo.get_active_text()
         self.service.call('create', project_name=project_name,
                                     project_directory=project_dir,
                                     project_type_name=typename)
 
-    def get_combo_active_text(self, combo):
-        model = combo.get_model()
-        aiter = combo.get_active_iter()
-        return model.get_value(aiter, 0)
-
     def set_project_types(self, types):
-        combo = self.get_widget('projecttype_combo')
-        model = gtk.ListStore(gobject.TYPE_STRING)
-        combo.set_model(model)
-        cell = gtk.CellRendererText()
-        combo.pack_start(cell, True)
-        combo.add_attribute(cell, 'text', 0)
-        for name in types:
-            model.append([name])
-        combo.set_active(0)
-        combo.show_all()
+        for typename in types:
+            self.__type_combo.append_text(typename)
+        self.__type_combo.set_active(0)
 
 class project_creator(service.service):
 
