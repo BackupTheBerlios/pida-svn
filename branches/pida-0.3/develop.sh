@@ -1,5 +1,7 @@
 #! /bin/sh
 set -e
+
+me=$(readlink -f $0); cd ${me%/*}
 distdir=$PWD/build/egg
 python setup.py build 2>&1>/dev/null
 python setup.py bdist --dist-dir=$distdir --formats=egg 2>&1>/dev/null
