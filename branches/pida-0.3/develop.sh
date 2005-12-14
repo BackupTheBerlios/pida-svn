@@ -1,8 +1,12 @@
 #! /bin/sh
 set -e
-distdir=`mktemp -d`
+distdir=$PWD/build/egg
 python setup.py build 2>&1>/dev/null
 python setup.py bdist --dist-dir=$distdir --formats=egg 2>&1>/dev/null
-export PYTHONPATH=$distdir/`ls $distdir`
-echo built and added $PYTHONPATH to '$PYTHONPATH'
-python scripts/pida $*
+
+pyver=`python -V 2>&1 | cut -d' ' -f2 | cut -c1-3`
+version=`grep '^Version:' pida.egg-info/PKG-INFO | cut -d' ' -f2-`
+egg="$distdir/pida-$version-py$pyver.egg"
+export PYTHONPATH=$egg:$PYTHONPATH
+echo "built and added $egg to '\$PYTHONPATH'"
+exec python scripts/pida "$@"
