@@ -380,6 +380,8 @@ class control_box(gtk.HBox):
         detach_image.set_from_pixbuf(self.detach_pixbuf)
         return detach_image
 
+gobject.type_register(control_box)
+
 
 HL_MU = """<span color="%s">%%s</span>"""
 NORMAL_MU = HL_MU % '#0000c0'
