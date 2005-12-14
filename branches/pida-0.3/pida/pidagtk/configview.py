@@ -193,8 +193,8 @@ class config_view(contentview.content_view):
                     first = name
                 self.__registries[name] = reg
         self.__build_list()
-        print registries[0][0]
-        self.__list.set_selected(first)
+        if first is not None:
+            self.__list.set_selected(first)
 
     def cb_list_clicked(self, listview, item):
         self.__build_page(item.key)
