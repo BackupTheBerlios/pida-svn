@@ -237,6 +237,8 @@ class clickable_eventbox(gtk.EventBox):
                 self.__clickedstate = False
                 self.emit('unactive')
 
+gobject.type_register(clickable_eventbox)
+
 import gobject
 from cgi import escape
 
@@ -293,6 +295,8 @@ class hyper_link(clickable_eventbox):
         markup_string = self.get_property('%s-markup' % state)
         self.__label.set_markup(markup_string % escape(self.__text))
 
+
+gobject.type_register(hyper_link)
 
 
 def demo():
