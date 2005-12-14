@@ -121,5 +121,7 @@ class sizer(gtk.EventBox):
         x, y = self.get_pointer()
         diff = y - self.__y
         self.emit('dragged', diff)
+
+gobject.type_register(sizer)
     
 
