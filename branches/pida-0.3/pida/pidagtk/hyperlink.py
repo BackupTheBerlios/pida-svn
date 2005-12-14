@@ -26,78 +26,17 @@ from cgi import escape
 
 from kiwi.utils import gsignal, gproperty
 
-class clickable_eventbox(gtk.EventBox):
+class HyperLink(gtk.EventBox):
+    """A hyperlink widget.
 
-    gsignal('clicked')
-    gsignal('popup')
-    gsignal('active')
-    gsignal('unactive')
+    This widget behaves much like a hyperlink from a browser. The markup that
+    will be displayed is contained in the properties normal-markup
+    hover-markup and active-markup. There is a clicked signal which is fired
+    when hyperlink is clicked with the left mouse button.
 
-    def __init__(self, widget=None, menu=None):
-        gtk.EventBox.__init__(self)
-        self.connect('map-event', self.on_map_event)
-        # initialise the event box
-        self.add_events(gtk.gdk.BUTTON_PRESS_MASK)
-        self.add_events(gtk.gdk.BUTTON_RELEASE_MASK)
-        self.connect('button-press-event', self.on_button_press_event)
-        self.connect('button-release-event', self.on_button_release_event)
-        self.__widget = widget
-        if widget is not None:
-            self.add(widget)
-        self.__menu = menu
-        self.__clickedstate = False
-
-    # public API
-
-    def popup(self, menu=None, button=3, etime=0):
-        """Popup the menu and emit the popup signal.
-
-        @var event: the gtk.gdk event that fired the popup. Note: this can be
-        any object with the time and button paramters"""
-        if menu is None:
-            menu = self.__menu
-        if menu is not None:
-            menu.popup(None, None, None, button, etime)
-        self.emit('popup')
-
-    def set_menu(self, menu):
-        """Set the menu."""
-        self.__menu = menu
-
-    def has_menu(self):
-        """Whether the widget has a menu set."""
-        return self.__menu is not None
-
-    def clicked(self):
-        self.emit('clicked')
-
-    def get_widget(self):
-        return self.__widget
-
-    # signal callbacks
-
-    def on_button_press_event(self, eventbox, event):
-        if event.button == 1:
-            self.grab_add()
-            self.__clickedstate = True
-            self.emit('active')
-        elif event.button == 3:
-            self.popup(button=event.button)
-
-    def on_button_release_event(self, eventbox, event):
-        if event.button == 1:
-            self.grab_remove()
-            if self.__clickedstate:
-                self.clicked()
-                self.__clickedstate = False
-                self.emit('unactive')
-
-    def on_map_event(self, eventbox, event):
-        cursor = gtk.gdk.Cursor(gtk.gdk.HAND1)
-        self.window.set_cursor(cursor)
-
-class hyper_link(clickable_eventbox):
-
+    Additionally, the user may set a menu that will be popped up when the user
+    right clicks the hyperlink.
+    """
     gproperty('normal-markup', str,
               '<span color="#0000c0">%s</span>')
 
@@ -107,50 +46,148 @@ class hyper_link(clickable_eventbox):
     gproperty('hover-markup', str,
               '<u><span color="#0000c0">%s</span></u>')
 
-    def __init__(self, text=''):
-        self.__gproperties = {}
-        self.__label = gtk.Label()
-        clickable_eventbox.__init__(self, self.__label)
-        self.set_border_width(1)
-        self.add_events(gtk.gdk.ENTER_NOTIFY_MASK |
-                        gtk.gdk.LEAVE_NOTIFY_MASK)
-        self.connect('enter-notify-event', self.on_hover_changed, True)
-        self.connect('leave-notify-event', self.on_hover_changed, False)
-        self.connect('active', self.on_active_changed, True)
-        self.connect('unactive', self.on_active_changed, False)
-        self.__text = None
-        self.__is_active = False
-        self.__is_hover = False
+    gsignal('clicked')
+
+    gsignal('popup')
+
+    def __init__(self, text='', menu=None):
+        """
+        Create a new hyperlink.
+
+        @param text: The text of the hyperlink.
+        @type text: str
+        """
+        gtk.EventBox.__init__(self)
+        self._gproperties = {}
+        self._text = text
+        self._is_active = False
+        self._is_hover = False
+        self._menu = menu
+        self._label = gtk.Label()
+        self.add(self._label)
         self.set_text(text)
+        self.add_events(gtk.gdk.BUTTON_PRESS_MASK |
+                        gtk.gdk.BUTTON_RELEASE_MASK |
+                        gtk.gdk.ENTER_NOTIFY_MASK |
+                        gtk.gdk.LEAVE_NOTIFY_MASK)
+        self.connect('button-press-event', self._on_button_press_event)
+        self.connect('button-release-event', self._on_button_release_event)
+        self.connect('enter-notify-event', self._on_hover_changed, True)
+        self.connect('leave-notify-event', self._on_hover_changed, False)
+        self.connect('map-event', self._on_map_event)
 
     def do_set_property(self, prop, value):
-        self.__gproperties[prop.name] = value
+        self._gproperties[prop.name] = value
 
     def do_get_property(self, prop):
-        return self.__gproperties.setdefault(prop.name, prop.default_value)
+        return self._gproperties.setdefault(prop.name, prop.default_value)
+
+    def get_text(self):
+        return self._text
 
     def set_text(self, text):
-        self.__text = text
-        self.__update_look()
-
-    def on_hover_changed(self, eb, event, hover):
-        self.__is_hover = hover
-        self.__update_look()
+        """
+        Set the text of the hyperlink.
         
-    def on_active_changed(self, eb, active):
-        self.__is_active = active
-        self.__update_look()
+        @param text: The text to set the hyperlink to.
+        @type text: str
+        """
+        self._text = text
+        self._update_look()
 
-    def __update_look(self):
-        if self.__is_active:
+    def set_menu(self, menu):
+        """
+        Set the menu to be used for popups.
+
+        @param menu: the gtk.Menu to be used.
+        @type menu: gtk.Menu
+        """
+        self._menu = menu
+
+    def has_menu(self):
+        """
+        Return whether the widget has a menu set.
+        
+        @return: a boolean value indicating whether the internal menu has been
+            set.
+        """
+        return self._menu is not None
+
+    def popup(self, menu=None, button=3, etime=0):
+        """
+        Popup the menu and emit the popup signal.
+
+        @param menu: The gtk.Menu to be popped up. This menu will be
+            used instead of the internally set menu. If this parameter is not
+            passed or None, the internal menu will be used.
+        @type menu: gtk.Menu
+
+        @param button: An integer representing the button number pressed to
+            cause the popup action.
+        @type button: int
+
+        @param time: The time that the popup event was initiated.
+        @type time: long
+        """
+        if menu is None:
+            menu = self._menu
+        if menu is not None:
+            menu.popup(None, None, None, button, etime)
+        self.emit('popup')
+
+    def clicked(self):
+        """
+        Fire a clicked signal.
+        """
+        self.emit('clicked')
+
+    def get_label(self):
+        """
+        Get the internally stored widget.
+        """
+        return self._label
+
+    def _update_look(self):
+        """
+        Update the look of the hyperlink depending on state.
+        """
+        if self._is_active:
             state = 'active'
-        elif self.__is_hover:
+        elif self._is_hover:
             state = 'hover'
         else:
             state = 'normal'
         markup_string = self.get_property('%s-markup' % state)
-        self.__label.set_markup(markup_string % escape(self.__text))
+        self._label.set_markup(markup_string % escape(self._text))
+    # signal callbacks
 
+    def _on_button_press_event(self, eventbox, event):
+        if event.button == 1:
+            self.grab_add()
+            self._is_active = True
+            self._update_look()
+        elif event.button == 3:
+            self.popup(button=event.button)
+
+    def _on_button_release_event(self, eventbox, event):
+        if event.button == 1:
+            self.grab_remove()
+            if self._is_active:
+                self.clicked()
+                self._is_active = False
+                self._update_look()
+
+    def _on_hover_changed(self, eb, event, hover):
+        self._is_hover = hover
+        self._update_look()
+        
+    def _on_active_changed(self, eb, active):
+        self._is_active = active
+        self._update_look()
+
+    def _on_map_event(self, eventbox, event):
+        cursor = gtk.gdk.Cursor(gtk.gdk.HAND1)
+        self.window.set_cursor(cursor)
 
 
 def demo():
@@ -168,7 +205,7 @@ def demo():
              'me too right click me!']
     for i in range(5):
         w.show_all()
-        hl = hyper_link(links[i])
+        hl = HyperLink(links[i])
         hl.connect('clicked', clicked, i)
         hl.connect('popup', clicked, i)
         v1.pack_start(hl)

@@ -57,13 +57,13 @@ class window_manager(service.service):
         self.toolbar = self.__uim.get_widget('/toolbar')
         tp.pack_start(self.toolbar)
         
-        print self.__uim.get_ui()
-        ag = self.__uim.get_action_groups()
-        for a in ag:
-            print a.get_name(), a.get_visible()
-            acts = a.list_actions()
-            for act in acts:
-                print '\t', act, act.get_name(), act.get_visible()
+        #print self.__uim.get_ui()
+        #ag = self.__uim.get_action_groups()
+       # for a in ag:
+         #   print a.get_name(), a.get_visible()
+         #   acts = a.list_actions()
+         #   for act in acts:
+         #       print '\t', act, act.get_name(), act.get_visible()
 
     def cmd_shrink_content(self, bookname):
         self.__window.shrinkbook(bookname)

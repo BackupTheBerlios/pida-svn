@@ -1,5 +1,5 @@
+#! /usr/bin/python
 # -*- coding: utf-8 -*- 
-
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 #Copyright (c) 2005 Ali Afshar aafshar@gmail.com
 
@@ -23,70 +23,52 @@
 
 
 
-from twisted.spread import pb
-from twisted.internet import reactor
-from twisted.python import util
+import pida.services.rpc as rpc
 
-#factory = pb.PBClientFactory()
-#reactor.connectTCP("localhost", 8781, factory)
-#d = factory.getRootObject()
-#d.addCallback(lambda object: object.callRemote("command", "terminal",
-#              "execute-py-shell", {}))
-#d.addCallback(lambda echo: 'server echoed: '+echo)
-#d.addErrback(lambda reason: 'error: '+str(reason.value))
-#d.addCallback(util.println)
-#d.addCallback(lambda _: reactor.stop())
-#reactor.run()
-
-import cmd
-
-import twisted.python.log as log
+import tempfile
+import os
 import sys
-#log.startLogging(sys.stdout)
 
-class PidaRemote(cmd.Cmd):
+class client_reactor(rpc.reactor):
+    
+    def __init__(self, serverfile):
+        self.__serverfile = serverfile
+        f, tempname = tempfile.mkstemp()
+        os.close(f)
+        os.unlink(tempname)
+        rpc.reactor.__init__(self, tempname)
 
-    def do_cmd(self, args):
-        args = args.split()
-        if len(args) < 2:
-            print "command <servicename> <command> [args]"
-            return
-        else:
-            servicename = args[0]
-            commandname = args[1]
-            kwdict = {}
-            for arg in args[2:]:
-                keyval = args.split('=')
-                if len(keyval != 2):
-                    print "command <servicename> <command> [args]"
-                    return
-                else:
-                    kwdict[keyva[0]] = keyval[1]
-            print self.remote_call(servicename, commandname, kwdict)
-                    
+    def do_single_command(self, line):
+        self.start()
+        self.send(line)
+        self.stop()
+        
+    def send(self, line):
+        mangled = self.__mangle(line)
+        rpc.reactor.send(self, self.__serverfile, mangled)
 
-    def remote_call(self, servicename, name, kwdict):
-        socket_file = '/home/ali/.pida2/sockets/pida-rpc'
-        factory = pb.PBClientFactory()
-        reactor.connectUNIX(socket_file, factory)
-        d = factory.getRootObject()
-        d.addCallback(lambda object: object.callRemote("command",
-                      servicename, name, kwdict))
-        d.addCallback(lambda echo: '%s' % echo)
-        d.addErrback(lambda reason: 'error: '+str(reason.value))
-        #d.addCallback(util.println)
-        d.addCallback(lambda _: reactor.stop())
-        d.addErrback(lambda _: reactor.stop())
-        reactor.run()
-            
+    def __mangle(self, line):
+        return line.strip().replace(' ', '\1') + '\0'
+        
+import gtk
 
 def main():
-    
-    c = PidaRemote()
-    c.onecmd(raw_input())
-
-    
-    
-
+    socdir = os.path.join(os.path.expanduser('~'), '.pida2', 'sockets')
+    def reply(reactor, (address, command, args)):
+        print command
+        gtk.main_quit()
+    for f in os.listdir(socdir):
+        path = os.path.join(socdir, f)
+        c = client_reactor(path)
+        cid = c.connect('received', reply)
+        try:
+            c.do_single_command(' '.join(sys.argv[1:]))
+            gtk.main()
+        except Exception, e:
+            print path, e
+            #os.unlink(path)
+            c.disconnect(cid)
+            continue
+    sys.exit(1)
 if __name__ == '__main__':
     main()
