@@ -106,3 +106,5 @@ class boss(base.pidacomponent):
         return self.__env.positional_args
     positional_args = property(get_positional_args)
 
+    ServiceNotFoundError = ServiceNotFoundError
+
