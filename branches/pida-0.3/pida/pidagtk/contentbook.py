@@ -100,6 +100,8 @@ class Contentholder(gtk.VBox):
         contentview = self.__views[unique_id]
         contentview.raise_page()
 
+gobject.type_register(Contentholder)
+
 class content_list(gtk.HBox):
 
     __gsignals__ = {'clicked' : (
@@ -113,6 +115,8 @@ class content_list(gtk.HBox):
 
     def init(self):
         pass
+
+gobject.type_register(content_list)
 
 class ContentholderList(content_list):
 
