@@ -126,8 +126,8 @@ class FileBrowser(contentview.content_view):
     ICON_TEXT = 'files'
 
     def init(self):
-        self.__toolbar = contextwidgets.context_toolbar()
-        self.widget.pack_start(self.__toolbar, expand=False)
+        #self.__toolbar = contextwidgets.context_toolbar()
+        #self.widget.pack_start(self.__toolbar, expand=False)
         hbox = gtk.HPaned()
         self.widget.pack_start(hbox)
         sw = gtk.ScrolledWindow()
@@ -155,14 +155,14 @@ class FileBrowser(contentview.content_view):
                 self.set_long_title(shorten_home_name(directory))
                 self.__currentdirectory = directory
                 globaldict = {'directory':directory}
-                try:
-                    contexts = self.service.boss.call_command('contexts',
-                                                              'get_contexts',
-                                                  contextname='directory',
-                                                  globaldict=globaldict)
-                    self.__toolbar.set_contexts(contexts)
-                except self.service.boss.ServiceNotFoundError:
-                    pass
+                #try:
+                #    contexts = self.service.boss.call_command('contexts',
+                #                                              'get_contexts',
+                #                                  contextname='directory',
+                #                                  globaldict=globaldict)
+                #    self.__toolbar.set_contexts(contexts)
+                #except self.service.boss.ServiceNotFoundError:
+                #    pass
                 #tb = self.boss.command('contexts', 'get-toolbar',
                 #                       contextname='directory',
                 #                       globaldict={'directory': directory})

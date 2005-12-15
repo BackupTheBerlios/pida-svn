@@ -1,37 +1,41 @@
-# -*- coding: utf-8 -*- 
+#
+# Kiwi: a Framework and Enhanced Widgets for Python
+#
+# Copyright (C) 2005 Async Open Source
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+# 
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+# 
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+# USA
+# 
+# Author(s): Lorenzo Gil Sanchez <lgs@sicem.biz>
+#            Johan Dahlin <jdahlin@async.com.br>
+#
+# This module: (C) Ali Afshar <aafshar@gmail.com>
+# (contact if you require release under a different license)
 
-# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
-#Copyright (c) 2005 Ali Afshar aafshar@gmail.com
 
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
-
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
-
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#SOFTWARE.
-
-"""A module containing a hyper link widget."""
+"""A hyper link widget."""
 
 
 from cgi import escape
 
 import gtk
 
-from kiwi.utils import gsignal, gproperty
+from kiwi.utils import gsignal, gproperty, PropertyObject
 
 
-class HyperLink(gtk.EventBox):
+class HyperLink(PropertyObject, gtk.EventBox):
     """
     A hyperlink widget.
 
@@ -43,6 +47,8 @@ class HyperLink(gtk.EventBox):
     Additionally, the user may set a menu that will be popped up when the user
     right clicks the hyperlink.
     """
+
+    gproperty('text', str, '')
 
     gproperty('normal-color', str, '#0000c0')
 
@@ -66,7 +72,7 @@ class HyperLink(gtk.EventBox):
 
     gsignal('right-clicked')
 
-    def __init__(self, text='', menu=None):
+    def __init__(self, text=None, menu=None):
         """
         Create a new hyperlink.
 
@@ -74,14 +80,15 @@ class HyperLink(gtk.EventBox):
         @type text: str
         """
         gtk.EventBox.__init__(self)
+        PropertyObject.__init__(self)
         self._gproperties = {}
-        self._text = text
+        if text is not None:
+            self.set_property('text', text)
         self._is_active = False
         self._is_hover = False
         self._menu = menu
         self._label = gtk.Label()
         self.add(self._label)
-        self.set_text(text)
         self.add_events(gtk.gdk.BUTTON_PRESS_MASK |
                         gtk.gdk.BUTTON_RELEASE_MASK |
                         gtk.gdk.ENTER_NOTIFY_MASK |
@@ -91,15 +98,16 @@ class HyperLink(gtk.EventBox):
         self.connect('enter-notify-event', self._on_hover_changed, True)
         self.connect('leave-notify-event', self._on_hover_changed, False)
         self.connect('map-event', self._on_map_event)
+        self.connect('notify', self._on_notify)
+        self.set_text(text)
 
-    def do_set_property(self, prop, value):
-        self._gproperties[prop.name] = value
-
-    def do_get_property(self, prop):
-        return self._gproperties.setdefault(prop.name, prop.default_value)
+    # public API
 
     def get_text(self):
-        return self._text
+        """
+        Return the hyperlink text.
+        """
+        return self.get_property('text')
 
     def set_text(self, text):
         """
@@ -108,7 +116,7 @@ class HyperLink(gtk.EventBox):
         @param text: The text to set the hyperlink to.
         @type text: str
         """
-        self._text = text
+        self.set_property('text', text)
         self._update_look()
 
     def set_menu(self, menu):
@@ -163,6 +171,8 @@ class HyperLink(gtk.EventBox):
         """
         return self._label
 
+    # private API
+
     def _update_look(self):
         """
         Update the look of the hyperlink depending on state.
@@ -176,7 +186,8 @@ class HyperLink(gtk.EventBox):
         color =  self.get_property('%s-color' % state)
         underline =  self.get_property('%s-underline' % state)
         bold =  self.get_property('%s-bold' % state)
-        markup_string = self._build_markup(self._text, color, underline, bold)
+        markup_string = self._build_markup(self.get_text(),
+                                           color, underline, bold)
         self._label.set_markup(markup_string)
 
     def _build_markup(self, text, color, underline, bold):
@@ -233,6 +244,18 @@ class HyperLink(gtk.EventBox):
         self._is_hover = hover
         self._update_look()
 
+    def _on_notify(self, eventbox, param):
+        """
+        Called on property notification.
+        
+        Ensure that the look is up to date with the properties
+        """
+        if (param.name == 'text' or
+            param.name.endswith('-color') or
+            param.name.endswith('-underline') or
+            param.name.endswith('-bold')):
+            self._update_look()
+
     def _on_map_event(self, eventbox, event):
         """
         Called on initially mapping the widget.
@@ -241,6 +264,9 @@ class HyperLink(gtk.EventBox):
         """
         cursor = gtk.gdk.Cursor(gtk.gdk.HAND1)
         self.window.set_cursor(cursor)
+
+### Demo application
+
 
 
 def demo():
@@ -274,6 +300,12 @@ def demo():
             m.add(mi)
             m.show_all()
             hl.set_menu(m)
+    def ch():
+        hl.set_text('banana')
+        hl.normal_color = '#00c000'
+        hl.hover_color = '#00c000'
+    import gobject
+    gobject.timeout_add(1000, ch)
     v1.pack_start(e)
     w.show_all()
     gtk.main()

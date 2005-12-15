@@ -34,6 +34,7 @@ defs = service.definitions
 
 import gtk
 import os
+import gobject
 import os.path
 
 PROJECT_CONF = os.path.join(os.path.expanduser("~"), ".pida2", "conf", "projects.conf")
@@ -94,6 +95,8 @@ class project_view(contentview.content_view):
             self.__projectlist.markup_format_string)
         self.__projectlist.connect('clicked',
             self.service.cb_plugin_view_project_clicked)
+        self.__projectlist.connect('right-clicked',
+            self.cb_list_right_clicked)
 
     def set_projects(self, *args):
         self.__projectlist.set_projects(self.service.projects)
@@ -103,6 +106,17 @@ class project_view(contentview.content_view):
 
     def set_contexts(self, contexts):
         self.__toolbar.set_contexts(contexts)
+
+    def cb_list_right_clicked(self, treeview, item, event):
+        globaldict = {'directory': item.value.source_directory}
+        contexts = self.service.boss.call_command('contexts', 'get_contexts',
+                                     contextname='directory',
+                                     globaldict=globaldict
+                                     )
+        menu = contextwidgets.get_menu(contexts)
+        menu.popup(None, None, None, event.button, event.time)
+
+    
 
 
 class ProjectManager(service.service):
@@ -168,20 +182,19 @@ class ProjectManager(service.service):
         view.set_registries([(p.name, p.options) for p in projects])
 
     def __current_project_changed(self, project):
-        if self.__current_project is None or (project.project_type is not
-                self.__current_project.project_type):
+        if project is not self.__current_project:
             if self.__current_project is not None:
                 self.__current_project.project_type.action_group.\
                     set_visible(False)
             self.__current_project = project
             self.__current_project.project_type.action_group.set_visible(True)
             self.boss.call_command('window', 'update_action_groups')
-        contexts = self.boss.call_command('contexts', 'get_contexts',
-                                          contextname='directory',
-                                          globaldict={'directory':
-                                            project.source_directory})
-        self.plugin_view.set_contexts(contexts)
-
+            directory = project.source_directory
+            def browse():
+                if directory is not None:
+                    self.boss.call_command('filemanager', 'browse',
+                                       directory=directory)
+            gobject.timeout_add(100, browse)
 
     # external interface
    
@@ -227,10 +240,6 @@ class ProjectManager(service.service):
     # view callbacks
 
     def cb_plugin_view_project_clicked(self, tree, item):
-        directory = item.value.source_directory
-        if directory is not None:
-            self.boss.call_command('filemanager', 'browse',
-                                       directory=directory)
         self.__current_project_changed(item.value)
 
     def cb_plugin_view_new_clicked(self, treeview):

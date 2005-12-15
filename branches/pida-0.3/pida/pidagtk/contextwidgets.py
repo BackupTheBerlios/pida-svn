@@ -51,13 +51,27 @@ def get_menu(contexts):
     def clicked(menuitem, name):
         callbacks[name](args)
     menu = gtk.Menu()
+    first = True
     for name, icon, ltext, func, args in contexts:
+        if first:
+            first = False
+            menuitem = gtk.MenuItem()
+            menubox = gtk.HBox(spacing=4)
+            im = icons.icons.get_image('manhole')
+            menubox.pack_start(im, expand=False)
+            label = gtk.Label('%s' % args)
+            label.set_alignment(0, 0.5)
+            menubox.pack_start(label)
+            menuitem.add(menubox)
+            menu.append(menuitem)
+            menu.append(gtk.SeparatorMenuItem())
+            
         callbacks[name] = func
         menuitem = gtk.MenuItem()
         menubox = gtk.HBox(spacing=4)
         icon = icons.icons.get_image(icon)
         menubox.pack_start(icon, expand=False)
-        label = gtk.Label(ltext)
+        label = gtk.Label('%s' % ltext)
         label.set_alignment(0, 0.5)
         menubox.pack_start(label)
         menuitem.add(menubox)
