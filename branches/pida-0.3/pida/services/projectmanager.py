@@ -128,6 +128,14 @@ class ProjectManager(service.service):
 
     single_view_type = configview.config_view
     single_view_book = 'view'
+
+    class default(defs.project_type):
+        class general(defs.optiongroup):
+            """General options for Python projects"""
+            class source_directory(defs.option):
+                """The directory containing source code."""
+                rtype = types.directory
+                default = os.path.expanduser('~')
    
     # life cycle
  
@@ -217,6 +225,9 @@ class ProjectManager(service.service):
         self.__history.append(project_file)
         self.__write_history()
         self.__update()
+
+    def cmd_get_current_project(self):
+        return self.__current_project
 
     # Actions
 

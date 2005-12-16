@@ -488,8 +488,6 @@ class Gazpacho(service.service):
                 </toolbar>
                             """
 
-    
-
     def cmd_open(self, filename):
         self.boss.call_command('buffermanager', 'open_file',
                                 filename=filename)
@@ -497,6 +495,12 @@ class Gazpacho(service.service):
     def cmd_start(self):
         self.create_single_view()
         self.single_view.raise_page()
+
+    def cmd_create(self, filename):
+        f = open(filename, 'w')
+        f.write(empty_gazpacho_document)
+        f.close()
+        self.call('open', filename=filename)
 
     def cmd_goto_signal_handler(self, glade_filename, callback_filename,
                                 callback_name):
@@ -737,5 +741,11 @@ class Editor(gtk.Notebook):
         if self._loaded_widget:
             self._load_widget(self._loaded_widget)
 
+
+empty_gazpacho_document = """<?xml version="1.0" standalone="no"?>
+<!--*- mode: xml -*-->
+<!DOCTYPE glade-interface SYSTEM "http://gazpacho.sicem.biz/gazpacho-0.1.dtd">
+<glade-interface/>
+"""
 
 Service = Gazpacho

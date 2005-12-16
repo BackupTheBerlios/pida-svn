@@ -46,6 +46,7 @@ class python_source_view(contentview.content_view):
             '%(node_type_short)s </span></i></b>'
             '<b>%(name)s</b>\n%(additional_info)s</tt>')
         self.widget.pack_start(self.__nodes)
+        self.__nodes.connect('clicked', self.cb_source_clicked)
 
     def set_source_nodes(self, root_node):
         self.__nodes.clear()
@@ -57,6 +58,11 @@ class python_source_view(contentview.content_view):
                 key=(root_node.filename, root_node.linenumber))
         for node in root_node.children:
             self.__set_nodes(node, piter)
+
+    def cb_source_clicked(self, treeview, item):
+        self.service.boss.call_command('editormanager', 'goto_line',
+                                        linenumber=item.value.linenumber)
+        
 
 class python(service.service):
 
@@ -106,7 +112,7 @@ class python(service.service):
     class python(defs.project_type):
 
         project_type_name = 'python'
-    
+
         class general(defs.optiongroup):
             """General options for Python projects"""
             class source_directory(defs.option):
@@ -117,20 +123,47 @@ class python(service.service):
                 """The location of the python binary"""
                 rtype = types.file
                 default = '/usr/bin/python'
+            class project_file_to_execute(defs.option):
+                """The python file to run for this project"""
+                rtype = types.file
+                default = ''                
 
         def act_execute_current_project(self, action):
-            pass
+            proj = self.boss.call_command('projectmanager',
+                                          'get_current_project')
+            projfile = proj.get_option('general',
+                        'project_file_to_execute').value
+            if projfile:
+                self.service.boss.call_command('terminal', 'execute',
+                    command_args=['python', projfile], icon_name='run')
+            else:
+                self.service.log.info('project has not set an executable')
 
+        def act_add_ui_form(self, action):
+            name = 'form1.glade'
+            proj = self.boss.call_command('projectmanager',
+                                          'get_current_project')
+            filepath = os.path.join(proj.source_directory, name)
+            self.service.boss.call_command('gazpach', 'create',
+                                           filename=filepath)
+        
         def get_menu_definition(self):
             return """
-                <menubar>
-                <menu name="base_project" action="base_project_menu">
-                <separator />
-                <menuitem name="expyproj" action="python+project+execute_current_project" />
-                <separator />
-                </menu>
-                </menubar>
-                """
+            <menubar>
+            <menu name="base_project" action="base_project_menu">
+            <separator />
+            <menuitem name="addform" action="python+project+add_ui_form" />
+            <menuitem name="expyproj" action="python+project+execute_current_project" />
+            <separator />
+            </menu>
+            </menubar>
+            <toolbar>
+            <separator />
+            <toolitem name="runproj" action="python+project+execute_current_project" />
+            <separator />
+            </toolbar>
+            """
+            
 
     def act_python(self, action):
         pass

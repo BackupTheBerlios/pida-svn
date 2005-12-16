@@ -87,7 +87,7 @@ class moo_editor(service.service):
         self.get_service('editormanager').events.emit('started')
 
     def cmd_goto_line(self, linenumber):
-        self.__currentview.editor.move_cursor(linenumber, 0, True)
+        self.__currentview.editor.move_cursor(linenumber - 1, 0, True)
 
     def cmd_save(self):
         self.__currentview.editor.save()
