@@ -70,6 +70,10 @@ class moo_editor(service.service):
             self.__load_file(filename)
         self.__view_file(filename)
 
+    def cmd_revert(self):
+        #self.__currentview.editor.reload()
+        pass
+
     def __load_file(self, filename):
         view = self.create_multi_view(filename=filename)
         self.__files[filename] = view

@@ -79,6 +79,7 @@ class Buffermanager(service.service):
     def cmd_open_file(self, filename):
         if (len(filename) and (self.__currentdocument is None or
                 filename != self.__currentdocument.filename)):
+            filename = os.path.abspath(filename)
             if filename in self.__documents:
                 document = self.__documents[filename]
                 self.__view_document(document)
@@ -93,6 +94,7 @@ class Buffermanager(service.service):
 
     def cmd_open_file_line(self, filename, linenumber):
         self.call('open_file', filename=filename)
+        self.editor.call('revert')
         self.editor.call('goto_line', linenumber=linenumber)
 
     def cmd_file_closed(self, filename):

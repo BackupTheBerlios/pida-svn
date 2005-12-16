@@ -553,6 +553,7 @@ class %(class)s(SimpleGladeApp):
 %(t)s#-- %(class)s.new {
 %(t)sdef new(self):
 %(t)s%(t)sprint "A new %%s has been created" %% self.__class__.__name__
+%(t)s%(t)sself.main_widget.show_all()
 %(t)s#-- %(class)s.new }
 
 %(t)s#-- %(class)s custom methods {

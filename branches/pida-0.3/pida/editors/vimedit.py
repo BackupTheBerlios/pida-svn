@@ -44,6 +44,9 @@ class vim_editor(service.service):
         self.create_single_view()
         self.single_view.run()
 
+    def cmd_revert(self):
+        self.__cw.revert(self.__srv)
+
     def cmd_edit(self, filename):
         """Open and edit."""
         if filename != self.__currentfile:
@@ -75,7 +78,7 @@ class vim_editor(service.service):
         self.__cw.save(self.__srv)
 
     def cmd_goto_line(self, linenumber):
-        self.__cw.goto
+        self.__cw.goto_line(self.__srv, linenumber)
 
     def has_started(self):
         return self.__srv is not None
@@ -151,6 +154,7 @@ class vim_editor(service.service):
     def vim_bufferunload(self, filename, *args):
         if filename != '':
             # unloaded an empty new file
+            print self.__files
             if filename in self.__files:
                 self.__files.remove(filename)
                 self.boss.call_command('buffermanager', 'file_closed',

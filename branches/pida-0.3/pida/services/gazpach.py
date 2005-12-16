@@ -141,8 +141,11 @@ class GazpachoApplication(application.Application):
         widgettype =  self._editor._loaded_widget.gtk_widget
         signalname =  model.get_value(niter, 0)
         if callbackname and callbackname.startswith('<'):
-            callbackname = '%s_%s' % (widgetname, signalname.replace('-', '_'))
-            model.set_value(niter, 1, callbackname)
+            callbackname = 'on_%s__%s' % (widgetname, signalname.replace('-', '_'))
+            model.set(niter, 1, callbackname, 5, True)
+            cellrenderer = tv.get_column(1).get_cell_renderers()[0]
+            cellrenderer.emit('edited', ':'.join(['%s' % i for i in path]),
+                              callbackname)
         if callbackname:
             if not self._project.path:
                 mb = gtk.MessageDialog(parent=self.get_window(),
@@ -155,9 +158,9 @@ class GazpachoApplication(application.Application):
                     mb.destroy()
                 mb.connect('response', mbok)
                 mb.run()
-                self._save_cb(None)
             if not self._project.path:
                 return
+            self._save_cb(None)
             self.__view.cb_signal_activated(callbackname, self._project.path)
             #self.cb.evt('signaledited', self._project.path,
             #                widgetname,
@@ -518,7 +521,7 @@ class Gazpacho(service.service):
         f.close()
         self.boss.call_command('buffermanager', 'open_file_line',
                                filename=callback_filename,
-                               linenumber=linenumber)
+                               linenumber=linenumber + 1)
 
     def act_user_interface_designer(self, action):
         """Start the user interface designer Gazpacho."""

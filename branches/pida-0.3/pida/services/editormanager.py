@@ -38,6 +38,9 @@ class editor_manager(service.service):
             rtype = types.stringlist(['vim', 'moo'])
             default = 'vimedit'            
 
+    def cmd_revert(self):
+        self.editor.call('revert')
+    
     def cmd_start(self):
         self.editor.call('start')
 
@@ -46,7 +49,6 @@ class editor_manager(service.service):
 
     def cmd_goto_line(self, linenumber):
         self.editor.call('goto_line', linenumber=linenumber)
-        
 
     def cmd_save(self):
         self.editor.call('save')
