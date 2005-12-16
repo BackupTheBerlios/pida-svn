@@ -44,6 +44,10 @@ class editor_manager(service.service):
     def cmd_edit(self, filename):
         self.editor.call('edit', filename=filename)
 
+    def cmd_goto_line(self, linenumber):
+        self.editor.call('goto_line', linenumber=linenumber)
+        
+
     def cmd_save(self):
         self.editor.call('save')
 

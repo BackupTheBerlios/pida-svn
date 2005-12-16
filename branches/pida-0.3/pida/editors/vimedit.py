@@ -74,6 +74,9 @@ class vim_editor(service.service):
     def cmd_save(self):
         self.__cw.save(self.__srv)
 
+    def cmd_goto_line(self, linenumber):
+        self.__cw.goto
+
     def has_started(self):
         return self.__srv is not None
     started = property(has_started)

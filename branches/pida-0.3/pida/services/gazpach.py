@@ -45,8 +45,9 @@ class gazpacho_holder(contentview.content_view):
 
 class GazpachoApplication(application.Application):
     
-    def __init__(self, app_window):
+    def __init__(self, app_window, view):
         self.__app_window = app_window
+        self.__view = view
         application.Application.__init__(self)
 
     def _change_action_state(self, sensitive=[], unsensitive=[]):
@@ -78,9 +79,10 @@ class GazpachoApplication(application.Application):
         menubar, toolbar = self._construct_menu_and_toolbar(gtk.Window())
 
         self._palette = application.Palette(self._catalogs)
+        self._palette.set_size_request(100, -1)
         self._palette.connect('toggled', self._palette_button_clicked)
 
-        self._editor = Editor(self)
+        self._editor = Editor(self, self.cb_signal_activated)
         editor_view = gtk.VBox()
         editor_view.pack_start(self._editor)
         self._editor.make_pages()
@@ -99,30 +101,18 @@ class GazpachoApplication(application.Application):
         #main_vbox.pack_start(toolbar, False)
         self.menubar = menubar
 
-        hbox = gtk.HBox(spacing=6)
-        vpaned = gtk.VBox()
-        hbox.pack_start(vpaned, True, True)
-        hbox.pack_start(self._palette, False, False)
-
-        #vpaned = gtk.VPaned()
-
-        #notebook = gtk.Notebook()
-        #notebook.append_page(widget_view, gtk.Label(('Widgets')))
-        #notebook.append_page(self.gactions_view, gtk.Label(('Actions')))
-
+        hbox = gtk.HPaned()
+        hbox.set_border_width(6)
+        hbox.pack2(self._palette)
+        vpaned = gtk.VPaned()
+        hbox.pack1(vpaned, True, True)
+        vpaned.set_position(200)
         notebook = gtk.Notebook()
-
-
-        notebook.append_page(widget_view)
-        notebook.append_page(self.gactions_view)
+        notebook.append_page(widget_view, tab_label=gtk.Label('Widgets'))
+        notebook.append_page(self.gactions_view, tab_label=gtk.Label('Actions'))
         notebook.set_page(0)
-        #, gtk.Label(('Widgets')))
-
-        #vpaned.set_position(150)
-
-        vpaned.pack_start(notebook, expand=True, padding=2)
-        vpaned.pack_start(editor_view, expand=True, padding=2)
-
+        vpaned.pack1(notebook)
+        vpaned.pack2(editor_view)
         main_vbox.pack_start(hbox)
         
         #main_vbox.pack_end(self._statusbar, False)
@@ -168,11 +158,12 @@ class GazpachoApplication(application.Application):
                 self._save_cb(None)
             if not self._project.path:
                 return
-            self.cb.evt('signaledited', self._project.path,
-                            widgetname,
-                            widgettype,
-                            signalname,
-                            callbackname)
+            self.__view.cb_signal_activated(callbackname, self._project.path)
+            #self.cb.evt('signaledited', self._project.path,
+            #                widgetname,
+            #                widgettype,
+            #                signalname,
+            #                callbackname)
         #print self._project.path
 
     def _fconstruct_menu_and_toolbar(self, application_window):
@@ -337,28 +328,81 @@ class EmbeddedGazpacho(contentview.content_view):
 
     def init(self):
         self.__main_window = self.service.boss.get_main_window()
-        self.__gazpacho = GazpachoApplication(self.__main_window)
+        self.__gazpacho = GazpachoApplication(self.__main_window, self)
         self.widget.pack_start(self.__gazpacho.get_container())
-        #self.add_button('open', 'open', 'save the file')
-        #self.add_button('save', 'save', 'save the file')
-        #self.add_button('saveas', 'saveas', 'save the file as')
-        #self.add_button('cut', 'cut', 'cut to the clipboard')
-        #self.add_button('copy', 'copy', 'copy to the clipboard')
-        #self.add_button('paste', 'paste', 'paste from the clipboard')
-        #for item in self.__gazpacho.menubar.get_children():
-        #    l = item.get_children()[0]
-        #    text = l.get_text()
-        #    if text == 'File':
-        #        text = 'Gazpacho'
-        #    l.set_markup('<span size="small">%s</span>' % text.lower())
-        #self.menu_area.pack_start(self.__gazpacho.menubar, expand=False)
 
     def open_file(self, filename):
         self.__gazpacho.open_project(filename)
 
+    def save(self):
+        self.__gazpacho._save_cb(None)
+
+    def save_as(self):
+        self.__gazpacho._save_as_cb(None)
+
+    def cut(self):
+        self.__gazpacho._cut_cb(None)
+
+    def copy(self):
+        self.__gazpacho._copy_cb(None)
+
+    def paste(self):
+        self.__gazpacho._paste_cb(None)
+
+    def delete(self):
+        self.__gazpacho._delete_cb(None)
+
+    def undo(self):
+        self.__gazpacho._undo_cb(None)
+    
+    def redo(self):
+        self.__gazpacho._redo_cb(None)
+
+    def close_all(self):
+        for project in self.gaz._projects:
+            project.selection_clear(False)
+            project.selection_changed()
+            for widget in project.widgets:
+                widget.destroy()
+            self.gaz._ui_manager.remove_ui(project.uim_id)
+
+    def confirm_close(self):
+        unsaved = [p for p in self.__gazpacho._projects if p.changed]
+        close = self.__gazpacho._confirm_close_projects(unsaved)
+        self.__gazpacho._config.save()
+        if close:
+            self.close_all()
+        return close
+
     def get_gazpacho(self):
         return self.__gazpacho
     gaz = property(get_gazpacho)
+
+    def cb_signal_activated(self, signalname, projectpath):
+        callback_file_path = '%s.py' % projectpath.rsplit('.', 1)[0]
+        if not os.path.exists(callback_file_path):
+            print callback_file_path, 'was not found'
+            mb = gtk.MessageDialog(parent=self.gaz.get_window(),
+                flags = 0,
+                type = gtk.MESSAGE_INFO,
+                buttons = gtk.BUTTONS_YES_NO,
+                message_format='You must save your user interface '
+                                       'file before continuing.')
+            def mbox(messagebox, response):
+                if response == gtk.RESPONSE_YES:
+                    self.service.call('goto_signal_handler',
+                                      glade_filename=projectpath,
+                                      callback_filename=callback_file_path,
+                                      callback_name=signalname)
+                messagebox.destroy()
+            mb.connect('response', mbox)
+            mb.run()
+        else:
+            self.service.call('goto_signal_handler',
+                              glade_filename=projectpath,
+                              callback_filename=callback_file_path,
+                              callback_name=signalname)
+
 
 class Gazpacho(service.service):
 
@@ -380,20 +424,29 @@ class Gazpacho(service.service):
             self.service.single_view.open_file(document.filename)
             self.service.current_document = document
 
+        def act_cut(self, action):
+            self.service.single_view.cut()
+
         def act_copy(self, action):
-            pass
+            self.service.single_view.copy()
+
+        def act_paste(self, action):
+            self.service.single_view.paste()
+
+        def act_delete(self, action):
+            self.service.single_view.delete()
 
         def act_save(self, action):
-            pass
+            self.service.single_view.save()
 
         def act_save_as(self, action):
-            pass
+            self.service.single_view.save_as()
 
         def act_undo(self, action):
-            pass
+            self.service.single_view.undo()
 
         def act_redo(self, action):
-            pass
+            self.service.single_view.redo()
 
         def get_menu_definition(self):
             return """
@@ -404,32 +457,32 @@ class Gazpacho(service.service):
                   <menuitem action="gazpach+document+save_as"/>
                   <separator />
                 </menu>
-                <menu action="base_edit_menu">
-                  <menuitem action="gazpach+document+undo"/>
-                  <menuitem action="gazpach+document+redo"/>
-                  <separator name="EM1"/>
-                  <menuitem action="Cut"/>
-                  <menuitem action="Copy"/>
-                  <menuitem action="Paste"/>
-                  <menuitem action="Delete"/>
+                <menu name="base_edit" action="base_edit_menu">
+                <menuitem action="gazpach+document+undo"/>
+                <menuitem action="gazpach+document+redo"/>
+                <separator />
+                <menuitem action="gazpach+document+cut"/>
+                <menuitem action="gazpach+document+copy"/>
+                <menuitem action="gazpach+document+paste"/>
+                <menuitem action="gazpach+document+delete"/>
                 </menu>
                 <menu action="base_project_menu">
                 </menu>
                 <menu action="base_help_menu">
-                  <menuitem action="About"/>
+                <menuitem action="About"/>
                 </menu>
               </menubar>
-              <toolbar name="MainToolbar">
-                <toolitem action="gazpach+document+save"/>
+              <toolbar>
+               <toolitem action="gazpach+document+save"/>
+                <separator />
                 <toolitem action="gazpach+document+undo"/>
                 <toolitem action="gazpach+document+redo"/>    
-              </toolbar>
-              <toolbar name="EditBar">
-                <toolitem action="Cut"/>
-                <toolitem action="Copy"/>
-                <toolitem action="Paste"/>
-                                <toolitem action="Delete"/>
-                              </toolbar>
+                <separator />
+                <toolitem action="gazpach+document+cut"/>
+                <toolitem action="gazpach+document+copy"/>
+                <toolitem action="gazpach+document+paste"/>
+                <toolitem action="gazpach+document+delete"/>
+                </toolbar>
                             """
 
     
@@ -441,6 +494,31 @@ class Gazpacho(service.service):
     def cmd_start(self):
         self.create_single_view()
         self.single_view.raise_page()
+
+    def cmd_goto_signal_handler(self, glade_filename, callback_filename,
+                                callback_name):
+        import pida.utils.tepache as tepache
+        class dummyopts(object):
+            pass
+        def get_options_status():
+            opts = dummyopts()
+            opts.glade_file = glade_filename
+            opts.output_file = callback_filename
+            opts.use_tabs = False
+            opts.no_helper = False
+            return opts, True
+        tepache.get_options_status = get_options_status
+        tepache.main()
+        f = open(callback_filename)
+        fundef = 'def %s' % callback_name
+        for linenumber, line in enumerate(f):
+            if fundef in line:
+                print 'callback found at line', linenumber
+                break
+        f.close()
+        self.boss.call_command('buffermanager', 'open_file_line',
+                               filename=callback_filename,
+                               linenumber=linenumber)
 
     def act_user_interface_designer(self, action):
         """Start the user interface designer Gazpacho."""
@@ -459,6 +537,9 @@ class Gazpacho(service.service):
     def cb_single_view_closed(self, view):
         self.boss.call_command('buffermanager', 'file_closed',
                         filename=self.current_document.filename)
+
+    def confirm_single_view_controlbar_clicked_close(self, view):
+        return view.confirm_close()
         
     def get_current_document(self):
         return self.__current_document
@@ -495,9 +576,10 @@ class Editor(gtk.Notebook):
                       (str, long, int, str))
         }
     
-    def __init__(self, app):
+    def __init__(self, app, row_activated_cb=lambda *a: None):
         gtk.Notebook.__init__(self)
         self._app = app
+        self.row_activated_cb = row_activated_cb
 
     def make_pages(self):
 
@@ -532,7 +614,7 @@ class Editor(gtk.Notebook):
         scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scrolled_window.add_with_viewport(vbox)
         scrolled_window.set_shadow_type(gtk.SHADOW_NONE)
-        self.append_page(scrolled_window)
+        self.append_page(scrolled_window, tab_label=gtk.Label(name))
         return vbox, scrolled_window
         
     def do_add_signal(self, id_widget, type_widget, id_signal, callback_name):
@@ -584,8 +666,9 @@ class Editor(gtk.Notebook):
     def _create_signal_page(self):
         if self._signal_editor:
             return self._signal_editor
-        
         self._signal_editor = signaleditor.SignalEditor(self, self._app)
+        self._signal_editor._signals_list.connect('row-activated',
+            self.row_activated_cb)
         self._vbox_signals.pack_start(self._signal_editor)
 
     def _get_parent_types(self, widget):

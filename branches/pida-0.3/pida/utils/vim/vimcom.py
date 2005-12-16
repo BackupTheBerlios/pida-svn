@@ -533,6 +533,9 @@ class communication_window(gtk.Window):
     def open_file(self, server, name):
         self.send_ex(server, 'confirm e %s' % self.escape_filename(name))
 
+    def goto_line(self, server, linenumber):
+        self.send_ex(server, '%s' % linenumber)
+
     def preview_file(self, server, fn):
         self.send_ex(server, 'pc')
         self.send_ex(server, 'set nopreviewwindow')

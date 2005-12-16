@@ -91,6 +91,10 @@ class Buffermanager(service.service):
         else:
             return 'current'
 
+    def cmd_open_file_line(self, filename, linenumber):
+        self.call('open_file', filename=filename)
+        self.editor.call('goto_line', linenumber=linenumber)
+
     def cmd_file_closed(self, filename):
         if filename in self.__documents:
             document = self.__documents[filename]
@@ -156,13 +160,12 @@ class Buffermanager(service.service):
                 <ui>
                 <menubar>
                 <menu name="base_file" action="base_file_menu">
-                <menuitem name="New" action="buffermanager+open_file" />
+                <menuitem name="open" action="buffermanager+open_file" />
                 <separator name="F1" />
                 </menu>
                 </menubar>
                 <toolbar>
                 <toolitem name="Open" action="buffermanager+open_file" />
-                <toolitem name="Save" action="buffermanager+save_file" />
                 <separator />
                 </toolbar>
                 </ui>

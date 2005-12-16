@@ -43,12 +43,23 @@ class moo_view(contentview.content_view):
         return self.__editor
     editor = property(get_editor)
 
+class moo_config_view(contentview.content_view):
+
+    def init(self):
+        prefs = editor_instance.prefs_page()
+        prefs.emit('init')
+        self.widget.pack_start(prefs)
+        self.__prefs = prefs
+
 class moo_editor(service.service):
 
     NAME = 'mooedit'
 
     multi_view_type = moo_view
     multi_view_book = 'edit'
+
+    single_view_type = moo_config_view
+    single_view_book = 'view'
 
     def init(self):
         self.__files = {}
@@ -71,6 +82,9 @@ class moo_editor(service.service):
     def cmd_start(self):
         self.get_service('editormanager').events.emit('started')
 
+    def cmd_goto_line(self, linenumber):
+        self.__currentview.editor.move_cursor(linenumber, 0, True)
+
     def cmd_save(self):
         self.__currentview.editor.save()
 
@@ -89,10 +103,23 @@ class moo_editor(service.service):
     def cmd_paste(self):
         self.__currentview.editor.emit('paste-clipboard')
 
+    def act_editor_preferences(self, action):
+        self.create_single_view()
+
     def cb_multiview_closed(self, view):
         if view.unique_id in self.__views:
             filename = self.__views[view.unique_id]
             self.boss.call_command('buffermanager', 'file_closed',
                                    filename=filename)
+
+    def get_menu_definition(self):
+        return """
+        <menubar>
+        <menu name="base_tools" action="base_tools_menu">
+        <separator />
+        <menuitem name="mooconf" action="mooedit+editor_preferences" />
+        </menu>
+        </menubar>
+        """
 
 Service = moo_editor
