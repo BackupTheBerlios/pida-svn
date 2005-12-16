@@ -525,7 +525,7 @@ class Gazpacho(service.service):
         f.close()
         self.boss.call_command('buffermanager', 'open_file_line',
                                filename=callback_filename,
-                               linenumber=linenumber + 1)
+                               linenumber=linenumber + 2)
 
     def act_user_interface_designer(self, action):
         """Start the user interface designer Gazpacho."""

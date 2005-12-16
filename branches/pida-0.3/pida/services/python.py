@@ -23,6 +23,8 @@
 
 import os
 
+import gtk
+
 from pida.core import service
 
 import pida.pidagtk.contentview as contentview
@@ -62,7 +64,6 @@ class python_source_view(contentview.content_view):
     def cb_source_clicked(self, treeview, item):
         self.service.boss.call_command('editormanager', 'goto_line',
                                         linenumber=item.value.linenumber)
-        
 
 class python(service.service):
 
@@ -75,7 +76,6 @@ class python(service.service):
                                icon_name='execute')
 
     class python_language(defs.language_handler):
-
         file_name_globs = ['*.py']
 
         first_line_globs = ['*/bin/python']
@@ -110,7 +110,6 @@ class python(service.service):
                 """
 
     class python(defs.project_type):
-
         project_type_name = 'python'
 
         class general(defs.optiongroup):
@@ -129,6 +128,7 @@ class python(service.service):
                 default = ''                
 
         def act_execute_current_project(self, action):
+            """Execute the current project."""
             proj = self.boss.call_command('projectmanager',
                                           'get_current_project')
             projfile = proj.get_option('general',
@@ -140,13 +140,33 @@ class python(service.service):
                 self.service.log.info('project has not set an executable')
 
         def act_add_ui_form(self, action):
-            name = 'form1.glade'
-            proj = self.boss.call_command('projectmanager',
-                                          'get_current_project')
-            filepath = os.path.join(proj.source_directory, name)
-            self.service.boss.call_command('gazpach', 'create',
-                                           filename=filepath)
-        
+            """Add a user interface form to the current project."""
+            dialog = gtk.Dialog(title='Form name',
+                parent=self.service.boss.get_main_window(),
+                buttons=(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT,
+                         gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT))
+            hb = gtk.HBox(spacing=6)
+            dialog.vbox.pack_start(hb)
+            hb.set_border_width(6)
+            hb.pack_start(gtk.Label('Form name'), expand=False)
+            name_entry = gtk.Entry()
+            hb.pack_start(name_entry)
+            hb.show_all()
+            def response(dialog, response):
+                print response
+                if response == gtk.RESPONSE_ACCEPT:
+                    name = name_entry.get_text()
+                    if not name.endswith('.glade'):
+                        name = '%s.glade' % name
+                    proj = self.boss.call_command('projectmanager',
+                                                  'get_current_project')
+                    filepath = os.path.join(proj.source_directory, name)
+                    self.service.boss.call_command('gazpach', 'create',
+                                                   filename=filepath)
+                dialog.destroy()
+            dialog.connect('response', response)
+            dialog.run()
+
         def get_menu_definition(self):
             return """
             <menubar>
@@ -163,7 +183,6 @@ class python(service.service):
             <separator />
             </toolbar>
             """
-            
 
     def act_python(self, action):
         pass
