@@ -22,15 +22,10 @@ class sizer(gtk.EventBox):
 
     def __init__(self):
         gtk.EventBox.__init__(self)
-        self.__vb = gtk.HBox()
-        self.__b = gtk.Frame()
-        self.add(self.__b)
+        #self.__b = gtk.Frame()
+        #self.add(self.__b)
         self.add_events(gtk.gdk.BUTTON_PRESS_MASK |
                              gtk.gdk.BUTTON_RELEASE_MASK)
-        uparrow = gtk.Arrow(gtk.ARROW_UP, gtk.SHADOW_ETCHED_IN)
-        self.__vb.pack_start(uparrow, expand=False)
-        downarrow = gtk.Arrow(gtk.ARROW_DOWN, gtk.SHADOW_ETCHED_IN)
-        self.__vb.pack_start(downarrow, expand=False)
         self.connect('button-press-event', self.cb_press)
         self.connect('button-release-event', self.cb_release)
         self.connect('motion-notify-event', self.cb_motion)
@@ -39,7 +34,6 @@ class sizer(gtk.EventBox):
             self.window.set_cursor(cursor)
             return True
         self.connect('map-event', mapped)
-        self.set_size_request(-1, 6)
 
     def cb_release(self, eb, ev):
         self.drag_unhighlight()
@@ -104,15 +98,18 @@ class paned(gtk.EventBox):
             self.__bar_holder.set_size_request(-1, self.handle_width)
             box = gtk.VBox()
         self.add(box)
-        self.__stick_button = gtk.ToggleButton()
+        self.__stick_button = sizer()
         self.__bar_holder.pack_start(self.__stick_button,expand=False)
+        self.__stick_button.connect('clicked', self.cb_stick_button_clicked)
+        self.__stick_arrow = gtk.Arrow(gtk.ARROW_UP, gtk.SHADOW_ETCHED_IN)
+        self.__stick_button.add(self.__stick_arrow)
         self.__drag_button = sizer()
         self.__bar_holder.pack_start(self.__drag_button, expand=False)
         self.__drag_button.set_size_request(12, 12)
         self.__drag_button.connect('dragged', self.cb_dragbutton_dragged)
         self.__drag_button.connect('drag-started', self.cb_dragbutton_started)
         self.__drag_button.connect('drag-stopped', self.cb_dragbutton_stopped)
-        self.__stick_button.connect('toggled', self.cb_stick_but_toggled)
+        #self.__stick_button.connect('toggled', self.cb_stick_but_toggled)
         self.__bar_holder.pack_start(self.__bar)
         self.__bar_holder.set_sensitive(False)
         self.__bar_holder.set_no_show_all(True)
@@ -130,7 +127,7 @@ class paned(gtk.EventBox):
             box.pack_start(self.__pane_holder, expand=False)
         self.__pos = pos
         self.__open = False
-        self.__sticky = True
+        self.__sticky = False
         self.__pane_width = 150
 
     def set_main_widget(self, main_widget):
@@ -145,7 +142,7 @@ class paned(gtk.EventBox):
         self.__bar_holder.show_all()
         self.show_all()
         self.hide_pane()
-        self.__stick_button.set_active(True)
+        #self.__stick_button.set_active(True)
 
     def unset_pane_widget(self):
         self.set_sticky(False)
@@ -162,6 +159,14 @@ class paned(gtk.EventBox):
         self.__pane_holder.show()
         self.__pane_widget.show_all()
         self.__open = True
+        if self.__pos == gtk.POS_LEFT:
+            self.__stick_arrow.set(gtk.ARROW_LEFT, gtk.SHADOW_ETCHED_IN)
+        elif self.__pos == gtk.POS_TOP:
+            self.__stick_arrow.set(gtk.ARROW_UP, gtk.SHADOW_ETCHED_IN)
+        elif self.__pos == gtk.POS_RIGHT:
+            self.__stick_arrow.set(gtk.ARROW_RIGHT, gtk.SHADOW_ETCHED_IN)
+        elif self.__pos == gtk.POS_BOTTOM:
+            self.__stick_arrow.set(gtk.ARROW_DOWN, gtk.SHADOW_ETCHED_IN)
 
     def set_sticky(self, stickiness):
         self.hide_pane()
@@ -177,6 +182,14 @@ class paned(gtk.EventBox):
             self.__open = False
             self.__pane_holder.hide()
             self.__pane_floater.hide()
+            if self.__pos == gtk.POS_LEFT:
+                self.__stick_arrow.set(gtk.ARROW_RIGHT, gtk.SHADOW_ETCHED_IN)
+            elif self.__pos == gtk.POS_TOP:
+                self.__stick_arrow.set(gtk.ARROW_DOWN, gtk.SHADOW_ETCHED_IN)
+            elif self.__pos == gtk.POS_RIGHT:
+                self.__stick_arrow.set(gtk.ARROW_LEFT, gtk.SHADOW_ETCHED_IN)
+            elif self.__pos == gtk.POS_BOTTOM:
+                self.__stick_arrow.set(gtk.ARROW_UP, gtk.SHADOW_ETCHED_IN)
 
     def float_pane(self):
         self.__pane_widget.reparent(self.__pane_floater)
@@ -252,7 +265,7 @@ class paned(gtk.EventBox):
 
 
     def cb_bar_dragged(self, sizer, diffx, diffy):
-        if self.__sticky:
+        if self.__sticky or True:
             if self.__pos in [gtk.POS_LEFT, gtk.POS_RIGHT]:
                 diff = diffx
             else:
@@ -266,13 +279,13 @@ class paned(gtk.EventBox):
 
     def cb_bar_clicked(self, sizer):
         if not self.__sticky:
-            self.float_pane()
+            self.show_pane()
 
     def cb_floater_event(self, window, event):
         self.__pane_floater.chain(event)
 
-    def cb_stick_but_toggled(self, button):
-        self.set_sticky(button.get_active())
+    def cb_stick_button_clicked(self, button):
+        self.set_sticky(not self.__sticky)
 
 class pane_dropper(gtk.Window):
 
