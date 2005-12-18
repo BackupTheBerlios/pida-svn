@@ -54,7 +54,7 @@ class pidawindow(paned.paned_window):
         self.__viewbooks = {}
         from pkg_resources import Requirement, resource_filename
         icon_file = resource_filename(Requirement.parse('pida'),
-                                      'pida-icon.svg')
+                                      'pida-icon.png')
         im = gtk.Image()
         im.set_from_file(icon_file)
         self.set_icon(im.get_pixbuf())
