@@ -69,7 +69,12 @@ class paned(gtk.EventBox):
     __gsignals__ = {'dragged-to' : (
                         gobject.SIGNAL_RUN_LAST,
                         gobject.TYPE_NONE,
-                        (gobject.TYPE_INT, ))}
+                        (gobject.TYPE_INT, )),
+                    'dragging-to' : (
+                        gobject.SIGNAL_RUN_LAST,
+                        gobject.TYPE_NONE,
+                        (gobject.TYPE_INT, ))
+}
 
     handle_width = 12
 
@@ -217,11 +222,9 @@ class paned(gtk.EventBox):
 
     def cb_dragbutton_started(self, sizer):
         dwindow = pane_dropper(self.__window)
+        x, y, w, h, c = self.__window.window.get_geometry()
         winx, winy = self.__window.get_position()
-        relpx, relpy = self.get_pointer()
-        pointerx = relpx + winx
-        pointery = relpy + winy
-        dwindow.popup(pointerx, pointery)
+        dwindow.popup(x + (w/2) + winx - 50, y + (h/2) + winy - 50)
         self.__dwindow = dwindow
         self.__targx = 0
         self.__targy = 0
@@ -244,6 +247,7 @@ class paned(gtk.EventBox):
             else:
                 targ = gtk.POS_BOTTOM
         self.__dwindow.set_selected(targ)
+        self.emit('dragging-to', targ)
         self.__targ = targ
 
 
@@ -276,16 +280,21 @@ class pane_dropper(gtk.Window):
         gtk.Window.__init__(self, gtk.WINDOW_POPUP)
         self.__window = win
         self.__targets = {}
-        vbox = gtk.VBox()
-        self.add(vbox)
-        for pos in [gtk.POS_TOP, gtk.POS_LEFT, gtk.POS_BOTTOM, gtk.POS_RIGHT]:
+        box = gtk.Fixed()
+        self.add(box)
+        for pos, x, y in [(gtk.POS_TOP, 34, 0),
+                    (gtk.POS_LEFT, 0, 34),
+                    (gtk.POS_BOTTOM, 34, 68),
+                    (gtk.POS_RIGHT, 68, 34)]:
             a = gtk.EventBox()
-            l = gtk.Label(pos.value_nick)
+            l = gtk.Frame()
+            l.set_size_request(32, 32)
             a.add(l)
             a.connect('enter-notify-event', self.cb_motion,pos)
             self.__targets[pos] = a
-            vbox.pack_start(a)
-        self.show_all()
+            
+            box.put(a, x, y)
+        self.set_size_request(100, 100)
 
     def popup(self, x, y):
         self.move(x, y)
@@ -329,6 +338,7 @@ class paned_window(gtk.Window):
         vbox.pack_start(self.__paneds[gtk.POS_BOTTOM], expand=False)
         for pos, pane in self.__paneds.iteritems():
             pane.connect('dragged-to', self.cb_dragged_to, pos)
+            pane.connect('dragging-to', self.cb_dragging_to, pos)
 
     def set_main_widget(self, widget):
         self.__main_widget.add(widget)
@@ -341,6 +351,15 @@ class paned_window(gtk.Window):
             pane_widget = pane.get_pane_widget()
             pane.unset_pane_widget()
             self.set_pane_widget(to_pos, pane_widget)
+
+    def cb_dragging_to(self, pane, to_pos, from_pos):
+        for pos, pane in self.__paneds.iteritems():
+            if pos == to_pos:
+                #pane.drag_highlight()
+                pass
+            else:
+                pass
+                #pane.drag_unhighlight()
 
 if __name__ == '__main__':
     window = paned_window()
