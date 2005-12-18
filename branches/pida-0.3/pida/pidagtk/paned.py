@@ -287,6 +287,8 @@ class paned(gtk.EventBox):
     def cb_stick_button_clicked(self, button):
         self.set_sticky(not self.__sticky)
 
+gobject.type_register(paned)
+
 class pane_dropper(gtk.Window):
 
     def __init__(self, win):
