@@ -73,7 +73,7 @@ for svc in os.listdir(os.path.join('pida', 'editors')):
 
 pixmaps = []
 for pix in os.listdir(os.path.join('data', 'pixmaps')):
-    if pix.endswith('png'):
+    if pix.endswith('xpm'):
         pixmaps.append('data/pixmaps/%s' % pix)
 print pixmaps
 setup(name='pida',
