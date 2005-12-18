@@ -130,7 +130,7 @@ class paned(gtk.EventBox):
             box.pack_start(self.__pane_holder, expand=False)
         self.__pos = pos
         self.__open = False
-        self.__sticky = False
+        self.__sticky = True
         self.__pane_width = 150
 
     def set_main_widget(self, main_widget):
@@ -144,10 +144,11 @@ class paned(gtk.EventBox):
         self.__bar_holder.set_no_show_all(False)
         self.__bar_holder.show_all()
         self.show_all()
-        print 'h', self.__pos
         self.hide_pane()
+        self.__stick_button.set_active(True)
 
     def unset_pane_widget(self):
+        self.set_sticky(False)
         self.hide_pane()
         self.__pane_hidden.remove(self.__pane_widget)
         self.__pane_widget = None
@@ -166,7 +167,6 @@ class paned(gtk.EventBox):
         self.hide_pane()
         self.__sticky = stickiness
         if stickiness:
-            print stickiness
             self.show_pane()
         else:
             self.hide_pane()
@@ -186,7 +186,7 @@ class paned(gtk.EventBox):
         self.__open = True
 
     def update_size(self):
-        print self.__pane_width
+        self.realize()
         alloc = self.get_allocation()
         walloc = self.__window.get_allocation()
         wx, wy = self.__window.window.get_position()
