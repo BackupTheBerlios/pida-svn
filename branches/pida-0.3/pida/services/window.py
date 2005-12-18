@@ -134,7 +134,7 @@ class window_manager(service.service):
         ##### JUST A SKETCH
 
         self.buffermanager = self.get_service('buffermanager').single_view
-        pluginmanager = contentbook.contentbook()#self.boss.plugins.view
+        pluginmanager = contentbook.contentbook('Plugins')#self.boss.plugins.view
         #uim = self.__uim
         for service in self.boss.services:
             if service.plugin_view_type is not None:

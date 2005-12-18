@@ -34,28 +34,28 @@ class Contentholder(gtk.VBox):
                         gobject.TYPE_NONE,
                         ())}
 
-    def __init__(self, listwidget=None):
+    def __init__(self, listwidget=None, show_tabs=True):
         gtk.VBox.__init__(self)
-        self.__init_notebook()
+        self.__init_notebook(show_tabs)
         self.__list_widget = listwidget
         if listwidget is not None:
             listwidget.connect('clicked', self.cb_list_clicked)
         self.__views = {}
 
-    def __init_notebook(self):
+    def __init_notebook(self, show_tabs):
         self.__notebook = gtk.Notebook()
         self.pack_start(self.__notebook)
-        self.__notebook.set_tab_pos(gtk.POS_TOP)
+        self.__notebook.set_tab_pos(gtk.POS_BOTTOM)
         self.__notebook.set_scrollable(True)
         self.__notebook.set_show_border(False)
-        self.__notebook.set_show_tabs(False)
+        self.__notebook.set_show_tabs(show_tabs)
         self.__notebook.set_property('tab-border', 2)
         self.__notebook.set_property('homogeneous', True)
         self.__notebook.set_property('enable-popup', True)
         self.__notebook.set_show_border(False)
 
     def append_page(self, contentview):
-        self.__notebook.append_page(contentview)
+        self.__notebook.append_page(contentview, tab_label=contentview.icon)
         self.__views[contentview.unique_id] = contentview
         contentview.holder = self
         contentview.connect('short-title-changed',
@@ -86,7 +86,7 @@ class Contentholder(gtk.VBox):
         if self.__list_widget is not None:
             self.__list_widget.remove_page(contentview)
         del self.__views[contentview.unique_id]
-        if len(self.__views) == None:
+        if len(self.__views) == 0:
             self.emit('empty')
 
     def __get_notebook(self):
@@ -176,10 +176,18 @@ class ContentholderList(content_list):
 
 class contentbook(expander.expander):
 
+    def __init__(self, name):
+        self.__name = name
+        expander.expander.__init__(self)
+
     def populate(self):
         self.__contentholderlist = ContentholderList()
-        self.set_label_widget(self.__contentholderlist)
+        #self.set_label_widget(self.__contentholderlist)
+        lab = gtk.Label(self.__name)
+        lab.set_alignment(0, 0.5)
+        self.set_label_widget(lab)
         self.__contentholder = Contentholder(self.__contentholderlist)
+        self.__contentholder.connect('empty', self.cb_empty)
         self.set_body_widget(self.__contentholder)
         self.set_sensitive(False)
 
@@ -194,3 +202,9 @@ class contentbook(expander.expander):
 
     def set_page(self, contentview):
         return self.__contentholder.set_page(contentview)
+
+    def cb_empty(self, contentholder):
+        self.collapse()
+        self.set_sensitive(False)
+
+

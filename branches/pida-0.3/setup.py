@@ -70,6 +70,11 @@ for svc in os.listdir(os.path.join('pida', 'editors')):
     if svc.endswith('.py') and not svc.startswith('_'):
         name = svc.rsplit('.')[0]
         editors.append('%s = pida.editors.%s:Service' % (name, name))
+
+pixmaps = []
+for pix in os.listdir(os.path.join('data', 'pixmaps')):
+    pixmaps.append('data/pixmaps/%s' % pix)
+print pixmaps
 setup(name='pida',
     version='0.3planning',
     author='Ali Afshar',
@@ -84,7 +89,9 @@ setup(name='pida',
     scripts=['scripts/pida'],
     data_files=[
                 ('images', ['data/icons.dat']),
-                ('glade', ['glade/project-creator.glade'])
+                ('glade', ['glade/project-creator.glade']),
+                ('pixmaps', pixmaps),
+                ('', ['data/icons/pida-icon.png']),
                 ],
     entry_points = {
         'console_scripts': [

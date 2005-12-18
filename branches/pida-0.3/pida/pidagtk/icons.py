@@ -31,18 +31,32 @@ class Icons(object):
         #icon_file = ('/home/ali/working/pida/pida/branches/'
         #             'pida-ali/pida/pidagtk/icons.dat')
         from pkg_resources import Requirement, resource_filename
+        from pkg_resources import resource_listdir
+        print resource_listdir(Requirement.parse('pida'), 'data')
         icon_file = resource_filename(Requirement.parse('pida'), 'images/icons.dat')
         #icon_file = "/usr/share/pida/icons.dat"
         self.d = shelve.open(icon_file, 'r')
         self.cs = gtk.gdk.COLORSPACE_RGB
-    
-    def get(self, name, *args):
-        if name not in  self.d:
-            name = 'new'
-        d, a = self.d[name]
-        pb = gtk.gdk.pixbuf_new_from_data(d, self.cs, *a)
-        return pb
+        stock_ids = set(gtk.stock_list_ids())
+        iconfactory = gtk.IconFactory()
+        self.__theme = gtk.icon_theme_get_default()
+        for k in self.d:
+            stockname = 'gtk-%s' % k
+            if stockname not in stock_ids:
+                d, a = self.d[k]
+                pixbuf = gtk.gdk.pixbuf_new_from_data(d, self.cs, *a)
+                iconset = gtk.IconSet(pixbuf)
+                iconfactory.add(stockname, iconset)
+                gtk.icon_theme_add_builtin_icon(stockname, 12, pixbuf)
+        iconfactory.add_default()
+        self.__iconfactory = iconfactory
 
+    def get(self, name, *args):
+        try:
+            return self.__theme.load_icon('gtk-%s' % name, 12, 0)
+        except:
+            return self.__theme.load_icon('gtk-manhole', 12, 0)
+            
     def get_image(self, name, *size):
         im = gtk.Image()
         im.set_from_pixbuf(self.get(name))
@@ -71,7 +85,8 @@ class Icons(object):
 
     def get_button(self, name, *asize):
         ic = self.get_image(name)
-        but = gtk.ToolButton(icon_widget=ic)
+        #but = gtk.ToolButton(icon_widget=ic)
+        but = gtk.ToolButton(stock_id=name)
         return but
 
     def get_text_button(self, icon, text):

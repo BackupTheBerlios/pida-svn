@@ -20,8 +20,12 @@ class sizer(gtk.EventBox):
                         gobject.TYPE_NONE,
                         ())}
 
-    def __init__(self):
+    def __init__(self, button_name=None):
         gtk.EventBox.__init__(self)
+        self.__button_name = button_name
+        if button_name is not None:
+            buttons = get_pixmaps(self.__button_name)
+            self.add(buttons[0])
         #self.__b = gtk.Frame()
         #self.add(self.__b)
         self.add_events(gtk.gdk.BUTTON_PRESS_MASK |
@@ -58,6 +62,21 @@ class sizer(gtk.EventBox):
 gobject.type_register(sizer)
     
 
+def get_pixmaps(name):
+    from pkg_resources import Requirement, resource_filename, resource_listdir
+    print resource_listdir(Requirement.parse('pida'), '/')
+    exts = ['%s-inactive.xpm', '%s-active.xpm', '%s-pressed.xpm']
+    pixmaps = []
+    for ext in exts:
+        fname = ext % name
+        resource = 'pixmaps/%s' % fname
+        icon_file = resource_filename(Requirement.parse('pida'), resource)
+        image = gtk.Image()
+        image.set_from_file(icon_file)
+        pixmaps.append(image)
+    return pixmaps
+
+print get_pixmaps('maximize')
 class paned(gtk.EventBox):
     
     __gsignals__ = {'dragged-to' : (
@@ -74,6 +93,8 @@ class paned(gtk.EventBox):
 
     def __init__(self, pos, win):
         gtk.EventBox.__init__(self)
+        self.set_visible_window(True)
+        self.connect_after('map', self.cb_map)
         self.__window = win
         self.__main_widget = None
         self.__pane_widget = None
@@ -98,12 +119,12 @@ class paned(gtk.EventBox):
             self.__bar_holder.set_size_request(-1, self.handle_width)
             box = gtk.VBox()
         self.add(box)
-        self.__stick_button = sizer()
+        self.__stick_button = sizer('maximize')
         self.__bar_holder.pack_start(self.__stick_button,expand=False)
         self.__stick_button.connect('clicked', self.cb_stick_button_clicked)
         self.__stick_arrow = gtk.Arrow(gtk.ARROW_UP, gtk.SHADOW_ETCHED_IN)
-        self.__stick_button.add(self.__stick_arrow)
-        self.__drag_button = sizer()
+        #self.__stick_button.add(self.__stick_arrow)
+        self.__drag_button = sizer('maximize-toggled')
         self.__bar_holder.pack_start(self.__drag_button, expand=False)
         self.__drag_button.set_size_request(12, 12)
         self.__drag_button.connect('dragged', self.cb_dragbutton_dragged)
@@ -116,6 +137,9 @@ class paned(gtk.EventBox):
         self.__bar_holder.hide_all()
         self.__bar.connect('dragged', self.cb_bar_dragged)
         self.__bar.connect('clicked', self.cb_bar_clicked)
+        frame = gtk.Frame()
+        frame.set_border_width(4)
+        self.__bar.add(frame)
         self.__main_holder = gtk.VBox()
         if pos in [gtk.POS_LEFT, gtk.POS_TOP]:
             box.pack_start(self.__pane_holder, expand=False)
@@ -263,6 +287,15 @@ class paned(gtk.EventBox):
         self.emit('dragging-to', targ)
         self.__targ = targ
 
+    
+    def cb_map(self, eb):
+        print 'mapping'
+        style = self.__bar.get_style().copy()
+        style.paint_handle(self.__bar.window, gtk.STATE_NORMAL, gtk.SHADOW_ETCHED_IN,
+                            None, self.__bar, "d", 0, 0, 10, 10,
+                            gtk.ORIENTATION_HORIZONTAL)
+        self.__bar.show_all()
+
 
     def cb_bar_dragged(self, sizer, diffx, diffy):
         if self.__sticky or True:
@@ -336,9 +369,13 @@ class paned_window(gtk.Window):
 
     def __init__(self):
         gtk.Window.__init__(self)
+        mvbox = gtk.VBox()
+        self.add(mvbox)
+        self.__top_area = gtk.VBox()
+        mvbox.pack_start(self.__top_area, expand=False)
         self.__paneds = {}
         hbox = gtk.HBox()
-        self.add(hbox)
+        mvbox.pack_start(hbox)
         self.__paneds[gtk.POS_LEFT] = paned(gtk.POS_LEFT, self)
         hbox.pack_start(self.__paneds[gtk.POS_LEFT], expand=False)
         vbox = gtk.VBox()
@@ -360,6 +397,13 @@ class paned_window(gtk.Window):
 
     def set_pane_widget(self, pos, widget):
         self.__paneds[pos].set_pane_widget(widget)
+
+    def set_pane_sticky(self, pos, stickiness):
+        self.__paneds[pos].set_sticky(stickiness)
+
+    def get_top_area(self):
+        return self.__top_area
+    top_area = property(get_top_area)
 
     def cb_dragged_to(self, pane, to_pos, from_pos):
         if from_pos != to_pos:

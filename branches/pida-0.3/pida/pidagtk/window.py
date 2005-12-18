@@ -27,7 +27,7 @@ import expander
 import contentbook
 import contentview
 import multipaned
-
+import paned
 # gtk import(s)
 import gtk
 import gobject
@@ -46,12 +46,18 @@ class pida_v_paned(gtk.VPaned):
         if gparamspec.name == 'position-set':
             gobject.timeout_add(1000, clear)
 
-class pidawindow(gtk.Window):
+class pidawindow(paned.paned_window):
 
     def __init__(self, manager):
-        gtk.Window.__init__(self)
+        paned.paned_window.__init__(self)
         self.__manager = manager
         self.__viewbooks = {}
+        from pkg_resources import Requirement, resource_filename
+        icon_file = resource_filename(Requirement.parse('pida'),
+                                      'pida-icon.svg')
+        im = gtk.Image()
+        im.set_from_file(icon_file)
+        self.set_icon(im.get_pixbuf())
 
 
     def append_page(self, bookname, page):
@@ -68,15 +74,16 @@ class pidawindow(gtk.Window):
             book.detach_pages()
 
     def __create_sidebar(self):
-        bar = multipaned.multi_paned()
+        #bar = multipaned.multi_paned()
+        bar = gtk.VBox()
         bufferlist = self.__manager.buffermanager
-        bar.add_pane(bufferlist)
-        bar.add_pane(self.__manager.pluginmanager)
-        vb = self.__viewbooks['language'] = contentbook.contentbook()
-        bar.add_pane(vb)
+        bar.pack_start(bufferlist)
+        bar.pack_start(self.__manager.pluginmanager)
+        vb = self.__viewbooks['language'] = contentbook.contentbook('Languages')
+        bar.pack_start(vb)
         vb.collapse()
-        vb = self.__viewbooks['content'] = contentbook.contentbook()
-        bar.add_pane(vb)
+        vb = self.__viewbooks['content'] = contentbook.contentbook('Quick View')
+        bar.pack_start(vb)
         vb.collapse()
         return bar
 
@@ -85,11 +92,11 @@ class pidawindow(gtk.Window):
         mainbox = gtk.VBox()
         self.add(mainbox)
         menu = self.__manager.menubar
-        mainbox.pack_start(menu, expand=False)
         topbar = gtk.HBox()
         toolbar = self.__manager.toolbar
         self.__toolarea = gtk.VBox()
-        topbar.pack_start(self.__toolarea)
+        self.top_area.pack_start(self.__toolarea)
+        self.__toolarea.pack_start(menu, expand=False)
         self.__toolarea.pack_start(toolbar, expand=True)
         toolbar.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
         mainbox.pack_start(topbar, expand=False)
@@ -106,29 +113,35 @@ class pidawindow(gtk.Window):
         sidebar_on_right = False
         
 
-        editor = contentbook.Contentholder()
-        ew = pida_v_paned()
-        ew.pack1(editor, resize=True, shrink=True)
+        editor = contentbook.Contentholder(show_tabs=False)
+        #ew = pida_v_paned()
+        #ew.pack1(editor, resize=True, shrink=True)
 
         self.__viewbooks['edit'] = editor
 
-        viewbook = contentbook.contentbook()
-        ew.pack2(viewbook, resize=True, shrink=False)
+        viewbook = contentbook.contentbook('Content')
+        #ew.pack2(viewbook, resize=True, shrink=False)
 
         self.__viewbooks['view'] = viewbook
 
-        self.__editor_pane = ew
+        #self.__editor_pane = ew
         self.__side_pane = self.__create_sidebar()
 
-        if sidebar_on_right:
-            self.__p0.pack1(self.__editor_pane)
-            self.__p0.pack2(self.__side_pane)
-        else:
-            self.__p0.pack1(self.__side_pane)
-            self.__p0.pack2(self.__editor_pane)
+        self.set_main_widget(editor)
+        self.set_pane_widget(gtk.POS_BOTTOM, viewbook)
+
+        self.set_pane_widget(gtk.POS_LEFT, self.__side_pane)
+        self.set_pane_sticky(gtk.POS_LEFT, True)
+
+        #if sidebar_on_right:
+        #    self.__p0.pack1(self.__editor_pane)
+        #    self.__p0.pack2(self.__side_pane)
+        #else:
+        #    self.__p0.pack1(self.__side_pane)
+        #    self.__p0.pack2(self.__editor_pane)
 
         self.set_size_request(800, 600)
-        self.__side_pane.set_size_request(300, -1)
+        #self.__side_pane.set_size_request(300, -1)
 
 
     def toggle_book(self, name):
