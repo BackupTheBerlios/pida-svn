@@ -77,6 +77,9 @@ class Buffermanager(service.service):
 
     def act_open_file(self, action):
         self.boss.call_command('filemanager', 'browse')
+
+    def act_quit_pida(self, action):
+        self.boss.stop()
         
     def cmd_open_document(self, document):
         if document is not self.__currentdocument:
@@ -178,6 +181,9 @@ class Buffermanager(service.service):
                 <menu name="base_file" action="base_file_menu">
                 <menuitem name="open" action="buffermanager+open_file" />
                 <separator name="F1" />
+                <separator />
+                <separator />
+                <menuitem name="quit" action="buffermanager+quit_pida" />
                 </menu>
                 </menubar>
                 <toolbar>
