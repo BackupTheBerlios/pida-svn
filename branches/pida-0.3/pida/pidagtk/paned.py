@@ -249,7 +249,6 @@ class paned(gtk.EventBox):
         else:
             if self.__pane_width > (walloc.height - growmin):
                 self.__pane_width = walloc.height - growmin
-        #self.realize()
         alloc = self.get_allocation()
         try:
             wx, wy = self.__window.window.get_position()
