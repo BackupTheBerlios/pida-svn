@@ -77,6 +77,12 @@ class Buffermanager(service.service):
 
     def act_open_file(self, action):
         self.boss.call_command('filemanager', 'browse')
+        
+    def cmd_open_document(self, document):
+        if document is not self.__currentdocument:
+            if document.unique_id not in self.__filenames:
+                self.__add_document(document)
+            self.__view_document(document)
 
     def cmd_open_file(self, filename):
         if (len(filename) and (self.__currentdocument is None or

@@ -37,9 +37,11 @@ class document_type_handler(service.service):
 
         globs = None
 
-        def create_document(self, filename):
-            doc = document.realfile_document(filename=filename,
-                                             handler=self)
+        def create_document(self, filename, document_type=None, **kw):
+            if document_type is None:
+                document_type = document.realfile_document
+            doc = document_type(filename=filename,
+                                         handler=self, **kw)
             return doc
 
         def view_document(self, document):
@@ -112,10 +114,11 @@ class document_type_handler(service.service):
         else:
             self.__register_patterns(self.__files, handler)
 
-    def cmd_create_document(self, filename):
+    def cmd_create_document(self, filename, document_type=None, **kw):
         handler = (self.__get_file_handler(filename) or
                         self.__file_fallback)
-        doc = handler.create_document(filename)
+        print kw
+        doc = handler.create_document(filename, document_type, **kw)
         handler.view_document(doc)
         if handler not in self.__action_groups:
             self.boss.call_command('window', 'register_action_group',
@@ -133,6 +136,8 @@ class document_type_handler(service.service):
             handlers[pattern] = handler(handler.service)
         
     def __get_file_handler(self, filename):
+        if filename is None:
+            return False
         for pattern in self.__files:
             if pattern.match(filename):
                 return self.__files[pattern]

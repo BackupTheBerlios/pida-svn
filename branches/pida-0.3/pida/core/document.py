@@ -246,13 +246,20 @@ class temporary_document(realfile_document):
     """A temporary file on disk"""
     contexts = ['temporary']
 
-    def __init__(self, prefix, title):
+    markup_prefix = 'tp'
+    markup_directory_color = '#600060'
+    markup_attributes = ['title', 'prefix', 'directory_colour']
+    markup_string = ('<span color="%(directory_colour)s">%(title)s</span> '
+                     '<b>%(prefix)s</b>')
+    
+
+    def __init__(self, filename, handler, prefix, title):
         self.__prefix = prefix
         self.__title = title
         f, filename = tempfile.mkstemp(prefix=prefix)
         os.close(f)
         print filename
-        realfile_document.__init__(self, filename)
+        realfile_document.__init__(self, filename=filename, handler=handler)
 
     def get_title(self):
         return self.__title

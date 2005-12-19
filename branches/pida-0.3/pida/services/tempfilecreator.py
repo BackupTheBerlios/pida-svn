@@ -26,10 +26,14 @@ import pida.core.document as document
 
 class temp_file(service.service):
 
-    def cmd_get_input(self, callback_function):
-        doc = document.temporary_document('a', 'b')
-        self.boss.call_command('buffermanager', 'open_file',
-                               filename = doc.filename)
+    def cmd_get_input(self, callback_function, title='temp', prefix='pida'):
+        doc = self.boss.call_command('documenttypes', 'create_document',
+                                filename='',
+                                document_type=document.temporary_document,
+                                prefix=prefix,
+                                title=title)
+        self.boss.call_command('buffermanager', 'open_document',
+                               document=doc)
         def callback():
             callback_function(doc.string)
             self.boss.call_command('buffermanager', 'close_file',

@@ -105,7 +105,8 @@ class version_control(service.service):
                                         kwdict = {'directory':
                                                    directory})
             self.boss.call_command('tempfilecreator', 'get_input',
-                                   callback_function=commit)
+                                   callback_function=commit,
+                                   title=vcs.NAME, prefix='commit')
             #try:
             #    commandargs = vcs.update_command()
             #    self.boss.call_command('terminal', 'execute',
