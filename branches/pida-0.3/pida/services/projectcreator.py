@@ -26,6 +26,7 @@ import pida.core.service as service
 defs = service.definitions
 
 import pida.pidagtk.contentview as contentview
+import pida.pidagtk.filedialogs as filedialogs
 
 import os
 import gtk
@@ -48,7 +49,7 @@ class project_creator_view(contentview.content_view):
         wsz = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
         hb = gtk.HBox()
         self.widget.pack_start(hb, expand=False, padding=3)
-        name_label = gtk.Label('Project name')
+        name_label = gtk.Label('Name')
         hb.pack_start(name_label, expand=False, padding=3)
         lsz.add_widget(name_label)
         name_label.set_alignment(0, 0.5)
@@ -57,17 +58,17 @@ class project_creator_view(contentview.content_view):
         wsz.add_widget(self.__name_entry)
         hb = gtk.HBox()
         self.widget.pack_start(hb, expand=False, padding=3)
-        file_label = gtk.Label('Project file name')
+        file_label = gtk.Label('Save in')
         hb.pack_start(file_label, expand=False, padding=3)
         lsz.add_widget(file_label)
         file_label.set_alignment(0, 0.5)
-        self.__file_chooser = gtk.FileChooserButton('Project file directory')
+        self.__file_chooser = filedialogs.FolderButton()
         hb.pack_start(self.__file_chooser)
         wsz.add_widget(self.__file_chooser)
-        self.__file_chooser.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
+        #self.__file_chooser.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
         hb = gtk.HBox()
         self.widget.pack_start(hb, expand=False, padding=3)
-        type_label = gtk.Label('Type of project')
+        type_label = gtk.Label('Type')
         hb.pack_start(type_label, expand=False, padding=3)
         lsz.add_widget(type_label)
         type_label.set_alignment(0, 0.5)
