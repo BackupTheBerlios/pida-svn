@@ -78,7 +78,7 @@ class Icons(object):
                 if ic:
                     break
         if not ic:
-            ic = defaulticons.load_icon('gnome-mime-text', 14, 1)
+            ic = None#self.get('gtk-new')
         return ic
 
     def get_button(self, name, *asize):
