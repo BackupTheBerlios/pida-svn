@@ -126,8 +126,8 @@ class FileBrowser(contentview.content_view):
     ICON_TEXT = 'files'
 
     def init(self):
-        #self.__toolbar = contextwidgets.context_toolbar()
-        #self.widget.pack_start(self.__toolbar, expand=False)
+        self.__toolbar = contextwidgets.context_toolbar()
+        self.widget.pack_start(self.__toolbar, expand=False)
         hbox = gtk.HPaned()
         self.widget.pack_start(hbox)
         sw = gtk.ScrolledWindow()
@@ -155,21 +155,14 @@ class FileBrowser(contentview.content_view):
                 self.set_long_title(shorten_home_name(directory))
                 self.__currentdirectory = directory
                 globaldict = {'directory':directory}
-                #try:
-                #    contexts = self.service.boss.call_command('contexts',
-                #                                              'get_contexts',
-                #                                  contextname='directory',
-                #                                  globaldict=globaldict)
-                #    self.__toolbar.set_contexts(contexts)
-                #except self.service.boss.ServiceNotFoundError:
-                #    pass
-                #tb = self.boss.command('contexts', 'get-toolbar',
-                #                       contextname='directory',
-                #                       globaldict={'directory': directory})
-                #for child in self.bar_area.get_children():
-                #    self.bar_area.remove(child)
-                #    child.destroy()
-                #self.bar_area.pack_start(tb, expand=False)
+                try:
+                    contexts = self.service.boss.call_command('contexts',
+                                                              'get_contexts',
+                                                  contextname='directory',
+                                                  globaldict=globaldict)
+                    self.__toolbar.set_contexts(contexts)
+                except self.service.boss.ServiceNotFoundError:
+                    pass
                 self.__fileview.clear()
             else:
                 for i in xrange(0,
@@ -181,13 +174,15 @@ class FileBrowser(contentview.content_view):
             def listdir():
                 images = {}
                 for filename in os.listdir(directory):
+                    if filename == '':
+                        continue
                     path = os.path.join(directory, filename)
                     fsi = FileSystemItem(path)
                     if os.path.isdir(path):
                         fsi.directory = -1
                         i = DirTreeItem(path, fsi, image=DIR_ICON)
                         item = self.__fileview.add_item(i, get_root())
-                        childfsi = FileSystemItem('empty')
+                        childfsi = FileSystemItem('__empty__')
                         i2 = FileTreeItem('', fsi)
                         self.__fileview.add_item(i2, item)
                     else:
@@ -201,6 +196,7 @@ class FileBrowser(contentview.content_view):
                         i = FileTreeItem(path, fsi, image=image)
                         self.__fileview.add_item(i, get_root())
                 for childpath in childnodes:
+                    print 'deleting'
                     childiter = self.__fileview.model.get_iter(childpath)
                     self.__fileview.model.remove(childiter)
 

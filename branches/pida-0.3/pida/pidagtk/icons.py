@@ -51,8 +51,10 @@ class Icons(object):
 
     def get(self, name, *args):
         try:
+            print name, 'found'
             return self.__theme.load_icon('gtk-%s' % name, 12, 0)
         except:
+            print name, 'notfound'
             return self.__theme.load_icon('gtk-manhole', 12, 0)
             
     def get_image(self, name, *size):
@@ -83,8 +85,9 @@ class Icons(object):
 
     def get_button(self, name, *asize):
         ic = self.get_image(name)
-        #but = gtk.ToolButton(icon_widget=ic)
-        but = gtk.ToolButton(stock_id=name)
+        but = gtk.ToolButton(icon_widget=ic)
+        #but = gtk.ToolButton(stock_id='gtk-%s' % name)
+        #but.set_size_request(32, 32)
         return but
 
     def get_text_button(self, icon, text):
