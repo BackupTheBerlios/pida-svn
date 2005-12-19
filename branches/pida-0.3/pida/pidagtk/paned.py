@@ -249,7 +249,7 @@ class paned(gtk.EventBox):
         else:
             if self.__pane_width > (walloc.height - growmin):
                 self.__pane_width = walloc.height - growmin
-        self.realize()
+        #self.realize()
         alloc = self.get_allocation()
         try:
             wx, wy = self.__window.window.get_position()
@@ -317,15 +317,8 @@ class paned(gtk.EventBox):
         self.emit('dragging-to', targ)
         self.__targ = targ
 
-    
     def cb_map(self, eb):
         print 'mapping'
-        style = self.__bar.get_style().copy()
-        style.paint_handle(self.__bar.window, gtk.STATE_NORMAL, gtk.SHADOW_ETCHED_IN,
-                            None, self.__bar, "d", 0, 0, 10, 10,
-                            gtk.ORIENTATION_HORIZONTAL)
-        self.__bar.show_all()
-
 
     def cb_bar_dragged(self, sizer, diffx, diffy):
         if self.__sticky or True:
