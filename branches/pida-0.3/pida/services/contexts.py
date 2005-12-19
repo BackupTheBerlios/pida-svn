@@ -199,7 +199,8 @@ class project_context(default_context):
         return globaldict['project']
 
     def command_properties(self, project):
-        print project
+        self.boss.call_command('projectmanager', 'edit',
+                               current_project=project)
 
         
 

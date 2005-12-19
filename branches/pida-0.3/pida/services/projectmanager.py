@@ -192,12 +192,14 @@ class ProjectManager(service.service):
                 self.__projects.append(project)
              
 
-    def __launch_editor(self, projects=None):
+    def __launch_editor(self, projects=None, current_project=None):
         if projects is None:
             projects = self.projects
         view = self.create_single_view()
         view.connect('data-changed', self.cb_data_changed)
         view.set_registries([(p.name, p.options) for p in projects])
+        if current_project is not None:
+            self.single_view.show_page(current_project.name)
 
     def __current_project_changed(self, project):
         if project is not self.__current_project:
@@ -228,8 +230,10 @@ class ProjectManager(service.service):
 
     #commands
 
-    def cmd_edit(self, projects=None):
-        self.__launch_editor(projects)
+    def cmd_edit(self, projects=None, current_project=None):
+        if current_project is None:
+            current_project = self.__current_project
+        self.__launch_editor(projects, current_project)
 
     def cmd_add_project(self, project_file):
         self.__history.append(project_file)

@@ -212,4 +212,7 @@ class config_view(contentview.content_view):
     def cb_cancel_clicked(self, button):
         pass
 
+    def show_page(self, pagename):
+        self.__list.set_selected(pagename)
+
 gobject.type_register(config_view)
