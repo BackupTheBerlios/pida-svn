@@ -52,6 +52,8 @@ class pyflake_view(contentview.content_view):
     
     def set_messages(self, messages):
         self.__list.clear()
+        if messages i None:
+            return
         for message in messages:
             args = [('<b>%s</b>' % arg) for arg in message.message_args]
             msg = textwrap.wrap(message.message % tuple(args), 25)
