@@ -79,9 +79,6 @@ class pidawindow(paned.paned_window):
         bufferlist = self.__manager.buffermanager
         bar.pack_start(bufferlist)
         bar.pack_start(self.__manager.pluginmanager)
-        vb = self.__viewbooks['language'] = contentbook.contentbook('Languages')
-        bar.pack_start(vb)
-        vb.collapse()
         vb = self.__viewbooks['content'] = contentbook.contentbook('Quick View')
         bar.pack_start(vb)
         vb.collapse()
@@ -119,7 +116,7 @@ class pidawindow(paned.paned_window):
 
         self.__viewbooks['edit'] = editor
 
-        viewbook = contentbook.contentbook('Content')
+        viewbook = contentbook.Contentholder()
         #ew.pack2(viewbook, resize=True, shrink=False)
 
         self.__viewbooks['view'] = viewbook
@@ -133,6 +130,12 @@ class pidawindow(paned.paned_window):
         self.set_pane_widget(gtk.POS_LEFT, self.__side_pane)
         self.set_pane_sticky(gtk.POS_LEFT, True)
 
+        vb = self.__viewbooks['language'] = contentbook.contentbook('Languages')
+        #bar.pack_start(vb)
+        vb.collapse()
+
+        self.set_pane_widget(gtk.POS_RIGHT, vb)
+        self.set_pane_sticky(gtk.POS_BOTTOM, True)
         #if sidebar_on_right:
         #    self.__p0.pack1(self.__editor_pane)
         #    self.__p0.pack2(self.__side_pane)

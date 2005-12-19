@@ -36,8 +36,11 @@ import subprocess
 class vim_embed(contentview.content_view):
 
     HAS_DETACH_BUTTON = False
+    
+    HAS_TITLE = False
 
     def init(self, command='gvim', args=[]):
+        self.widget.set_border_width(3)
         self.__servername = self.__generate_servername()
         self.command = command
         self.pid = None

@@ -32,8 +32,11 @@ editor_instance.get_lang_mgr().read_dirs()
 
 class moo_view(contentview.content_view):
 
+    HAS_TITLE = False
+
     def init(self, filename=None):
         import gtk
+        self.widget.set_border_width(6)
         sw = gtk.ScrolledWindow()
         self.widget.pack_start(sw)
         self.__editor = editor_instance.create_doc(filename)

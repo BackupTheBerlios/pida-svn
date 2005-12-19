@@ -45,7 +45,7 @@ class BufferView(contentview.content_view):
                                        '%(markup)s')
         self.__buffertree.connect('clicked',
                                   self.service.cb_single_view_clicked)
-        self.widget.pack_start(self.__buffertree.details_box, expand=False)
+        #self.widget.pack_start(self.__buffertree.details_box, expand=False)
         self.widget.pack_start(self.__buffertree)
 
     def get_bufferview(self):

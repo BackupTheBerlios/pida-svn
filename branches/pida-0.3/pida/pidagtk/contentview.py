@@ -24,6 +24,7 @@
 # pidagtk import(s)
 import toolbar
 import widgets
+import paned
 
 # system imports
 import time
@@ -131,18 +132,23 @@ class content_view(gtk.VBox):
         self.__toolbar.connect('clicked', self.cb_toolbar_clicked)
         for name, icon, tooltip in self.BUTTONS:
             self.__toolbar.add_button(name, icon, tooltip)
+        if self.HAS_CONTROL_BOX:
+            if self.HAS_DETACH_BUTTON:
+                detbut = paned.sizer('menu')
+                self.__toolbar_area.pack_start(detbut, expand=False)
+                detbut.connect('clicked',
+                            self.cb_controlbar_detach_clicked)
         self.__long_title_label = gtk.Label(self.__long_title)
         if self.HAS_TITLE:
-            self.__toolbar_area.pack_start(self.__long_title_label)
+            topbar.pack_start(self.__long_title_label)
             self.__long_title_label.set_alignment(0, 0.5)
-        controlbar = widgets.control_box(self.HAS_DETACH_BUTTON,
-                                         self.HAS_CLOSE_BUTTON)
         if self.HAS_CONTROL_BOX:
-            self.__toolbar_area.pack_start(controlbar, expand=False)
-        controlbar.connect('close-clicked',
+            if self.HAS_CLOSE_BUTTON:
+                self.__toolbar_area.pack_start(gtk.Alignment())
+                closebut = paned.sizer('close')
+                self.__toolbar_area.pack_start(closebut, expand=False)
+                closebut.connect('clicked',
                             self.cb_controlbar_close_clicked)
-        controlbar.connect('detach-clicked',
-                            self.cb_controlbar_detach_clicked)
 
     def init(self):
         pass

@@ -39,6 +39,7 @@ class python_source_view(contentview.content_view):
 
     ICON_NAME = 'list'
 
+    HAS_CONTROL_BOX = False
     LONG_TITLE_NAME = 'python source browser'
 
     def init(self):

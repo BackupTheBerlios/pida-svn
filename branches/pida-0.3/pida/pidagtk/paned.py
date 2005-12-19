@@ -20,12 +20,14 @@ class sizer(gtk.EventBox):
                         gobject.TYPE_NONE,
                         ())}
 
-    def __init__(self, button_name=None):
+    def __init__(self, button_name=None, cursor_name=None):
         gtk.EventBox.__init__(self)
         self.__button_name = button_name
+        self.__button_image = gtk.Image()
         if button_name is not None:
-            buttons = get_pixmaps(self.__button_name)
-            self.add(buttons[0])
+            self.__pixbufs = get_pixmaps(self.__button_name)
+            self.add(self.__button_image)
+            self.__button_image.set_from_pixbuf(self.__pixbufs[1])
         #self.__b = gtk.Frame()
         #self.add(self.__b)
         self.add_events(gtk.gdk.BUTTON_PRESS_MASK |
@@ -34,23 +36,25 @@ class sizer(gtk.EventBox):
         self.connect('button-release-event', self.cb_release)
         self.connect('motion-notify-event', self.cb_motion)
         def mapped(slf, eb, *args):
-            cursor = gtk.gdk.Cursor(gtk.gdk.SB_H_DOUBLE_ARROW)
-            self.window.set_cursor(cursor)
-            return True
+            if cursor_name is not None:
+                cursor = gtk.gdk.Cursor(cursor_name)
+                self.window.set_cursor(cursor)
         self.connect('map-event', mapped)
 
     def cb_release(self, eb, ev):
-        self.drag_unhighlight()
+        #self.drag_unhighlight()
         #self.grab_remove()
         self.emit('drag-stopped')
         self.emit('clicked')
+        self.__button_image.set_from_pixbuf(self.__pixbufs[1])
         return True
 
     def cb_press(self, eb, ev):
         self.__x, self.__y = self.get_pointer()
-        self.drag_highlight()
+        #self.drag_highlight()
         #self.grab_add()
         self.emit('drag-started')
+        self.__button_image.set_from_pixbuf(self.__pixbufs[2])
         return True
 
     def cb_motion(self, eb, ev):
@@ -73,7 +77,10 @@ def get_pixmaps(name):
         icon_file = resource_filename(Requirement.parse('pida'), resource)
         image = gtk.Image()
         image.set_from_file(icon_file)
-        pixmaps.append(image)
+        pixbuf = image.get_pixbuf()
+        #pixbuf.saturate_and_pixelate(pixbuf, 20, False)
+        pixbuf = pixbuf.add_alpha(True, *map(chr, [247, 247, 247]))
+        pixmaps.append(pixbuf)
     return pixmaps
 
 print get_pixmaps('maximize')
@@ -89,7 +96,7 @@ class paned(gtk.EventBox):
                         (gobject.TYPE_INT, ))
 }
 
-    handle_width = 12
+    handle_width = 14
 
     def __init__(self, pos, win):
         gtk.EventBox.__init__(self)
@@ -119,12 +126,12 @@ class paned(gtk.EventBox):
             self.__bar_holder.set_size_request(-1, self.handle_width)
             box = gtk.VBox()
         self.add(box)
-        self.__stick_button = sizer('maximize')
+        self.__stick_button = sizer('hide')
         self.__bar_holder.pack_start(self.__stick_button,expand=False)
         self.__stick_button.connect('clicked', self.cb_stick_button_clicked)
         self.__stick_arrow = gtk.Arrow(gtk.ARROW_UP, gtk.SHADOW_ETCHED_IN)
         #self.__stick_button.add(self.__stick_arrow)
-        self.__drag_button = sizer('maximize-toggled')
+        self.__drag_button = sizer('maximize')
         self.__bar_holder.pack_start(self.__drag_button, expand=False)
         self.__drag_button.set_size_request(12, 12)
         self.__drag_button.connect('dragged', self.cb_dragbutton_dragged)
