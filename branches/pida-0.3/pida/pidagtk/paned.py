@@ -103,6 +103,7 @@ class paned(gtk.EventBox):
 }
 
     handle_width = 14
+    minimum_size = 32
 
     def __init__(self, pos, win):
         gtk.EventBox.__init__(self)
@@ -237,9 +238,18 @@ class paned(gtk.EventBox):
         self.__open = True
 
     def update_size(self):
+        walloc = self.__window.get_allocation()
+        if self.__pane_width < self.minimum_size:
+            self.__pane_width = self.minimum_size
+        growmin = self.minimum_size * 3
+        if self.__pos in [gtk.POS_LEFT, gtk.POS_RIGHT]:
+            if self.__pane_width > (walloc.width - growmin):
+                self.__pane_width = walloc.width - growmin
+        else:
+            if self.__pane_width > (walloc.height - growmin):
+                self.__pane_width = walloc.height - growmin
         self.realize()
         alloc = self.get_allocation()
-        walloc = self.__window.get_allocation()
         wx, wy = self.__window.window.get_position()
         x, y, w, h, col = self.__window.window.get_geometry()
         if self.__pos == gtk.POS_LEFT:
@@ -259,6 +269,7 @@ class paned(gtk.EventBox):
             self.__pane_floater.move(wx, wy + h - self.__pane_width)
             self.__pane_floater.resize(w, self.__pane_width)
             self.__pane_holder.set_size_request(-1, self.__pane_width)
+        
         self.__window.size_allocate(walloc)
         #self.__pane_holder.set_size_request(self.__pane_width, -1)
 
