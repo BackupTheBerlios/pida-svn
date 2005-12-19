@@ -46,7 +46,10 @@ class sizer(gtk.EventBox):
         #self.grab_remove()
         self.emit('drag-stopped')
         self.emit('clicked')
-        self.__button_image.set_from_pixbuf(self.__pixbufs[1])
+        try:
+            self.__button_image.set_from_pixbuf(self.__pixbufs[1])
+        except AttributeError:
+            pass
         return True
 
     def cb_press(self, eb, ev):
@@ -54,7 +57,10 @@ class sizer(gtk.EventBox):
         #self.drag_highlight()
         #self.grab_add()
         self.emit('drag-started')
-        self.__button_image.set_from_pixbuf(self.__pixbufs[2])
+        try:
+            self.__button_image.set_from_pixbuf(self.__pixbufs[2])
+        except AttributeError:
+            pass
         return True
 
     def cb_motion(self, eb, ev):
@@ -173,6 +179,7 @@ class paned(gtk.EventBox):
         self.__bar_holder.show_all()
         self.show_all()
         self.hide_pane()
+        self.set_sticky(True)
         #self.__stick_button.set_active(True)
 
     def unset_pane_widget(self):
@@ -416,7 +423,11 @@ class paned_window(gtk.Window):
         if from_pos != to_pos:
             pane_widget = pane.get_pane_widget()
             pane.unset_pane_widget()
+            to_pane_widget = self.__paneds[to_pos].get_pane_widget()
+            if to_pane_widget is not None:
+                self.__paneds[to_pos].unset_pane_widget()
             self.set_pane_widget(to_pos, pane_widget)
+            self.set_pane_widget(from_pos, to_pane_widget)
 
     def cb_dragging_to(self, pane, to_pos, from_pos):
         for pos, pane in self.__paneds.iteritems():
