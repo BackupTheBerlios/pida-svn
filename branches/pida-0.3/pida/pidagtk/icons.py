@@ -31,8 +31,6 @@ class Icons(object):
         #icon_file = ('/home/ali/working/pida/pida/branches/'
         #             'pida-ali/pida/pidagtk/icons.dat')
         from pkg_resources import Requirement, resource_filename
-        from pkg_resources import resource_listdir
-        print resource_listdir(Requirement.parse('pida'), 'data')
         icon_file = resource_filename(Requirement.parse('pida'), 'images/icons.dat')
         #icon_file = "/usr/share/pida/icons.dat"
         self.d = shelve.open(icon_file, 'r')
