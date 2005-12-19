@@ -72,7 +72,7 @@ class Buffermanager(service.service):
         self.__filenames = {}
         self.__editor = None
 
-    def reset(self):
+    def bind(self):
         self.create_single_view()
 
     def act_open_file(self, action):
