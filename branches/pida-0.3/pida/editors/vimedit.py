@@ -148,13 +148,13 @@ class vim_editor(service.service):
     def goto_line(self, linenumber):
         self.__cw.change_cursor(self.__srv, 1, linenumber)
 
-    def vim_bufferchange(self, index, filename):
+    def vim_bufferchange(self, cwd, filename):
         #for fcall, args in self.__bufferevents:
         #    fcall(*args)
         #self.__bufferevents = []
         #self.manager.emit_event('file-opened', filename=filename)
         if os.path.abspath(filename) != filename:
-            filename = os.path.join(self.__cw.get_cwd(self.__srv), filename)
+            filename = os.path.join(cwd, filename)
         self.log.debug('vim buffer change "%s"', filename)
         if filename != self.__currentfile:
             self.__currentfile = filename
@@ -228,12 +228,11 @@ endfunction
 endfunction
 :silent augroup pida
 :silent au! pida
-:silent au pida BufEnter * call Async_event("bufferchange,".bufnr('%').",".bufname('%'))
+:silent au pida BufEnter * call Async_event("bufferchange,".getcwd().",".bufname('%'))
 :silent au pida BufDelete * call Async_event("bufferunload,".expand('<amatch>'))
 :silent au pida VimLeave * call Async_event("vimshutdown,")
 :silent au pida VimEnter * call Async_event("started,")
 :silent au pida BufWritePost * call Async_event("filesave,")
-:silent au pida FileType * call Async_event("filetype,".bufnr('%').",".expand('<amatch>'))
 :echo "PIDA connected"
 '''
 
