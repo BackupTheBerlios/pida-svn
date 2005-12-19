@@ -139,6 +139,7 @@ class ProjectManager(service.service):
     single_view_book = 'view'
 
     class default(defs.project_type):
+        project_type_name = 'default'
         class general(defs.optiongroup):
             """General options for Python projects"""
             class source_directory(defs.option):

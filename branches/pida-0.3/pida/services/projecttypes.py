@@ -67,14 +67,13 @@ class project_types(service.service):
         except OSError, IOError:
             self.log.info('unable to read "%s"', project_file_name)
             return
+        print self.__types
+        if project_type_name not in self.__types:
+            project_type_name = 'default'
         if project_type_name in self.__types:
             project_type = self.__types[project_type_name]
             proj = project.project(project_type, project_file_name)
             return proj
-        else:
-            self.log.info('no handler associated with "%s" project type',
-                          project_type_name)
-        
     
 
 Service = project_types
