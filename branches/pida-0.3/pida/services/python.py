@@ -30,6 +30,7 @@ from pida.core import service
 import pida.pidagtk.contentview as contentview
 import pida.pidagtk.tree as tree
 import pida.utils.pythonparser as pythonparser
+import threading
 
 defs = service.definitions
 types = service.types
@@ -83,12 +84,27 @@ class python(service.service):
 
         def init(self):
             self.__document = None
+            self.__cached = {}
 
         def load_document(self, document):
             self.__document = document
-            root_node = pythonparser.get_nodes_from_string(document.string)
-            self.service.lang_view.set_source_nodes(root_node)
-        
+            root_node = None
+            if document.unique_id in self.__cached:
+                root_node, mod = self.__cached[document.unique_id]
+                if mod != document.stat.st_mtime:
+                    root_node = None
+            def load():
+                root_node = pythonparser.\
+                    get_nodes_from_string(document.string)
+                self.service.lang_view.set_source_nodes(root_node)
+                self.__cached[document.unique_id] = (root_node,
+                               document.stat.st_mtime)
+            if not root_node:
+                t = threading.Thread(target=load)
+                t.run()
+            else:
+                self.service.lang_view.set_source_nodes(root_node)
+
         def act_execute_current_file(self, action):
             self.service.call('execute_file',
                               filename=self.__document.filename)
