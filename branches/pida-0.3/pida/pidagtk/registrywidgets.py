@@ -23,6 +23,7 @@
 
 
 import gtk
+import filedialogs
 
 NAME_MU = """<span weight="bold">%s</span>"""
 DOC_MU = """<span>%s</span>"""
@@ -279,8 +280,8 @@ class types(object):
             @param key: The configuration key that the widget is for
             @type key: string
             """
-            widget = gtk.FileChooserButton(option.doc)
-            widget.set_action(gtk.FILE_CHOOSER_ACTION_OPEN)
+            widget = filedialogs.FileButton()
+            #widget.set_action(gtk.FILE_CHOOSER_ACTION_OPEN)
             registry_widget.__init__(self, widget, option)
             
         def load(self):
@@ -316,8 +317,8 @@ class types(object):
             @param key: The configuration key that the widget is for
             @type key: string
             """
-            widget = gtk.FileChooserButton('Select a file')
-            widget.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
+            widget = filedialogs.FolderButton()
+            #widget.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
             registry_widget.__init__(self, widget, option)
            
     class color(registry_widget):

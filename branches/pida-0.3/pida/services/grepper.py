@@ -25,6 +25,7 @@
 import pida.core.service as service
 import pida.core.registry as registry
 import pida.pidagtk.contentbook as contentbook
+import pida.pidagtk.contentview as contentview
 import pida.pidagtk.filedialogs as filedialogs
 import pida.pidagtk.tree as tree
 
@@ -68,7 +69,7 @@ class ResultsTreeItem(tree.TreeItem):
 class ResultsTree(tree.Tree):
     pass
 
-class GrepView(contentbook.ContentView):
+class GrepView(contentview.content_view):
 
     ICON = 'find'
     ICON_TEXT = 'Find '
@@ -174,13 +175,13 @@ class GrepView(contentbook.ContentView):
     def add_result(self, result):
         self.__results_tree.add_item(ResultsTreeItem('', result))
         
-class ContextOption(registry.Integer):
-    adjustment = 2, 9, 1
+#class ContextOption(registry.Integer):
+#    adjustment = 2, 9, 1
 
-class FindsTotalOption(registry.Integer):
-    adjustment = 100, 1000, 100
+#class FindsTotalOption(registry.Integer):
+#    adjustment = 100, 1000, 100
 
-class Grepper(service.ServiceWithSingleView):
+class Grepper(service.service):
 
     NAME = 'grepper'
 
@@ -190,23 +191,23 @@ class Grepper(service.ServiceWithSingleView):
                 ('find', [('path', True), ('pattern', True)])]
 
     OPTIONS = [('start-detailed',
-                'Whether the search dialog will start with the detailed view.',
-                False, registry.Boolean),
+                'Whether the search dialog will start with the detailed view.'),
+                #False, registry.Boolean),
                ('recursive',
-                'Whether the search will recurse directories by default.',
-                True, registry.Boolean),
+                'Whether the search will recurse directories by default.'),
+                #True, registry.Boolean),
                ('ignore-vcs',
-                'whether the search will ignore .svn CNS and _darcs etc.',
-                True, registry.Boolean),
+                'whether the search will ignore .svn CNS and _darcs etc.'),
+                #True, registry.Boolean),
                ('context-lines',
-                'the number of lines of context that will be displayed.',
-                3, ContextOption),
+                'the number of lines of context that will be displayed.'),
+                #3, ContextOption),
                ('start-directory',
-                'the default search start directory',
-                os.path.expanduser('~'), registry.Directory),
+                'the default search start directory'),
+                #os.path.expanduser('~'), registry.Directory),
                ('maximum-matches',
-                'the maximum number of matches for each search',
-                500, FindsTotalOption)]
+                'the maximum number of matches for each search',)]
+                #500, FindsTotalOption)]
 
     EDITOR_VIEW = GrepView
 
@@ -382,4 +383,4 @@ class PidaGrep(gobject.GObject):
 
 gobject.type_register(PidaGrep)
 
-Service = Grepper
+ervice = Grepper
