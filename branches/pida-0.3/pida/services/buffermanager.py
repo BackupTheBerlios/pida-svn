@@ -70,8 +70,10 @@ class Buffermanager(service.service):
         self.__currentdocument = None
         self.__documents = {}
         self.__filenames = {}
-        self.create_single_view()
         self.__editor = None
+
+    def reset(self):
+        self.create_single_view()
 
     def act_open_file(self, action):
         self.boss.call_command('filemanager', 'browse')
@@ -96,6 +98,12 @@ class Buffermanager(service.service):
         self.call('open_file', filename=filename)
         self.editor.call('revert')
         self.editor.call('goto_line', linenumber=linenumber)
+
+    def cmd_close_file(self, filename):
+        if filename in self.__documents:
+            doc = self.__documents[filename]
+            doc.handler.close_document(doc)
+            
 
     def cmd_file_closed(self, filename):
         if filename in self.__documents:

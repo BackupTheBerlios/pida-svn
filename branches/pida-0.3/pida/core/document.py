@@ -27,6 +27,7 @@ import stat
 import gobject
 import base
 import time
+import tempfile
 
 import actions
 
@@ -221,6 +222,7 @@ class realfile_document(document):
     directory_colour = property(get_directory_colour)
 
     def poll(self):
+        self.__load()
         new_stat = self.__load_stat()
         if new_stat.st_mtime != self.__stat.st_mtime:
             self.__stat = new_stat
@@ -228,6 +230,16 @@ class realfile_document(document):
             return True
         else:
             return False
+
+    def poll_until_change(self, callback, delay=1000):
+        def do_poll():
+            poll = self.poll()
+            if poll:
+                callback()
+                return False
+            else:
+                return True
+        gobject.timeout_add(delay, do_poll)
 
 
 class temporary_document(realfile_document):
@@ -237,6 +249,10 @@ class temporary_document(realfile_document):
     def __init__(self, prefix, title):
         self.__prefix = prefix
         self.__title = title
+        f, filename = tempfile.mkstemp(prefix=prefix)
+        os.close(f)
+        print filename
+        realfile_document.__init__(self, filename)
 
     def get_title(self):
         return self.__title

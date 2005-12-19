@@ -38,6 +38,9 @@ class editor_manager(service.service):
             rtype = types.stringlist(['vim', 'moo'])
             default = 'vimedit'            
 
+    def cmd_close(self, filename):
+        self.editor.call('close', filename=filename)
+
     def cmd_revert(self):
         self.editor.call('revert')
     

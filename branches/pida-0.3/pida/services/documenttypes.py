@@ -46,6 +46,10 @@ class document_type_handler(service.service):
             self.service.get_service('editormanager').call('edit',
                                       filename=document.filename)
 
+        def close_document(self, document):
+            self.service.boss.call_command('editormanager', 'close',
+                                            filename=document.filename)
+
         def act_redo(self, action):
             self.service.boss.call_command('editormanager', 'redo')
 

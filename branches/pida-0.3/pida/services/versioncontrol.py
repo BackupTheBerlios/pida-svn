@@ -90,16 +90,22 @@ class version_control(service.service):
                                                    directory})
             except NotImplementedError:
                 self.log.info('"%s" is not version controlled', directory)
+            return vcs
 
     def cmd_commit(self, directory):
-        print directory
         vcs = self.call('get_vcs_for_directory', directory=directory)
-        print vcs.get_working_directory()
         if vcs.NAME == 'Null':
             self.log.info('"%s" is not version controlled', directory)
         else:
-            print vcs.NAME
-            statuses = self.call('get_statuses', directory=directory)
+            def commit(message):
+                commandargs = vcs.commit_command(message)
+                self.boss.call_command('terminal', 'execute',
+                                        command_args=commandargs,
+                                        icon_name='vcs_commit',
+                                        kwdict = {'directory':
+                                                   directory})
+            self.boss.call_command('tempfilecreator', 'get_input',
+                                   callback_function=commit)
             #try:
             #    commandargs = vcs.update_command()
             #    self.boss.call_command('terminal', 'execute',

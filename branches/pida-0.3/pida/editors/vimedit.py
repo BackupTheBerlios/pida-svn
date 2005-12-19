@@ -47,6 +47,10 @@ class vim_editor(service.service):
     def cmd_revert(self):
         self.__cw.revert(self.__srv)
 
+    def cmd_close(self, filename):
+        if filename == self.__currentfile:
+            self.__cw.close_current_buffer(self.__srv)
+
     def cmd_edit(self, filename):
         """Open and edit."""
         if filename != self.__currentfile:
