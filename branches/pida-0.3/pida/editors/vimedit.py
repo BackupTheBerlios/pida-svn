@@ -153,6 +153,7 @@ class vim_editor(service.service):
         #    fcall(*args)
         #self.__bufferevents = []
         #self.manager.emit_event('file-opened', filename=filename)
+        self.log.debug('vim buffer change "%s"' % filename)
         self.boss.call_command('buffermanager', 'open_file', filename=filename)
 
     def vim_bufferunload(self, filename, *args):
