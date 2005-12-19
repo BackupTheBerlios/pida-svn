@@ -27,8 +27,6 @@ import os.path
 import pida.core.service as service
 import pida.core.base as base
 
-import pida.pidagtk.dataview as dataview
-
 defs = service.definitions
 types = service.types
 
@@ -37,7 +35,7 @@ import pida.pidagtk.gladeview as gladeview
 class Contexts(service.service):
 
     class contexts(defs.database):
-        DATA_VIEW = dataview.data_view
+        #DATA_VIEW = dataview.data_view
         class scripts(defs.field):
             rtype = types.string
             default = ''
