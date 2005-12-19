@@ -44,7 +44,8 @@ packages = ['pida',
             'pida.plugins',
             'pida.utils',
             'pida.utils.vim',
-            'pida.utils.vc']
+            'pida.utils.vc',
+            'pida.utils.pyflakes']
 
 #log('Preparing editors')
 #plugindir = os.path.join('pida', 'editors')

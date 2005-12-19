@@ -166,7 +166,8 @@ class paned(gtk.EventBox):
         self.__pos = pos
         self.__open = False
         self.__sticky = False
-        self.__pane_width = 150
+        self.__pane_width = 175
+        self.update_size()
 
     def set_main_widget(self, main_widget):
         self.main_widget = main_widget
@@ -250,8 +251,12 @@ class paned(gtk.EventBox):
                 self.__pane_width = walloc.height - growmin
         self.realize()
         alloc = self.get_allocation()
-        wx, wy = self.__window.window.get_position()
-        x, y, w, h, col = self.__window.window.get_geometry()
+        try:
+            wx, wy = self.__window.window.get_position()
+            x, y, w, h, col = self.__window.window.get_geometry()
+        except AttributeError:
+            x = y = w = h = wx = wy = 0
+            self.__pane_width = 175
         if self.__pos == gtk.POS_LEFT:
             self.__pane_floater.move(wx, wy)
             self.__pane_floater.resize(self.__pane_width, h)

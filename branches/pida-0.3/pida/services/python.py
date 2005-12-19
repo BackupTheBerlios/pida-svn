@@ -40,7 +40,7 @@ class python_source_view(contentview.content_view):
     ICON_NAME = 'list'
 
     HAS_CONTROL_BOX = False
-    LONG_TITLE_NAME = 'python source browser'
+    LONG_TITLE = 'python source browser'
 
     def init(self):
         self.__nodes = tree.Tree()
@@ -49,7 +49,7 @@ class python_source_view(contentview.content_view):
             '%(node_type_short)s </span></i></b>'
             '<b>%(name)s</b>\n%(additional_info)s</tt>')
         self.widget.pack_start(self.__nodes)
-        self.__nodes.connect('clicked', self.cb_source_clicked)
+        self.__nodes.connect('double-clicked', self.cb_source_clicked)
 
     def set_source_nodes(self, root_node):
         self.__nodes.clear()

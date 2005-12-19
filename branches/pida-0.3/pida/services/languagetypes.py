@@ -56,10 +56,12 @@ class language_types(service.service):
         return set(handlers)
 
     def cmd_show_handlers(self, document):
-        for handler in self.__langs.values():
-            handler.action_group.set_visible(False)
+        for handlerlist in self.__langs.values():
+            for handler in handlerlist:
+                handler.action_group.set_visible(False)
         self.boss.call_command('window', 'remove_pages', bookname='language')
         handlers = self.call('get_language_handlers', document=document)
+        print handlers
         for handler in handlers:
             handler.action_group.set_visible(True)
             if hasattr(handler.service, 'lang_view_type'):
@@ -74,13 +76,14 @@ class language_types(service.service):
         for glob_pattern in patterns:
             re_pattern = glob.fnmatch.translate(glob_pattern)
             pattern = sre.compile(re_pattern)
-            handlers[pattern] = handler
+            handlers.setdefault(pattern, []).append(handler)
         
     def __get_lang_handler(self, filename):
         matches = []
         for pattern in self.__langs:
             if pattern.match(filename):
-                matches.append(self.__langs[pattern])
+                matches = matches + self.__langs[pattern]
+        print matches
         return matches
 
     def __get_first_handler(self, lines):
@@ -88,7 +91,8 @@ class language_types(service.service):
         for line in lines:
             for pattern in self.__firsts:
                 if pattern.match(line):
-                    matches.append(self.__firsts[pattern])
+                    matches = matches + self.__firsts[pattern]
+        print matches
         return matches
             
 

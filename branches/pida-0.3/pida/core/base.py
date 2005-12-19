@@ -21,6 +21,8 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import os
+
 
 def set_boss(boss):
     pidaobject.boss = boss
@@ -50,7 +52,11 @@ class pidalogenabled(object):
         handler.setFormatter(format)
         logger = logging.getLogger(name)
         logger.addHandler(handler)
-        logger.setLevel(logging.DEBUG)
+        if 'PIDA_DEBUG' in os.environ:
+            level = logging.DEBUG
+        else:
+            level = logging.INFO
+        logger.setLevel(level)
         return logger
         
 
