@@ -20,6 +20,7 @@
 #LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
+import os
 
 import pida.core.service as service
 defs = service.definitions
@@ -148,13 +149,17 @@ class vim_editor(service.service):
         self.__cw.change_cursor(self.__srv, 1, linenumber)
 
     def vim_bufferchange(self, index, filename):
-        self.__currentfile = filename
         #for fcall, args in self.__bufferevents:
         #    fcall(*args)
         #self.__bufferevents = []
         #self.manager.emit_event('file-opened', filename=filename)
-        self.log.debug('vim buffer change "%s"' % filename)
-        self.boss.call_command('buffermanager', 'open_file', filename=filename)
+        if os.path.abspath(filename) != filename:
+            filename = os.path.join(self.__cw.get_cwd(self.__srv), filename)
+        self.log.debug('vim buffer change "%s"', filename)
+        if filename != self.__currentfile:
+            self.__currentfile = filename
+            self.boss.call_command('buffermanager', 'open_file',
+                                    filename=filename)
 
     def vim_bufferunload(self, filename, *args):
         if filename != '':

@@ -417,6 +417,10 @@ class communication_window(gtk.Window):
         # Evaluate the expression with the gotcwd callback
         self.send_expr(servername, "getcwd()", gotcwd)
 
+    def get_cwd(self, server):
+        if server in self.server_cwds:
+            return self.server_cwds[server]
+
     def abspath(self, servername, filename):
         """
         Return the absolute path of a buffer name in the context of the named
