@@ -71,7 +71,6 @@ class ProjectTree(tree.Tree):
     def set_projects(self, projects):
         self.clear()
         for project in projects:
-            print project
             # remove
             project.key = project.name
             self.add_item(project, key=project.name)
@@ -223,6 +222,7 @@ class ProjectManager(service.service):
 
     def cmd_add_project(self, project_file):
         self.__history.append(project_file)
+        self.__history = list(set(self.__history))
         self.__write_history()
         self.__update()
 
@@ -238,6 +238,21 @@ class ProjectManager(service.service):
     def act_properties(self, action):
         """See or edit the properties for this project."""
         self.call('edit')
+
+    def act_add_project(self, action):
+        fdialog = gtk.FileChooserDialog('Please select the project file',
+                                 parent=self.boss.get_main_window(),
+                                 action=gtk.FILE_CHOOSER_ACTION_OPEN,
+                                 buttons=(gtk.STOCK_OK,
+                                          gtk.RESPONSE_ACCEPT,
+                                          gtk.STOCK_CANCEL,
+                                          gtk.RESPONSE_REJECT))
+        def response(dialog, response):
+            if response == gtk.RESPONSE_ACCEPT:
+                self.call('add_project', project_file=dialog.get_filename())
+            dialog.destroy()
+        fdialog.connect('response', response)
+        fdialog.run()
 
     def act_commit_project(self, action):
         pass
@@ -268,7 +283,6 @@ class ProjectManager(service.service):
             self.cb_data_changed('project_data')
 
     def cb_data_changed(self, configview):
-        print 'datachanged'
         self.__update()
 
     # ui definition
@@ -282,6 +296,7 @@ class ProjectManager(service.service):
                 </menu>
                 <menu name="base_project" action="base_project_menu">
                 <menuitem name="newproj" action="projectmanager+new_project" />
+                <menuitem name="addproj" action="projectmanager+add_project" />
                 <separator />
                 <menuitem name="statproj"
                     action="projectmanager+get_project_statuses" />

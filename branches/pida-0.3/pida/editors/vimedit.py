@@ -227,6 +227,7 @@ endfunction
     endtry
 endfunction
 :silent augroup pida
+:set guioptions-=mT
 :silent au! pida
 :silent au pida BufEnter * call Async_event("bufferchange,".getcwd().",".bufname('%'))
 :silent au pida BufDelete * call Async_event("bufferunload,".expand('<amatch>'))
