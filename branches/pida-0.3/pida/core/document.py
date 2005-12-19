@@ -246,6 +246,7 @@ class temporary_document(realfile_document):
     """A temporary file on disk"""
     contexts = ['temporary']
 
+
     markup_prefix = 'tp'
     markup_directory_color = '#600060'
     markup_attributes = ['title', 'prefix', 'directory_colour']
