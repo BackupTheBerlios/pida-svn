@@ -44,7 +44,9 @@ class Contexts(service.service):
         self.__defaults = {}
         self.__defaults['file'] = file_context()
         self.__defaults['directory'] = directory_context()
-        for contextname in ['file', 'directory']:
+        self.__defaults['project_directory'] = project_directory_context()
+        self.__defaults['project'] = project_context()
+        for contextname in self.__defaults:
             if contextname not in self.databases['contexts']:
                 self.add_data_item('contexts', contextname, [])
 
@@ -56,7 +58,6 @@ class Contexts(service.service):
             self.log.info('context %s does not exist', contextname)
             contexts = []
         return contexts
-
 
     def cmd_get_custom_toolbar(self, contextname, globaldict={}):
         group = self.__registry.get_group(contextname)
@@ -140,13 +141,7 @@ class directory_context(default_context):
                 ('new', 'new', 'New',
                  'Create a new file in this directory'),
                 ('terminal', 'terminal', 'Terminal',
-                'Open a terminal in this directory'),
-                ('vcs_diff', 'vcs_diff', 'VCS Statuses',
-                 'Get the version statuses of this directory'),
-                ('vcs_update', 'vcs_update', 'VCS Update',
-                 'update this directory from version control.'),
-                ('vcs_commit', 'vcs_commit', 'VCS Commit',
-                 'commit this directory to version control.')]
+                'Open a terminal in this directory')]
 
     def globals_modifier(self, globaldict):
         return globaldict['directory']
@@ -171,6 +166,15 @@ class directory_context(default_context):
             parent = os.path.split(directory)[0]
             self.boss.call_command('filemanager', 'browse', directory=parent)
 
+
+class project_directory_context(default_context):
+    COMMANDS = [('vcs_diff', 'vcs_diff', 'VCS Statuses',
+                 'Get the version statuses of this directory'),
+                ('vcs_update', 'vcs_update', 'VCS Update',
+                 'update this directory from version control.'),
+                ('vcs_commit', 'vcs_commit', 'VCS Commit',
+                 'commit this directory to version control.')]
+
     def command_vcs_diff(self, directory):
         self.boss.call_command('versioncontrol', 'statuses',
                                directory=directory)
@@ -183,8 +187,26 @@ class directory_context(default_context):
         self.boss.call_command('versioncontrol', 'update',
                                 directory=directory)
 
+    def globals_modifier(self, globaldict):
+        return globaldict['directory']
+
+class project_context(default_context):
+    
+    COMMANDS = [('properties', 'config', 'Project options',
+                'Configure this project')]
+
+    def globals_modifier(self, globaldict):
+        return globaldict['project']
+
+    def command_properties(self, project):
+        print project
+
+        
 
 CONTEXTS = [('file', 'When an action is in the context of a single file'),
-            ('directory', 'When an action is in the context of a directory')]
+            ('directory', 'When an action is in the context of a directory'),
+            ('project_directory', 'When an action is in the context of a directory'),
+            ('project', 'When an action is in the context of a directory'),
+            ]
 
 Service = Contexts

@@ -57,8 +57,8 @@ def get_menu(contexts):
             first = False
             menuitem = gtk.MenuItem()
             menubox = gtk.HBox(spacing=4)
-            im = icons.icons.get_image('manhole')
-            menubox.pack_start(im, expand=False)
+            #im = icons.icons.get_image('manhole')
+            #menubox.pack_start(im, expand=False)
             label = gtk.Label('%s' % args)
             label.set_alignment(0, 0.5)
             menubox.pack_start(label)
