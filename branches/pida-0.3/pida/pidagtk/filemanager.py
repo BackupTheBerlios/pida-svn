@@ -146,6 +146,7 @@ class FileBrowser(contentview.content_view):
     def display(self, directory, rootpath=None, statuses=[], glob='*', hidden=True):
         if os.path.isdir(directory):
             childnodes = []
+            rootpath = None
             def get_root():
                 if rootpath is None:
                     return None
