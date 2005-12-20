@@ -49,8 +49,7 @@ class vim_editor(service.service):
         self.__cw.revert(self.__srv)
 
     def cmd_close(self, filename):
-        if filename == self.__currentfile:
-            self.__cw.close_current_buffer(self.__srv)
+        self.__cw.close_buffer(self.__srv, filename)
 
     def cmd_edit(self, filename):
         """Open and edit."""
@@ -153,6 +152,8 @@ class vim_editor(service.service):
         #    fcall(*args)
         #self.__bufferevents = []
         #self.manager.emit_event('file-opened', filename=filename)
+        if not filename:
+            return
         if os.path.abspath(filename) != filename:
             filename = os.path.join(cwd, filename)
         self.log.debug('vim buffer change "%s"', filename)
