@@ -23,6 +23,7 @@
 #import pida.core.buffer as buffer
 import glob
 import os
+import gtk
 import pida.core.service as service
 import pida.pidagtk.buffertree as buffertree
 import gobject
@@ -80,6 +81,38 @@ class Buffermanager(service.service):
 
     def act_quit_pida(self, action):
         self.boss.stop()
+
+    def act_save_session(self, action):
+        fdialog = gtk.FileChooserDialog('Please select the session file',
+                                 parent=self.boss.get_main_window(),
+                                 action=gtk.FILE_CHOOSER_ACTION_SAVE,
+                                 buttons=(gtk.STOCK_OK,
+                                          gtk.RESPONSE_ACCEPT,
+                                          gtk.STOCK_CANCEL,
+                                          gtk.RESPONSE_REJECT))
+        def response(dialog, response):
+            if response == gtk.RESPONSE_ACCEPT:
+                self.call('save_session',
+                          session_filename=dialog.get_filename())
+            dialog.destroy()
+        fdialog.connect('response', response)
+        fdialog.run()
+
+    def act_load_session(self, action):
+        fdialog = gtk.FileChooserDialog('Please select the session file',
+                                 parent=self.boss.get_main_window(),
+                                 action=gtk.FILE_CHOOSER_ACTION_OPEN,
+                                 buttons=(gtk.STOCK_OK,
+                                          gtk.RESPONSE_ACCEPT,
+                                          gtk.STOCK_CANCEL,
+                                          gtk.RESPONSE_REJECT))
+        def response(dialog, response):
+            if response == gtk.RESPONSE_ACCEPT:
+                self.call('load_session',
+                          session_filename=dialog.get_filename())
+            dialog.destroy()
+        fdialog.connect('response', response)
+        fdialog.run()
         
     def cmd_open_document(self, document):
         if document is not self.__currentdocument:
@@ -112,7 +145,21 @@ class Buffermanager(service.service):
         if filename in self.__documents:
             doc = self.__documents[filename]
             doc.handler.close_document(doc)
-            
+
+    def cmd_save_session(self, session_filename):
+        f = open(session_filename, 'w')
+        for filename in self.__documents:
+            f.write('%s\n' % filename)
+        f.close()
+
+    def cmd_load_session(self, session_filename):
+        f = open(session_filename, 'r')
+        for line in f:
+            filename = line.strip()
+            self.call('open_file', filename=filename)
+        lines = f.readlines()
+        f.close()
+        return lines
 
     def cmd_file_closed(self, filename):
         if filename in self.__documents:
@@ -182,6 +229,9 @@ class Buffermanager(service.service):
                 <menuitem name="open" action="buffermanager+open_file" />
                 <separator name="F1" />
                 <separator />
+                <separator />
+                <menuitem name="savesess" action="buffermanager+save_session" />
+                <menuitem name="loadsess" action="buffermanager+load_session" />
                 <separator />
                 <menuitem name="quit" action="buffermanager+quit_pida" />
                 </menu>
