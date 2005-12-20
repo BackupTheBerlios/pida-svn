@@ -418,7 +418,7 @@ class Gazpacho(service.service):
 
         globs = ["*.glade"]
 
-        def create_document(self, filename):
+        def create_document(self, filename, document_type):
             doc = gazpacho_document(filename=filename, handler=self)
             return doc
 

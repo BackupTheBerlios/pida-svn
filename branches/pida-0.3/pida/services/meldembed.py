@@ -196,7 +196,7 @@ class Meld(service.service):
 
         globs = ['*:meld']
 
-        def create_document(self, filename):
+        def create_document(self, filename, document_type):
             document = MeldBuffer(filename, handler=self)
             return document
 

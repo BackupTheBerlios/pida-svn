@@ -88,6 +88,9 @@ class window_manager(service.service):
         actiongroup.set_visible(False)
         self.__uim.ensure_update()
 
+    def bnd_buffermanager_document_changed(self, document):
+        self.call('set_title', title=document.filename)
+
     def init(self):
         self.__window = window.pidawindow(self)
         self.__window.connect('destroy', self.cb_destroy)

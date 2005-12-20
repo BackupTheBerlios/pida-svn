@@ -117,7 +117,6 @@ class document_type_handler(service.service):
     def cmd_create_document(self, filename, document_type=None, **kw):
         handler = (self.__get_file_handler(filename) or
                         self.__file_fallback)
-        print kw
         doc = handler.create_document(filename, document_type, **kw)
         handler.view_document(doc)
         if handler not in self.__action_groups:
