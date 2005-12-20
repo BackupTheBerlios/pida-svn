@@ -283,6 +283,9 @@ class ProjectManager(service.service):
     def act_update_project(self, action):
         pass
 
+    def act_remove_project_from_workbench(self, action):
+        self.call('remove_project', project=self.__current_project)
+
     # view callbacks
 
     def cb_plugin_view_project_clicked(self, tree, item):
@@ -317,6 +320,11 @@ class ProjectManager(service.service):
                 <menu name="base_project" action="base_project_menu">
                 <menuitem name="newproj" action="projectmanager+new_project" />
                 <menuitem name="addproj" action="projectmanager+add_project" />
+                <separator />
+                <menuitem name="remproj"
+                    action="projectmanager+remove_project_from_workbench" />
+                <separator />
+                <separator />
                 <separator />
                 <menuitem name="statproj"
                     action="projectmanager+get_project_statuses" />
