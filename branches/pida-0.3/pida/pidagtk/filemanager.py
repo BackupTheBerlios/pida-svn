@@ -238,19 +238,39 @@ class FileBrowser(contentview.content_view):
     def cb_file_rightclicked(self, view, fileitem, event):
         fsi = fileitem.value
         if fsi.directory:
-            globaldict={'directory':fsi.path}
-            contextname = 'directory'
+            self.__popup_dir(fsi.path, event)
         else:
-            globaldict={'filename':fsi.path}
-            contextname = 'file'
+            self.__popup_file(fsi.path, event)
+
+    def __popup_file(self, path, event):
+
+        globaldict = {'filename': path}
 
         contexts = self.service.boss.call_command('contexts', 'get_contexts',
-                                     contextname=contextname,
+                                     contextname='file',
                                      globaldict=globaldict
                                      )
         menu = contextwidgets.get_menu(contexts)
         menu.popup(None, None, None, event.button, event.time)
        
+
+    def __popup_dir(self, path, event):
+
+        globaldict = {'directory': path}
+        menu = gtk.Menu()
+        for title, context in [('Directory', 'directory'),
+                        ('Source code', 'project_directory')]:
+            mroot = gtk.MenuItem(label=title)
+            menu.add(mroot)
+            contexts = self.service.boss.call_command('contexts',
+                                     'get_contexts',
+                                     contextname=context,
+                                     globaldict=globaldict
+                                     )
+            cmenu = contextwidgets.get_menu(contexts)
+            mroot.set_submenu(cmenu)
+        menu.show_all()
+        menu.popup(None, None, None, event.button, event.time)
 
 
     def cb_dir_activated(self, tree, item):
