@@ -114,15 +114,15 @@ class file_context(default_context):
         return globaldict['filename']
 
     def command_filemanager(self, filename):
-        self.boss.command('filemanager', 'browse',
+        self.boss.call_command('filemanager', 'browse',
             directory=self.get_parent_directory(filename))
 
     def command_terminal(self, filename):
-        self.boss.command('terminal', 'execute-vt-shell',
-        kwargs={'directory': self.get_parent_directory(filename)})
+        self.boss.call_command('terminal', 'execute_shell',
+        kwdict={'directory': self.get_parent_directory(filename)})
 
     def command_diff(self, filename):
-        self.boss.command('versioncontrol', 'diff-file',
+        self.boss.call_command('versioncontrol', 'diff_file',
                           filename=filename)
 
     def get_parent_directory(self, filename):
