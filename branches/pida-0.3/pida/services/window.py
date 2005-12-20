@@ -25,7 +25,7 @@ import pida.core.service as service
 import pida.pidagtk.window as window
 import pida.pidagtk.contentview as contentview
 import pida.pidagtk.contentbook as contentbook
-
+import os
 import gtk
 
 types = service.types
@@ -159,6 +159,32 @@ class window_manager(service.service):
         #vertsb = self.options.get('sidebar-orientation-vertical').value()
         #self.__window.pack(editor, bufferview, pluginmanager, contentbook,
         #    viewbook, topbar, menu, vertsb, onright)
+
+        self.__window.drag_dest_set(gtk.DEST_DEFAULT_ALL,
+                                    [('text/uri-list', 0, 0)],
+                                    gtk.gdk.ACTION_COPY)
+        
+        def drag_motion(win, drag, x, y, timestamp):
+            self.buffermanager.drag_highlight()
+
+        def drag_leave(win, drag, timestamp):
+            self.buffermanager.drag_unhighlight()
+
+        def drag_drop(win, drag, x, y, selection, info, timestamp):
+            path = selection.data.strip()[7:]
+            if os.path.isdir(path):
+                self.boss.call_command('filemanager', 'browse',
+                                       directory=path)
+            elif os.path.exists(path):
+                self.boss.call_command('buffermanager', 'open_file',
+                                       filename=path)
+            return True
+
+        self.__window.connect('drag-motion', drag_motion)
+        self.__window.connect('drag-leave', drag_leave)
+        self.__window.connect('drag-data-received', drag_drop)
+
+
         self.__window.reset()
         
 

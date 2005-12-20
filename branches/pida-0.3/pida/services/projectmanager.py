@@ -324,6 +324,7 @@ class ProjectManager(service.service):
                 <menuitem name="remproj"
                     action="projectmanager+remove_project_from_workbench" />
                 <separator />
+                <menuitem name="propproj" action="projectmanager+properties" />
                 <separator />
                 <separator />
                 <menuitem name="statproj"
@@ -331,7 +332,6 @@ class ProjectManager(service.service):
                 <menuitem name="upproj" action="projectmanager+update_project" />
                 <menuitem name="comproj" action="projectmanager+commit_project" />
                 <separator />
-                <menuitem name="propproj" action="projectmanager+properties" />
                 </menu>
                 <menu name="base_tools" action="base_tools_menu">
                 </menu>
