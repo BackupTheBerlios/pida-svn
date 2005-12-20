@@ -215,6 +215,8 @@ class Meld(service.service):
         self.boss.call_command('buffermanager', 'open_file',
                                 filename=mangled)
 
+    cmd_diff_file = cmd_diff
+
     def cmd_browse(self, directory):
         self.cmd_diff_file(directory)
 
