@@ -95,6 +95,10 @@ class project(base.pidacomponent):
             return self.__vcs
     vcs = property(get_vcs)
 
+    def get_project_filename(self):
+        return self.__options_file
+    project_filename = property(get_project_filename)
+
     
 
 class project_type(actions.action_handler):

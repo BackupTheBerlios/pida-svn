@@ -193,7 +193,9 @@ class project_directory_context(default_context):
 class project_context(default_context):
     
     COMMANDS = [('properties', 'config', 'Project options',
-                'Configure this project')]
+                'Configure this project'),
+                ('remove', 'delete', 'Remove project',
+                'Remove project from workbench')]
 
     def globals_modifier(self, globaldict):
         return globaldict['project']
@@ -201,6 +203,10 @@ class project_context(default_context):
     def command_properties(self, project):
         self.boss.call_command('projectmanager', 'edit',
                                current_project=project)
+
+    def command_remove(self, project):
+        self.boss.call_command('projectmanager', 'remove_project',
+                               project=project)
 
         
 

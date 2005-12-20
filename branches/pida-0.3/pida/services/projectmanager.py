@@ -241,6 +241,11 @@ class ProjectManager(service.service):
         self.__write_history()
         self.__update()
 
+    def cmd_remove_project(self, project):
+        self.__history.remove(project.project_filename)
+        self.__write_history()
+        self.__update()
+
     def cmd_get_current_project(self):
         return self.__current_project
 
