@@ -67,7 +67,7 @@ def main():
             gtk.main()
         except Exception, e:
             print path, e
-            #os.unlink(path)
+            os.unlink(path)
             c.disconnect(cid)
             continue
 
