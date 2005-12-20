@@ -117,7 +117,8 @@ class project_creator(service.service):
         project_file_name = os.path.join(project_directory,
                                          '%s.pidaproject' % project_name)
         f = open(project_file_name, 'w')
-        f.write('#%s\n' % project_type_name)
+        f.write('#%s\n[general]\nsource_directory=%s\n' %
+                (project_type_name, os.path.dirname(project_file_name)))
         f.close()
         self.boss.call_command('projectmanager', 'add_project',
             project_file=project_file_name)
