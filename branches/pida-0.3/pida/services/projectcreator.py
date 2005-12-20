@@ -90,9 +90,11 @@ class project_creator_view(contentview.content_view):
                                     project_type_name=typename)
 
     def set_project_types(self, types):
+        self.__type_combo.get_model().clear()
         for typename in types:
             self.__type_combo.append_text(typename)
         self.__type_combo.set_active(0)
+        self.__type_combo.show_all()
 
 class project_creator(service.service):
 
