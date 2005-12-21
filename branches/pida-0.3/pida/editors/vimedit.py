@@ -164,9 +164,9 @@ class vim_editor(service.service):
                                     filename=filename)
 
     def vim_bufferunload(self, filename, *args):
+        print 'vim unloaded "%s"' % filename
         if filename != '':
             # unloaded an empty new file
-            print self.__files
             if filename in self.__files:
                 self.__files.remove(filename)
                 self.boss.call_command('buffermanager', 'file_closed',
