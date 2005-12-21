@@ -235,7 +235,6 @@ endfunction
 :silent au pida VimLeave * call Async_event("vimshutdown,")
 :silent au pida VimEnter * call Async_event("started,")
 :silent au pida BufWritePost * call Async_event("filesave,")
-:let PIDA_EMBEDDED=1
 :echo "PIDA connected"
 '''
 
