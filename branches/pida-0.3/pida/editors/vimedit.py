@@ -98,7 +98,8 @@ class vim_editor(service.service):
             self.get_service('editormanager').events.emit('started')
 
     def confirm_single_view_controlbar_clicked_close(self, view):
-        self.__cw.close_current_buffer(self.__srv)
+        self.call('close', filename=self.__currentfile)
+        #self.__cw.close_current_buffer(self.__srv)
         return False
 
     # move to the vimcom library
