@@ -473,7 +473,6 @@ class communication_window(gtk.Window):
                     messageattrs['t'] = t[0]
         return messageattrs
 
-
     def send_message(self, servername, message, asexpr, callback):
         wid = self.get_server_wid(servername)
         if wid:
@@ -506,7 +505,6 @@ class communication_window(gtk.Window):
 
     def get_option(self, server, option, callbackfunc):
         self.send_expr(server, '&%s' % option, callbackfunc)
-    
 
     def foreground(self, server):
         def cb(*args):
@@ -514,7 +512,7 @@ class communication_window(gtk.Window):
         self.send_expr(server, 'foreground()', cb)
         
     def change_buffer(self, server, filename):
-        self.send_ex(server, 'b!%s' % filename)
+        self.send_ex(server, "exe 'b!'.bufnr('%s')" % filename)
 
     def close_buffer(self, server, buffername):
         self.send_ex(server, 'confirm bw %s' % buffername)
@@ -530,7 +528,7 @@ class communication_window(gtk.Window):
         self.send_ex('mks %s' % name)
 
     def escape_filename(self, name):
-        for s in ['\\', '?', '*', ' ', "'", '"', '[', '	', '$']:
+        for s in ['\\', '?', '*', ' ', "'", '"', '[', '	', '$', '{', '}']:
             name = name.replace (s, '\\%s' % s)
         return name
 
