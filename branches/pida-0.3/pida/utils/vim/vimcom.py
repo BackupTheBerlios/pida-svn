@@ -515,7 +515,7 @@ class communication_window(gtk.Window):
         self.send_ex(server, "exe 'b!'.bufnr('%s')" % filename)
 
     def close_buffer(self, server, buffername):
-        self.send_ex(server, 'confirm bw %s' % buffername)
+        self.send_ex(server, "exe 'confirm bw'.bufnr('%s')" % buffername)
 
     def close_current_buffer(self, server):
         self.send_ex(server, 'confirm bw')
