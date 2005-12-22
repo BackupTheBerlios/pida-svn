@@ -132,9 +132,7 @@ class file_context(default_context):
 
 class directory_context(default_context):
     
-    COMMANDS = [('filemanager', 'filemanager', 'File Manager',
-                 'Browse this directory'),
-                ('up', 'up', 'Up',
+    COMMANDS = [('up', 'up', 'Up',
                  'Browse the parent directoy'),
                 ('find', 'find', 'Find',
                  'Find files in this directory'),

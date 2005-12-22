@@ -83,7 +83,7 @@ class Icons(object):
             ic = None#self.get('gtk-new')
         return ic
 
-    def get_button(self, name, *asize):
+    def get_button(self, name, tooltip='', *asize):
         ic = self.get_image(name)
         but = gtk.ToolButton(icon_widget=ic)
         #but = gtk.ToolButton(stock_id='gtk-%s' % name)

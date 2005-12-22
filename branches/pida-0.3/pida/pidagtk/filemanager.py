@@ -25,6 +25,7 @@ import os
 import gtk
 import tree
 import icons
+import toolbar
 import gobject
 import threading
 import contentview
@@ -126,8 +127,15 @@ class FileBrowser(contentview.content_view):
     ICON_TEXT = 'files'
 
     def init(self):
+        tb = gtk.HBox()
+        self.widget.pack_start(tb, expand=False)
+        own_tb = toolbar.Toolbar()
+        own_tb.connect('clicked', self.cb_toolbar_clicked)
+        own_tb.add_button('project_root', 'project',
+                          'Browse the source directory of the current project')
+        tb.pack_start(own_tb, expand=False)
         self.__toolbar = contextwidgets.context_toolbar()
-        self.widget.pack_start(self.__toolbar, expand=False)
+        tb.pack_start(self.__toolbar, expand=False)
         hbox = gtk.HPaned()
         self.widget.pack_start(hbox)
         sw = gtk.ScrolledWindow()
@@ -135,13 +143,9 @@ class FileBrowser(contentview.content_view):
         hbox.pack2(sw)
         self.__fileview = FileTree(self)
         sw.add(self.__fileview)
-        #self.__fileview.connect('item-activated', self.cb_file_activated)
         self.__fileview.connect('double-clicked', self.cb_file_activated)
         self.__fileview.connect('right-clicked', self.cb_file_rightclicked)
         self.__currentdirectory = None
-        #add_but = self.add_button("up", "up", 'go to the parent directory')
-        #add_but = self.add_button("new", "new", 'Create a new file here')
-        #add_but = self.add_button("find", "find", 'find things here')
 
     def display(self, directory, rootpath=None, statuses=[], glob='*', hidden=True):
         if os.path.isdir(directory):
@@ -283,18 +287,14 @@ class FileBrowser(contentview.content_view):
             func = getattr(self, funcname)
             func()
 
-    def toolbar_action_up(self):
-        self.go_up()
-
-    def toolbar_action_find(self):
-        if self.__currentdirectory is not None:
-            self.boss.command('grepper', 'find-interactive',
-                               directories=[self.__currentdirectory])
-
-    def toolbar_action_new(self):
-        if self.__currentdirectory is not None:
-            self.boss.command('newfile', 'create-interactive',
-                              directory=self.__currentdirectory)
+    def toolbar_action_project_root(self):
+        project = self.service.boss.call_command('projectmanager',
+                                         'get_current_project')
+        if project is not None:
+            project_root = project.source_directory
+            self.service.call('browse', directory=project_root)
+        else:
+            self.service.log.info('there is no project to go to its root')
         
 
 gobject.type_register(FileBrowser)
