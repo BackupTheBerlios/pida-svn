@@ -37,8 +37,6 @@ import os
 import gobject
 import os.path
 
-PROJECT_CONF = os.path.join(os.path.expanduser("~"), ".pida2", "conf", "projects.conf")
-
 class Project(object):
 
     name = None
@@ -124,9 +122,6 @@ class project_view(contentview.content_view):
             mroot.set_submenu(cmenu)
         menu.show_all()
         menu.popup(None, None, None, event.button, event.time)
-
-    
-
 
 class ProjectManager(service.service):
     """Project Management"""

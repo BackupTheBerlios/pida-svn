@@ -71,15 +71,15 @@ class ResultsTree(tree.Tree):
 
 class GrepView(contentview.content_view):
 
-    ICON = 'find'
-    ICON_TEXT = 'Find '
+    ICON_NAME = 'find'
+    SHORT_TITLE = 'Find '
 
-    HAS_SEPARATOR = True
+    LONG_TITLE = 'Find text in files.'
 
-    def populate(self):
+    def init(self):
         # Die RAD!
         hb = gtk.HBox()
-        self.bar_area.pack_start(hb, expand=True, padding=2)
+        self.widget.pack_start(hb, expand=False, padding=2)
         self.__pattern_entry = gtk.Entry()
         hb.pack_start(self.__pattern_entry)
         l = gtk.Label()
@@ -90,16 +90,27 @@ class GrepView(contentview.content_view):
         self.__recursive = gtk.CheckButton('-R')
         hb.pack_start(self.__recursive, expand=False)
         hb = gtk.HBox()
+        self.widget.pack_start(hb, expand=False)
+        self.__status_bar = gtk.ProgressBar()
+        self.__status_bar.set_size_request(-1, 32)
+        self.__status_bar.set_pulse_step(0.01)
+        hb.pack_start(self.__status_bar, padding=4)
+        self.__stop_but = gtk.Button(stock=gtk.STOCK_STOP)
+        hb.pack_start(self.__stop_but, expand=False)
+        self.__stop_but.set_sensitive(False)
+        self.__stop_but.connect('clicked', self.cb_stop_clicked)
+        self.__start_but = gtk.Button(stock=gtk.STOCK_FIND)
+        hb.pack_start(self.__start_but, expand=False)
+        self.__start_but.connect('clicked', self.cb_start_clicked)
+        #self.add_button('apply', 'apply', 'Start the search')
+        #self.add_button('stop', 'stop', 'Stop the search')
+        hb = gtk.HBox()
         l = gtk.Label()
         hb.pack_start(l, expand=True)
         l.set_markup(EXPANDER_LABEL_MU)
-        self.__status_bar = gtk.ProgressBar()
-        hb.pack_start(self.__status_bar, padding=4)
-        self.__status_bar.set_size_request(-1, 12)
-        self.__status_bar.set_pulse_step(0.01)
         self.__details_expander = gtk.Expander()
         self.__details_expander.set_label_widget(hb)
-        self.pack_start(self.__details_expander, expand=False)
+        self.widget.pack_start(self.__details_expander, expand=False)
         details_box = gtk.Table(4, 3)
         self.__details_expander.add(details_box)
         details_box.set_col_spacings(4)
@@ -108,33 +119,34 @@ class GrepView(contentview.content_view):
         self.__ignore_vcs = gtk.CheckButton("Ignore Version Control Directories")
         details_box.attach(self.__ignore_vcs, 0, 1, 1, 2)
         resbox = gtk.HBox()
-        self.pack_start(resbox)
+        self.widget.pack_start(resbox)
         butbox = gtk.VButtonBox()
         resbox.pack_start(butbox, expand=False)
-        self.__results_tree = ResultsTree()
+        self.__results_tree = tree.Tree()
+        self.__results_tree.set_property('markup-format-string', '%(markup)s')
         resbox.pack_start(self.__results_tree)
         self.__results_tree.connect('clicked', self.cb_result_selected)
         self.__results_tree.connect('double-clicked', self.cb_result_activated)
         self.__context_expander = gtk.Expander(label=RESULTS_LABEL_MU)
         self.__context_expander.set_use_markup(True)
-        self.pack_start(self.__context_expander, expand=False)
+        self.widget.pack_start(self.__context_expander, expand=False)
         self.__context_expander.set_expanded(True)
         contextbox = gtk.HBox()
         self.__context_expander.add(contextbox)
         self.__context_label = gtk.Label()
         self.__context_label.set_alignment(0, 0)
         contextbox.pack_start(self.__context_label, padding=4)
-        self.add_button('apply', 'apply', 'Start the search')
-        self.add_button('stop', 'stop', 'Stop the search')
 
     def show_status(self, status):
         code, message = status
         if message is None:
-            self.__status_bar.show()
+            self.start()
+            self.__status_bar.set_sensitive(True)
             self.__status_bar.pulse()
         else:
-            self.__status_bar.hide()
-            self.set_title(message)
+            self.stop()
+            self.__status_bar.set_sensitive(False)
+            #self.set_title(message)
 
     def set_details_expanded(self, expanded):
         self.__details_expander.set_expanded(expanded)
@@ -160,7 +172,6 @@ class GrepView(contentview.content_view):
         return options
 
     def from_options(self, options):
-        self.__status_bar.hide()
         self.__pattern_entry.set_text(options.pattern)
         if len(options.directories):
             self.__path_entry.set_filename(options.directories[0])
@@ -174,6 +185,18 @@ class GrepView(contentview.content_view):
 
     def add_result(self, result):
         self.__results_tree.add_item(ResultsTreeItem('', result))
+
+    def start(self):
+        self.__stop_but.set_sensitive(True)
+
+    def stop(self):
+        self.__stop_but.set_sensitive(False)
+
+    def cb_stop_clicked(self, button):
+        self.service.grep_stop()
+
+    def cb_start_clicked(self, button):
+        self.service.grep_start()
         
 #class ContextOption(registry.Integer):
 #    adjustment = 2, 9, 1
@@ -184,11 +207,6 @@ class GrepView(contentview.content_view):
 class Grepper(service.service):
 
     NAME = 'grepper'
-
-    COMMANDS = [('find-interactive', [('directories', False),
-                                      ('ignorevcs', False),
-                                      ('recursive', False)]),
-                ('find', [('path', True), ('pattern', True)])]
 
     OPTIONS = [('start-detailed',
                 'Whether the search dialog will start with the detailed view.'),
@@ -209,42 +227,48 @@ class Grepper(service.service):
                 'the maximum number of matches for each search',)]
                 #500, FindsTotalOption)]
 
-    EDITOR_VIEW = GrepView
+    single_view_type = GrepView
+    single_view_book = 'view'
 
-    def grep(self):
-        self.editorview.clear_results()
-        self.__grep = PidaGrep(self.editorview.get_options())
+    def grep_start(self):
+        self.single_view.clear_results()
+        self.single_view.start()
+        self.__grep = PidaGrep(self.single_view.get_options())
         self.__grep.connect('found', self.cb_results_found)
         self.__grep.connect('status', self.cb_results_status)
         self.__grep.run()
 
+    def grep_stop(self):
+        self.__grep.stop()
+        self.single_view.stop()
+
     def cb_results_found(self, grep, result):
-        self.editorview.add_result(result)
+        self.single_view.add_result(result)
 
     def cb_results_status(self, grep, status):
-        self.editorview.show_status(status)
+        self.single_view.show_status(status)
             
 
     def cmd_find_interactive(self, directories=None, ignorevcs=None,
                              recursive=None):
-        self.create_editorview()
+        self.create_single_view()
         options = GrepOptions()
-        if directories is None:
-            options.directories = [self.options.get('start-directory').value()]
-        else:
-            options.directories = directories
-        if ignorevcs is None:
-            options.ignorevcs = self.options.get('ignore-vcs').value()
-        else:
-            options.ignorevcs = ignorevcs
-        if recursive is None:
-            options.recursive = self.options.get('recursive').value()
-        else:
-            options.recursive = recursive
-        options.maxresults = self.options.get('maximum-matches').value()
-        self.editorview.from_options(options)
-        self.editorview.set_details_expanded(
-            self.options.get('start-detailed').value())
+        #if directories is None:
+        #    options.directories = [self.options.get('start-directory').value()]
+        #else:
+        #    options.directories = directories
+        #if ignorevcs is None:
+        #    options.ignorevcs = self.options.get('ignore-vcs').value()
+        #else:
+        #    options.ignorevcs = ignorevcs
+        #if recursive is None:
+        #    options.recursive = self.options.get('recursive').value()
+        #else:
+        #    options.recursive = recursive
+        options.maxresults = 100#self.options.get('maximum-matches').value()
+        self.single_view.from_options(options)
+        #self.editorview.set_details_expanded(
+        #    self.options.get('start-detailed').value())
 
     def cmd_find(self, path, pattern):
         pass
@@ -258,6 +282,22 @@ class Grepper(service.service):
             self.grep()
         if name == 'stop':
             self.__grep.stop()
+
+    def act_find(self, action):
+        self.call('find_interactive')
+
+    def get_menu_definition(self):
+        return """
+            <menubar>
+            <menu name="base_tools" action="base_tools_menu">
+            <separator />
+            <menuitem name="grepper" action="grepper+find" />
+            </menu>
+            </menubar>
+            <toolbar>
+            <toolitem  name="grepper" action="grepper+find" />
+            </toolbar>
+            """
     
     
 BINARY_RE = re.compile(r'[\000-\010\013\014\016-\037\200-\377]')
@@ -296,6 +336,12 @@ class GrepResult(object):
         pre = '\n'.join(pre)
         post = '\n'.join(post)
         return pre, '%s\t%s' % (self.linenumber, self.line), post
+
+    def get_markup(self):
+        return RESULT_MU % (self.linenumber,
+                            cgi.escape(self.filename),
+                            self.muline)
+    markup = property(get_markup)
 
 class PidaGrep(gobject.GObject):
     
@@ -383,4 +429,4 @@ class PidaGrep(gobject.GObject):
 
 gobject.type_register(PidaGrep)
 
-ervice = Grepper
+Service = Grepper
