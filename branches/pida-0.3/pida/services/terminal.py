@@ -61,7 +61,7 @@ class terminal_manager(service.service):
         """Terminal options."""
         class terminal_type(defs.option):
             """The default terminal type used."""
-            default = 'moo'
+            default = 'vte'
             rtype = types.stringlist('vte', 'moo')
 
     def cmd_execute(self, command_args=[], command_line='',
