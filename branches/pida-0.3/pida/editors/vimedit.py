@@ -171,6 +171,7 @@ class vim_editor(service.service):
                 self.__files.remove(filename)
                 self.boss.call_command('buffermanager', 'file_closed',
                                         filename=filename)
+                self.__currentfile = None
             else:
                 self.log.info('vim unloaded an unknown file %s', filename)
 
