@@ -145,6 +145,7 @@ class Tree(gtk.VBox):
         self.__sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.__view = gtk.TreeView(self.__model)
         self.__view.set_rules_hint(True)
+        self.__view.set_enable_search(False)
         self.__sw.add(self.__view)
         self.__view.set_headers_visible(False)
         for column in self.__init_renderers():
