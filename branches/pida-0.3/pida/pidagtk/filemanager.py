@@ -184,7 +184,7 @@ class FileBrowser(contentview.content_view):
             #t = threading.Thread(target=listdir)
             #t.run()
 
-            SMAP = {0: 'i', 1:'?', 2:' ', 7: 'M'}
+            SMAP = {0: 'i', 1:'?', 2:' ', 7: 'M', 6: 'A'}
             
             statuses = self.service.boss.call_command('versioncontrol',
                     'get_statuses', directory=directory)

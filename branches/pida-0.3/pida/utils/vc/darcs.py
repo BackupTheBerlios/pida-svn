@@ -42,6 +42,7 @@ class Vc(_vc.Vc):
 
     def __init__(self, location):
         self._cachetime = None
+        self._cached_statuses = None
         while location != "/":
             if os.path.isdir( "%s/_darcs" % location):
                 self.root = location
