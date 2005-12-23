@@ -64,7 +64,7 @@ class version_control(service.service):
             self.log.info('"%s" is not version controlled', directory)
         else:
             try:
-                statuses = vcs.lookup_files([directory], [])
+                statuses = vcs.listdir(directory)
                 return statuses
             except NotImplementedError:
                 self.log.info('"%s" is not version controlled', directory)

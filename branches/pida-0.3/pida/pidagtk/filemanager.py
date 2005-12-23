@@ -37,45 +37,18 @@ def shorten_home_name(directory):
 
 class FileTreeItem(tree.IconTreeItem):
     def __get_markup(self):
-        return ('<span foreground="black"><tt>%s</tt></span>' %
-                (self.value.name))
+        return ('<tt><span color="#600060"><b>%s </b></span>%s</tt>' %
+                (self.value.status, self.value.name))
     markup = property(__get_markup)
 
 
 class DirTreeItem(tree.IconTreeItem):
     def __get_markup(self):
-        return ('<span color="blue"><tt>%s</tt></span>' %
-                (self.value.name))
+        return ('<tt><span color="#600060"><b>%s </b></span>'
+                '<span color="blue">%s</span></tt>' %
+                (self.value.status, self.value.name))
     markup = property(__get_markup)
 
-class FileTree(gtk.IconView):
-    FIELDS =   (gobject.TYPE_STRING,
-                gobject.TYPE_STRING,
-                gobject.TYPE_BOOLEAN,
-                gtk.gdk.Pixbuf)
-
-    def __init__(self):
-        gtk.IconView.__init__(self)
-        self.__model = gtk.ListStore(*self.FIELDS)
-        self.set_model(self.__model)
-        self.set_markup_column(1)
-        self.set_pixbuf_column(-1)
-        #self.set_orientation(gtk.ORIENTATION_HORIZONTAL)
-
-
-    def add_item(self, item):
-        filename = item.key
-        markup = item.markup
-        pixbuf = item.pixbuf
-        isdir = item.DIRECTORY
-        self.__model.append([filename, markup, isdir, pixbuf])
-
-    def clear(self):
-        self.__model.clear()
-
-    def get_model(self):
-        return self.__model
-    model = property(get_model)
 
 DIR_ICON = icons.icons.get_image('filemanager')
 
@@ -133,6 +106,8 @@ class FileBrowser(contentview.content_view):
         own_tb.connect('clicked', self.cb_toolbar_clicked)
         own_tb.add_button('project_root', 'project',
                           'Browse the source directory of the current project')
+        own_tb.add_button('refresh', 'refresh',
+                          'Refresh the current directory')
         tb.pack_start(own_tb, expand=False)
         self.__toolbar = contextwidgets.context_toolbar()
         tb.pack_start(self.__toolbar, expand=False)
@@ -148,6 +123,7 @@ class FileBrowser(contentview.content_view):
         self.__currentdirectory = None
 
     def display(self, directory, rootpath=None, statuses=[], glob='*', hidden=True):
+        print directory
         if os.path.isdir(directory):
             childnodes = []
             rootpath = None
@@ -205,9 +181,46 @@ class FileBrowser(contentview.content_view):
                     childiter = self.__fileview.model.get_iter(childpath)
                     self.__fileview.model.remove(childiter)
 
-            t = threading.Thread(target=listdir)
-            t.run()
+            #t = threading.Thread(target=listdir)
+            #t.run()
+
+            SMAP = {0: 'i', 1:'?', 2:' ', 7: 'M'}
             
+            statuses = self.service.boss.call_command('versioncontrol',
+                    'get_statuses', directory=directory)
+            images = {}
+            if statuses is None:
+                for filename in os.listdir(directory):
+                    path = os.path.join(directory, filename)
+                    fsi = FileSystemItem(path)
+                    if os.path.isdir(path):
+                        i = DirTreeItem(path, fsi, image=DIR_ICON)
+                    else:
+                        mtype = mimetypes.guess_type(path)[0]
+                        if mtype in images:
+                            image = images[mtype]
+                        else:
+                            image=icons.icons.get_mime_image(mtype)
+                        i = FileTreeItem(path, fsi, image=image)
+                    fsi.status = ' '
+                    self.__fileview.add_item(i)
+            else:
+                for s in statuses[::-1]:
+                    fsi = FileSystemItem(s.path)
+                    try:
+                        fsi.status = SMAP[s.state]
+                    except KeyError:
+                        fsi.status = '%s %s' % (s.state, s.states[s.state])
+                    if s.isdir:
+                        tsi = DirTreeItem(s.path, fsi, image=DIR_ICON)
+                    else:
+                        mtype = mimetypes.guess_type(s.path)[0]
+                        if mtype in images:
+                            image = images[mtype]
+                        else:
+                            image=icons.icons.get_mime_image(mtype)
+                        tsi = FileTreeItem(s.path, fsi, image=image)
+                    self.__fileview.add_item(tsi)
 
 
             #self.emit('directory-changed', directory)
@@ -226,23 +239,23 @@ class FileBrowser(contentview.content_view):
                 self.__fileview.set(niter, column, statuses[row[0]])
 
     def cb_file_activated(self, view, path):
-        print self.__fileview.selected.value.path
+        print self.__fileview.selected.key
         filepath = self.__fileview.selected.key
         if filepath:
             treepath = self.__fileview.selected_path
             if os.path.isdir(filepath):
-                if self.__fileview.view.row_expanded(treepath):
-                #self.display(filepath, self.__fileview.selected_iter)
-                    self.__fileview.view.collapse_row(treepath)
-                else:
-                    self.__fileview.view.expand_row(treepath, False)
+                #if self.__fileview.view.row_expanded(treepath):
+                self.display(filepath, self.__fileview.selected_iter)
+                #    self.__fileview.view.collapse_row(treepath)
+                #else:
+                #    self.__fileview.view.expand_row(treepath, False)
             else:
                 print filepath
                 self.emit('file-activated', filepath)
 
     def cb_file_rightclicked(self, view, fileitem, event):
         fsi = fileitem.value
-        if fsi.directory:
+        if os.path.isdir(fsi.path):
             self.__popup_dir(fsi.path, event)
         else:
             self.__popup_file(fsi.path, event)
@@ -295,6 +308,9 @@ class FileBrowser(contentview.content_view):
             self.service.call('browse', directory=project_root)
         else:
             self.service.log.info('there is no project to go to its root')
+
+    def toolbar_action_refresh(self):
+        self.display(self.__currentdirectory)
         
 
 gobject.type_register(FileBrowser)
