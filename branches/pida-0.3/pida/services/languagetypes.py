@@ -28,9 +28,7 @@ import pida.core.languages as languages
 import pida.pidagtk.contentview as contentview
 
 class lv(contentview.content_view):
-
-    def init(self):
-        print "LVVV"
+    pass
 
 class language_types(service.service):
 
@@ -61,7 +59,6 @@ class language_types(service.service):
                 handler.action_group.set_visible(False)
         self.boss.call_command('window', 'remove_pages', bookname='language')
         handlers = self.call('get_language_handlers', document=document)
-        print handlers
         for handler in handlers:
             handler.action_group.set_visible(True)
             if hasattr(handler.service, 'lang_view_type'):
@@ -83,7 +80,6 @@ class language_types(service.service):
         for pattern in self.__langs:
             if pattern.match(filename):
                 matches = matches + self.__langs[pattern]
-        print matches
         return matches
 
     def __get_first_handler(self, lines):
@@ -92,7 +88,6 @@ class language_types(service.service):
             for pattern in self.__firsts:
                 if pattern.match(line):
                     matches = matches + self.__firsts[pattern]
-        print matches
         return matches
             
 

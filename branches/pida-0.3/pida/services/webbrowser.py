@@ -80,7 +80,6 @@ class BrowserView(contentview.content_view):
 
     def ro(self, *args):
         return
-        print 'ro', args
 
     def cb_style_updated(self, node, style, foo):
         pass

@@ -123,7 +123,6 @@ class VersionControl(service.ServiceWithSingleView):
 
     def cmd_commit_files(self, files):
         #self.call('up', directory)
-        print files
         self.call('commit', os.path.dirname(files[0]), files)
 
     def cmd_commit_current_file(self):

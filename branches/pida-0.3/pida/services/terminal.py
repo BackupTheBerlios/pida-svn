@@ -66,7 +66,6 @@ class terminal_manager(service.service):
 
     def cmd_execute(self, command_args=[], command_line='',
                     term_type=None, icon_name='terminal', kwdict={}):
-        print kwdict
         if term_type == None:
             term_type = self.opt('terminal', 'terminal_type')
         self.create_multi_view(term_type=term_type,
@@ -147,7 +146,6 @@ class vte_terminal(pida_terminal):
         kwdict = {}
         if 'directory' in kw:
             kwdict['directory'] = kw['directory']
-        print kwdict
         return kwdict
         
 
@@ -183,7 +181,6 @@ TERMINAL_TYPES = {TT_HIDDEN: hidden_terminal,
                   TT_MOO: moo_terminal}
 
 def make_terminal(terminal_type_name, **kw):
-    print kw
     if terminal_type_name in TERMINAL_TYPES:
         terminal_type = TERMINAL_TYPES[terminal_type_name]
         terminal = terminal_type()

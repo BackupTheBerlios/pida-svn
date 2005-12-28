@@ -40,7 +40,6 @@ class pida_v_paned(gtk.VPaned):
         
     def on_pane_notify(self, pane, gparamspec):
         # A widget property has changed.  Ignore unless it is 'position'.
-        print gparamspec.name
         def clear():
             pane.set_property('position-set', False)
         if gparamspec.name == 'position-set':
@@ -87,7 +86,7 @@ class pidawindow(paned.paned_window):
     def reset(self):
         """Pack the required components."""
         mainbox = gtk.VBox()
-        self.add(mainbox)
+        #self.add(mainbox)
         menu = self.__manager.menubar
         topbar = gtk.HBox()
         toolbar = self.__manager.toolbar
@@ -136,9 +135,9 @@ class pidawindow(paned.paned_window):
         self.set_pane_widget(panepos, self.__side_pane)
         self.set_pane_sticky(panepos, True)
 
-        vb = self.__viewbooks['language'] = contentbook.contentbook('Languages')
+        vb = self.__viewbooks['language'] = contentbook.Contentholder()
         #bar.pack_start(vb)
-        vb.collapse()
+        #vb.collapse()
 
         self.set_pane_widget(langpos, vb)
 

@@ -98,7 +98,6 @@ class expander(gtk.VBox):
 
     def __set_expand(self, expand):
         parent = self.get_parent()
-        print parent.__class__.__name__
         if parent is not None:
             if hasattr(parent, 'set_child_packing'):
                 parent.set_child_packing(self, expand=expand, fill=True,

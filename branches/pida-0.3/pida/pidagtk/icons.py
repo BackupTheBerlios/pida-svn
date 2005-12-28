@@ -51,7 +51,6 @@ class Icons(object):
 
     def get(self, name, *args):
         try:
-            print name, 'found'
             return self.__theme.load_icon('gtk-%s' % name, 12, 0)
         except:
             print name, 'notfound'

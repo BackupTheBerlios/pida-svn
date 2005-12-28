@@ -88,7 +88,6 @@ class MeldAppi(meldapp.MeldApp):
         self.scheduler.connect("runnable", self.on_scheduler_runnable )
         self.widget.set_default_size(self.prefs.window_size_x, self.prefs.window_size_y)
         self.widget.show()
-        print sys.argv
         
 
 TBMAP = {

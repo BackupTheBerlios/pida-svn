@@ -74,7 +74,6 @@ gobject.type_register(sizer)
 
 def get_pixmaps(name):
     from pkg_resources import Requirement, resource_filename, resource_listdir
-    print resource_listdir(Requirement.parse('pida'), '/')
     exts = ['%s-inactive.xpm', '%s-active.xpm', '%s-pressed.xpm']
     pixmaps = []
     for ext in exts:
@@ -89,7 +88,6 @@ def get_pixmaps(name):
         pixmaps.append(pixbuf)
     return pixmaps
 
-print get_pixmaps('maximize')
 class paned(gtk.EventBox):
     
     __gsignals__ = {'dragged-to' : (
@@ -254,7 +252,7 @@ class paned(gtk.EventBox):
             wx, wy = self.__window.window.get_position()
             x, y, w, h, col = self.__window.window.get_geometry()
         except AttributeError:
-            x = y = w = h = wx = wy = 0
+            x = y = w = h = wx = wy = 1
             self.__pane_width = 175
         if self.__pos == gtk.POS_LEFT:
             self.__pane_floater.move(wx, wy)
@@ -317,7 +315,7 @@ class paned(gtk.EventBox):
         self.__targ = targ
 
     def cb_map(self, eb):
-        print 'mapping'
+        pass
 
     def cb_bar_dragged(self, sizer, diffx, diffy):
         if self.__sticky or True:
@@ -380,10 +378,9 @@ class pane_dropper(gtk.Window):
         
 
     def cb_motion(self, arrow, pos):
-        print dir(pos)
+        pass
 
     def cb_event(self, widget, event):
-        print event.type
         self.chain(event)
 
 

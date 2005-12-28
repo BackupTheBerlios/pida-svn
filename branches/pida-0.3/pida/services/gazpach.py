@@ -384,7 +384,6 @@ class EmbeddedGazpacho(contentview.content_view):
     def cb_signal_activated(self, signalname, projectpath):
         callback_file_path = '%s.py' % projectpath.rsplit('.', 1)[0]
         if not os.path.exists(callback_file_path):
-            print callback_file_path, 'was not found'
             mb = gtk.MessageDialog(parent=self.gaz.get_window(),
                 flags = 0,
                 type = gtk.MESSAGE_INFO,
@@ -520,7 +519,6 @@ class Gazpacho(service.service):
         fundef = 'def %s' % callback_name
         for linenumber, line in enumerate(f):
             if fundef in line:
-                print 'callback found at line', linenumber
                 break
         f.close()
         self.boss.call_command('buffermanager', 'open_file_line',

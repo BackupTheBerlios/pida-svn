@@ -173,7 +173,6 @@ class Buffermanager(service.service):
         del self.__documents[document.filename]
         model = self.single_view.bufferview.model
         for row in model:
-            print row[0], 'RRRRR'
             if row[0] == str(document.unique_id):
                 model.remove(row.iter)
         document.handler.action_group.set_visible(False)

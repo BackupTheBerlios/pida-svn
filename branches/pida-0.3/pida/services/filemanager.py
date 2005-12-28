@@ -49,6 +49,5 @@ class file_manager(service.service):
         
         self.boss.call_command('buffermanager', 'open_file',
                                 filename=filename)
-        print [filename]
         
 Service = file_manager

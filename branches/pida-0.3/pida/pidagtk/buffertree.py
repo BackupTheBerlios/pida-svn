@@ -40,7 +40,6 @@ class BufferTree(tree.Tree):
     def __init__(self):
         tree.Tree.__init__(self)
         self.set_property('markup-format-string', '%(filename)s')
-        print self.get_property('markup-format-string')
         self.__bufferdetails = BufferDetails()
         #self.pack_start(self.__bufferdetails, expand=False)
         

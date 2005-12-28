@@ -205,7 +205,6 @@ class Meld(service.service):
             if view is not None:
                 success = view.view(document.actual_filename)
                 if not success:
-                    print 'removingf'
                     view.remove()
     def init(self):
         self.__views = {}

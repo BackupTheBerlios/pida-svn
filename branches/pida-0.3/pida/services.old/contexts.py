@@ -72,7 +72,6 @@ class DefaultContext(object):
         return tb
 
     def get_menu(self, globaldict):
-        print globaldict
         callbacks = {}
         def clicked(menuitem, name):
             callbacks[name](args)

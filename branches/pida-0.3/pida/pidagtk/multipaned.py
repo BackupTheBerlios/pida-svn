@@ -30,7 +30,6 @@ class multi_paned(gtk.EventBox):
         szr.connect('dragged', self.cb_resized, len(self.__panes))
         widget.pane_id = len(self.__panes)
         self.__panes.append(pane)
-        print self.get_allocation()[3]
 
     def shrink_pane(self, paneindex):
         
@@ -110,9 +109,7 @@ class sizer(gtk.EventBox):
         return True
 
     def cb_press(self, eb, ev):
-        print self.get_pointer()
         self.__y = self.get_pointer()[1]
-        print self.__y
         self.drag_highlight()
         self.grab_add()
         return True

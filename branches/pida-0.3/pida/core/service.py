@@ -296,7 +296,6 @@ class bindings_mixin(object):
 
     def bind(self):
         for bndfunc in self.__bindings__:
-            print 'binding', bndfunc
             evtstring = split_function_name(bndfunc.func_name)
             servicename, eventname = evtstring.split('_', 1)
             svc = self.get_service(servicename)

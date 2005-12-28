@@ -259,7 +259,6 @@ class temporary_document(realfile_document):
         self.__title = title
         f, filename = tempfile.mkstemp(prefix=prefix)
         os.close(f)
-        print filename
         realfile_document.__init__(self, filename=filename, handler=handler)
 
     def get_title(self):

@@ -289,7 +289,6 @@ class types(object):
             Load the filename from the options database.
             """
             fn = self.option.value
-            print fn
             self.widget.set_filename(fn)
 
         def save(self):

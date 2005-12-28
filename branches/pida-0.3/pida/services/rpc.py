@@ -45,7 +45,6 @@ class rpc(service.service):
         self.stop()
 
     def cb_pipe_received(self, pipe, (address, command, args)):
-        print address, command, args
         if len(args) == 0 and command:
             filename = command
             self.log.debug('remote file open %s', filename)
@@ -88,11 +87,9 @@ class reactor(gobject.GObject):
         gobject.io_add_watch(self.socket, gobject.IO_IN, self.cb_read)
     
     def stop(self):
-        print 'stopping'
         os.unlink(self.socketfile)
 
     def cb_read(self, socket, condition):
-        print 'read'
         if condition == gobject.IO_IN:
             data, address = socket.recvfrom(6024)
             self.received_data(data, address)

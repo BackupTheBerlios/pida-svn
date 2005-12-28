@@ -173,7 +173,6 @@ class sizer(gtk.EventBox):
         return True
 
     def cb_motion(self, eb, event):
-        print event.x, event.y
         pass
 
 

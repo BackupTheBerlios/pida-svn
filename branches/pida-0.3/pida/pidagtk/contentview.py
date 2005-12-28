@@ -176,7 +176,6 @@ class content_view(gtk.VBox):
 
     def cb_toolbar_clicked(self, toolbar, name):
         func = 'cb_%s_toolbar_clicked_%s' % (self.__prefix, name)
-        print func
         cb = getattr(self.service, func, None)
         if cb is not None:
             cb(self, toolbar, name)
@@ -190,7 +189,6 @@ class content_view(gtk.VBox):
 
     def __controlbar_clicked(self, name):
         func = 'cb_%s_controlbar_clicked_%s' % (self.__prefix, name)
-        print func
         cb = getattr(self.service, func, None)
         if cb is not None:
             cb(self, toolbar, name)

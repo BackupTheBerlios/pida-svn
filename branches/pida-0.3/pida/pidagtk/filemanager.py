@@ -123,7 +123,6 @@ class FileBrowser(contentview.content_view):
         self.__currentdirectory = None
 
     def display(self, directory, rootpath=None, statuses=[], glob='*', hidden=True):
-        print directory
         if os.path.isdir(directory):
             childnodes = []
             rootpath = None
@@ -177,7 +176,6 @@ class FileBrowser(contentview.content_view):
                         i = FileTreeItem(path, fsi, image=image)
                         self.__fileview.add_item(i, get_root())
                 for childpath in childnodes:
-                    print 'deleting'
                     childiter = self.__fileview.model.get_iter(childpath)
                     self.__fileview.model.remove(childiter)
 
@@ -239,7 +237,6 @@ class FileBrowser(contentview.content_view):
                 self.__fileview.set(niter, column, statuses[row[0]])
 
     def cb_file_activated(self, view, path):
-        print self.__fileview.selected.key
         filepath = self.__fileview.selected.key
         if filepath:
             treepath = self.__fileview.selected_path
@@ -250,7 +247,6 @@ class FileBrowser(contentview.content_view):
                 #else:
                 #    self.__fileview.view.expand_row(treepath, False)
             else:
-                print filepath
                 self.emit('file-activated', filepath)
 
     def cb_file_rightclicked(self, view, fileitem, event):

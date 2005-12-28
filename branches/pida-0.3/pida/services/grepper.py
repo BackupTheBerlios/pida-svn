@@ -125,8 +125,7 @@ class GrepView(contentview.content_view):
         self.__results_tree = tree.Tree()
         self.__results_tree.set_property('markup-format-string', '%(markup)s')
         resbox.pack_start(self.__results_tree)
-        self.__results_tree.connect('clicked', self.cb_result_selected)
-        self.__results_tree.connect('double-clicked', self.cb_result_activated)
+        self.__results_tree.connect('clicked', self.cb_result_activated)
         self.__context_expander = gtk.Expander(label=RESULTS_LABEL_MU)
         self.__context_expander.set_use_markup(True)
         self.widget.pack_start(self.__context_expander, expand=False)
@@ -152,15 +151,16 @@ class GrepView(contentview.content_view):
         self.__details_expander.set_expanded(expanded)
 
     def cb_result_selected(self, tree, result):
-        lines = self.boss.option('grepper', 'context-lines')
+        #lines = self.boss.option('grepper', 'context-lines')
+        lines = 4
         pre, match, post = [cgi.escape(s) for s in
                             result.value.get_context(lines)]
         self.__context_label.set_markup(RESULT_CONTEXT_MU % (pre, match, post))
 
     def cb_result_activated(self, tree, result):
-        self.boss.command('editor', 'open-file-line',
-                filename=result.value.filename,
-                linenumber=result.value.linenumber)
+        self.service.boss.call_command('buffermanager', 'open_file_line',
+                filename=result.value.value.filename,
+                linenumber=result.value.value.linenumber + 1)
 
     def get_options(self):
         options = GrepOptions()

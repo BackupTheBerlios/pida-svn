@@ -170,7 +170,6 @@ class python(service.service):
             hb.pack_start(name_entry)
             hb.show_all()
             def response(dialog, response):
-                print response
                 if response == gtk.RESPONSE_ACCEPT:
                     name = name_entry.get_text()
                     if not name.endswith('.glade'):
