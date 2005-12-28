@@ -256,7 +256,7 @@ class Grepper(service.service):
         #if directories is None:
         #    options.directories = [self.options.get('start-directory').value()]
         #else:
-        #    options.directories = directories
+        options.directories = directories
         #if ignorevcs is None:
         #    options.ignorevcs = self.options.get('ignore-vcs').value()
         #else:

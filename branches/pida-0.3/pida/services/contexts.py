@@ -148,7 +148,7 @@ class directory_context(default_context):
         self.boss.call_command('filemanager', 'browse', directory=directory)
 
     def command_find(self, directory):
-        self.boss.call_command('grepper', 'find-interactive',
+        self.boss.call_command('grepper', 'find_interactive',
                            directories=[directory])
 
     def command_new(self, directory):
