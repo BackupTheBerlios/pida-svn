@@ -98,17 +98,16 @@ class pidawindow(paned.paned_window):
         toolbar.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
         mainbox.pack_start(topbar, expand=False)
         self.__p0 = gtk.HPaned()
-        def on_pane_notify(pane, gparamspec):
-            # A widget property has changed.  Ignore unless it is 'position'.
-            if gparamspec.name == 'position':
-                print 'pane position is now', pane.get_property('position')
-        self.__p0.connect('notify', on_pane_notify)
+        #def on_pane_notify(pane, gparamspec):
+        #    # A widget property has changed.  Ignore unless it is 'position'.
+        #    if gparamspec.name == 'position':
+        #        print 'pane position is now', pane.get_property('position')
+        #self.__p0.connect('notify', on_pane_notify)
         mainbox.pack_start(self.__p0)
         bufferlist = gtk.Label('tb')
         pluginbook = gtk.Label('pluginbook')
         sidebar_orientation_horizontal = False
-        sidebar_on_right = False
-        
+        sidebar_on_right = self.__manager.opt('layout', 'sidebar_on_right')
 
         editor = contentbook.Contentholder(show_tabs=False)
         #ew = pida_v_paned()
@@ -127,14 +126,22 @@ class pidawindow(paned.paned_window):
         self.set_main_widget(editor)
         self.set_pane_widget(gtk.POS_BOTTOM, viewbook)
 
-        self.set_pane_widget(gtk.POS_LEFT, self.__side_pane)
-        self.set_pane_sticky(gtk.POS_LEFT, True)
+        if sidebar_on_right:
+            panepos = gtk.POS_RIGHT
+            langpos = gtk.POS_LEFT
+        else:
+            panepos = gtk.POS_LEFT
+            langpos = gtk.POS_RIGHT
+
+        self.set_pane_widget(panepos, self.__side_pane)
+        self.set_pane_sticky(panepos, True)
 
         vb = self.__viewbooks['language'] = contentbook.contentbook('Languages')
         #bar.pack_start(vb)
         vb.collapse()
 
-        self.set_pane_widget(gtk.POS_RIGHT, vb)
+        self.set_pane_widget(langpos, vb)
+
         self.set_pane_sticky(gtk.POS_BOTTOM, True)
         #if sidebar_on_right:
         #    self.__p0.pack1(self.__editor_pane)
