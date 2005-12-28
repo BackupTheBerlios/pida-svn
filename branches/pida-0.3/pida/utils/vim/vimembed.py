@@ -93,8 +93,9 @@ class vim_embed(contentview.content_view):
         self.win.destroy()
 
     def cb_plugged(self, *a):
+        return
         if self.r_cb_plugged:
-            self.r_cb_plugged()
+            self.r_cb_plugged
 
     def cb_unplugged(self, *a):
         self.stop()
