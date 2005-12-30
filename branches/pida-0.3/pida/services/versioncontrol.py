@@ -143,7 +143,24 @@ class version_control(service.service):
             #                                       directory})
             #except NotImplementedError:
             #    self.log.info('"%s" is not version controlled', directory)
+
+    def cmd_add_file(self, filename):
         
+        directory = os.path.dirname(filename)
+        vcs = self.call('get_vcs_for_directory', directory=directory)
+        if vcs.NAME == 'Null':
+            self.log.info('"%s" is not version controlled', directory)
+        else:
+            try:
+                commandargs = vcs.add_command() + [filename]
+                self.boss.call_command('terminal', 'execute',
+                                    command_args=commandargs,
+                                    icon_name='vcs_add',
+                                    kwdict = {'directory':
+                                               directory})
+            except NotImplementedError:
+                self.log.info('Not implemented for %s' % vcs.NAME)
+
 
     def act_diff_file(self, action):
         self.call('diff_file', filename=self.__currentfile)

@@ -126,23 +126,17 @@ class file_parent_context(default_context):
 
 class file_versioncontrol_context(default_context):
     COMMANDS = [('vcs_diff', 'vcs_diff', 'VCS Statuses',
-                 'Diff'),
-                ('vcs_update', 'vcs_update', 'VCS Update',
-                 'Update'),
-                ('vcs_commit', 'vcs_commit', 'VCS Commit',
-                 'Commit')]
+                 'Diff file'),
+                 ('vcs_add', 'vcs_add', 'VCS Add',
+                 'Add file')]
 
     def command_vcs_diff(self, filename):
         self.boss.call_command('versioncontrol', 'diff_file',
                                filename=filename)
 
-    def command_vcs_commit(self, filename):
-        self.boss.call_command('versioncontrol', 'commit',
-                               filename=filename)
-
-    def command_vcs_update(self, filename):
-        self.boss.call_command('versioncontrol', 'update',
-                               filename=filename)
+    def command_vcs_add(self, filename):
+        self.boss.call_command('versioncontrol', 'add_file',
+                                filename=filename)
 
     def globals_modifier(self, globaldict):
         return globaldict['filename']
