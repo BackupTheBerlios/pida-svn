@@ -43,13 +43,26 @@ class version_control(service.service):
     def init(self):
         self.__currentfile = None
         self.action_group.set_sensitive(False)
+        self.__cached_vcs = {}
 
     def bnd_buffermanager_document_changed(self, document):
         self.__currentfile = document.filename
         self.action_group.set_sensitive(True)
 
     def cmd_get_vcs_for_directory(self, directory):
-        return vc.Vc(directory)
+        vcs = vc.Vc(directory)
+        workdir = vcs.get_working_directory(directory)
+        if workdir in self.__cached_vcs:
+            vcs = self.__cached_vcs[workdir]
+        else:
+            self.__cached_vcs[workdir] = vcs
+        return vcs
+
+    def cmd_forget_directory(self, directory):
+        vcs = vc.Vc(directory)
+        workdir = vcs.get_working_directory(directory)
+        if workdir in self.__cached_vcs:
+            del self.__cached_vcs[workdir]
 
     def cmd_statuses(self, directory):
         if self.opt('meld_integration', 'use_meld_for_statuses'):

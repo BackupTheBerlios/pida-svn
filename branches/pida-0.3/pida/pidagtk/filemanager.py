@@ -306,6 +306,8 @@ class FileBrowser(contentview.content_view):
             self.service.log.info('there is no project to go to its root')
 
     def toolbar_action_refresh(self):
+        self.service.boss.call_command('versioncontrol',
+            'forget_directory', directory=self.__currentdirectory)
         self.display(self.__currentdirectory)
         
 
