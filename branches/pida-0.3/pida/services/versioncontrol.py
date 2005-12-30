@@ -147,12 +147,13 @@ class version_control(service.service):
     def cmd_add_file(self, filename):
         
         directory = os.path.dirname(filename)
+        basename = os.path.basename(filename)
         vcs = self.call('get_vcs_for_directory', directory=directory)
         if vcs.NAME == 'Null':
             self.log.info('"%s" is not version controlled', directory)
         else:
             try:
-                commandargs = vcs.add_command() + [filename]
+                commandargs = vcs.add_command() + [basename]
                 self.boss.call_command('terminal', 'execute',
                                     command_args=commandargs,
                                     icon_name='vcs_add',
