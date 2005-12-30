@@ -133,7 +133,7 @@ class file_versioncontrol_context(default_context):
                  'Commit')]
 
     def command_vcs_diff(self, filename):
-        self.boss.call_command('versioncontrol', 'statuses',
+        self.boss.call_command('versioncontrol', 'diff_file',
                                filename=filename)
 
     def command_vcs_commit(self, filename):
