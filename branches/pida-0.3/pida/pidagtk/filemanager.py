@@ -259,12 +259,19 @@ class FileBrowser(contentview.content_view):
     def __popup_file(self, path, event):
 
         globaldict = {'filename': path}
-
-        contexts = self.service.boss.call_command('contexts', 'get_contexts',
-                                     contextname='file',
+        menu = gtk.Menu()
+        for title, context in [('Version control', 'file_vc'),
+                        ('Parent directory', 'file_parent')]:
+            mroot = gtk.MenuItem(label=title)
+            menu.add(mroot)
+            contexts = self.service.boss.call_command('contexts',
+                                     'get_contexts',
+                                     contextname=context,
                                      globaldict=globaldict
                                      )
-        menu = contextwidgets.get_menu(contexts)
+            cmenu = contextwidgets.get_menu(contexts)
+            mroot.set_submenu(cmenu)
+        menu.show_all()
         menu.popup(None, None, None, event.button, event.time)
        
 

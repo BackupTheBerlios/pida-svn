@@ -42,10 +42,11 @@ class Contexts(service.service):
 
     def init(self):
         self.__defaults = {}
-        self.__defaults['file'] = file_context()
+        self.__defaults['file_vc'] = file_versioncontrol_context()
         self.__defaults['directory'] = directory_context()
         self.__defaults['project_directory'] = project_directory_context()
         self.__defaults['project'] = project_context()
+        self.__defaults['file_parent'] = file_parent_context()
         for contextname in self.__defaults:
             if contextname not in self.databases['contexts']:
                 self.add_data_item('contexts', contextname, [])
@@ -101,14 +102,12 @@ class default_context(base.pidacomponent):
         return globaldict
             
 
-class file_context(default_context):
+class file_parent_context(default_context):
 
     COMMANDS = [('filemanager', 'filemanager', 'File Manager',
                 'Open a file manager in the parent directory of this file'),
                 ('terminal', 'terminal', 'Terminal',
-                'Open a terminal in the parent directory of this file'),
-                ('diff', 'vcs_diff', 'Version Control Diff',
-                 'Get the diff on this file')]
+                'Open a terminal in the parent directory of this file')]
 
     def globals_modifier(self, globaldict):
         return globaldict['filename']
@@ -121,13 +120,33 @@ class file_context(default_context):
         self.boss.call_command('terminal', 'execute_shell',
         kwdict={'directory': self.get_parent_directory(filename)})
 
-    def command_diff(self, filename):
-        self.boss.call_command('versioncontrol', 'diff_file',
-                          filename=filename)
-
     def get_parent_directory(self, filename):
         directory = os.path.split(filename)[0]
         return directory
+
+class file_versioncontrol_context(default_context):
+    COMMANDS = [('vcs_diff', 'vcs_diff', 'VCS Statuses',
+                 'Diff'),
+                ('vcs_update', 'vcs_update', 'VCS Update',
+                 'Update'),
+                ('vcs_commit', 'vcs_commit', 'VCS Commit',
+                 'Commit')]
+
+    def command_vcs_diff(self, filename):
+        self.boss.call_command('versioncontrol', 'statuses',
+                               filename=filename)
+
+    def command_vcs_commit(self, filename):
+        self.boss.call_command('versioncontrol', 'commit',
+                               filename=filename)
+
+    def command_vcs_update(self, filename):
+        self.boss.call_command('versioncontrol', 'update',
+                               filename=filename)
+
+    def globals_modifier(self, globaldict):
+        return globaldict['filename']
+    
 
 
 class directory_context(default_context):
@@ -208,10 +227,11 @@ class project_context(default_context):
 
         
 
-CONTEXTS = [('file', 'When an action is in the context of a single file'),
+CONTEXTS = [('file_vc', 'When an action is in the context of a single file'),
             ('directory', 'When an action is in the context of a directory'),
             ('project_directory', 'When an action is in the context of a directory'),
             ('project', 'When an action is in the context of a directory'),
+            ('file_parent', '')
             ]
 
 Service = Contexts

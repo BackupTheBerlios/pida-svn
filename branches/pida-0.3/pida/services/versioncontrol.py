@@ -87,7 +87,20 @@ class version_control(service.service):
             self.boss.call_command('meldembed', 'diff',
                                     filename=filename)
         else:
-            print 'not using meld'
+            directory = os.path.dirname(filename)
+            vcs = self.call('get_vcs_for_directory', directory=directory)
+            if vcs.NAME == 'Null':
+                self.log.info('"%s" is not version controlled', directory)
+            else:
+                try:
+                    commandargs = vcs.diff_command()
+                    self.boss.call_command('terminal', 'execute',
+                                        command_args=commandargs,
+                                        icon_name='vcs_diff',
+                                        kwdict = {'directory':
+                                                   directory})
+                except NotImplementedError:
+                    self.log.info('Not implemented for %s' % vcs.NAME)
 
     def cmd_update(self, directory):
         vcs = self.call('get_vcs_for_directory', directory=directory)
