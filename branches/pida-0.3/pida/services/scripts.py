@@ -36,12 +36,12 @@ SCRIPTS_CONF = os.path.join(os.path.expanduser("~"), ".pida2", "scripts")
  #   ICON = 'scripts'
 
 
-class Scripts(service.ServiceWithListedTab):
+class Scripts(service.service):
 
     NAME = 'scripts'
 
-    OPTIONS = [('directory', 'The scripts directory',
-                SCRIPTS_CONF, registry.CreatingDirectory)]
+    #OPTIONS = [('directory', 'The scripts directory',
+    #            SCRIPTS_CONF, registry.CreatingDirectory)]
 
 #    EDITOR_VIEW = ScriptView
     
@@ -93,11 +93,4 @@ class Scripts(service.ServiceWithListedTab):
         globaldict['command'] = self.boss.command
         exec script in globaldict
 
-    def cmd_show_editor(self):
-        self.create_editorview(self.__registry)
-
-    def cb_show_editor(self, button):
-        self.cmd_show_editor()
-
-
-Service = Scripts
+service = Scripts
