@@ -22,7 +22,6 @@
 #SOFTWARE.
 
 import pida.pidagtk.contentbook as contentbook
-import pida.pidagtk.listedtab as listedtab
 
 import pida.core.service as service
 
@@ -32,9 +31,9 @@ import os.path
 
 SCRIPTS_CONF = os.path.join(os.path.expanduser("~"), ".pida2", "scripts")
 
-class ScriptView(contentbook.TabView):
+#class ScriptView(contentbook.TabView):
 
-    ICON = 'scripts'
+ #   ICON = 'scripts'
 
 
 class Scripts(service.ServiceWithListedTab):
@@ -44,13 +43,7 @@ class Scripts(service.ServiceWithListedTab):
     OPTIONS = [('directory', 'The scripts directory',
                 SCRIPTS_CONF, registry.CreatingDirectory)]
 
-    COMMANDS = [('execute', [('scriptname', True),
-                             ('globaldict', False)]),
-                ('execute-file', [('scriptname', True),
-                             ('globaldict', False)]),
-                ('show-editor', [])]
-
-    EDITOR_VIEW = ScriptView
+#    EDITOR_VIEW = ScriptView
     
     def reset(self):
         directory = self.options.get('directory').value()
