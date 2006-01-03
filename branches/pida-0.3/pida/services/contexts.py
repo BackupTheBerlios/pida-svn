@@ -128,7 +128,9 @@ class file_versioncontrol_context(default_context):
     COMMANDS = [('vcs_diff', 'vcs_diff', 'VCS Statuses',
                  'Diff file'),
                  ('vcs_add', 'vcs_add', 'VCS Add',
-                 'Add file')]
+                 'Add file'),
+                 ('vcs_remove', 'vcs_remove', 'VCS Remove',
+                 'Remove file')]
 
     def command_vcs_diff(self, filename):
         self.boss.call_command('versioncontrol', 'diff_file',
@@ -136,6 +138,10 @@ class file_versioncontrol_context(default_context):
 
     def command_vcs_add(self, filename):
         self.boss.call_command('versioncontrol', 'add_file',
+                                filename=filename)
+
+    def command_vcs_remove(self, filename):
+        self.boss.call_command('versioncontrol', 'remove_file',
                                 filename=filename)
 
     def globals_modifier(self, globaldict):

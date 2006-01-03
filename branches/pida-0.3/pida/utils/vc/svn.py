@@ -47,7 +47,7 @@ class Vc(_vc.Vc):
             return [self.CMD,"add","-kb"]
         return [self.CMD,"add"]
     def remove_command(self, force=0):
-        return [self.CMD,"rm","-f"]
+        return [self.CMD,"rm","--force"]
     def revert_command(self):
         return [self.CMD,"revert"]
 

@@ -162,6 +162,24 @@ class version_control(service.service):
             except NotImplementedError:
                 self.log.info('Not implemented for %s' % vcs.NAME)
 
+    def cmd_remove_file(self, filename):
+        
+        directory = os.path.dirname(filename)
+        basename = os.path.basename(filename)
+        vcs = self.call('get_vcs_for_directory', directory=directory)
+        if vcs.NAME == 'Null':
+            self.log.info('"%s" is not version controlled', directory)
+        else:
+            try:
+                commandargs = vcs.remove_command() + [basename]
+                self.boss.call_command('terminal', 'execute',
+                                    command_args=commandargs,
+                                    icon_name='vcs_add',
+                                    kwdict = {'directory':
+                                               directory})
+            except NotImplementedError:
+                self.log.info('Not implemented for %s' % vcs.NAME)
+
 
     def act_diff_file(self, action):
         self.call('diff_file', filename=self.__currentfile)
