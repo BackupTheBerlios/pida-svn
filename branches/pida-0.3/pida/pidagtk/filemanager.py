@@ -78,14 +78,16 @@ class FileSystemItem(object):
             self.isdir = 1
 
     def __get_markup(self):
-        color = (self.isdir < 0 and '#0000c0') or '#000000' 
+        color = '#000000'
+        if self.isdir < 0:
+            color = '#0000c0'
         return ('<tt><span color="%s"><span color="#600060"><b>%s'
                 '</b>  </span>%s</span></tt>' %
                 (color, self.status, self.name))
     markup = property(__get_markup)
 
     def get_pixbuf(self):
-        if self.isdir:
+        if self.isdir < 0:
             return DIR_ICON.get_pixbuf()
         else:
             return None
@@ -200,6 +202,7 @@ class FileBrowser(contentview.content_view):
 
     def cb_file_rightclicked(self, view, fileitem, event):
         fsi = fileitem.value
+        print fsi.isdir
         if os.path.isdir(fsi.path):
             self.__popup_dir(fsi.path, event)
         else:
