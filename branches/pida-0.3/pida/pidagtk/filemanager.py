@@ -38,9 +38,9 @@ def shorten_home_name(directory):
 
 DIR_ICON = icons.icons.get_image('filemanager')
 
-class FileTree(tree.Tree):
+class FileTree(tree.IconTree):
 
-    SORT_LIST = ['directory', 'name']
+    SORT_LIST = ['isdir', 'name']
 
     def clear(self):
         self.model.clear()
@@ -56,7 +56,7 @@ class FileTree(tree.Tree):
         return children
 
     def __init__(self, fm):
-        tree.Tree.__init__(self)
+        tree.IconTree.__init__(self)
         self.set_property('markup-format-string', '%(markup)s')
         self.__fm = fm
         self.view.connect('row-expanded', self.cb_row_expanded)
@@ -73,16 +73,24 @@ class FileSystemItem(object):
         self.key = path
         self.name = os.path.basename(path)
         if os.path.isdir(path):
-            self.isdir = True
+            self.isdir = -1
         else:
-            self.isdir = False
+            self.isdir = 1
 
     def __get_markup(self):
-        color = (self.isdir and '#0000c0') or '#000000' 
+        color = (self.isdir < 0 and '#0000c0') or '#000000' 
         return ('<tt><span color="%s"><span color="#600060"><b>%s'
                 '</b>  </span>%s</span></tt>' %
                 (color, self.status, self.name))
     markup = property(__get_markup)
+
+    def get_pixbuf(self):
+        if self.isdir:
+            return DIR_ICON.get_pixbuf()
+        else:
+            return None
+    
+    pixbuf = property(get_pixbuf)
 
 class FileBrowser(contentview.content_view):
 
@@ -110,19 +118,19 @@ class FileBrowser(contentview.content_view):
         tb.pack_start(own_tb, expand=False)
         self.__toolbar = contextwidgets.context_toolbar()
         tb.pack_start(self.__toolbar, expand=False)
-        hbox = gtk.HPaned()
-        self.widget.pack_start(hbox)
-        sw = gtk.ScrolledWindow()
-        sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        hbox.pack2(sw)
+        #hbox = gtk.HPaned()
+        #self.widget.pack_start(hbox)
+        #sw = gtk.ScrolledWindow()
+        #sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        #hbox.pack2(sw)
         self.__fileview = FileTree(self)
-        sw.add(self.__fileview)
+        self.widget.pack_start(self.__fileview)
         self.__fileview.connect('double-clicked', self.cb_file_activated)
         self.__fileview.connect('right-clicked', self.cb_file_rightclicked)
         self.__currentdirectory = None
 
     def display(self, directory, rootpath=None, statuses=[], glob='*', hidden=True):
-        if os.path.isdir(directory):
+        def _display():
             self.__fileview.clear()
             self.set_long_title(shorten_home_name(directory))
             self.__currentdirectory = directory
@@ -145,6 +153,7 @@ class FileBrowser(contentview.content_view):
                     path = os.path.join(directory, filename)
                     fsi = FileSystemItem(path)
                     fsi.status = ' '
+                    icon = None
                     self.__fileview.add_item(fsi)
             else:
                 for s in statuses[::-1]:
@@ -154,6 +163,11 @@ class FileBrowser(contentview.content_view):
                     except KeyError:
                         fsi.status = '%s %s' % (s.state, s.states[s.state])
                     self.__fileview.add_item(fsi)
+            self.__fileview.show_all()
+
+        if os.path.isdir(directory):
+            t = threading.Thread(target=_display)
+            t.run()
 
 
             #self.emit('directory-changed', directory)

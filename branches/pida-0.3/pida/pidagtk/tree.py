@@ -245,6 +245,7 @@ class Tree(gtk.VBox):
                 unmangled[k] = getattr(item, k)
         markup_string = markup_fmt % unmangled
         return markup_string
+    get_markup = __get_markup
     
     def add_items(self, items):
         """Add items to the tree."""
@@ -389,10 +390,19 @@ class IconTree(Tree):
     COLUMNS = [[gtk.CellRendererPixbuf, 'pixbuf', 3],
                [gtk.CellRendererText, 'markup', 2]]
 
-    def add_item(self, item, parent=None):
-        markup = item.markup
+    def add_item(self, item, key=None, parent=None):
         pixbuf = item.pixbuf
-        return self.model.append(parent, [item.key, item, markup, pixbuf])
+        if key is None:
+            key = item.key
+        else:
+            item.key = key
+        titem = TreeItem(key, item)
+        row = [key, titem, self.get_markup(item), pixbuf]
+        niter = self.model.append(parent, row)
+        def reset(oself):
+            self.model.set_value(niter, 2, self.__get_markup(item))
+        #item.reset_func = reset
+        return niter
         
 gobject.type_register(Tree)
 
