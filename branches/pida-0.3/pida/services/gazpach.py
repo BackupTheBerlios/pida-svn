@@ -27,10 +27,23 @@ import pida.pidagtk.contentbook as contentbook
 import pida.pidagtk.contentview as contentview
 import pida.pidagtk.expander as expander
 
-from gazpacho import application
+import gazpacho.app.app as application
 from gazpacho import editor
 from gazpacho.properties import PropertyCustomEditor, UNICHAR_PROPERTIES, prop_registry 
 from gazpacho import signaleditor
+from gazpacho.sizegroupeditor import SizeGroupView
+from gazpacho.palette import palette
+from gazpacho.placeholder import Placeholder
+from gazpacho.project import Project
+from gazpacho.sizegroupeditor import SizeGroupView
+from gazpacho.util import rebuild
+from gazpacho.widget import Widget
+from gazpacho.widgetview import WidgetTreeView
+from gazpacho.widgetregistry import widget_registry
+from gazpacho.uimstate import WidgetUIMState, ActionUIMState, SizeGroupUIMState
+from gazpacho.actioneditor import GActionsView
+
+from gazpacho.editor import Editor
 
 import gtk
 import gobject
@@ -64,75 +77,82 @@ class GazpachoApplication(application.Application):
 
     window = property(get_window)
 
+  
     def _application_window_create(self):
-        #application_window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        #application_window.move(0, 0)
-        #application_window.set_default_size(700, -1)
-
         application_window = gtk.VBox()
-        iconfilename = application.environ.find_pixmap('gazpacho-icon.png')
-        #gtk.window_set_default_icon_from_file(iconfilename)
-                                                
-        application_window.connect('delete-event', self._delete_event)
-
-        # Create the different widgets
-        menubar, toolbar = self._construct_menu_and_toolbar(gtk.Window())
-
-        self._palette = application.Palette(self._catalogs)
-        self._palette.set_size_request(100, -1)
-        self._palette.connect('toggled', self._palette_button_clicked)
-
-        self._editor = Editor(self, self.cb_signal_activated)
-        editor_view = gtk.VBox()
-        editor_view.pack_start(self._editor)
-        self._editor.make_pages()
-
-        widget_view = self._widget_tree_view_create()
-
-        self.gactions_view = self._gactions_view_create()
-        
-        self._statusbar = self._construct_statusbar()
-
         # Layout them on the window
         main_vbox = gtk.VBox()
         application_window.add(main_vbox)
+        # Create actions that are always enabled
 
-        #main_vbox.pack_start(menubar, False)
-        #main_vbox.pack_start(toolbar, False)
-        self.menubar = menubar
-
-        hbox = gtk.HPaned()
-        hbox.set_border_width(6)
-        hbox.pack2(self._palette)
-        vpaned = gtk.VPaned()
-        hbox.pack1(vpaned, True, True)
-        vpaned.set_position(200)
-        notebook = gtk.Notebook()
-        notebook.append_page(widget_view, tab_label=gtk.Label('Widgets'))
-        notebook.append_page(self.gactions_view, tab_label=gtk.Label('Actions'))
-        notebook.set_page(0)
-        vpaned.pack1(notebook)
-        vpaned.pack2(editor_view)
+        hbox = gtk.HBox(spacing=6)
         main_vbox.pack_start(hbox)
         
-        #main_vbox.pack_end(self._statusbar, False)
+        palette.connect('toggled', self._palette_button_clicked)
+        hbox.pack_start(palette, False, False)
 
+        vpaned = gtk.VPaned()
+        vpaned.set_position(150)
+        hbox.pack_start(vpaned, True, True)
+
+        notebook = gtk.Notebook()
+        vpaned.add1(notebook)
+
+        # Widget view
+        widget_view = WidgetTreeView(self)
+        self._add_view(widget_view)
+        page_num = notebook.append_page(widget_view, gtk.Label(_('Widgets')))
+
+        state = WidgetUIMState()
+        self._uim_states[page_num] = state
+        
+        # Action view
+        self.gactions_view = GActionsView(self)
+        self._add_view(self.gactions_view)
+        page_num = notebook.append_page(self.gactions_view, gtk.Label(_('Actions')))
+
+        state = ActionUIMState(self.gactions_view)
+        self._uim_states[page_num] = state
+
+        # Sizegroup view
+        self.sizegroup_view = SizeGroupView(self)
+        self._add_view(self.sizegroup_view)
+        page_num = notebook.append_page(self.sizegroup_view, gtk.Label(_('Size Groups')))
+
+        state = SizeGroupUIMState(self.sizegroup_view)
+        self._uim_states[page_num] = state
+
+        # Add property editor
+        self._editor = Editor(self)
+        self._editor.row_activated_cb = self.cb_signal_activated
+        vpaned.add2(self._editor)
+
+        notebook.connect('switch-page', self._switch_page_cb)
+
+        # Statusbar
+        statusbar = gtk.Statusbar()
+        self._statusbar_menu_context_id = statusbar.get_context_id("menu")
+        self._statusbar_actions_context_id = statusbar.get_context_id("actions")
+        main_vbox.pack_end(statusbar, False)
+        self._statusbar = statusbar
+        
         # dnd doesn't seem to work with Konqueror, at least not when
         # gtk.DEST_DEFAULT_ALL or gtk.DEST_DEFAULT_MOTION is used. If
         # handling the drag-motion event it will work though, but it's
         # a bit tricky.
-        application_window.drag_dest_set(gtk.DEST_DEFAULT_ALL,
-                                         application.Application.targets,
-                                         gtk.gdk.ACTION_COPY)
+        #application_window.drag_dest_set(gtk.DEST_DEFAULT_ALL,
+        #                                 Application.targets,
+        #                                 gtk.gdk.ACTION_COPY)
         
         #application_window.connect('drag_data_received',
         #                           self._dnd_data_received_cb)
+
+        # Enable the current state
+        #self._active_uim_state = self._uim_states[0]
+        #self._active_uim_state.enable()
         
-        self.refresh_undo_and_redo()
-
-        self.application_window = application_window
         return application_window
-
+       
     def cb_signal_activated(self, tv, path, column):
         model = tv.get_model()
         niter = model.get_iter(path)
@@ -169,172 +189,18 @@ class GazpachoApplication(application.Application):
             #                callbackname)
         #print self._project.path
 
-    def _fconstruct_menu_and_toolbar(self, application_window):
-        actions =(
-            ('Gazpacho', None, ('_Gaz')),
-            ('FileMenu', None, ('_File')),
-            ('New', gtk.STOCK_NEW, ('_New'), '<control>N',
-             ('New Project'), self._new_cb),
-            ('Open', gtk.STOCK_OPEN, ('_Open'), '<control>O',
-             ('Open Project'), self._open_cb),
-            ('Save', gtk.STOCK_SAVE, ('_Save'), '<control>S',
-             ('Save Project'), self._save_cb),
-            ('SaveAs', gtk.STOCK_SAVE_AS, ('_Save As...'),
-             '<shift><control>S', ('Save project with different name'),
-             self._save_as_cb),
-            ('Close', gtk.STOCK_CLOSE, ('_Close'), '<control>W',
-             ('Close Project'), self._close_cb),
-            ('Quit', gtk.STOCK_QUIT, ('_Quit'), '<control>Q', ('Quit'),
-             self._quit_cb),
-            ('EditMenu', None, ('_Edit')),
-            ('Cut', gtk.STOCK_CUT, ('C_ut'), '<control>X', ('Cut'),
-             self._cut_cb),
-            ('Copy', gtk.STOCK_COPY, ('_Copy'), '<control>C', ('Copy'),
-             self._copy_cb),
-            ('Paste', gtk.STOCK_PASTE, ('_Paste'), '<control>V', ('Paste'),
-             self._paste_cb),
-            ('Delete', gtk.STOCK_DELETE, ('_Delete'), '<control>D',
-             ('Delete'), self._delete_cb),
-            ('ActionMenu', None, ('_Actions')),
-            ('AddAction', gtk.STOCK_ADD, ('_Add action'), '<control>A',
-             ('Add an action'), self._add_action_cb),
-            ('RemoveAction', gtk.STOCK_REMOVE, ('_Remove action'), None,
-             ('Remove action'), self._remove_action_cb),
-            ('EditAction', None, ('_Edit action'), None, ('Edit Action'),
-             self._edit_action_cb),
-            ('ProjectMenu', None, ('_Project')),
-            ('DebugMenu', None, ('_Debug')),
-            ('HelpMenu', None, ('_Help')),
-            ('About', None, ('_About'), None, ('About'), self._about_cb)
-            )
-
-        toggle_actions = (
-            ('ShowCommandStack', None, ('Show _command stack'), 'F3',
-             ('Show the command stack'), self._show_command_stack_cb, False),
-            ('ShowClipboard', None, ('Show _clipboard'), 'F4',
-             ('Show the clipboard'), self._show_clipboard_cb, False),
-            )
-        
-        undo_action = (
-            ('Undo', gtk.STOCK_UNDO, ('_Undo'), '<control>Z',
-             ('Undo last action'), self._undo_cb),
-            )
-
-        redo_action = (
-            ('Redo', gtk.STOCK_REDO, ('_Redo'), '<control>R',
-             ('Redo last action'), self._redo_cb),
-            )
-        
-        ui_description = """<ui>
-              <menubar name="MainMenu">
-                <menu action="Gazpacho">
-                <menu action="FileMenu">
-                  <menuitem action="New"/>
-                  <menuitem action="Open"/>
-                  <separator name="FM1"/>
-                  <menuitem action="Save"/>
-                  <menuitem action="SaveAs"/>
-                  <separator name="FM2"/>
-                  <menuitem action="Close"/>
-                  <menuitem action="Quit"/>
-                </menu>
-                <menu action="EditMenu">
-                  <menuitem action="Undo"/>
-                  <menuitem action="Redo"/>
-                  <separator name="EM1"/>
-                  <menuitem action="Cut"/>
-                  <menuitem action="Copy"/>
-                  <menuitem action="Paste"/>
-                  <menuitem action="Delete"/>
-                </menu>
-                <menu action="ActionMenu">
-                  <menuitem action="AddAction"/>
-                  <menuitem action="RemoveAction"/>
-                  <menuitem action="EditAction"/>
-                </menu>
-                <menu action="ProjectMenu">
-                </menu>
-                <menu action="DebugMenu">
-                  <menuitem action="ShowCommandStack"/>
-                  <menuitem action="ShowClipboard"/>
-                </menu>
-                <menu action="HelpMenu">
-                  <menuitem action="About"/>
-                </menu>
-                </menu>
-              </menubar>
-              <toolbar name="MainToolbar">
-                <toolitem action="Open"/>
-                <toolitem action="Save"/>
-                <toolitem action="Undo"/>
-                <toolitem action="Redo"/>    
-              </toolbar>
-              <toolbar name="EditBar">
-                <toolitem action="Cut"/>
-                <toolitem action="Copy"/>
-                <toolitem action="Paste"/>
-                                <toolitem action="Delete"/>
-                              </toolbar>
-                            </ui>
-                            """
-        self._ui_manager = gtk.UIManager()
-
-        action_group = gtk.ActionGroup('MenuActions')
-        action_group.add_actions(actions)
-        action_group.add_toggle_actions(toggle_actions)
-        self._ui_manager.insert_action_group(action_group, 0)
-
-        action_group = gtk.ActionGroup('UndoAction')
-        action_group.add_actions(undo_action)
-        self._ui_manager.insert_action_group(action_group, 0)
-        
-        action_group = gtk.ActionGroup('RedoAction')
-        action_group.add_actions(redo_action)
-        self._ui_manager.insert_action_group(action_group, 0)
-        
-        self._ui_manager.add_ui_from_string(ui_description)
-        
-        #application_window.add_accel_group(self._ui_manager.get_accel_group())
-
-        self.project_action_group = gtk.ActionGroup('ProjectActions')
-        self._ui_manager.insert_action_group(self.project_action_group, 0)
-
-        menu = self._ui_manager.get_widget('/MainMenu')
-    
-        self.menu = menu
-
-        return menu
-    
-    def irefresh_undo_and_redo(self):
-        undo_info = redo_info = None        
-        if self._project is not None:
-            undo_info = self._project.undo_stack.get_undo_info()
-            redo_info = self._project.undo_stack.get_redo_info()
-
-        undo_action = self._ui_manager.get_action('/MainToolbar/Undo')
-        undo_group = undo_action.get_property('action-group')
-        undo_group.set_sensitive(undo_info is not None)
-        undo_widget = self.undo_button
-        undo_widget.set_sensitive(undo_info is not None)
-            
-        redo_action = self._ui_manager.get_action('/MainToolbar/Redo')
-        redo_group = redo_action.get_property('action-group')
-        redo_group.set_sensitive(redo_info is not None)
-        redo_widget = self.redo_button
-        redo_widget.set_sensitive(redo_info is not None)
-        if self._command_stack_window is not None:
-            command_stack_view = self._command_stack_window.get_child()
-            command_stack_view.update()
-
 class EmbeddedGazpacho(contentview.content_view):
-
-
     def init(self):
         self.__main_window = self.service.boss.get_main_window()
         self.__gazpacho = GazpachoApplication(self.__main_window, self)
         self.widget.pack_start(self.__gazpacho.get_container())
+        
 
     def open_file(self, filename):
+        for project in self.__gazpacho._projects:
+            if filename == project.path:
+                self.__gazpacho._set_project(project)
+                return
         self.__gazpacho.open_project(filename)
 
     def save(self):
@@ -574,7 +440,7 @@ class gazpacho_document(document.dummyfile_document):
         return MU % (dn, fn)
     markup = property(get_markup)
 
-class Editor(gtk.Notebook):
+class iEditor(gtk.Notebook):
 
     __gsignals__ = {
         'add_signal':(gobject.SIGNAL_RUN_LAST, None,
@@ -739,6 +605,15 @@ class Editor(gtk.Notebook):
         if self._loaded_widget:
             self._load_widget(self._loaded_widget)
 
+class Editor(Editor):
+
+    def _create_signal_page(self):
+        if self._signal_editor:
+            return self._signal_editor
+        self._signal_editor = signaleditor.SignalEditor(self, self._app)
+        self._signal_editor._signals_list.connect('row-activated',
+            self.row_activated_cb)
+        self._vbox_signals.pack_start(self._signal_editor)
 
 empty_gazpacho_document = """<?xml version="1.0" standalone="no"?>
 <!--*- mode: xml -*-->
