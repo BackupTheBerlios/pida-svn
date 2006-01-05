@@ -225,14 +225,19 @@ class Buffermanager(service.service):
                 <ui>
                 <menubar>
                 <menu name="base_file" action="base_file_menu">
+                <placeholder name="OpenFileMenu">
                 <menuitem name="open" action="buffermanager+open_file" />
-                <separator name="F1" />
-                <separator />
+                </placeholder>
+                <placeholder name="SaveFileMenu" />
+                <placeholder name="ExtrasFileMenu">
                 <separator />
                 <menuitem name="savesess" action="buffermanager+save_session" />
                 <menuitem name="loadsess" action="buffermanager+load_session" />
                 <separator />
+                </placeholder>
+                <placeholder name="GlobalFileMenu">
                 <menuitem name="quit" action="buffermanager+quit_pida" />
+                </placeholder>
                 </menu>
                 </menubar>
                 <toolbar>

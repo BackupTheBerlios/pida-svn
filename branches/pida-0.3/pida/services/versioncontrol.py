@@ -189,7 +189,14 @@ class version_control(service.service):
             <menubar>
             <menu name="base_file" action="base_file_menu">
             <separator />
+            <placeholder name="OpenFileMenu" />
+            <placeholder name="SaveFileMenu" />
+            <placeholder name="ExtrasFileMenu">
+            <separator />
             <menuitem name="diff_file" action="versioncontrol+diff_file" />
+            <separator />
+            </placeholder>
+            <placeholder name="GlobalFileMenu" />
             <separator />
             </menu>
             </menubar>

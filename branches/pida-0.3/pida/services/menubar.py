@@ -136,6 +136,7 @@ class Menubar(service.service):
                 <placeholder name="OpenFileMenu" />
                 <placeholder name="SaveFileMenu" />
                 <placeholder name="ExtrasFileMenu" />
+                <placeholder name="GlobalFileMenu" />
                 </menu>
                 <menu name="base_edit" action="base_edit_menu">
                 </menu>

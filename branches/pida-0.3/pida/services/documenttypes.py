@@ -75,7 +75,12 @@ class document_type_handler(service.service):
             return """
                 <menubar>
                 <menu name="base_file" action="base_file_menu">
+                <placeholder name="OpenFileMenu" />
+                <placeholder name="SaveFileMenu">
                 <menuitem name="Save" action="documenttypes+document+save" />
+                </placeholder>
+                <placeholder name="ExtrasFileMenu" />
+                <placeholder name="GlobalFileMenu" />
                 </menu>
                 <menu name="base_edit" action="base_edit_menu">
                 <menuitem name="Undo" action="documenttypes+document+undo" />
