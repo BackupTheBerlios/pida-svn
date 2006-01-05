@@ -35,24 +35,10 @@ import contextwidgets
 def shorten_home_name(directory):
     return directory.replace(os.path.expanduser('~'), '~')
 
-class FileTreeItem(tree.IconTreeItem):
-    def __get_markup(self):
-        return ('<tt><span color="#600060"><b>%s </b></span>%s</tt>' %
-                (self.value.status, self.value.name))
-    markup = property(__get_markup)
-
-
-class DirTreeItem(tree.IconTreeItem):
-    def __get_markup(self):
-        return ('<tt><span color="#600060"><b>%s </b></span>'
-                '<span color="blue">%s</span></tt>' %
-                (self.value.status, self.value.name))
-    markup = property(__get_markup)
-
 
 DIR_ICON = icons.icons.get_image('filemanager')
 
-class FileTree(tree.IconTree):
+class FileTree(tree.Tree):
 
     SORT_LIST = ['directory', 'name']
 
@@ -70,7 +56,8 @@ class FileTree(tree.IconTree):
         return children
 
     def __init__(self, fm):
-        tree.IconTree.__init__(self)
+        tree.Tree.__init__(self)
+        self.set_property('markup-format-string', '%(markup)s')
         self.__fm = fm
         self.view.connect('row-expanded', self.cb_row_expanded)
 
@@ -83,7 +70,19 @@ class FileSystemItem(object):
 
     def __init__(self, path):
         self.path = path
+        self.key = path
         self.name = os.path.basename(path)
+        if os.path.isdir(path):
+            self.isdir = True
+        else:
+            self.isdir = False
+
+    def __get_markup(self):
+        color = (self.isdir and '#0000c0') or '#000000' 
+        return ('<tt><span color="%s"><span color="#600060"><b>%s'
+                '</b>  </span>%s</span></tt>' %
+                (color, self.status, self.name))
+    markup = property(__get_markup)
 
 class FileBrowser(contentview.content_view):
 
@@ -124,82 +123,27 @@ class FileBrowser(contentview.content_view):
 
     def display(self, directory, rootpath=None, statuses=[], glob='*', hidden=True):
         if os.path.isdir(directory):
-            childnodes = []
-            rootpath = None
-            def get_root():
-                if rootpath is None:
-                    return None
-                else:
-                    return self.__fileview.model.get_iter(rootpath)
-            if rootpath is None:
-                self.set_long_title(shorten_home_name(directory))
-                self.__currentdirectory = directory
-                globaldict = {'directory':directory}
-                try:
-                    contexts = self.service.boss.call_command('contexts',
-                                                              'get_contexts',
-                                                  contextname='directory',
-                                                  globaldict=globaldict)
-                    self.__toolbar.set_contexts(contexts)
-                except self.service.boss.ServiceNotFoundError:
-                    pass
-                self.__fileview.clear()
-            else:
-                for i in xrange(0,
-                    self.__fileview.model.iter_n_children(get_root())):
-                    child = self.__fileview.model.iter_nth_child(
-                        get_root(), i)
-                    childpath = self.__fileview.model.get_path(child)
-                    childnodes.append(childpath)
-            def listdir():
-                images = {}
-                for filename in os.listdir(directory):
-                    if filename == '':
-                        continue
-                    path = os.path.join(directory, filename)
-                    fsi = FileSystemItem(path)
-                    if os.path.isdir(path):
-                        fsi.directory = -1
-                        i = DirTreeItem(path, fsi, image=DIR_ICON)
-                        item = self.__fileview.add_item(i, get_root())
-                        childfsi = FileSystemItem('__empty__')
-                        i2 = FileTreeItem('', fsi)
-                        self.__fileview.add_item(i2, item)
-                    else:
-                        fsi.directory = 0
-                        mtype = mimetypes.guess_type(path)[0]
-                        if mtype in images:
-                            image = images[mtype]
-                        else:
-                            image=icons.icons.get_mime_image(mtype)
-                        
-                        i = FileTreeItem(path, fsi, image=image)
-                        self.__fileview.add_item(i, get_root())
-                for childpath in childnodes:
-                    childiter = self.__fileview.model.get_iter(childpath)
-                    self.__fileview.model.remove(childiter)
-
-            #t = threading.Thread(target=listdir)
-            #t.run()
+            self.__fileview.clear()
+            self.set_long_title(shorten_home_name(directory))
+            self.__currentdirectory = directory
+            globaldict = {'directory':directory}
+            try:
+                contexts = self.service.boss.call_command('contexts',
+                                                            'get_contexts',
+                                                contextname='directory',
+                                                globaldict=globaldict)
+                self.__toolbar.set_contexts(contexts)
+            except self.service.boss.ServiceNotFoundError:
+                pass
 
             SMAP = {0: 'i', 1:'?', 2:' ', 7: 'M', 6: 'A', 8: 'C'}
             
             statuses = self.service.boss.call_command('versioncontrol',
                     'get_statuses', directory=directory)
-            images = {}
             if statuses is None:
                 for filename in os.listdir(directory):
                     path = os.path.join(directory, filename)
                     fsi = FileSystemItem(path)
-                    if os.path.isdir(path):
-                        i = DirTreeItem(path, fsi, image=DIR_ICON)
-                    else:
-                        mtype = mimetypes.guess_type(path)[0]
-                        if mtype in images:
-                            image = images[mtype]
-                        else:
-                            image=icons.icons.get_mime_image(mtype)
-                        i = FileTreeItem(path, fsi, image=image)
                     fsi.status = ' '
                     self.__fileview.add_item(fsi)
             else:
@@ -209,22 +153,13 @@ class FileBrowser(contentview.content_view):
                         fsi.status = SMAP[s.state]
                     except KeyError:
                         fsi.status = '%s %s' % (s.state, s.states[s.state])
-                    if s.isdir:
-                        tsi = DirTreeItem(s.path, fsi, image=DIR_ICON)
-                    else:
-                        mtype = mimetypes.guess_type(s.path)[0]
-                        if mtype in images:
-                            image = images[mtype]
-                        else:
-                            image=icons.icons.get_mime_image(mtype)
-                        tsi = FileTreeItem(s.path, fsi, image=image)
-                    self.__fileview.add_item(tsi)
+                    self.__fileview.add_item(fsi)
 
 
             #self.emit('directory-changed', directory)
 
 
-    def go_up(self):
+    def Go_up(self):
         if self.__currentdirectory and self.__currentdirectory != '/':
             parent = os.path.split(self.__currentdirectory)[0]
             self.display(parent)
@@ -295,6 +230,7 @@ class FileBrowser(contentview.content_view):
 
 
     def cb_dir_activated(self, tree, item):
+        print item.key
         self.display(item.key)
 
     def cb_toolbar_clicked(self, toolbar, name):
