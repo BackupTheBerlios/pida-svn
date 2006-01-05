@@ -59,7 +59,7 @@ class registry_item(base.pidacomponent):
         try:
             self.value = value
             return True
-        except BadRegistryValue:
+        except exceptions.BadRegistryValue:
             self.setdefault()
             return False
 
