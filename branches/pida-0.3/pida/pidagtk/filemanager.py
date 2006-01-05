@@ -201,7 +201,7 @@ class FileBrowser(contentview.content_view):
                             image=icons.icons.get_mime_image(mtype)
                         i = FileTreeItem(path, fsi, image=image)
                     fsi.status = ' '
-                    self.__fileview.add_item(i)
+                    self.__fileview.add_item(fsi)
             else:
                 for s in statuses[::-1]:
                     fsi = FileSystemItem(s.path)

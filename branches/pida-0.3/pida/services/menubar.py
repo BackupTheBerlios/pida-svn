@@ -133,6 +133,9 @@ class Menubar(service.service):
         return  """
                 <menubar>
                 <menu name="base_file" action="base_file_menu">
+                <placeholder name="OpenFileMenu" />
+                <placeholder name="SaveFileMenu" />
+                <placeholder name="ExtrasFileMenu" />
                 </menu>
                 <menu name="base_edit" action="base_edit_menu">
                 </menu>
