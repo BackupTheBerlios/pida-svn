@@ -76,6 +76,10 @@ class Contentholder(gtk.VBox):
         self.detach_page(contentview)
         contentview.emit('removed')
 
+    def remove_pages(self):
+        for uid in self.__views.keys():
+            self.remove_page(self.__views[uid])
+
     def detach_pages(self):
         for uid in self.__views.keys():
             self.detach_page(self.__views[uid])

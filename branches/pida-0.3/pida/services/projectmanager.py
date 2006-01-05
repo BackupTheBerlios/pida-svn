@@ -131,7 +131,7 @@ class ProjectManager(service.service):
     plugin_view_type = project_view
 
     single_view_type = configview.config_view
-    single_view_book = 'view'
+    single_view_book = 'ext'
 
     class default(defs.project_type):
         project_type_name = 'default'

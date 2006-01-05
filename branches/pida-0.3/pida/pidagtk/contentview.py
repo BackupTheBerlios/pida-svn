@@ -169,6 +169,10 @@ class content_view(gtk.VBox):
     def remove(self):
         if self.__holder is not None:
             self.__holder.remove_page(self)
+    
+    def detach(self):
+        if self.__holder is not None:
+            self.__holder.detach_page(self)
 
     def raise_page(self):
         if self.__holder is not None:

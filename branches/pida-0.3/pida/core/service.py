@@ -405,6 +405,7 @@ class single_view_mixin(object):
             if self.__view is None:
                 self.__view = self.single_view_type(self,
                     prefix='single_view', *args, **kwargs)
+                self.__view.connect('removed', self.cb_single_view_removed)
                 self.boss.call_command('window', 'append_page',
                                        bookname=self.single_view_book,
                                        view=self.__view)
@@ -414,14 +415,31 @@ class single_view_mixin(object):
     def raise_single_view(self, name):
         if self.__view is not None:
             self.__view.raise_page(name)
+        else:
+            self.create_single_view()
 
     def cb_single_view_controlbar_clicked_close(self, view, toolbar, name):
         assert(view is self.__view)
         if self.confirm_single_view_controlbar_clicked_close(view):
             self.__view.remove()
-            self.__view.destroy()
-            self.__view = None
-            self.cb_single_view_closed(view)
+
+    def cb_single_view_controlbar_clicked_detach(self, view, toolbar, name):
+        assert(view is self.__view)
+        if view.holder.get_parent().__class__.__name__ == 'Window':
+            bookname = self.single_view_book
+        else:
+            bookname = 'ext'
+        self.__view.detach()
+        self.boss.call_command('window', 'append_page',
+                                bookname=bookname,
+                                view=self.__view)
+        self.__view.raise_page()
+            
+
+    def cb_single_view_removed(self, view):
+        self.__view.destroy()
+        self.__view = None
+        self.cb_single_view_closed(view)
 
     def cb_single_view_closed(self, view):
         pass
@@ -463,6 +481,17 @@ class multi_view_mixin(object):
             del self.__views[view.unique_id]
             view.destroy()
             self.cb_multi_view_closed(view)
+
+    def cb_multi_view_controlbar_clicked_detach(self, view, toolbar, name):
+        if view.holder.get_parent().__class__.__name__ == 'Window':
+            bookname = self.multi_view_book
+        else:
+            bookname = 'ext'
+        view.detach()
+        self.boss.call_command('window', 'append_page',
+                                bookname=bookname,
+                                view=view)
+        view.raise_page()
 
     def confirm_multi_view_controlbar_clicked_close(self, view):
         return True

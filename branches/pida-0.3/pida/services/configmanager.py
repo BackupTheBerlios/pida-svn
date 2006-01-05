@@ -36,7 +36,7 @@ class config_view(configview.config_view):
 class config_manager(service.service):
     
     single_view_type = config_view
-    single_view_book = 'view'
+    single_view_book = 'ext'
 
     def cmd_edit(self):
         regs = [(svc.NAME, svc.options) for svc in self.boss.services]

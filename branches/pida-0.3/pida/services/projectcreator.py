@@ -80,6 +80,9 @@ class project_creator_view(contentview.content_view):
         self.__ok_but = gtk.Button(stock=gtk.STOCK_OK)
         bb.pack_start(self.__ok_but, padding=6)
         self.__ok_but.connect('clicked', self.on_ok_button__clicked)
+        self.__cancel_but = gtk.Button(stock=gtk.STOCK_CANCEL)
+        bb.pack_start(self.__cancel_but, padding=6)
+        self.__cancel_but.connect('clicked', self.on_cancel_button__clicked)
 
     def on_ok_button__clicked(self, button):
         project_name = self.__name_entry.get_text()
@@ -88,6 +91,10 @@ class project_creator_view(contentview.content_view):
         self.service.call('create', project_name=project_name,
                                     project_directory=project_dir,
                                     project_type_name=typename)
+        self.close()
+
+    def on_cancel_button__clicked(self, button):
+        self.close()
 
     def set_project_types(self, types):
         self.__type_combo.get_model().clear()
@@ -126,5 +133,9 @@ class project_creator(service.service):
         f.close()
         self.boss.call_command('projectmanager', 'add_project',
             project_file=project_file_name)
+        class dummy_project:
+            name = project_name
+        self.boss.call_command('projectmanager', 'edit', projects=None,
+                                current_project = dummy_project())
 
 Service = project_creator

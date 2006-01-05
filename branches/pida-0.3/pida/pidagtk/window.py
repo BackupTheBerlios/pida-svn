@@ -152,6 +152,8 @@ class pidawindow(paned.paned_window):
         self.set_size_request(800, 600)
         #self.__side_pane.set_size_request(300, -1)
 
+        extb = self.__viewbooks['ext'] = external_book()
+        extb.window.set_transient_for(self)
 
     def toggle_book(self, name):
         if name in self.__viewbooks:
@@ -161,4 +163,35 @@ class pidawindow(paned.paned_window):
         if name in self.__viewbooks:
             self.__viewbooks[name].shrink()
 
+
+class external_book(contentbook.Contentholder):
+
+    def __init__(self, *args):
+        contentbook.Contentholder.__init__(self)
+        self.__create_window()
+        self.connect('empty', self.cb_empty)
+
+    def cb_empty(self, holder):
+        self.__window.destroy()
+
+    def __create_window(self):
+        self.__window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        self.__window.connect('destroy', self.on_window__destroy)
+        self.__window.add(self)
+
+    def append_page(self, *args):
+        contentbook.Contentholder.append_page(self, *args)
+        self.__window.show_all()
+        self.__window.present()
+
+    def on_window__destroy(self, window):
+        self.remove_pages()
+        self.__window.hide()
+        self.__window.remove(self)
+        self.__create_window()
+        return True
+
+    def get_window(self):
+        return self.__window
+    window = property(get_window)
 
