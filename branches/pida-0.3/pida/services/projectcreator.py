@@ -96,6 +96,9 @@ class project_creator_view(contentview.content_view):
         self.__type_combo.set_active(0)
         self.__type_combo.show_all()
 
+    def set_project_dir(self, path):
+        self.__file_chooser.set_filename(path)
+
 class project_creator(service.service):
 
     single_view_type = project_creator_view
@@ -112,6 +115,7 @@ class project_creator(service.service):
         types = self.boss.call_command('projecttypes',
             'get_project_type_names')
         view.set_project_types(types)
+        view.set_project_dir(self.__projectsdir)
 
     def cmd_create(self, project_name, project_directory, project_type_name):
         project_file_name = os.path.join(project_directory,
