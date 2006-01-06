@@ -44,8 +44,11 @@ class terminal_view(contentview.content_view):
     def init(self, term_type, command_args, **kw):
         terminal, kw = make_terminal(term_type, **kw)
         self.widget.pack_start(terminal.widget)
-        terminal.execute(command_args, **kw)
         self.set_long_title(' '.join(command_args))
+        terminal.configure(self.service.opt('terminal', 'foreground_colour'),
+                            self.service.opt('terminal', 'background_colour'),
+                            self.service.opt('terminal', 'font'))
+        terminal.execute(command_args, **kw)
         
 
 class terminal_manager(service.service):
@@ -66,6 +69,18 @@ class terminal_manager(service.service):
             """The default terminal type used."""
             default = 'vte'
             rtype = types.stringlist('vte', 'moo')
+        class background_colour(defs.option):
+            """The background colour to be used"""
+            default = '#000000'
+            rtype = types.color
+        class foreground_colour(defs.option):
+            """The background colour to be used"""
+            default = '#c0c0c0'
+            rtype = types.color
+        class font(defs.option):
+            """The font to be used in terminals"""
+            default = 'Monospace 8'
+            rtype = types.font
 
     def cmd_execute(self, command_args=[], command_line='',
                     term_type=None, icon_name='terminal', kwdict={}):
@@ -116,6 +131,9 @@ class pida_terminal(base.pidacomponent):
         return None
     widget = property(get_widget)
 
+    def configure(self, fg, bg, font):
+        pass
+
 class hidden_terminal(pida_terminal):
 
     def init(self):
@@ -133,6 +151,14 @@ class vte_terminal(pida_terminal):
         import vte
         self.__term = vte.Terminal()
         self.__term.set_size_request(-1, 10)
+
+    def configure(self, fg, bg, font):
+        bgcol = gtk.gdk.color_parse(bg)
+        fgcol = gtk.gdk.color_parse(fg)
+        self.__term.set_colors(fgcol, bgcol, [])
+        self.__term.set_font_from_string(font)
+        self.__term.set_size(60, 10)
+        self.__term.set_size_request(-1, 50)
 
     def get_widget(self):
         return self.__term
@@ -182,13 +208,16 @@ class dumb_terminal(pida_terminal):
         self.__sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.__view = gtk.TextView()
         self.__sw.add(self.__view)
+
+    def configure(self, fg, bg, font):
         model = self.__view.get_buffer()
         self.__tag = model.create_tag('fixed', editable=False,
-                                      font='Monospace 8', background='black',
-                                      foreground='white')
-        bgcol = gtk.gdk.color_parse('black')
+                                      font=font, background=bg,
+                                      foreground=fg)
+        bgcol = gtk.gdk.color_parse(bg)
         self.__view.modify_bg(gtk.STATE_NORMAL, bgcol)
         self.__view.modify_base(gtk.STATE_NORMAL, bgcol)
+
 
     def translate_kwargs(self, **kw):
         kwdict = {}
