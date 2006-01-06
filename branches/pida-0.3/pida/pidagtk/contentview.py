@@ -142,6 +142,7 @@ class content_view(gtk.VBox):
         if self.HAS_TITLE:
             topbar.pack_start(self.__long_title_label)
             self.__long_title_label.set_alignment(0, 0.5)
+            self.__long_title_label.set_selectable(True)
         if self.HAS_CONTROL_BOX:
             if self.HAS_CLOSE_BUTTON:
                 self.__toolbar_area.pack_start(gtk.Alignment())
