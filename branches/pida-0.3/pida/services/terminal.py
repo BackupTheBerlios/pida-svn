@@ -27,8 +27,11 @@ import pida.core.service as service
 
 # pidagtk import(s)
 import pida.pidagtk.contentview as contentview
+import gobject
+import gtk
 
 # system import(s)
+import os
 import subprocess
 
 defs = service.definitions
@@ -171,14 +174,48 @@ class moo_terminal(pida_terminal):
             kwdict['working_dir'] = kw['directory']
         return kwdict
 
+class dumb_terminal(pida_terminal):
+
+    def init(self):
+        import gtk
+        self.__sw = gtk.ScrolledWindow()
+        self.__sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.__view = gtk.TextView()
+        self.__sw.add(self.__view)
+        model = self.__view.get_buffer()
+        self.__tag = model.create_tag('fixed', editable=False,
+                                      font='Monospace 8')
+
+    def translate_kwargs(self, **kw):
+        kwdict = {}
+        if 'directory' in kw:
+            kwdict['cwd'] = kw['directory']
+        return kwdict
+
+    def execute(self, command_args, **kw):
+        proc = popen(command_args, self.cb_completed, kw)
+
+    def get_widget(self):
+        return self.__sw
+
+    def cb_completed(self, data):
+        model = self.__view.get_buffer()
+        start = model.get_start_iter()
+        model.insert_with_tags(start, data, self.__tag)
+        self.__view.scroll_to_iter(model.get_end_iter(), 0.0, False)
+        
+
+    widget = property(get_widget)
 
 TT_HIDDEN = 'hidden'
 TT_VTE = 'vte'
 TT_MOO = 'moo'
+TT_DUMB = 'dumb'
 
 TERMINAL_TYPES = {TT_HIDDEN: hidden_terminal,
                   TT_VTE: vte_terminal,
-                  TT_MOO: moo_terminal}
+                  TT_MOO: moo_terminal,
+                  TT_DUMB: dumb_terminal}
 
 def make_terminal(terminal_type_name, **kw):
     if terminal_type_name in TERMINAL_TYPES:
@@ -186,6 +223,37 @@ def make_terminal(terminal_type_name, **kw):
         terminal = terminal_type()
         kw = terminal.translate_kwargs(**kw)
         return terminal, kw
+
+
+class popen(object):
+    
+    def __init__(self, cmdargs, callback, kwargs):
+        self.__running = False
+        self.__readbuf = []
+        self.__callback = callback
+        self.run(cmdargs, **kwargs)
+    
+    def run(self, cmdargs, **kwargs):
+        console = subprocess.Popen(args=cmdargs, stdout=subprocess.PIPE,
+                                                 stderr=subprocess.STDOUT,
+                                                 **kwargs)
+        self.__running = True
+        self.__readtag = gobject.io_add_watch(
+            console.stdout, gobject.IO_IN, self.cb_read)
+        self.__huptag = gobject.io_add_watch(
+            console.stdout, gobject.IO_HUP, self.cb_hup)
+        self.pid = console.pid
+
+    def cb_read(self, fd, cond):
+        data = os.read(fd.fileno(), 1024)
+        self.__readbuf.append(data)
+        return True
+
+    def cb_hup(self, fd, cond):
+        self.__callback(''.join(self.__readbuf))
+        self.__running = False
+        gobject.source_remove(self.__readtag)
+        return False
 
 def test_terminal(terminal_type_names, command_line, **kw):
     import gtk

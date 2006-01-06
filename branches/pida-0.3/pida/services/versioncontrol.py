@@ -89,15 +89,17 @@ class version_control(service.service):
                                     filename=filename)
         else:
             directory = os.path.dirname(filename)
+            basename = os.path.basename(filename)
             vcs = self.call('get_vcs_for_directory', directory=directory)
             if vcs.NAME == 'Null':
                 self.log.info('"%s" is not version controlled', directory)
             else:
                 try:
-                    commandargs = vcs.diff_command() + [filename]
+                    commandargs = vcs.diff_command() + [basename]
                     self.boss.call_command('terminal', 'execute',
                                         command_args=commandargs,
                                         icon_name='vcs_diff',
+                                        term_type='dumb',
                                         kwdict = {'directory':
                                                    directory})
                 except NotImplementedError:
