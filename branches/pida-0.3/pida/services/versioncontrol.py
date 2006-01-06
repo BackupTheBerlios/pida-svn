@@ -36,10 +36,10 @@ class version_control(service.service):
         """How much meld will be used."""
         class use_meld_for_statuses(defs.option):
             rtype = types.boolean
-            default = True
+            default = False
         class use_meld_for_diff(defs.option):
             rtype = types.boolean
-            default = True
+            default = False
 
     def init(self):
         self.__currentfile = None
