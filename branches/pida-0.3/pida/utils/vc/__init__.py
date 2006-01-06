@@ -22,9 +22,9 @@
 ### THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import bzr, cvs, darcs, mercurial, monotone, svn, _null
+import bzr, cvs, darcs, mercurial, monotone, svn, tla, _null
 
-_plugins = [bzr, cvs, darcs, mercurial, monotone, svn]
+_plugins = [bzr, cvs, darcs, mercurial, monotone, svn, tla]
 
 def Vc(location):
     for plugin in _plugins:

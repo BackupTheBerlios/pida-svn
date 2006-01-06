@@ -89,6 +89,7 @@ class GazpachoApplication(application.Application):
         main_vbox.pack_start(hbox)
         
         palette.connect('toggled', self._palette_button_clicked)
+        palette.get_parent().remove(palette)
         hbox.pack_start(palette, False, False)
 
         vpaned = gtk.VPaned()
