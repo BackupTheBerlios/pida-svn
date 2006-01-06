@@ -184,7 +184,11 @@ class dumb_terminal(pida_terminal):
         self.__sw.add(self.__view)
         model = self.__view.get_buffer()
         self.__tag = model.create_tag('fixed', editable=False,
-                                      font='Monospace 8')
+                                      font='Monospace 8', background='black',
+                                      foreground='white')
+        bgcol = gtk.gdk.color_parse('black')
+        self.__view.modify_bg(gtk.STATE_NORMAL, bgcol)
+        self.__view.modify_base(gtk.STATE_NORMAL, bgcol)
 
     def translate_kwargs(self, **kw):
         kwdict = {}
