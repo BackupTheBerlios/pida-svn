@@ -102,6 +102,7 @@ class Vc(_vc.Vc):
                           "!": _vc.STATE_MISSING,
                           "I": _vc.STATE_IGNORED,
                           "M": _vc.STATE_MODIFIED,
+                          "D":_vc.STATE_REMOVED,
                           "C": _vc.STATE_CONFLICT }.get(match[1], _vc.STATE_NONE)
                 retfiles.append( _vc.File(path, name, state, rev, tag, options) )
 
