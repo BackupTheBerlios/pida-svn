@@ -88,6 +88,28 @@ class window_manager(service.service):
         actiongroup.set_visible(False)
         self.__uim.ensure_update()
 
+    def cmd_input(self, callback_function, prompt='?', prefill=''):
+        dialog = gtk.Dialog(title=prompt,
+            parent=self.boss.get_main_window(),
+            buttons=(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT,
+                     gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT))
+        hb = gtk.HBox(spacing=6)
+        dialog.vbox.pack_start(hb)
+        hb.set_border_width(6)
+        hb.pack_start(gtk.Label(prompt), expand=False)
+        name_entry = gtk.Entry()
+        hb.pack_start(name_entry)
+        name_entry.set_text(prefill)
+        hb.show_all()
+        def response(dialog, response):
+            if response == gtk.RESPONSE_ACCEPT:
+                text = name_entry.get_text()
+                callback_function(text)
+            dialog.destroy()
+        dialog.connect('response', response)
+        dialog.run()
+    
+
     def bnd_buffermanager_document_changed(self, document):
         self.call('set_title', title=document.filename)
 

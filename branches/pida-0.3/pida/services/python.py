@@ -158,30 +158,18 @@ class python(service.service):
 
         def act_add_ui_form(self, action):
             """Add a user interface form to the current project."""
-            dialog = gtk.Dialog(title='Form name',
-                parent=self.service.boss.get_main_window(),
-                buttons=(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT,
-                         gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT))
-            hb = gtk.HBox(spacing=6)
-            dialog.vbox.pack_start(hb)
-            hb.set_border_width(6)
-            hb.pack_start(gtk.Label('Form name'), expand=False)
-            name_entry = gtk.Entry()
-            hb.pack_start(name_entry)
-            hb.show_all()
-            def response(dialog, response):
-                if response == gtk.RESPONSE_ACCEPT:
-                    name = name_entry.get_text()
-                    if not name.endswith('.glade'):
-                        name = '%s.glade' % name
-                    proj = self.boss.call_command('projectmanager',
-                                                  'get_current_project')
-                    filepath = os.path.join(proj.source_directory, name)
-                    self.service.boss.call_command('gazpach', 'create',
-                                                   filename=filepath)
-                dialog.destroy()
-            dialog.connect('response', response)
-            dialog.run()
+            def callback(name):
+                if not name.endswith('.glade'):
+                    name = '%s.glade' % name
+                proj = self.boss.call_command('projectmanager',
+                                              'get_current_project')
+                filepath = os.path.join(proj.source_directory, name)
+                self.service.boss.call_command('gazpach', 'create',
+                                               filename=filepath)
+            self.service.boss.call_command('window', 'input',
+                                            callback_function=callback,
+                                            prompt='Form Name')
+
 
         def get_menu_definition(self):
             return """
