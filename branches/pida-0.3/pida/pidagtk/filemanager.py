@@ -146,7 +146,7 @@ class FileBrowser(contentview.content_view):
             except self.service.boss.ServiceNotFoundError:
                 pass
 
-            SMAP = {0: 'i', 1:'?', 2:' ', 7: 'M', 6: 'A', 8: 'C'}
+            SMAP = {0: 'i', 1:'?', 2:' ', 7: 'M', 6: 'A', 8: 'C', 9:'D'}
             
             statuses = self.service.boss.call_command('versioncontrol',
                     'get_statuses', directory=directory)
