@@ -30,7 +30,7 @@ STATES = {
     "A": _vc.STATE_NEW,
     "M": _vc.STATE_MODIFIED,
     "C": _vc.STATE_CONFLICT,
-    "R": _vc.STATE_REMOVED
+    "D": _vc.STATE_REMOVED
 }
 
 class Vc(_vc.Vc):

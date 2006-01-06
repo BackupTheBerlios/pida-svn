@@ -130,7 +130,9 @@ class file_versioncontrol_context(default_context):
                  ('vcs_add', 'vcs_add', 'VCS Add',
                  'Add file'),
                  ('vcs_remove', 'vcs_remove', 'VCS Remove',
-                 'Remove file')]
+                 'Remove file'),
+                 ('vcs_revert', 'undo', 'VCS revert',
+                 'Revert file')]
 
     def command_vcs_diff(self, filename):
         self.boss.call_command('versioncontrol', 'diff_file',
@@ -142,6 +144,10 @@ class file_versioncontrol_context(default_context):
 
     def command_vcs_remove(self, filename):
         self.boss.call_command('versioncontrol', 'remove_file',
+                                filename=filename)
+
+    def command_vcs_revert(self, filename):
+        self.boss.call_command('versioncontrol', 'revert_file',
                                 filename=filename)
 
     def globals_modifier(self, globaldict):
