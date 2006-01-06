@@ -177,7 +177,7 @@ class directory_context(default_context):
                            directories=[directory])
 
     def command_new(self, directory):
-        self.boss.call_command('newfile', 'create-interactive',
+        self.boss.call_command('newfile', 'create_interactive',
                           directory=directory)
 
     def command_terminal(self, directory):
