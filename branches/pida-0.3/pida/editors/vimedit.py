@@ -40,10 +40,19 @@ class vim_editor(service.service):
         self.__srv = None
         self.__currentfile = None
 
+    class general(defs.optiongroup):
+        class use_cream(defs.option):
+            rtype = types.boolean
+            default = False
+
     def cmd_start(self):
         self.__cw = vimcom.communication_window(self)
         self.create_single_view()
-        self.single_view.run()
+        if self.opt('general', 'use_cream'):
+            command = 'cream'
+        else:
+            command = 'gvim'
+        self.single_view.run(command)
 
     def cmd_revert(self):
         self.__cw.revert(self.__srv)
@@ -230,7 +239,8 @@ endfunction
     endtry
 endfunction
 :silent augroup pida
-:set guioptions-=mT
+:set guioptions-=T
+:set guioptions-=m
 :silent au! pida
 :silent au pida BufEnter * call Async_event("bufferchange,".getcwd().",".bufname('%'))
 :silent au pida BufDelete * call Async_event("bufferunload,".expand('<amatch>'))

@@ -42,7 +42,6 @@ class vim_embed(contentview.content_view):
     def init(self, command='gvim', args=[]):
         self.widget.set_border_width(3)
         self.__servername = self.__generate_servername()
-        self.command = command
         self.pid = None
         self.args = args
         self.r_cb_plugged = None
@@ -70,7 +69,8 @@ class vim_embed(contentview.content_view):
         self.service.remove_attempt()
         return False
 
-    def run(self):
+    def run(self, command):
+        self.command = command
         xid = self.__pack()
         args = self.args[:] # a copy
         args.extend(['--socketid', '%s' % xid])
