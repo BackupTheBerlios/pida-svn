@@ -37,7 +37,6 @@ class PaneSize(types.integer):
 class window_manager(service.service):
     """Class to control the main window."""
 
-
     class layout(defs.optiongroup):
         """The layout options."""
         class sidebar_on_right(defs.option):
@@ -56,6 +55,19 @@ class window_manager(service.service):
             rtype = types.boolean
             default = True
 
+    def init(self):
+        self.__window = window.pidawindow(self)
+        self.__window.connect('destroy', self.cb_destroy)
+        self._connect_drag_events()
+        self._create_uim()
+
+    def reset(self):
+        """Display the window."""
+        if not self.__started:
+            self.__started = True
+            self._pack_window()
+            self.__window.show_all()
+
     def cmd_update_action_groups(self):
         self.__uim.ensure_update()
         tp = self.toolbar.get_parent()
@@ -63,14 +75,6 @@ class window_manager(service.service):
             tp.remove(self.toolbar)
         self.toolbar = self.__uim.get_widget('/toolbar')
         tp.pack_start(self.toolbar)
-        
-        #print self.__uim.get_ui()
-        #ag = self.__uim.get_action_groups()
-       # for a in ag:
-         #   print a.get_name(), a.get_visible()
-         #   acts = a.list_actions()
-         #   for act in acts:
-         #       print '\t', act, act.get_name(), act.get_visible()
 
     def cmd_shrink_content(self, bookname):
         self.__window.shrinkbook(bookname)
@@ -115,14 +119,14 @@ class window_manager(service.service):
             dialog.destroy()
         dialog.connect('response', response)
         dialog.run()
-    
 
     def bnd_buffermanager_document_changed(self, document):
         self.call('set_title', title=document.filename)
 
-    def init(self):
-        self.__window = window.pidawindow(self)
-        self.__window.connect('destroy', self.cb_destroy)
+    def cb_destroy(self, window):
+        self.boss.stop()
+
+    def _create_uim(self):
         self.__uim = gtk.UIManager()
         ag = gtk.ActionGroup('baseactions')
         ag.add_actions([
@@ -133,7 +137,6 @@ class window_manager(service.service):
             ('base_tools_menu', None, '_Tools'),
             ('base_help_menu', None, '_Help')
             ])
-            
         menudef = """
                 <menubar>
                 <menu name="base_file" action="base_file_menu">
@@ -169,13 +172,18 @@ class window_manager(service.service):
         self.call('register_action_group',
                     actiongroup=ag,
                     uidefinition=menudef)
-
         self.__started = False
 
-    def cb_destroy(self, window):
-        self.boss.stop()
+    def _debug_uim(self):
+        print self.__uim.get_ui()
+        ag = self.__uim.get_action_groups()
+        for a in ag:
+            print a.get_name(), a.get_visible()
+            acts = a.list_actions()
+            for act in acts:
+                print '\t', act, act.get_name(), act.get_visible()
 
-    def __pack_window(self):
+    def _pack_window(self):
         """Populate the window."""
         bufferview = self.get_service('buffermanager').single_view
         pluginview = contentbook.contentbook('Plugins')
@@ -189,7 +197,8 @@ class window_manager(service.service):
                                     [('text/uri-list', 0, 0)],
                                     gtk.gdk.ACTION_COPY)
         self.__window.pack(menubar, self.toolbar, bufferview, pluginview)
-        
+
+    def _connect_drag_events(self):
         def drag_motion(win, drag, x, y, timestamp):
             self.buffermanager.drag_highlight()
 
@@ -210,27 +219,9 @@ class window_manager(service.service):
         self.__window.connect('drag-leave', drag_leave)
         self.__window.connect('drag-data-received', drag_drop)
 
-
-        self.__window.reset()
-        
-
-    def reset(self):
-        """Display the window."""
-        if not self.__started:
-            self.__started = True
-            self.__pack_window()
-            self.__window.show_all()
-        #self.__window.resize_viewbook(-1,
-        #                              self.options.get('view-book-height').value())
-        #self.__window.resize_contentbook(-1,
-        #                              self.options.get('content-book-height').value())
-        #self.__window.resize_sidepane(self.options.get('layout').get('sidebar_width').value)
-
-        pass
-
-    def __get_view(self):
+    def get_view(self):
         return self.__window
-    view = property(__get_view)
+    view = property(get_view)
 
     def cmd_set_title(self, title):
         """Set the window title.
