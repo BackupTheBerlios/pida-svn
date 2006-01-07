@@ -49,13 +49,20 @@ class window_manager(service.service):
             default = 300
             rtype = types.intrange(200, 1800, 25)
 
+    class panes(defs.optiongroup):
+        """Options for panes."""
+        class automatically_expand_language_bar(defs.option):
+            """Whether the language bar will automatically expand when there are language plugins available"""
+            rtype = types.boolean
+            default = True
+
     def cmd_update_action_groups(self):
         self.__uim.ensure_update()
-        #tp = self.toolbar.get_parent()
-        #if tp:
-        #    tp.remove(self.toolbar)
-        #self.toolbar = self.__uim.get_widget('/toolbar')
-        #tp.pack_start(self.toolbar)
+        tp = self.toolbar.get_parent()
+        if tp:
+            tp.remove(self.toolbar)
+        self.toolbar = self.__uim.get_widget('/toolbar')
+        tp.pack_start(self.toolbar)
         
         #print self.__uim.get_ui()
         #ag = self.__uim.get_action_groups()
@@ -177,11 +184,11 @@ class window_manager(service.service):
                 pluginview.append_page(service.plugin_view)
         self.__uim.ensure_update()
         menubar = self.__uim.get_toplevels(gtk.UI_MANAGER_MENUBAR)[0]
-        toolbar = self.__uim.get_toplevels(gtk.UI_MANAGER_TOOLBAR)[0]
+        self.toolbar = self.__uim.get_toplevels(gtk.UI_MANAGER_TOOLBAR)[0]
         self.__window.drag_dest_set(gtk.DEST_DEFAULT_ALL,
                                     [('text/uri-list', 0, 0)],
                                     gtk.gdk.ACTION_COPY)
-        self.__window.pack(menubar, toolbar, bufferview, pluginview)
+        self.__window.pack(menubar, self.toolbar, bufferview, pluginview)
         
         def drag_motion(win, drag, x, y, timestamp):
             self.buffermanager.drag_highlight()

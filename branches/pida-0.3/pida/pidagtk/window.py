@@ -63,11 +63,15 @@ class pidawindow(paned.paned_window):
         if bookname in self.__viewbooks:
             self.__viewbooks[bookname].append_page(page)
             self.__viewbooks[bookname].show_all()
+            if bookname == 'language':
+                if not self.__manager.opt('panes',
+                    'automatically_expand_language_bar'):
+                    return True
             try:
                 pos = self._get_book_position(self.__viewbooks[bookname])
                 self.set_pane_sticky(pos, True)
             except AttributeError, e:
-                print e, bookname
+                pass
             return True
         else:
             return False

@@ -208,7 +208,6 @@ class paned(gtk.EventBox):
             self.__stick_arrow.set(gtk.ARROW_DOWN, gtk.SHADOW_ETCHED_IN)
 
     def set_sticky(self, stickiness):
-        print 'setting sticky', stickiness
         self.hide_pane()
         self.__sticky = stickiness
         if stickiness:
