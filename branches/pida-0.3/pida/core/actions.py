@@ -21,8 +21,10 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+# gtk import(s)
 import gtk
 
+# pida core import(s)
 import base
 
 class action_handler(base.pidacomponent):
