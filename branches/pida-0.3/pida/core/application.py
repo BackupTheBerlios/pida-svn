@@ -42,7 +42,7 @@ pida_revision = open(version_file).read().strip()
 pida_version = '0.3.pre r%s' % pida_revision
 
 def print_version_and_die():
-    print 'pIDA version %s' % pida_version
+    print 'PIDA, version %s' % pida_version
     sys.exit(0)
 
 class environment(base.pidacomponent):
