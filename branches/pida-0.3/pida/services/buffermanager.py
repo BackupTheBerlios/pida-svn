@@ -71,6 +71,9 @@ class Buffermanager(service.service):
     class document_changed(defs.event):
         pass
 
+    class document_modified(defs.event):
+        pass
+
     def bnd_editormanager_started(self):
         for filename in self.boss.positional_args:
             self.call('open_file', filename=filename)
@@ -181,6 +184,10 @@ class Buffermanager(service.service):
             self.__remove_document(document)
         else:
             self.log.warn('attempt to close file not opened %s', filename)
+
+    def cmd_reset_current_document(self):
+        self.__currentdocument.reset()
+        self.events.emit('document_modified', document=self.__currentdocument)
         
     def __remove_document(self, document):
         del self.__filenames[document.unique_id]

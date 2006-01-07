@@ -135,6 +135,7 @@ class realfile_document(document):
         self.__string = None
         self.__stat = None
         self.__mimetype = None
+    reset = __reset
         
     def __load(self):
         if self.__stat is None:

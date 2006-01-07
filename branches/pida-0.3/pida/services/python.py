@@ -77,6 +77,9 @@ class python(service.service):
                                command_args=command_args,
                                icon_name='execute')
 
+    def bnd_buffermanager_document_modified(self, document):
+        self.uncache(document)
+
     class python_language(defs.language_handler):
         file_name_globs = ['*.py']
 
@@ -84,7 +87,7 @@ class python(service.service):
 
         def init(self):
             self.__document = None
-            self.__cached = {}
+            self.__cached = self.cached = {}
 
         def load_document(self, document):
             self.__document = document

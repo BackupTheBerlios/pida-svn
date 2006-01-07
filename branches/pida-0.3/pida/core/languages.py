@@ -29,3 +29,12 @@ class language_handler(actions.action_handler):
 
     file_name_globs = []
     first_line_globs = []
+
+    def __init__(self, *args):
+        actions.action_handler.__init__(self, *args)
+        self.service.uncache = self.uncache
+
+    def uncache(self, document):
+        if document.unique_id in self.cached:
+            del self.cached[document.unique_id]
+            self.load_document(document)

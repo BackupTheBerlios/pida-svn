@@ -194,7 +194,7 @@ class vim_editor(service.service):
                 self.log.info('vim unloaded an unknown file %s', filename)
 
     def vim_filesave(self, *args):
-        self.boss.command('buffer-manager', 'reset-current-buffer')
+        self.boss.call_command('buffermanager', 'reset_current_document')
 
     def vim_globalkp(self, name):
         self.boss.command('keyboardshortcuts', 'keypress-by-name',

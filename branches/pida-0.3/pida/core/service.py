@@ -336,6 +336,10 @@ class language_type_mixin(object):
                                    'register_language_handler',
                                    handler_type=handler_type)
 
+    def bnd_buffermanager_document_modified(self, document):
+        if hasattr(self, 'uncache'):
+            self.uncache(document)
+
 
 class project_type_mixin(object):
 

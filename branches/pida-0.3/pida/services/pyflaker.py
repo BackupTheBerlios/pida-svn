@@ -76,7 +76,7 @@ class pyflaker(service.service):
 
         def init(self):
             self.__document = None
-            self.__cached = {}
+            self.cached = self.__cached = {}
 
         def load_document(self, document):
             self.__document = document
