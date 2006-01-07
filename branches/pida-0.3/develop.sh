@@ -6,17 +6,19 @@ pidadir=${me%/*}
 distdir=$pidadir/build/egg
 
 # build pida
+echo "Building pida ..."
 ( cd $pidadir
-LANG=C svn info . | grep '^Revision:' | cut -d' ' -f2 > data/svn_revision
-python setup.py build 2>&1>/dev/null
-python setup.py bdist --dist-dir=$distdir --formats=egg 2>&1>/dev/null
-)
+  python setup.py build
+  grep '^Version:' pida.egg-info/PKG-INFO | cut -d' ' -f2- > data/version
+  python setup.py bdist --dist-dir=$distdir --formats=egg
+) 2>&1 > /dev/null
 
 pyver=`python -V 2>&1 | cut -d' ' -f2 | cut -c1-3`
-version=`grep '^Version:' $pidadir/pida.egg-info/PKG-INFO | cut -d' ' -f2-`
-egg="$distdir/pida-$version-py$pyver.egg"
+version=`cat data/version`
+egg="$distdir/pida-${version//-/_}-py$pyver.egg"
+
+echo; echo "Adding ${egg#$pidadir/} to '\$PYTHONPATH' ..."
 export PYTHONPATH=$egg:$PYTHONPATH
-echo "built and added $egg to '\$PYTHONPATH'"
 
 DEBUG= REMOTE= GDB=
 while [ $# -gt 0 ]; do
@@ -36,7 +38,7 @@ if [ "$REMOTE" ]; then
 else
     pidacmd="$pidadir/scripts/pida $*"
 fi
-
+echo "Running $pidacmd ..."
 if [ "$GDB" ]; then
     echo "run $pidacmd" | exec gdb python -x /dev/stdin
 else

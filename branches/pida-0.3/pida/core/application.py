@@ -37,9 +37,8 @@ import gtk
 
 from pkg_resources import Requirement, resource_filename
 version_file = resource_filename(Requirement.parse('pida'),
-                                 'revision/svn_revision')
-pida_revision = open(version_file).read().strip()
-pida_version = '0.3-pre r%s' % pida_revision
+                                 'version/version')
+pida_version = open(version_file).read().strip()
 
 def print_version_and_die():
     print 'PIDA, version %s' % pida_version

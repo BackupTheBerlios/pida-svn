@@ -35,7 +35,7 @@ def log(message):
     if VERBOSE:
         print 'Pida:', message
 
-log('Preparing core')
+log('Preparing core...')
 packages = ['pida',
             'pida.core',
             'pida.pidagtk',
@@ -54,7 +54,7 @@ packages = ['pida',
 #        log('Adding editor "%s"' % plugin)
 #        packages.append('pida.editors.%s' % plugin)
 
-log('Performing setup.')
+log('Performing setup...')
 
 services = []
 for svc in os.listdir(os.path.join('pida', 'services')):
@@ -78,7 +78,7 @@ for pix in os.listdir(os.path.join('data', 'pixmaps')):
         pixmaps.append('data/pixmaps/%s' % pix)
 print pixmaps
 setup(name='pida',
-    version='0.3planning',
+    version='0.3',
     author='Ali Afshar',
     author_email='aafshar@gmail.com',
     url='http://pida.berlios.de',
@@ -93,7 +93,7 @@ setup(name='pida',
                 ('images', ['data/icons.dat']),
                 ('glade', ['glade/project-creator.glade']),
                 ('pixmaps', pixmaps),
-                ('revision', ['data/svn_revision']),
+                ('version', ['data/version']),
                 ('', ['data/icons/pida-icon.png']),
                 ],
     entry_points = {
