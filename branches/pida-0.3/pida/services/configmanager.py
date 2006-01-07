@@ -42,6 +42,10 @@ class config_manager(service.service):
         regs = [(svc.NAME, svc.options) for svc in self.boss.services]
         view = self.create_single_view()
         view.set_registries(regs)
+        view.connect('data-changed', self.cb_view_data_changed)
+
+    def cb_view_data_changed(self, view):
+        self.boss.reset()
 
     def act_configuration(self, action):
         self.call('edit')

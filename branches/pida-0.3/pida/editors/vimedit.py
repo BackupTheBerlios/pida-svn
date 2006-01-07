@@ -44,6 +44,10 @@ class vim_editor(service.service):
         class use_cream(defs.option):
             rtype = types.boolean
             default = False
+    class display(defs.optiongroup):
+        class colour_scheme(defs.option):
+            rtype = types.string
+            default = ''
 
     def cmd_start(self):
         self.__cw = vimcom.communication_window(self)
@@ -145,6 +149,9 @@ class vim_editor(service.service):
     def reset(self):
         if self.started:
             pass
+            colorscheme = self.opt('display', 'colour_scheme')
+            if colorscheme:
+                self.__cw.set_colorscheme(self.__srv, colorscheme)
             #self.__load_shortcuts()
 
     def open_file_line(self, filename, linenumber):

@@ -589,6 +589,9 @@ class communication_window(gtk.Window):
         self.send_esc(server)
         self.send_keys(server, 'p')
 
+    def set_colorscheme(self, server, colorscheme):
+        self.send_ex(server, 'colorscheme %s' % colorscheme)
+
     def quit(self, server):
         self.send_ex(server, 'q')
 

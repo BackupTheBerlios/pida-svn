@@ -144,6 +144,8 @@ class window_manager(service.service):
                     actiongroup=ag,
                     uidefinition=menudef)
 
+        self.__started = False
+
     def cb_destroy(self, window):
         self.boss.stop()
 
@@ -212,13 +214,14 @@ class window_manager(service.service):
 
     def reset(self):
         """Display the window."""
-        self.__pack_window()
-        self.__window.show_all()
+        if not self.__started:
+            self.__started = True
+            self.__pack_window()
+            self.__window.show_all()
         #self.__window.resize_viewbook(-1,
         #                              self.options.get('view-book-height').value())
         #self.__window.resize_contentbook(-1,
         #                              self.options.get('content-book-height').value())
-        self.log.debug(self.options)
         #self.__window.resize_sidepane(self.options.get('layout').get('sidebar_width').value)
 
         pass
