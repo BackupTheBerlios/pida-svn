@@ -96,6 +96,11 @@ class document_type_handler(service.service):
                 </menu>
                 </menubar>
                 <toolbar>
+                <placeholder name="OpenFileToolbar">
+                </placeholder>
+                <placeholder name="SaveFileToolbar">
+                </placeholder>
+                <placeholder name="EditToolbar">
                 <toolitem name="Save" action="documenttypes+document+save" />
                 <separator />
                 <toolitem name="Undo" action="documenttypes+document+undo" />
@@ -104,7 +109,12 @@ class document_type_handler(service.service):
                 <toolitem name="Cut" action="documenttypes+document+cut" />
                 <toolitem name="Copy" action="documenttypes+document+copy" />
                 <toolitem name="Paste" action="documenttypes+document+paste" />
-                </toolbar>
+                </placeholder>
+                <placeholder name="ProjectToolbar">
+                </placeholder>
+                <placeholder name="VcToolbar">
+                </placeholder>
+            </toolbar>
                 """
 
     def init(self):

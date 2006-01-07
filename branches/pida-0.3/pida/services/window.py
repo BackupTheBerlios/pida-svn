@@ -130,18 +130,32 @@ class window_manager(service.service):
         menudef = """
                 <menubar>
                 <menu name="base_file" action="base_file_menu">
+                <placeholder name="OpenFileMenu" />
+                <placeholder name="SaveFileMenu" />
+                <placeholder name="ExtrasFileMenu" />
+                <placeholder name="GlobalFileMenu" />
                 </menu>
                 <menu name="base_edit" action="base_edit_menu">
                 </menu>
                 <menu name="base_project" action="base_project_menu">
-                </menu>
-                <menu name="base_python" action="base_python_menu">
                 </menu>
                 <menu name="base_tools" action="base_tools_menu">
                 </menu>
                 <menu name="base_help" action="base_help_menu">
                 </menu>
                 </menubar>
+                <toolbar>
+                <placeholder name="OpenFileToolbar">
+                </placeholder>
+                <placeholder name="SaveFileToolbar">
+                </placeholder>
+                <placeholder name="EditToolbar">
+                </placeholder>
+                <placeholder name="ProjectToolbar">
+                </placeholder>
+                <placeholder name="VcToolbar">
+                </placeholder>
+                </toolbar>
                 """
         self.call('register_action_group',
                     actiongroup=ag,

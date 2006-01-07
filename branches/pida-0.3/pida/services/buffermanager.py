@@ -253,8 +253,19 @@ class Buffermanager(service.service):
                 </menu>
                 </menubar>
                 <toolbar>
+                <placeholder name="OpenFileToolbar">
+                <separator />
                 <toolitem name="Open" action="buffermanager+open_file" />
                 <separator />
+                </placeholder>
+                <placeholder name="SaveFileToolbar">
+                </placeholder>
+                <placeholder name="EditToolbar">
+                </placeholder>
+                <placeholder name="ProjectToolbar">
+                </placeholder>
+                <placeholder name="VcToolbar">
+                </placeholder>
                 </toolbar>
                 </ui>
                 """

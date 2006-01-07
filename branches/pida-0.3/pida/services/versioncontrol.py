@@ -208,6 +208,10 @@ class version_control(service.service):
 
     def get_menu_definition(self):
         return """
+            <toolbar>
+            <separator>
+            </separator>
+            </toolbar>
             <menubar>
             <menu name="base_file" action="base_file_menu">
             <separator />
@@ -222,6 +226,18 @@ class version_control(service.service):
             <separator />
             </menu>
             </menubar>
+            <toolbar>
+            <placeholder name="OpenFileToolbar">
+            </placeholder>
+            <placeholder name="SaveFileToolbar">
+            </placeholder>
+            <placeholder name="EditToolbar">
+            </placeholder>
+            <placeholder name="ProjectToolbar">
+            </placeholder>
+            <placeholder name="VcToolbar">
+            </placeholder>
+            </toolbar>
             """
         
         

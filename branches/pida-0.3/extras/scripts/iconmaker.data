@@ -43,6 +43,8 @@ vcs_add vcs_add
 vcs_remove vcs_remove
 vcs_resolve vcs_resolve
 vcs_diff vcs_diff
+vcs_commit commit
+vcs_update update
 gazpacho gazpacho
 gtk-copy copy
 gtk-paste paste

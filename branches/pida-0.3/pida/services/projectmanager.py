@@ -270,13 +270,20 @@ class ProjectManager(service.service):
         fdialog.run()
 
     def act_commit_project(self, action):
+        """Commit the current project to version control"""
+        directory = self.__current_project.source_directory
+        self.boss.call_command('versioncontrol', 'commit',
+                               directory=directory)
         pass
 
     def act_get_project_statuses(self, action):
         pass
 
     def act_update_project(self, action):
-        pass
+        """Update the current project from version control"""
+        directory = self.__current_project.source_directory
+        self.boss.call_command('versioncontrol', 'update',
+                               directory=directory)
 
     def act_remove_project_from_workbench(self, action):
         self.call('remove_project', project=self.__current_project)
@@ -331,6 +338,22 @@ class ProjectManager(service.service):
                 <menu name="base_tools" action="base_tools_menu">
                 </menu>
                 </menubar>
+                <toolbar>
+                <placeholder name="OpenFileToolbar">
+            </placeholder>
+            <placeholder name="SaveFileToolbar">
+            </placeholder>
+            <placeholder name="EditToolbar">
+            </placeholder>
+            <placeholder name="ProjectToolbar">
+            </placeholder>
+            <placeholder name="VcToolbar">
+                <separator />
+                <toolitem name="upproj" action="projectmanager+update_project" />
+                <toolitem name="comproj" action="projectmanager+commit_project" />
+                <separator />
+            </placeholder>
+            </toolbar>
         """
 
 
