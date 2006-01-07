@@ -191,6 +191,9 @@ class GazpachoApplication(application.Application):
         #print self._project.path
 
 class EmbeddedGazpacho(contentview.content_view):
+
+    HAS_TITLE = False
+
     def init(self):
         self.__main_window = self.service.boss.get_main_window()
         self.__gazpacho = GazpachoApplication(self.__main_window, self)
@@ -341,8 +344,15 @@ class Gazpacho(service.service):
                 <menuitem action="About"/>
                 </menu>
               </menubar>
-              <toolbar>
+                <toolbar>
+                <placeholder name="OpenFileToolbar">
+            </placeholder>
+            <placeholder name="SaveFileToolbar">
+                <separator />
                <toolitem action="gazpach+document+save"/>
+                <separator />
+            </placeholder>
+            <placeholder name="EditToolbar">
                 <separator />
                 <toolitem action="gazpach+document+undo"/>
                 <toolitem action="gazpach+document+redo"/>    
@@ -351,7 +361,13 @@ class Gazpacho(service.service):
                 <toolitem action="gazpach+document+copy"/>
                 <toolitem action="gazpach+document+paste"/>
                 <toolitem action="gazpach+document+delete"/>
-                </toolbar>
+                <separator />
+            </placeholder>
+            <placeholder name="ProjectToolbar">
+            </placeholder>
+            <placeholder name="VcToolbar">
+            </placeholder>
+            </toolbar>
                             """
 
     def cmd_open(self, filename):
