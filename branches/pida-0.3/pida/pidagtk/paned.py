@@ -165,7 +165,7 @@ class paned(gtk.EventBox):
         self.__open = False
         self.__sticky = False
         self.__pane_width = 175
-        self.update_size()
+        #self.update_size()
 
     def set_main_widget(self, main_widget):
         self.main_widget = main_widget
@@ -179,17 +179,15 @@ class paned(gtk.EventBox):
         self.__bar_holder.show_all()
         self.show_all()
         self.hide_pane()
-        self.set_sticky(True)
-        #self.__stick_button.set_active(True)
 
     def unset_pane_widget(self):
-        self.set_sticky(False)
         self.hide_pane()
         self.__pane_hidden.remove(self.__pane_widget)
         self.__pane_widget = None
         self.__bar_holder.set_sensitive(False)
         self.__bar_holder.hide_all()
         self.__bar_holder.set_no_show_all(True)
+        self.set_sticky(False)
 
     def show_pane(self):
         self.__pane_widget.reparent(self.__pane_holder)
@@ -207,6 +205,7 @@ class paned(gtk.EventBox):
             self.__stick_arrow.set(gtk.ARROW_DOWN, gtk.SHADOW_ETCHED_IN)
 
     def set_sticky(self, stickiness):
+        print 'setting sticky', stickiness
         self.hide_pane()
         self.__sticky = stickiness
         if stickiness:

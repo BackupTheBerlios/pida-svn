@@ -135,6 +135,8 @@ class pidawindow(paned.paned_window):
         self.set_pane_widget(panepos, self.__side_pane)
         self.set_pane_sticky(panepos, True)
 
+        self.__manager.boss.call_command('terminal', 'execute_shell')
+
         vb = self.__viewbooks['language'] = contentbook.Contentholder()
         #bar.pack_start(vb)
         #vb.collapse()
