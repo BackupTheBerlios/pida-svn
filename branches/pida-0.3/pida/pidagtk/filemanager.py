@@ -269,6 +269,10 @@ class FileBrowser(contentview.content_view):
         self.service.boss.call_command('versioncontrol',
             'forget_directory', directory=self.__currentdirectory)
         self.display(self.__currentdirectory)
+
+    def get_directory(self):
+        return self.__currentdirectory
+    directory = property(get_directory)
         
 
 gobject.type_register(FileBrowser)

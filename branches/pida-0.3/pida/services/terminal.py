@@ -45,9 +45,12 @@ class terminal_view(contentview.content_view):
         terminal, kw = make_terminal(term_type, **kw)
         self.widget.pack_start(terminal.widget)
         self.set_long_title(' '.join(command_args))
-        terminal.configure(self.service.opt('terminal', 'foreground_colour'),
-                            self.service.opt('terminal', 'background_colour'),
-                            self.service.opt('terminal', 'font'))
+        terminal.configure(self.service.opt('fonts_and_colours',
+                                            'foreground_colour'),
+                           self.service.opt('fonts_and_colours',
+                                            'background_colour'),
+                           self.service.opt('fonts_and_colours',
+                                            'font'))
         terminal.connect_child_exit(self.cb_exited)
         terminal.execute(command_args, **kw)
 
@@ -69,12 +72,14 @@ class terminal_manager(service.service):
             default = 'bash'
             rtype = types.string
 
-    class terminal(defs.optiongroup):
+    class general(defs.optiongroup):
         """Terminal options."""
         class terminal_type(defs.option):
             """The default terminal type used."""
             default = 'vte'
             rtype = types.stringlist('vte', 'moo')
+    class fonts_and_colours(defs.optiongroup):
+        """Fonts and colours for the terminal"""
         class background_colour(defs.option):
             """The background colour to be used"""
             default = '#000000'
@@ -91,7 +96,7 @@ class terminal_manager(service.service):
     def cmd_execute(self, command_args=[], command_line='',
                     term_type=None, icon_name='terminal', kwdict={}):
         if term_type == None:
-            term_type = self.opt('terminal', 'terminal_type')
+            term_type = self.opt('general', 'terminal_type')
         self.create_multi_view(term_type=term_type,
                                command_args=command_args,
                                icon_name=icon_name,

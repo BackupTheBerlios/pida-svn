@@ -42,8 +42,9 @@ class file_manager(service.service):
             directory = os.path.expanduser('~')
         self.single_view.display(directory)
 
-    def cmd_get_current_selection(self):
-        pass
+    def cmd_get_current_directory(self):
+        if self.single_view is not None:
+            return self.single_view.directory
 
     def cb_single_view_file_activated(self, view, filename):
         

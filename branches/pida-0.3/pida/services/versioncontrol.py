@@ -23,6 +23,8 @@
 
 import os
 
+import gobject
+
 import pida.core.service as service
 
 import pida.utils.vc as vc
@@ -119,6 +121,7 @@ class version_control(service.service):
                                         icon_name='vcs_update',
                                         kwdict = {'directory':
                                                    directory})
+                self._update_filemanager(directory)
             except NotImplementedError:
                 self.log.info('"%s" is not version controlled', directory)
             return vcs
@@ -135,6 +138,7 @@ class version_control(service.service):
                                         icon_name='vcs_commit',
                                         kwdict = {'directory':
                                                    directory})
+                self._update_filemanager(directory)
             self.boss.call_command('window', 'input',
                                    callback_function=commit,
                                    prompt='%s commit message' % vcs.NAME)
@@ -163,8 +167,11 @@ class version_control(service.service):
                                     icon_name='vcs_add',
                                     kwdict = {'directory':
                                                directory})
+                self._update_filemanager(directory)
             except NotImplementedError:
                 self.log.info('Not implemented for %s' % vcs.NAME)
+        
+
 
     def cmd_remove_file(self, filename):
         
@@ -181,6 +188,7 @@ class version_control(service.service):
                                     icon_name='vcs_add',
                                     kwdict = {'directory':
                                                directory})
+                self._update_filemanager(directory)
             except NotImplementedError:
                 self.log.info('Not implemented for %s' % vcs.NAME)
 
@@ -199,11 +207,19 @@ class version_control(service.service):
                                     icon_name='undo',
                                     kwdict = {'directory':
                                                directory})
+                self._update_filemanager(directory)
             except NotImplementedError:
                 self.log.info('Not implemented for %s' % vcs.NAME)
         
-        
-
+    def _update_filemanager(self, directory):
+        fmdir = self.boss.call_command('filemanager', 'get_current_directory')
+        print fmdir, directory
+        if directory == fmdir:
+            self.call('forget_directory', directory=directory)
+            def browse():
+                self.boss.call_command('filemanager', 'browse',
+                                       directory=directory)
+            gobject.timeout_add(200, browse)
 
     def act_diff_file(self, action):
         self.call('diff_file', filename=self.__currentfile)
