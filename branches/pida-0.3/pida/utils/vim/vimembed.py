@@ -46,16 +46,18 @@ class vim_embed(contentview.content_view):
         self.args = args
         self.r_cb_plugged = None
         self.r_cb_unplugged = None
+        self.__eb = None
 
     def __pack(self):
         socket = gtk.Socket()
-        socket.connect('plug-added', self.cb_plugged)
         socket.connect('plug-removed', self.cb_unplugged)
         eb = gtk.EventBox()
         self.widget.pack_start(eb)
         eb.add_events(gtk.gdk.KEY_PRESS_MASK)
         eb.add(socket)
         self.show_all()
+        self.__eb = eb
+        self.__socket = socket
         return socket.get_id()
 
     def __generate_servername(self):
@@ -89,18 +91,12 @@ class vim_embed(contentview.content_view):
         except OsError:
             pass
         self.pid = None
-        self.socket.destroy()
-        self.win.destroy()
+        self.__socket.destroy()
 
-    def cb_plugged(self, *a):
-        return
-
-    def cb_unplugged(self, *a):
+    def cb_unplugged(self, socket):
+        self.widget.remove(self.__eb)
         self.stop()
-        self.run(self.command)
-
-    def connect(self, plugged, unplugged):
-        self.r_cb_plugged = plugged
-        self.r_cb_unplugged = unplugged
+        self.service.shutdown()
+        self.service.call('start')
 
         

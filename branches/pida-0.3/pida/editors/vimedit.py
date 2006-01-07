@@ -200,6 +200,15 @@ class vim_editor(service.service):
         self.boss.command('keyboardshortcuts', 'keypress-by-name',
                            kpname=name)
 
+    def shutdown(self, *args):
+        for filename in self.__files:
+            self.boss.call_command('buffermanager', 'file_closed',
+                                    filename=filename)
+            self.call('close', filename=filename)
+        self.__files = []
+        self.__currentfile = None
+        
+
 
 
 SHORTCUTS = [('shortcut-execute',
@@ -253,7 +262,7 @@ endfunction
 :silent au! pida
 :silent au pida BufEnter * call Async_event("bufferchange,".getcwd().",".bufname('%'))
 :silent au pida BufDelete * call Async_event("bufferunload,".expand('<amatch>'))
-:silent au pida VimLeave * call Async_event("vimshutdown,")
+:silent au pida VimLeave * call Async_event("shutdown,")
 :silent au pida VimEnter * call Async_event("started,")
 :silent au pida BufWritePost * call Async_event("filesave,")
 :echo "PIDA connected"
