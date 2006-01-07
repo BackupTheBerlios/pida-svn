@@ -35,7 +35,7 @@ import optparse
 import gtk
 
 
-pida_version = '0.29.0'
+pida_version = '0.3.pre r795'
 
 def print_version_and_die():
     print 'pIDA version %s' % pida_version

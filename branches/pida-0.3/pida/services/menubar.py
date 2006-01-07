@@ -144,6 +144,8 @@ class Menubar(service.service):
                 </menu>
                 <menu name="base_tools" action="base_tools_menu">
                 </menu>
+                <menu name="base_help" action="base_help_menu">
+                </menu>
                 </menubar>
                 """
 

@@ -122,7 +122,8 @@ class window_manager(service.service):
             ('base_file_menu', None, '_File'),
             ('base_edit_menu', None, '_Edit'),
             ('base_project_menu', None, '_Project'),
-            ('base_tools_menu', None, '_Tools')
+            ('base_tools_menu', None, '_Tools'),
+            ('base_help_menu', None, '_Help')
             ])
             
         menudef = """
