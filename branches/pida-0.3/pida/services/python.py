@@ -21,15 +21,19 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+# system import(s)
 import os
+import threading
 
-
+# pida core import(s)
 from pida.core import service
 
+# pida gtk import(s)
 import pida.pidagtk.contentview as contentview
 import pida.pidagtk.tree as tree
+
+# pida utils import(s)
 import pida.utils.pythonparser as pythonparser
-import threading
 
 defs = service.definitions
 types = service.types
@@ -132,9 +136,9 @@ class python(service.service):
                 <placeholder name="EditToolbar">
                 </placeholder>
                 <placeholder name="ProjectToolbar">
-            <separator />
-            <toolitem name="runpy" action="python+language+execute_current_file"/>
-            <separator />
+                <separator />
+                <toolitem name="runpy" action="python+language+execute_current_file"/>
+                <separator />
                 </placeholder>
                 <placeholder name="VcToolbar">
                 </placeholder>
@@ -199,7 +203,6 @@ class python(service.service):
                                             callback_function=callback,
                                             prompt='Form Name')
 
-
         def get_menu_definition(self):
             return """
             <menubar>
@@ -210,23 +213,23 @@ class python(service.service):
             <separator />
             </menu>
             </menubar>
-                <toolbar>
-                <placeholder name="OpenFileToolbar">
-                </placeholder>
-                <placeholder name="SaveFileToolbar">
-                </placeholder>
-                <placeholder name="EditToolbar">
-                </placeholder>
-                <placeholder name="ProjectToolbar">
+            <toolbar>
+            <placeholder name="OpenFileToolbar">
+            </placeholder>
+            <placeholder name="SaveFileToolbar">
+            </placeholder>
+            <placeholder name="EditToolbar">
+            </placeholder>
+            <placeholder name="ProjectToolbar">
             <separator />
             <toolitem name="runproj" action="python+project+project_execute" />
             <separator />
-                </placeholder>
-                <placeholder name="VcToolbar">
-                </placeholder>
-                <placeholder name="ToolsToolbar">
-                </placeholder>
-                </toolbar>
+            </placeholder>
+            <placeholder name="VcToolbar">
+            </placeholder>
+            <placeholder name="ToolsToolbar">
+            </placeholder>
+            </toolbar>
             """
 
 Service = python
