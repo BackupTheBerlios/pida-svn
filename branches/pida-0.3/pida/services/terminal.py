@@ -251,11 +251,12 @@ class dumb_terminal(pida_terminal):
     def configure(self, fg, bg, font):
         model = self.__view.get_buffer()
         self.__tag = model.create_tag('fixed', editable=False,
-                                      font=font, background=bg,
-                                      foreground=fg)
-        bgcol = gtk.gdk.color_parse(bg)
-        self.__view.modify_bg(gtk.STATE_NORMAL, bgcol)
-        self.__view.modify_base(gtk.STATE_NORMAL, bgcol)
+                                      font=font)
+                                       #, background=bg,
+                                      #foreground=fg)
+        #bgcol = gtk.gdk.color_parse(bg)
+        #self.__view.modify_bg(gtk.STATE_NORMAL, bgcol)
+        #self.__view.modify_base(gtk.STATE_NORMAL, bgcol)
 
 
     def translate_kwargs(self, **kw):
