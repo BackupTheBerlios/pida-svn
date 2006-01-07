@@ -66,7 +66,8 @@ def create_page_from_optiongroup(optiongroup, parentname):
     vbox.pack_start(name_label, expand=False)
        
     name_label = gtk.Label()
-    name_label.set_markup(SECTION_TITLE % optiongroup.name)
+    name_label.set_markup(SECTION_TITLE %
+        ' '.join(optiongroup.name.split('_')).capitalize())
     name_label.set_justify(gtk.JUSTIFY_LEFT)
     name_label.set_alignment(0, 0.5)
     vbox.pack_start(name_label, expand=False)
