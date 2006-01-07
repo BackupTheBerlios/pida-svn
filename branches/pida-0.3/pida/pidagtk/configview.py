@@ -161,6 +161,8 @@ class config_view(contentview.content_view):
         for name in self.__registries:
             class di(object):
                 markup = self.service.boss.get_service_displayname(name)
+                if not markup:
+                    markup = name
                 key = name
             self.__list.add_item(di(), key=name)
 
