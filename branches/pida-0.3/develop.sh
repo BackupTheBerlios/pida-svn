@@ -8,6 +8,7 @@ distdir=$pidadir/build/egg
 # build pida
 echo "Building pida ..."
 ( cd $pidadir
+  python setup.py rotate --dist-dir=$distdir --match=.egg --keep=3
   python setup.py build
   grep '^Version:' pida.egg-info/PKG-INFO | cut -d' ' -f2- > data/version
   python setup.py bdist --dist-dir=$distdir --formats=egg
