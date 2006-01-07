@@ -172,7 +172,10 @@ class paned(gtk.EventBox):
         self.__main_holder.pack_start(main_widget)
 
     def set_pane_widget(self, pane_widget):
+        if not pane_widget:
+            return
         self.__pane_widget = pane_widget
+        pane_widget.position = self.position
         self.__pane_holder.add(pane_widget)
         self.__bar_holder.set_sensitive(True)
         self.__bar_holder.set_no_show_all(False)
@@ -214,7 +217,7 @@ class paned(gtk.EventBox):
             self.hide_pane()
 
     def hide_pane(self):
-        if not self.__sticky:
+        if not self.__sticky and self.__pane_widget:
             self.__pane_widget.reparent(self.__pane_hidden)
             self.__open = False
             self.__pane_holder.hide()
@@ -338,6 +341,10 @@ class paned(gtk.EventBox):
 
     def cb_stick_button_clicked(self, button):
         self.set_sticky(not self.__sticky)
+
+    def get_position(self):
+        return self.__pos
+    position = property(get_position)
 
 gobject.type_register(paned)
 

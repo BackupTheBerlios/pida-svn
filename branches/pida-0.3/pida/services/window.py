@@ -51,11 +51,11 @@ class window_manager(service.service):
 
     def cmd_update_action_groups(self):
         self.__uim.ensure_update()
-        tp = self.toolbar.get_parent()
-        if tp:
-            tp.remove(self.toolbar)
-        self.toolbar = self.__uim.get_widget('/toolbar')
-        tp.pack_start(self.toolbar)
+        #tp = self.toolbar.get_parent()
+        #if tp:
+        #    tp.remove(self.toolbar)
+        #self.toolbar = self.__uim.get_widget('/toolbar')
+        #tp.pack_start(self.toolbar)
         
         #print self.__uim.get_ui()
         #ag = self.__uim.get_action_groups()
@@ -170,42 +170,18 @@ class window_manager(service.service):
 
     def __pack_window(self):
         """Populate the window."""
-        #bufferview = self.boss.get_service('buffermanager').view
-        #contentbook = self.boss.get_service('contentbook').view
-        #viewbook = self.boss.get_service('viewbook').view
-        #topbar = self.boss.get_service('topbar').view
-        #import gtk
-
-
-        ##### JUST A SKETCH
-
-        self.buffermanager = self.get_service('buffermanager').single_view
-        pluginmanager = contentbook.contentbook('Plugins')#self.boss.plugins.view
-        #uim = self.__uim
+        bufferview = self.get_service('buffermanager').single_view
+        pluginview = contentbook.contentbook('Plugins')
         for service in self.boss.services:
             if service.plugin_view_type is not None:
-                pluginmanager.append_page(service.plugin_view)
-        #    menu_def = service.get_menu_definition()
-        #    if menu_def:
-        #        uim.add_ui_from_string(menu_def)
-        #    ag = service.action_group
-        #    uim.insert_action_group(ag, 0)
+                pluginview.append_page(service.plugin_view)
         self.__uim.ensure_update()
-        uim = self.__uim
-        self.pluginmanager = pluginmanager
-        self.menubar = uim.get_toplevels(gtk.UI_MANAGER_MENUBAR)[0]
-        self.toolbar = uim.get_toplevels(gtk.UI_MANAGER_TOOLBAR)[0]
-        self.menubar.show_all()
-        #editor = self.boss.get_editor().view
-        #menu = self.boss.get_service('menubar').view
-        #onright = self.options.get('sidebar-on-right').value()
-        #vertsb = self.options.get('sidebar-orientation-vertical').value()
-        #self.__window.pack(editor, bufferview, pluginmanager, contentbook,
-        #    viewbook, topbar, menu, vertsb, onright)
-
+        menubar = self.__uim.get_toplevels(gtk.UI_MANAGER_MENUBAR)[0]
+        toolbar = self.__uim.get_toplevels(gtk.UI_MANAGER_TOOLBAR)[0]
         self.__window.drag_dest_set(gtk.DEST_DEFAULT_ALL,
                                     [('text/uri-list', 0, 0)],
                                     gtk.gdk.ACTION_COPY)
+        self.__window.pack(menubar, toolbar, bufferview, pluginview)
         
         def drag_motion(win, drag, x, y, timestamp):
             self.buffermanager.drag_highlight()

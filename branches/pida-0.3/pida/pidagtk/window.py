@@ -63,6 +63,11 @@ class pidawindow(paned.paned_window):
         if bookname in self.__viewbooks:
             self.__viewbooks[bookname].append_page(page)
             self.__viewbooks[bookname].show_all()
+            try:
+                pos = self._get_book_position(self.__viewbooks[bookname])
+                self.set_pane_sticky(pos, True)
+            except AttributeError, e:
+                print e, bookname
             return True
         else:
             return False
@@ -72,90 +77,66 @@ class pidawindow(paned.paned_window):
             book = self.__viewbooks[bookname]
             book.detach_pages()
 
-    def __create_sidebar(self):
+    def _create_sidebar(self, bufferview, pluginview):
         #bar = multipaned.multi_paned()
         bar = gtk.VBox()
-        bufferlist = self.__manager.buffermanager
-        bar.pack_start(bufferlist)
-        bar.pack_start(self.__manager.pluginmanager)
+        bar.pack_start(bufferview)
+        bar.pack_start(pluginview)
         vb = self.__viewbooks['content'] = contentbook.contentbook('Quick View')
         bar.pack_start(vb)
         vb.collapse()
         return bar
 
-    def reset(self):
-        """Pack the required components."""
-        mainbox = gtk.VBox()
-        #self.add(mainbox)
-        menu = self.__manager.menubar
-        topbar = gtk.HBox()
-        toolbar = self.__manager.toolbar
+    def pack(self, menubar, toolbar, bufferview, pluginview):
+        self._pack_topbar(menubar, toolbar)
+        self._pack_panes(bufferview, pluginview)
+
+    def _pack_topbar(self, menubar, toolbar):
         self.__toolarea = gtk.VBox()
         self.top_area.pack_start(self.__toolarea)
-        self.__toolarea.pack_start(menu, expand=False)
+        self.__toolarea.pack_start(menubar, expand=False)
         self.__toolarea.pack_start(toolbar, expand=True)
         toolbar.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
-        mainbox.pack_start(topbar, expand=False)
-        self.__p0 = gtk.HPaned()
-        #def on_pane_notify(pane, gparamspec):
-        #    # A widget property has changed.  Ignore unless it is 'position'.
-        #    if gparamspec.name == 'position':
-        #        print 'pane position is now', pane.get_property('position')
-        #self.__p0.connect('notify', on_pane_notify)
-        mainbox.pack_start(self.__p0)
-        bufferlist = gtk.Label('tb')
-        pluginbook = gtk.Label('pluginbook')
-        sidebar_orientation_horizontal = False
-        sidebar_on_right = self.__manager.opt('layout', 'sidebar_on_right')
+        self.__menubar = menubar
+        self.__toolbar = toolbar
 
+    def _pack_panes(self, bufferview, pluginview):
         editor = contentbook.Contentholder(show_tabs=False)
-        #ew = pida_v_paned()
-        #ew.pack1(editor, resize=True, shrink=True)
-
         self.__viewbooks['edit'] = editor
-
-        viewbook = contentbook.Contentholder()
-        #ew.pack2(viewbook, resize=True, shrink=False)
-
-        self.__viewbooks['view'] = viewbook
-
-        #self.__editor_pane = ew
-        self.__side_pane = self.__create_sidebar()
-
         self.set_main_widget(editor)
-        self.set_pane_widget(gtk.POS_BOTTOM, viewbook)
-
+        self._create_paneholder('view', gtk.POS_BOTTOM)
+        sidebar_on_right = self.__manager.opt('layout', 'sidebar_on_right')
         if sidebar_on_right:
             panepos = gtk.POS_RIGHT
             langpos = gtk.POS_LEFT
         else:
             panepos = gtk.POS_LEFT
             langpos = gtk.POS_RIGHT
-
-        self.set_pane_widget(panepos, self.__side_pane)
+        self._create_paneholder('language', langpos)
+        sidebar = self._create_sidebar(bufferview, pluginview)
+        self.set_pane_widget(panepos, sidebar)
         self.set_pane_sticky(panepos, True)
-
-        self.__manager.boss.call_command('terminal', 'execute_shell')
-
-        vb = self.__viewbooks['language'] = contentbook.Contentholder()
-        #bar.pack_start(vb)
-        #vb.collapse()
-
-        self.set_pane_widget(langpos, vb)
-
-        self.set_pane_sticky(gtk.POS_BOTTOM, True)
-        #if sidebar_on_right:
-        #    self.__p0.pack1(self.__editor_pane)
-        #    self.__p0.pack2(self.__side_pane)
-        #else:
-        #    self.__p0.pack1(self.__side_pane)
-        #    self.__p0.pack2(self.__editor_pane)
-
-        self.set_size_request(800, 600)
-        #self.__side_pane.set_size_request(300, -1)
-
         extb = self.__viewbooks['ext'] = external_book()
         extb.window.set_transient_for(self)
+        self.resize(800, 600)
+
+    def _create_paneholder(self, name, position):
+        viewbook = contentbook.Contentholder()
+        self.__viewbooks[name] = viewbook
+        self.set_pane_widget(position, viewbook)
+        viewbook.connect('empty', self.cb_empty, name)
+
+    def _get_book_position(self, book):
+        return book.position
+        return book.get_parent().get_parent().get_parent().position
+
+    def cb_empty(self, book, name):
+        pos = self._get_book_position(book)
+        self.set_pane_sticky(pos, False)
+
+    def reset(self):
+        """Pack the required components."""
+
 
     def toggle_book(self, name):
         if name in self.__viewbooks:
