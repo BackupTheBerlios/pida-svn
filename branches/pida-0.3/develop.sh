@@ -14,10 +14,10 @@ echo "Building pida ..."
 ) 2>&1 > /dev/null
 
 pyver=`python -V 2>&1 | cut -d' ' -f2 | cut -c1-3`
-version=`cat data/version`
+version=`cat $pidadir/data/version`
 egg="$distdir/pida-${version//-/_}-py$pyver.egg"
 
-echo; echo "Adding ${egg#$pidadir/} to '\$PYTHONPATH' ..."
+echo "Adding ${egg#$pidadir/} to '\$PYTHONPATH' ..."
 export PYTHONPATH=$egg:$PYTHONPATH
 
 DEBUG= REMOTE= GDB=
