@@ -64,7 +64,7 @@ class project_types(service.service):
                 project_type_name = line.strip().strip('#')
                 break
             f.close()
-        except OSError, IOError:
+        except (OSError, IOError):
             self.log.info('unable to read "%s"', project_file_name)
             return
         if project_type_name not in self.__types:
