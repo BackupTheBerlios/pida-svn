@@ -27,13 +27,20 @@ import pida.core.service as service
 
 class new_file(service.service):
 
-    def cmd_create_interactive(self, directory):
+    def cmd_create_interactive(self, directory, mkdir=False):
         def callback(name):
             path = os.path.join(directory, name)
-            f = open(path, 'w')
-            f.close()
+            if mkdir:
+                os.mkdir(path)
+            else:
+                f = open(path, 'w')
+                f.close()
+        if mkdir:
+            prompt = 'Directory Name'
+        else:
+            prompt = 'File Name'
         self.boss.call_command('window', 'input',
                                callback_function=callback,
-                               prompt='File Name')
+                               prompt=prompt)
 
 Service = new_file
