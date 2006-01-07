@@ -43,7 +43,7 @@ class service_manager(base.pidagroup):
         for svc in self.__available['services']:
             self.__load_service('services', svc)
         # load one editor
-        editor_type = self.get('editormanager').opt('general', 'editor_type')
+        editor_type = self.get('editormanager').get_editor_name()
         self.__load_service('editors', editor_type)
         # load the required plugins
         self.log.debug('loading required plugins')

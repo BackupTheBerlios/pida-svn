@@ -35,8 +35,8 @@ class editor_manager(service.service):
         """General editor options"""
         class editor_type(defs.option):
             """Which editor pIDA will use."""
-            rtype = types.stringlist('vimedit', 'mooedit')
-            default = 'vimedit'            
+            rtype = types.stringlist('Vim', 'Moo')
+            default = 'Moo'            
 
     def cmd_close(self, filename):
         self.editor.call('close', filename=filename)
@@ -71,8 +71,20 @@ class editor_manager(service.service):
     def cmd_paste(self):
         self.editor.call('paste')
 
+    def get_editor_name(self):
+        editor_name = self.opt('general', 'editor_type')
+        if editor_name == 'Vim':
+            editor = 'vimedit'
+        elif editor_name == 'Moo':
+            editor = 'mooedit'
+        else:
+            self.log.error('No text editor')
+            editor = 'No working editor'
+        return editor
+    editor_name = property(get_editor_name)
+
     def get_editor(self):
-        editor = self.opt('general', 'editor_type')
+        editor = self.get_editor_name()
         return self.get_service(editor)
     editor = property(get_editor)
 
