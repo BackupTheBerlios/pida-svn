@@ -23,7 +23,6 @@
 
 import os
 
-import gtk
 
 from pida.core import service
 
@@ -125,6 +124,23 @@ class python(service.service):
                 <menuitem name="expyfile" action="python+language+execute_current_file" />
                 </menu>
                 </menubar>
+                <toolbar>
+                <placeholder name="OpenFileToolbar">
+                </placeholder>
+                <placeholder name="SaveFileToolbar">
+                </placeholder>
+                <placeholder name="EditToolbar">
+                </placeholder>
+                <placeholder name="ProjectToolbar">
+            <separator />
+            <toolitem name="runpy" action="python+language+execute_current_file"/>
+            <separator />
+                </placeholder>
+                <placeholder name="VcToolbar">
+                </placeholder>
+                <placeholder name="ToolsToolbar">
+                </placeholder>
+                </toolbar>
                 """
 
     class python(defs.project_type):
@@ -151,7 +167,7 @@ class python(service.service):
                 rtype = types.boolean
                 default = True
 
-        def act_execute_current_project(self, action):
+        def act_project_execute(self, action):
             """Execute the current project."""
             proj = self.boss.call_command('projectmanager',
                                           'get_current_project')
@@ -190,7 +206,7 @@ class python(service.service):
             <menu name="base_project" action="base_project_menu">
             <separator />
             <menuitem name="addform" action="python+project+add_ui_form" />
-            <menuitem name="expyproj" action="python+project+execute_current_project" />
+            <menuitem name="expyproj" action="python+project+project_execute" />
             <separator />
             </menu>
             </menubar>
@@ -203,7 +219,7 @@ class python(service.service):
                 </placeholder>
                 <placeholder name="ProjectToolbar">
             <separator />
-            <toolitem name="runproj" action="python+project+execute_current_project" />
+            <toolitem name="runproj" action="python+project+project_execute" />
             <separator />
                 </placeholder>
                 <placeholder name="VcToolbar">

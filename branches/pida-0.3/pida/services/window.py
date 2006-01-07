@@ -23,7 +23,6 @@
 
 import pida.core.service as service
 import pida.pidagtk.window as window
-import pida.pidagtk.contentview as contentview
 import pida.pidagtk.contentbook as contentbook
 import os
 import gtk

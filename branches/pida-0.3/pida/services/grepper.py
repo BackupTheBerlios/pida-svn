@@ -34,7 +34,6 @@ import pida.pidagtk.tree as tree
 import os
 import re
 import time
-import glob
 import gobject
 import threading
 import linecache
