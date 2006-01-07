@@ -31,6 +31,8 @@ import pida.utils.vim.vimembed as vimembed
 
 class vim_editor(service.service):
 
+    display_name = 'Vim'
+
     single_view_type = vimembed.vim_embed
     single_view_book = 'edit'
 

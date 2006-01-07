@@ -91,6 +91,9 @@ class boss(base.pidacomponent):
         return self.__services.__iter__()
     services = property(get_services)
 
+    def get_service_displayname(self, servicename):
+        return self.__services.get_display_name(servicename)
+
     def get_main_window(self):
         return self.__window.view
 

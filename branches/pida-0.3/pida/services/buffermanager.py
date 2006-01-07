@@ -59,6 +59,8 @@ class BufferView(contentview.content_view):
 
 class Buffermanager(service.service):
     
+    display_name = 'Buffer Management'
+    
     single_view_type = BufferView
 
     class sessions(defs.optiongroup):

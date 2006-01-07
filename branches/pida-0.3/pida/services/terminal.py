@@ -53,6 +53,8 @@ class terminal_view(contentview.content_view):
 
 class terminal_manager(service.service):
 
+    display_name = 'Terminals'
+
     multi_view_type = terminal_view
     multi_view_book = 'view'
 

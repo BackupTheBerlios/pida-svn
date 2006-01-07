@@ -28,6 +28,8 @@ types = service.types
 
 class editor_manager(service.service):
 
+    display_name = 'Editor'
+
     class started(defs.event):
         pass
 

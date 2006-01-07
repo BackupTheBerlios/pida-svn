@@ -32,6 +32,8 @@ types = service.types
 
 class version_control(service.service):
 
+    display_name = 'Version Control Integration'
+
     class meld_integration(defs.optiongroup):
         """How much meld will be used."""
         class use_meld_for_statuses(defs.option):

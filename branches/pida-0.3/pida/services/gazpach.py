@@ -294,6 +294,7 @@ class EmbeddedGazpacho(contentview.content_view):
 
 class Gazpacho(service.service):
 
+    display_name = 'Gazpacho'
 
     single_view_type = EmbeddedGazpacho
     single_view_book = 'edit'
@@ -655,3 +656,4 @@ empty_gazpacho_document = """<?xml version="1.0" standalone="no"?>
 """
 
 Service = Gazpacho
+

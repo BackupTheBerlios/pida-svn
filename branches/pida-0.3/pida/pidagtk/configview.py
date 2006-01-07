@@ -107,6 +107,10 @@ def create_notebook_from_registry(reg, regname):
         notebook.set_show_tabs(False)
     return notebook, widgets
 
+class config_tree(tree.Tree):
+
+    SORT_LIST = ['markup']
+
 class config_view(contentview.content_view):
 
     gsignal('data-changed')
@@ -122,9 +126,10 @@ class config_view(contentview.content_view):
     def __init_widgets(self):
         pane = gtk.HPaned()
         self.widget.pack_start(pane)
-        self.__list = tree.Tree()
+        self.__list = config_tree()
+        self.__list.set_property('markup-format-string', '%(markup)s')
         pane.pack1(self.__list)
-        self.__list.set_size_request(140, -1)
+        self.__list.set_size_request(200, -1)
         self.__list.connect('clicked', self.cb_list_clicked)
         self.__notebook = gtk.Notebook()
         pane.pack2(self.__notebook)
@@ -155,6 +160,7 @@ class config_view(contentview.content_view):
     def __build_list(self):
         for name in self.__registries:
             class di(object):
+                markup = self.service.boss.get_service_displayname(name)
                 key = name
             self.__list.add_item(di(), key=name)
 
@@ -164,7 +170,8 @@ class config_view(contentview.content_view):
             self.__set_current_page(page)
         elif pagename in self.__registries:
             reg = self.__registries[pagename]
-            page, wids = create_notebook_from_registry(reg, pagename)
+            displayname = self.service.boss.get_service_displayname(pagename)
+            page, wids = create_notebook_from_registry(reg, displayname)
             self.__pages[pagename] = page
             for names, wid in wids:
                 self.__widgets[names] = wid

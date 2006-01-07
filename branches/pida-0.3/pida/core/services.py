@@ -29,6 +29,7 @@ class service_manager(base.pidagroup):
 
     def init(self):
         base.pidagroup.init(self, None)
+        self.__display_names = {}
         self.__available =  {'services': {},
                              'editors': {},
                              'plugins': {},
@@ -61,7 +62,12 @@ class service_manager(base.pidagroup):
             cls = entrypoint.load()
             cls.boss = self.boss
             cls.NAME = entrypoint.name
+            if not hasattr(cls, 'display_name'):
+                cls.display_name = cls.NAME
+                print 'Serives should have a display name %s' % cls.NAME
+            self.__display_names[cls.NAME] = cls.display_name
             self.__available[group][cls.NAME] = cls
+            
         except ImportError, e:
             self.log.warn('failed to import %s.%s %s',
                            group, entrypoint, e)
@@ -82,6 +88,10 @@ class service_manager(base.pidagroup):
             if inst is not None:
                 self.add(inst.NAME, inst)
         
+    def get_display_name(self, servicename):
+        if servicename in self.__display_names:
+            return self.__display_names[servicename]
+    
 
     def bind(self):
         for service in self:
