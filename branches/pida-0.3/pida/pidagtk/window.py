@@ -21,31 +21,17 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-# pidagtk imports
-import toolbar
-import expander
-import contentbook
-import contentview
-import multipaned
-import paned
 # gtk import(s)
 import gtk
 import gobject
 
+# pidagtk import(s)
+import paned
+import contentbook
 
-class pida_v_paned(gtk.VPaned):
-
-    def __init__(self):
-        gtk.VPaned.__init__(self)
-        
-    def on_pane_notify(self, pane, gparamspec):
-        # A widget property has changed.  Ignore unless it is 'position'.
-        def clear():
-            pane.set_property('position-set', False)
-        if gparamspec.name == 'position-set':
-            gobject.timeout_add(1000, clear)
 
 class pidawindow(paned.paned_window):
+    """The Pida main window"""
 
     def __init__(self, manager):
         paned.paned_window.__init__(self)
@@ -57,7 +43,6 @@ class pidawindow(paned.paned_window):
         im = gtk.Image()
         im.set_from_file(icon_file)
         self.set_icon(im.get_pixbuf())
-
 
     def append_page(self, bookname, page):
         if bookname in self.__viewbooks:
@@ -82,7 +67,6 @@ class pidawindow(paned.paned_window):
             book.detach_pages()
 
     def _create_sidebar(self, bufferview, pluginview):
-        #bar = multipaned.multi_paned()
         bar = gtk.VBox()
         bar.pack_start(bufferview)
         bar.pack_start(pluginview)
@@ -132,18 +116,13 @@ class pidawindow(paned.paned_window):
 
     def _get_book_position(self, book):
         return book.position
-        return book.get_parent().get_parent().get_parent().position
 
     def cb_empty(self, book, name):
         pos = self._get_book_position(book)
         self.set_pane_sticky(pos, False)
 
-    def reset(self):
-        """Pack the required components."""
-
-
     def toggle_book(self, name):
-        if name in self.__viewbooks:
+       if name in self.__viewbooks:
             self.__viewbooks[name].toggle()
 
     def shrink_book(self, name):
