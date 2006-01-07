@@ -143,7 +143,7 @@ class paned(gtk.EventBox):
         #self.__stick_button.connect('toggled', self.cb_stick_but_toggled)
         def packbuts():
             self.__bar_holder.pack_start(self.__stick_button,expand=False)
-            self.__bar_holder.pack_start(self.__drag_button, expand=False)
+            #self.__bar_holder.pack_start(self.__drag_button, expand=False)
         def packbar():
             self.__bar_holder.pack_start(self.__bar)
         if pos == gtk.POS_RIGHT:
@@ -294,6 +294,7 @@ class paned(gtk.EventBox):
         self.hide_pane()
 
     def cb_dragbutton_started(self, sizer):
+        return
         dwindow = pane_dropper(self.__window)
         x, y, w, h, c = self.__window.window.get_geometry()
         winx, winy = self.__window.get_position()
@@ -303,8 +304,12 @@ class paned(gtk.EventBox):
         self.__targy = 0
 
     def cb_dragbutton_stopped(self, sizer):
+        return
         self.__dwindow.hide_all()
-        self.emit('dragged-to', self.__targ)
+        try:
+            self.emit('dragged-to', self.__targ)
+        except AttributeError:
+            pass
 
     def cb_dragbutton_dragged(self, sizer, xdiff, ydiff):
         self.__targx = xdiff - self.__targx
