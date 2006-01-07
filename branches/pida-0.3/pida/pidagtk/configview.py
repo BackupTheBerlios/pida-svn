@@ -195,6 +195,7 @@ class config_view(contentview.content_view):
         self.emit('data-changed')
 
     def set_registries(self, registries):
+        self.__list.clear()
         first = None
         for name, reg in registries:
             if len(reg):

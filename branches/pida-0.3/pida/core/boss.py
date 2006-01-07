@@ -53,6 +53,7 @@ class boss(base.pidacomponent):
         self.__services.bind()
         self.__services.reset()
         self.call_command('editormanager', 'start')
+        self.call_command('webbrowse', 'browse')
 
     def reset(self):
         """Reset live configuration options."""

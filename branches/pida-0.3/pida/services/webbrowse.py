@@ -43,7 +43,7 @@ class BrowserView(contentview.content_view):
 
     FIXED_TITLE = 'browser'
 
-    def populate(self):
+    def init(self):
         self.fetcher = Fetcher(self)
         self.doc = gtkhtml2.Document()
         self.doc.connect('request-url', self.cb_request_url)
@@ -59,24 +59,36 @@ class BrowserView(contentview.content_view):
         controls.connect('clicked', self.cb_toolbar_clicked)
         controls.add_button('back', 'left', 'Go back to the previous URL')
         controls.add_button('close', 'close', 'Stop loading the current URL')
-        self.bar_area.pack_start(controls, expand=False)
+        bar = gtk.HBox()
+        self.widget.pack_start(bar, expand=False)
+        bar.pack_start(controls, expand=False)
         self.location = gtk.Entry()
-        self.bar_area.pack_start(self.location)
+        bar.pack_start(self.location)
         self.location.connect('activate', self.cb_url_entered)
-        self.pack_start(self.swin)
+        self.widget.pack_start(self.swin)
         self.urlqueue = []
         self.urlqueueposition = 0
 
 
     def fetch(self, url):
+        if '#' in url:
+            aurl, self.mark = url.split('#')
+        else:
+            aurl = url
+            self.mark = None    
         self.url = url
         self.doc.clear()
         self.doc.open_stream('text/html')
-        self.fetcher.fetch_url(url)
+        self.fetcher.fetch_url(aurl)
 
     def done(self):
         self.urlqueue.append(self.url)
         self.location.set_text(self.url)
+        if self.mark:
+            self.scroll_to_mark(self.mark)
+
+    def scroll_to_mark(self, mark):
+        self.view.jump_to_anchor(self.url)
 
     def ro(self, *args):
         return
@@ -106,11 +118,12 @@ class BrowserView(contentview.content_view):
                 self.fetch(self.urlqueue[-1])
                 self.urlqueue.pop()
 
-class Webbrowser(service.service):
+class web_browser(service.service):
 
     NAME = 'webbrowser'
-    
-    COMMANDS = [('browse', [('url', False), ('newview', False)])]
+
+    multi_view_type = BrowserView
+    multi_view_book = 'view'    
 
     def init(self):
         self.__last_view = None
@@ -122,9 +135,8 @@ class Webbrowser(service.service):
         view.fetch(url)
 
     def create_view(self):
-        view = BrowserView()
+        view = self.create_multi_view()
         view.connect('raised', self.cb_view_raised)
-        self.boss.command('viewbook', 'add-page', contentview=view)
         return view
     
     def cb_view_raised(self, view):
@@ -168,4 +180,4 @@ class Fetcher(object):
             return False
 
 
-Service = Webbrowser
+Service = web_browser
