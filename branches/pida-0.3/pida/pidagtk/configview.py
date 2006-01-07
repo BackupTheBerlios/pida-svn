@@ -173,6 +173,8 @@ class config_view(contentview.content_view):
         elif pagename in self.__registries:
             reg = self.__registries[pagename]
             displayname = self.service.boss.get_service_displayname(pagename)
+            if not displayname:
+                displayname = pagename.capitalize()
             page, wids = create_notebook_from_registry(reg, displayname)
             self.__pages[pagename] = page
             for names, wid in wids:
