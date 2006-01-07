@@ -35,7 +35,11 @@ import optparse
 import gtk
 
 
-pida_version = '0.3.pre r795'
+from pkg_resources import Requirement, resource_filename
+version_file = resource_filename(Requirement.parse('pida'),
+                                 'revision/svn_revision')
+pida_revision = open(version_file).read().strip()
+pida_version = '0.3.pre r%s' % pida_revision
 
 def print_version_and_die():
     print 'pIDA version %s' % pida_version

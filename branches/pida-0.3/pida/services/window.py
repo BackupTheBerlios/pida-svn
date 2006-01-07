@@ -122,6 +122,7 @@ class window_manager(service.service):
             ('base_file_menu', None, '_File'),
             ('base_edit_menu', None, '_Edit'),
             ('base_project_menu', None, '_Project'),
+            ('base_python_menu', None, '_Python'),
             ('base_tools_menu', None, '_Tools'),
             ('base_help_menu', None, '_Help')
             ])
@@ -129,15 +130,16 @@ class window_manager(service.service):
         menudef = """
                 <menubar>
                 <menu name="base_file" action="base_file_menu">
-                <separator name="F1" />
-                <separator name="F2" />
-                <separator name="F3" />
                 </menu>
                 <menu name="base_edit" action="base_edit_menu">
                 </menu>
                 <menu name="base_project" action="base_project_menu">
                 </menu>
+                <menu name="base_python" action="base_python_menu">
+                </menu>
                 <menu name="base_tools" action="base_tools_menu">
+                </menu>
+                <menu name="base_help" action="base_help_menu">
                 </menu>
                 </menubar>
                 """
