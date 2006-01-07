@@ -32,7 +32,7 @@ from gazpacho import editor
 from gazpacho.properties import PropertyCustomEditor, UNICHAR_PROPERTIES, prop_registry 
 from gazpacho import signaleditor
 from gazpacho.sizegroupeditor import SizeGroupView
-from gazpacho.palette import palette
+from gazpacho import palette
 from gazpacho.placeholder import Placeholder
 from gazpacho.project import Project
 from gazpacho.sizegroupeditor import SizeGroupView
@@ -88,9 +88,12 @@ class GazpachoApplication(application.Application):
         hbox = gtk.HBox(spacing=6)
         main_vbox.pack_start(hbox)
         
-        palette.connect('toggled', self._palette_button_clicked)
-        palette.get_parent().remove(palette)
-        hbox.pack_start(palette, False, False)
+        pal = palette.Palette()
+        pal.connect('toggled', self._palette_button_clicked)
+        pal_parent = pal.get_parent()
+        if pal_parent is not None:
+            pal_parent.remove(pal)
+        hbox.pack_start(pal, False, False)
 
         vpaned = gtk.VPaned()
         vpaned.set_position(150)
@@ -149,7 +152,7 @@ class GazpachoApplication(application.Application):
         #                           self._dnd_data_received_cb)
 
         # Enable the current state
-        #self._active_uim_state = self._uim_states[0]
+        self._active_uim_state = self._uim_states[0]
         #self._active_uim_state.enable()
         
         return application_window
@@ -237,15 +240,28 @@ class EmbeddedGazpacho(contentview.content_view):
             project.selection_changed()
             for widget in project.widgets:
                 widget.destroy()
-            self.gaz._ui_manager.remove_ui(project.uim_id)
+            #self.gaz._ui_manager.remove_ui(project.uim_id)
 
-    def confirm_close(self):
+    def confirm_close_all(self):
         unsaved = [p for p in self.__gazpacho._projects if p.changed]
         close = self.__gazpacho._confirm_close_projects(unsaved)
-        self.__gazpacho._config.save()
+        #self.__gazpacho._config.save()
         if close:
             self.close_all()
         return close
+
+    def confirm_close(self):
+        proj = self.__gazpacho._project
+        if proj is not None:
+            if proj.changed:
+                close = self.__gazpacho._confirm_close_projects([proj])
+            else:
+                close = True
+            if close:
+                for widget in proj.widgets:
+                    widget.destroy()
+            return close
+        return True
 
     def get_gazpacho(self):
         return self.__gazpacho
