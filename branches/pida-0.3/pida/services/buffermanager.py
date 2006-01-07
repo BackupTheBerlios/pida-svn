@@ -31,6 +31,7 @@ import gobject
 import pida.pidagtk.contentview as contentview
 
 defs = service.definitions
+types = service.types
 
 class BufferView(contentview.content_view):
 
@@ -59,6 +60,11 @@ class BufferView(contentview.content_view):
 class Buffermanager(service.service):
     
     single_view_type = BufferView
+
+    class sessions(defs.optiongroup):
+        class automatically_load_last_session(defs.option):
+            rtype = types.boolean
+            default = True
     
     class document_changed(defs.event):
         pass
@@ -66,6 +72,12 @@ class Buffermanager(service.service):
     def bnd_editormanager_started(self):
         for filename in self.boss.positional_args:
             self.call('open_file', filename=filename)
+        if self.opt('sessions', 'automatically_load_last_session'):
+            most_recent = os.path.join(self.boss.pida_home,
+                                       'most-recent.session')
+            if os.path.exists(most_recent):
+                self.call('load_session', session_filename=most_recent)
+        
 
     def init(self):
         self.__currentdocument = None
@@ -246,6 +258,14 @@ class Buffermanager(service.service):
                 </toolbar>
                 </ui>
                 """
+
+    def stop(self):
+        most_recent = os.path.join(self.boss.pida_home, 'most-recent.session')
+        self.call('save_session', session_filename=most_recent)
+
+
+
+
 
 Service = Buffermanager
 
