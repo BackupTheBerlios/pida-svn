@@ -102,7 +102,7 @@ class terminal_manager(service.service):
         self.call('execute', command_args=[shellcommand],
                   term_type=term_type, kwdict=kwdict)
 
-    def act_shell(self, action):
+    def act_terminal(self, action):
         """Start a shell in a terminal emulator."""
         self.call('execute_shell')
 
@@ -115,10 +115,27 @@ class terminal_manager(service.service):
             <menubar>
             <menu name="base_tools" action="base_tools_menu">
             <separator />
-            <menuitem name="shell" action="terminal+shell" />
+            <menuitem name="shell" action="terminal+terminal" />
             <menuitem name="pyshell" action="terminal+python_shell" />
             </menu>
             </menubar>
+                <toolbar>
+                <placeholder name="OpenFileToolbar">
+                </placeholder>
+                <placeholder name="SaveFileToolbar">
+                </placeholder>
+                <placeholder name="EditToolbar">
+                </placeholder>
+                <placeholder name="ProjectToolbar">
+                </placeholder>
+                <placeholder name="VcToolbar">
+                </placeholder>
+                <placeholder name="ToolsToolbar">
+            <separator />
+            <toolitem  name="terminal" action="terminal+terminal" />
+            <separator />
+                </placeholder>
+                </toolbar>
             """
 
 

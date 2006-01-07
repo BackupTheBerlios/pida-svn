@@ -294,9 +294,23 @@ class Grepper(service.service):
             <menuitem name="grepper" action="grepper+find" />
             </menu>
             </menubar>
-            <toolbar>
+                <toolbar>
+                <placeholder name="OpenFileToolbar">
+                </placeholder>
+                <placeholder name="SaveFileToolbar">
+                </placeholder>
+                <placeholder name="EditToolbar">
+                </placeholder>
+                <placeholder name="ProjectToolbar">
+                </placeholder>
+                <placeholder name="VcToolbar">
+                </placeholder>
+                <placeholder name="ToolsToolbar">
+            <separator />
             <toolitem  name="grepper" action="grepper+find" />
-            </toolbar>
+            <separator />
+                </placeholder>
+                </toolbar>
             """
     
     

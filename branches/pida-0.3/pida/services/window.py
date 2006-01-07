@@ -167,6 +167,8 @@ class window_manager(service.service):
                 </placeholder>
                 <placeholder name="VcToolbar">
                 </placeholder>
+                <placeholder name="ToolsToolbar">
+                </placeholder>
                 </toolbar>
                 """
         self.call('register_action_group',
