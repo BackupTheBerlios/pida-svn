@@ -94,13 +94,10 @@ class vim_embed(contentview.content_view):
 
     def cb_plugged(self, *a):
         return
-        if self.r_cb_plugged:
-            self.r_cb_plugged
 
     def cb_unplugged(self, *a):
         self.stop()
-        if self.r_cb_unplugged:
-            self.r_cb_unplugged()
+        self.run(self.command)
 
     def connect(self, plugged, unplugged):
         self.r_cb_plugged = plugged
