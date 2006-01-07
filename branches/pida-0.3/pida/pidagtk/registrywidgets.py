@@ -40,6 +40,8 @@ def get_widget(rtype):
         return types.file
     elif name.startswith('int'):
         return types.integer
+    elif name.startswith('stringlist'):
+        return types.list
     else:
         return types.entry
 
