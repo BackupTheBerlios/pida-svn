@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 set -e
 
 me=$(readlink -f $0)
@@ -40,7 +40,7 @@ else
 fi
 echo "Running $pidacmd ..."
 if [ "$GDB" ]; then
-    echo "run $pidacmd" | exec gdb python -x /dev/stdin
+    exec gdb python -q -x <( echo "run $pidacmd" )
 else
     eval exec "python $pidacmd"
 fi
