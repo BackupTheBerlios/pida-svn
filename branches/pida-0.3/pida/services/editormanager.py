@@ -36,7 +36,7 @@ class editor_manager(service.service):
         class editor_type(defs.option):
             """Which editor pIDA will use."""
             rtype = types.stringlist('Vim', 'Moo')
-            default = 'Moo'            
+            default = 'Vim'            
 
     def cmd_close(self, filename):
         self.editor.call('close', filename=filename)
