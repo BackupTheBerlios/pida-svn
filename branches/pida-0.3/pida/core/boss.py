@@ -52,7 +52,6 @@ class boss(base.pidacomponent):
         self.__window = self.get_service('window')
         self.__services.bind()
         self.__services.reset()
-        self.call_command('manhole', 'run')
         self.call_command('editormanager', 'start')
 
     def reset(self):
