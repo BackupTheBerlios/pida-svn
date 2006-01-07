@@ -178,6 +178,8 @@ class external_book(contentbook.Contentholder):
         self.__window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.__window.connect('destroy', self.on_window__destroy)
         self.__window.add(self)
+        self.__window.resize(600, 480)
+        self.__window.set_position(gtk.WIN_POS_CENTER)
 
     def append_page(self, *args):
         contentbook.Contentholder.append_page(self, *args)
