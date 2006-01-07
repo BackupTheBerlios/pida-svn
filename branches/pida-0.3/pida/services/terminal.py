@@ -48,7 +48,11 @@ class terminal_view(contentview.content_view):
         terminal.configure(self.service.opt('terminal', 'foreground_colour'),
                             self.service.opt('terminal', 'background_colour'),
                             self.service.opt('terminal', 'font'))
+        terminal.connect_child_exit(self.cb_exited)
         terminal.execute(command_args, **kw)
+
+    def cb_exited(self):
+        self.close()
         
 
 class terminal_manager(service.service):
@@ -121,6 +125,9 @@ class terminal_manager(service.service):
 Service = terminal_manager
 
 class pida_terminal(base.pidacomponent):
+
+    def connect_child_exit(self, callback):
+        self.exited = callback
     
     def execute(self, commandargs, **kw):
         pass
@@ -153,6 +160,7 @@ class vte_terminal(pida_terminal):
         import vte
         self.__term = vte.Terminal()
         self.__term.set_size_request(-1, 10)
+        self.__term.connect('child-exited', self.cb_exited)
 
     def configure(self, fg, bg, font):
         bgcol = gtk.gdk.color_parse(bg)
@@ -170,8 +178,20 @@ class vte_terminal(pida_terminal):
         command = command_args[0]
         self.__term.fork_command(command, command_args, **kw)
 
-    def connect_child_exit(self):
-        pass
+
+    def feed(self, text, color=None):
+        """ Feed text to the terminal, optionally coloured."""
+        if color is not None:
+            text = '\x1b[%sm%s\x1b[0m' % (color, text)
+        self.__term.feed(text)
+
+    def cb_exited(self, term):
+        self.feed('Child exited\r\n', '1;34')
+        self.feed('Press any key to close.')
+        self.__term.connect('commit', self.cb_press_any_key)
+
+    def cb_press_any_key(self, term, data, datalen):
+        self.exited()
 
     def translate_kwargs(self, **kw):
         kwdict = {}
@@ -236,6 +256,7 @@ class dumb_terminal(pida_terminal):
     def cb_completed(self, data):
         model = self.__view.get_buffer()
         start = model.get_start_iter()
+        data = '%s\nChild exited' % data
         model.insert_with_tags(start, data, self.__tag)
         self.__view.scroll_to_iter(model.get_end_iter(), 0.0, False)
         
