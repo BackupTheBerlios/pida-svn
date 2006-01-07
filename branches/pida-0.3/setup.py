@@ -93,6 +93,7 @@ setup(name='pida',
                 ('images', ['data/icons.dat']),
                 ('glade', ['glade/project-creator.glade']),
                 ('pixmaps', pixmaps),
+                ('revision', ['data/svn_revision']),
                 ('', ['data/icons/pida-icon.png']),
                 ],
     entry_points = {

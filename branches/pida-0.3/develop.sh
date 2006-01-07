@@ -7,6 +7,7 @@ distdir=$pidadir/build/egg
 
 # build pida
 ( cd $pidadir
+LANG=C svn info . | grep '^Revision:' | cut -d' ' -f2 > data/svn_revision
 python setup.py build 2>&1>/dev/null
 python setup.py bdist --dist-dir=$distdir --formats=egg 2>&1>/dev/null
 )
