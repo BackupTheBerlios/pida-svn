@@ -159,10 +159,10 @@ class directory_context(default_context):
     
     COMMANDS = [('up', 'up', 'Up',
                  'Browse the parent directoy'),
-                ('find', 'find', 'Find',
-                 'Find files in this directory'),
                 ('new', 'new', 'New',
                  'Create a new file in this directory'),
+                ('dirnew', 'directory', 'New Directory',
+                 'Create a new directory in this directory'),
                 ('terminal', 'terminal', 'Terminal',
                 'Open a terminal in this directory')]
 
@@ -178,6 +178,10 @@ class directory_context(default_context):
 
     def command_new(self, directory):
         self.boss.call_command('newfile', 'create_interactive',
+                          directory=directory)
+
+    def command_dirnew(self, directory):
+        self.boss.call_command('newfile', 'create_dir_interactive',
                           directory=directory)
 
     def command_terminal(self, directory):
