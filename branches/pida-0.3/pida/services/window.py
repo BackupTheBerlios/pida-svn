@@ -139,6 +139,8 @@ class window_manager(service.service):
                 </menu>
                 <menu name="base_project" action="base_project_menu">
                 </menu>
+                <menu name="base_python" action="base_python_menu">
+                </menu>
                 <menu name="base_tools" action="base_tools_menu">
                 </menu>
                 <menu name="base_help" action="base_help_menu">

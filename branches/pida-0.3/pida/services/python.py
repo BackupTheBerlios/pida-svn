@@ -118,10 +118,8 @@ class python(service.service):
         def get_menu_definition(self):
             return """
                 <menubar>
-                <menu name="python_base" action="python" >
+                <menu name="base_python" action="base_python_menu">
                 <menuitem name="expyfile" action="python+language+execute_current_file" />
-                <menuitem name="debpyfile" action="python+language+debug_current_file" />
-                <menuitem name="propyfile" action="python+language+profile_current_file" />
                 </menu>
                 </menubar>
                 """
@@ -188,13 +186,4 @@ class python(service.service):
             </toolbar>
             """
 
-    def act_python(self, action):
-        pass
-
-    def get_menu_definition(self):
-        return """
-            <menubar>
-            <menu name="python_base" action="python+python" />
-            </menubar>
-            """
 Service = python
