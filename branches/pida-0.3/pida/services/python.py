@@ -140,20 +140,32 @@ class python(service.service):
                 """The location of the python binary"""
                 rtype = types.file
                 default = '/usr/bin/python'
+
+        class execution(defs.optiongroup):
+            """Options relating to executing the project"""
             class project_file_to_execute(defs.option):
                 """The python file to run for this project"""
                 rtype = types.file
                 default = ''                
+            class use_python_to_execute(defs.option):
+                rtype = types.boolean
+                default = True
 
         def act_execute_current_project(self, action):
             """Execute the current project."""
             proj = self.boss.call_command('projectmanager',
                                           'get_current_project')
-            projfile = proj.get_option('general',
+            projfile = proj.get_option('execution',
                         'project_file_to_execute').value
+            use_py = proj.get_option('execution',
+                        'use_python_to_execute').value
+            if use_py:
+                shell_cmd = 'python'
+            else:
+                shell_cmd = 'bash'
             if projfile:
                 self.service.boss.call_command('terminal', 'execute',
-                    command_args=['python', projfile], icon_name='run')
+                    command_args=[shell_cmd, projfile], icon_name='run')
             else:
                 self.service.log.info('project has not set an executable')
 
@@ -182,11 +194,23 @@ class python(service.service):
             <separator />
             </menu>
             </menubar>
-            <toolbar>
+                <toolbar>
+                <placeholder name="OpenFileToolbar">
+                </placeholder>
+                <placeholder name="SaveFileToolbar">
+                </placeholder>
+                <placeholder name="EditToolbar">
+                </placeholder>
+                <placeholder name="ProjectToolbar">
             <separator />
             <toolitem name="runproj" action="python+project+execute_current_project" />
             <separator />
-            </toolbar>
+                </placeholder>
+                <placeholder name="VcToolbar">
+                </placeholder>
+                <placeholder name="ToolsToolbar">
+                </placeholder>
+                </toolbar>
             """
 
 Service = python
