@@ -53,6 +53,7 @@ class Contentholder(gtk.VBox):
         self.__notebook.set_property('homogeneous', True)
         self.__notebook.set_property('enable-popup', True)
         self.__notebook.set_show_border(False)
+        self.__notebook.popup_disable()
 
     def append_page(self, contentview):
         self.__notebook.append_page(contentview, tab_label=contentview.icon)

@@ -23,7 +23,6 @@
 
 # gtk import(s)
 import gtk
-import gobject
 
 # pidagtk import(s)
 import paned

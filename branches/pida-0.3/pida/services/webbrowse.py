@@ -26,10 +26,7 @@ import pida.pidagtk.contentview as contentview
 import pida.pidagtk.toolbar as toolbar
 import gtk
 import os
-try:
-    import gtkhtml2
-except ImportError:
-    gtkhtml2 = None
+import gtkhtml2
 
 import threading
 import urllib
@@ -38,99 +35,132 @@ import urlparse
 import gobject
 import gtk
 
-class BrowserView(contentview.content_view):
-    ICON = 'internet' 
+def get_url_mark(url):
+    if '#' in url:
+        url, mark = url.rsplit('#', 1)
+    else:
+        mark = None
+    return url, mark
 
-    FIXED_TITLE = 'browser'
+def open_url(url):
+    return urllib.urlopen(url)
+
+def fetch_url(url, read_cb, hup_cb):
+    def _fetch():
+        def _readable(fd, cond):
+            data = fd.read(1024)
+            if data:
+                read_cb(data)
+                return True
+            else:
+                hup_cb(url)
+                return False
+        fd = open_url(url)
+        gobject.io_add_watch(fd.fp, gobject.IO_IN, _readable)
+    #t = threading.Thread(target=_fetch)
+    #t.start()
+    _fetch()
+
+class web_client(gtk.ScrolledWindow):
+
+    def __init__(self, manager=None):
+        super(web_client, self).__init__()
+        self.__view = gtkhtml2.View()
+        self.add(self.__view)
+        self.__document = gtkhtml2.Document()
+        self.__view.set_document(self.__document)
+        self.__document.connect('request-url', self.cb_request_url)
+        self.__document.connect('link-clicked', self.cb_link_clicked)
+        self.__current_url = None
+        self.__current_mark = None
+        self.__fetching_url = None
+        self.__fetching_mark = None
+        self.__manager = manager
+
+    def load_url(self, url):
+        url, mark = get_url_mark(url)
+        self.__fetching_mark = mark
+        self.__fetching_url = url
+        if url != self.__current_url:
+            self.__document.clear()
+            self.__document.open_stream('text/html')
+            fetch_url(url, self.cb_loader_data, self.cb_loader_finished)
+        else:
+            self.finished(url)
+
+    def cb_loader_data(self, data):
+        self.__document.write_stream(data)
+
+    def cb_loader_finished(self, url):
+        self.__document.close_stream()
+        self.finished(url)
+
+    def finished(self, url):
+        self.__current_url = url
+        self.__current_mark = self.__fetching_mark
+        if self.__current_mark:
+            self.__view.jump_to_anchor(self.__current_mark)
+        else:
+            self.__view.jump_to_anchor('')
+        durl = url
+        if self.__current_mark:
+            durl = durl + '#' + self.__current_mark
+        self.__manager.location.set_text(url)
+
+    def cb_request_url(self, doc, url, stream):
+        def _data(data):
+            stream.write(data)
+        def _hup(url):
+            stream.close()
+        url = urlparse.urljoin(self.__fetching_url, url)
+        fetch_url(url, _data, _hup)
+
+    def cb_link_clicked(self, doc, url):
+        url = urlparse.urljoin(self.__current_url, url)
+        self.load_url(url)
+
+
+
+
+class BrowserView(contentview.content_view):
+    ICON_NAME = 'internet' 
+
+    HAS_TITLE = False
 
     def init(self):
-        self.fetcher = Fetcher(self)
-        self.view = gtkhtml2.View()
-        self.view.connect('on-url', self.cb_onurl)
-        #self.view.set_size_request(400,300)
-        self.swin = gtk.ScrolledWindow()
-        self.swin.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.swin.add(self.view)
         controls = toolbar.Toolbar()
         controls.connect('clicked', self.cb_toolbar_clicked)
         self.back_button = controls.add_button('back',
             'left', 'Go back to the previous URL')
-        self.back_button.set_sensitive(False)
+        #self.back_button.set_sensitive(False)
         self.stop_button = controls.add_button('close',
             'close', 'Stop loading the current URL')
-        self.stop_button.set_sensitive(False)
+        #self.stop_button.set_sensitive(False)
         bar = gtk.HBox()
         self.widget.pack_start(bar, expand=False)
         bar.pack_start(controls, expand=False)
         self.location = gtk.Entry()
         bar.pack_start(self.location)
         self.location.connect('activate', self.cb_url_entered)
-        self.widget.pack_start(self.swin)
+
+        self.__browser = web_client(self)
+        self.widget.pack_start(self.__browser)
         self.status_bar = gtk.Statusbar()
         self.status_context = self.status_bar.get_context_id('web')
         self.widget.pack_start(self.status_bar, expand=False)
         self.urlqueue = []
         self.urlqueueposition = 0
-
-
-    def fetch(self, url):
-        if '#' in url:
-            aurl, self.mark = url.split('#')
-        else:
-            aurl = url
-            self.mark = None    
-        self.url = url
-        self.doc = gtkhtml2.Document()
-        self.doc.connect('request-url', self.cb_request_url)
-        self.doc.connect('link-clicked', self.cb_link_clicked)
-        self.doc.open_stream('text/html')
-        self.stop_button.set_sensitive(True)
-        self.fetcher.fetch_url(aurl)
-
-    def done(self):
-        self.stop_button.set_sensitive(True)
-        self.urlqueue.append(self.url)
-        if len(self.urlqueue) > 1:
-            self.back_button.set_sensitive(True)
-        self.location.set_text(self.url)
-        self.view.set_document(self.doc)
-        gobject.idle_add(self.scroll_to_mark)
-    
-    def scroll_to_mark(self):
-        if self.mark:
-            self.view.jump_to_anchor(self.mark)
-
-    def cb_style_updated(self, node, style, foo):
-        pass
-
-    def cb_onurl(self, view, url):
-        return
-        if url:
-            url = urlparse.urljoin(self.url, url)
-            self.status_bar.push(self.status_context, url)
-        else:
-            self.status_bar.push(self.status_context, '')
+        self.url = None
 
     def cb_url_entered(self, entry):
         url = self.location.get_text()
         self.fetch(url)
 
-    def cb_request_url(self, doc, url, stream):
-        url = urlparse.urljoin(self.url, url)
-        self.fetcher.fetch_url(url, stream)
-        
-    def cb_link_clicked(self, doc, url):
-        url = urlparse.urljoin(self.url, url)
-        self.fetch(url)
 
-    def cb_toolbar_clicked(self, toolbar, name):
-        if name == 'back':
-            if len(self.urlqueue) > 1:
-                self.urlqueue.pop()
-                self.fetch(self.urlqueue[-1])
-                self.urlqueue.pop()
-                if len(self.urlqueue) <= 1:
-                    self.back_button.set_sensitive(False)
+    def fetch(self, url):
+        self.__browser.load_url(url)
+            
+
 
 class web_browser(service.service):
 
@@ -157,40 +187,5 @@ class web_browser(service.service):
     
     def cb_view_raised(self, view):
         self.__last_view = view
-
-    
-
-class Fetcher(object):
-
-    def __init__(self, browser):
-        self.browser = browser
-
-    def fetch_url(self, url, stream=None):
-        def fetch():
-            if not url.endswith('csiis'):
-                fd = urllib.urlopen(url)
-                gobject.io_add_watch(fd.fp, gobject.IO_IN, self.readable, stream)
-            else:
-                if stream:
-                    stream.close()
-        t = threading.Thread(target=fetch)
-        t.start()
-
-    def readable(self, fd, cond, stream):
-        data = fd.read(64)
-        if data:
-            if stream:
-                stream.write(data)
-            else:
-                self.browser.doc.write_stream(data)
-            return True
-        else:
-            if stream:
-                stream.close()
-            else:
-                self.browser.doc.close_stream()
-                self.browser.done()
-            return False
-
 
 Service = web_browser
