@@ -28,25 +28,39 @@ import pida.core.service as service
 import pida.pidagtk.contentview as contentview
 import pida.pidagtk.tree as tree
 
+import xml.dom.minidom as minidom
+
 defs = service.definitions
 types = service.types
+
+class lib_list(tree.Tree):
+
+    SORT_LIST = ['name', 'title']
 
 class bookmark_view(contentview.content_view):
 
     def init(self):
-        self.__list = tree.Tree()
+        self.__list = lib_list()
         self.__list.set_property('markup_format_string',
                                  '%(name)s')
         self.__list.connect('double-clicked', self.cb_booklist_clicked)
         self.widget.pack_start(self.__list)
         for book in self.service.get_books():
-            self.__list.add_item(book)
+            if hasattr(book, 'bookmarks'):
+                self._add_item(book.bookmarks)
+            else:
+                pass
+
+    def _add_item(self, item, parent=None):
+        niter = self.__list.add_item(item, parent=parent)
+        for child in item.subs:
+            self._add_item(child, niter)
         
     def cb_booklist_clicked(self, treeview, item):
         book = item.value
-        if book.root:
+        if book.path:
             self.service.boss.call_command('webbrowse', 'browse',
-                                       url=book.root)
+                                       url=book.path)
         else:
             self.service.log.info('Bad document book "%s"', book.name)
 
@@ -59,10 +73,13 @@ class document_library(service.service):
 
     def get_books(self):
         books = []
-        directory = os.path.join(self.boss.pida_home, 'library')
-        for name in os.listdir(directory):
-            path = os.path.join(directory, name)
-            books.append(book(path))
+        pida_directory = os.path.join(self.boss.pida_home, 'library')
+        dirs = [pida_directory, '/usr/share/gtk-doc/html']
+        for directory in dirs:
+            for name in os.listdir(directory):
+                path = os.path.join(directory, name)
+                if os.path.exists(path):
+                    books.append(book(path))
         return books
 
 class book(object):
@@ -70,12 +87,58 @@ class book(object):
     def __init__(self, path):
         self.directory = path
         self.root = None
-        for index in ['index.html']:
-            indexpath = os.path.join(path, index)
-            if os.path.exists(indexpath):
-                self.root = indexpath
+        config_path = None
+        for name in os.listdir(path):
+            if name.endswith('.devhelp'):
+                config_path = os.path.join(path, name)
                 break
+        if config_path and os.path.exists(config_path):
+            dom = minidom.parse(config_path)
+            main = dom.documentElement
+            book_attrs = dict(main.attributes)
+            for attr in book_attrs:
+                setattr(self, attr, book_attrs[attr].value)
+            self.chapters = dom.getElementsByTagName('chapters')[0]
+            self.root = os.path.join(self.directory, self.link)
+            self.bookmarks = self.get_bookmarks()
+        else:
+            for index in ['index.html']:
+                indexpath = os.path.join(path, index)
+                if os.path.exists(indexpath):
+                    self.root = indexpath
+                    break
+                self.root = indexpath
         self.name = os.path.basename(path)
         self.key = path
+
+    def get_bookmarks(self):
+        #sub = self.chapters.getElementsByTagName('sub')[0]
+        root = book_mark(self.chapters, self.directory)
+        root.name = self.title
+        root.path = self.root
+        return root
+
+
+
+class book_mark(object):
+
+    def __init__(self, node, root_path):
+        try:
+            self.name = node.attributes['name'].value
+        except:
+            self.name = None
+        try:
+            self.path = os.path.join(root_path, node.attributes['link'].value)
+        except:
+            self.path = None
+        self.key = self.path
+        self.subs = []
+        for child in self._get_child_subs(node):
+            bm = book_mark(child, root_path)
+            self.subs.append(bm)
+
+    def _get_child_subs(self, node):
+        return [n for n in node.childNodes if n.nodeType == 1]
+
 
 Service = document_library

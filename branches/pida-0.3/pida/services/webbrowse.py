@@ -57,9 +57,9 @@ def fetch_url(url, read_cb, hup_cb):
                 return False
         fd = open_url(url)
         gobject.io_add_watch(fd.fp, gobject.IO_IN, _readable)
-    #t = threading.Thread(target=_fetch)
-    #t.start()
-    _fetch()
+    t = threading.Thread(target=_fetch)
+    t.start()
+    #_fetch()
 
 class web_client(gtk.ScrolledWindow):
 
