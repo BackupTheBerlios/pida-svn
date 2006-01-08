@@ -46,15 +46,19 @@ class BrowserView(contentview.content_view):
     def init(self):
         self.fetcher = Fetcher(self)
         self.view = gtkhtml2.View()
-        self.view.connect('on-url', self.ro)
+        self.view.connect('on-url', self.cb_onurl)
         self.view.set_size_request(400,300)
         self.swin = gtk.ScrolledWindow()
         self.swin.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.swin.add(self.view)
         controls = toolbar.Toolbar()
         controls.connect('clicked', self.cb_toolbar_clicked)
-        controls.add_button('back', 'left', 'Go back to the previous URL')
-        controls.add_button('close', 'close', 'Stop loading the current URL')
+        self.back_button = controls.add_button('back',
+            'left', 'Go back to the previous URL')
+        self.back_button.set_sensitive(False)
+        self.stop_button = controls.add_button('close',
+            'close', 'Stop loading the current URL')
+        self.stop_button.set_sensitive(False)
         bar = gtk.HBox()
         self.widget.pack_start(bar, expand=False)
         bar.pack_start(controls, expand=False)
@@ -62,6 +66,9 @@ class BrowserView(contentview.content_view):
         bar.pack_start(self.location)
         self.location.connect('activate', self.cb_url_entered)
         self.widget.pack_start(self.swin)
+        self.status_bar = gtk.Statusbar()
+        self.status_context = self.status_bar.get_context_id('web')
+        self.widget.pack_start(self.status_bar, expand=False)
         self.urlqueue = []
         self.urlqueueposition = 0
 
@@ -77,10 +84,14 @@ class BrowserView(contentview.content_view):
         self.doc.connect('request-url', self.cb_request_url)
         self.doc.connect('link-clicked', self.cb_link_clicked)
         self.doc.open_stream('text/html')
+        self.stop_button.set_sensitive(True)
         self.fetcher.fetch_url(aurl)
 
     def done(self):
+        self.stop_button.set_sensitive(True)
         self.urlqueue.append(self.url)
+        if len(self.urlqueue) > 1:
+            self.back_button.set_sensitive(True)
         self.location.set_text(self.url)
         self.view.set_document(self.doc)
         gobject.idle_add(self.scroll_to_mark)
@@ -89,14 +100,15 @@ class BrowserView(contentview.content_view):
         if self.mark:
             self.view.jump_to_anchor(self.mark)
 
-    def ro(self, *args):
-        return
-
     def cb_style_updated(self, node, style, foo):
         pass
 
     def cb_onurl(self, view, url):
-        print url
+        if url:
+            url = urlparse.urljoin(self.url, url)
+            self.status_bar.push(self.status_context, url)
+        else:
+            self.status_bar.push(self.status_context, '')
 
     def cb_url_entered(self, entry):
         url = self.location.get_text()
@@ -110,12 +122,14 @@ class BrowserView(contentview.content_view):
         url = urlparse.urljoin(self.url, url)
         self.fetch(url)
 
-    def cb_toolbar_clicked(self, toolbar, namr):
+    def cb_toolbar_clicked(self, toolbar, name):
         if name == 'back':
             if len(self.urlqueue) > 1:
                 self.urlqueue.pop()
                 self.fetch(self.urlqueue[-1])
                 self.urlqueue.pop()
+                if len(self.urlqueue) <= 1:
+                    self.back_button.set_sensitive(False)
 
 class web_browser(service.service):
 
