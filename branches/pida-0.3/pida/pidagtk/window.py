@@ -26,6 +26,7 @@ import gtk
 
 # pidagtk import(s)
 import paned
+import expander
 import contentbook
 
 
@@ -67,8 +68,17 @@ class pidawindow(paned.paned_window):
 
     def _create_sidebar(self, bufferview, pluginview):
         bar = gtk.VBox()
-        bar.pack_start(bufferview)
+        bufs = expander.expander()
+        bufs.set_body_widget(bufferview)
+        l = gtk.Label('Buffer list')
+        l.set_alignment(0, 0.5)
+        bufs.set_label_widget(l)
+        bufs.expand()
+        bar.pack_start(bufs, expand=True)
         bar.pack_start(pluginview)
+        vb = self.__viewbooks['language'] = contentbook.contentbook('Languages')
+        bar.pack_start(vb)
+        vb.collapse()
         vb = self.__viewbooks['content'] = contentbook.contentbook('Quick View')
         bar.pack_start(vb)
         vb.collapse()
@@ -99,7 +109,7 @@ class pidawindow(paned.paned_window):
         else:
             panepos = gtk.POS_LEFT
             langpos = gtk.POS_RIGHT
-        self._create_paneholder('language', langpos)
+        #self._create_paneholder('language', langpos)
         sidebar = self._create_sidebar(bufferview, pluginview)
         self.set_pane_widget(panepos, sidebar)
         self.set_pane_sticky(panepos, True)

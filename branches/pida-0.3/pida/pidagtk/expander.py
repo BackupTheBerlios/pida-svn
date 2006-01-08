@@ -57,6 +57,7 @@ class expander(gtk.VBox):
             self.pack_start(self.__bodyarea, expand=True, padding=2)
             self.pack_start(self.__labelarea, expand=False, padding=0)
 
+        self.__expanded = False
         self.waiting = False
         self.populate()
         self.collapse()
