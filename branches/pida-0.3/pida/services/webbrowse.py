@@ -47,7 +47,7 @@ class BrowserView(contentview.content_view):
         self.fetcher = Fetcher(self)
         self.view = gtkhtml2.View()
         self.view.connect('on-url', self.cb_onurl)
-        self.view.set_size_request(400,300)
+        #self.view.set_size_request(400,300)
         self.swin = gtk.ScrolledWindow()
         self.swin.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.swin.add(self.view)
@@ -104,6 +104,7 @@ class BrowserView(contentview.content_view):
         pass
 
     def cb_onurl(self, view, url):
+        return
         if url:
             url = urlparse.urljoin(self.url, url)
             self.status_bar.push(self.status_context, url)
@@ -166,7 +167,7 @@ class Fetcher(object):
 
     def fetch_url(self, url, stream=None):
         def fetch():
-            if not url.endswith('css'):
+            if not url.endswith('csiis'):
                 fd = urllib.urlopen(url)
                 gobject.io_add_watch(fd.fp, gobject.IO_IN, self.readable, stream)
             else:
