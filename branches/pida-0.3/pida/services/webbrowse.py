@@ -45,12 +45,8 @@ class BrowserView(contentview.content_view):
 
     def init(self):
         self.fetcher = Fetcher(self)
-        self.doc = gtkhtml2.Document()
-        self.doc.connect('request-url', self.cb_request_url)
-        self.doc.connect('link-clicked', self.cb_link_clicked)
         self.view = gtkhtml2.View()
         self.view.connect('on-url', self.ro)
-        self.view.set_document(self.doc)
         self.view.set_size_request(400,300)
         self.swin = gtk.ScrolledWindow()
         self.swin.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -77,18 +73,21 @@ class BrowserView(contentview.content_view):
             aurl = url
             self.mark = None    
         self.url = url
-        self.doc.clear()
+        self.doc = gtkhtml2.Document()
+        self.doc.connect('request-url', self.cb_request_url)
+        self.doc.connect('link-clicked', self.cb_link_clicked)
         self.doc.open_stream('text/html')
         self.fetcher.fetch_url(aurl)
 
     def done(self):
         self.urlqueue.append(self.url)
         self.location.set_text(self.url)
+        self.view.set_document(self.doc)
+        gobject.idle_add(self.scroll_to_mark)
+    
+    def scroll_to_mark(self):
         if self.mark:
-            self.scroll_to_mark(self.mark)
-
-    def scroll_to_mark(self, mark):
-        self.view.jump_to_anchor(self.url)
+            self.view.jump_to_anchor(self.mark)
 
     def ro(self, *args):
         return
@@ -132,6 +131,8 @@ class web_browser(service.service):
         view = self.create_view()
         if not url:
             url = 'http://pseudoscience.co.uk/'
+            url = ('/usr/share/gtk-doc/html/pygtkmozembed/'
+                   'gtkmozembed-class-reference.html')
         view.fetch(url)
 
     def create_view(self):
@@ -159,16 +160,14 @@ class Fetcher(object):
                     stream.close()
         t = threading.Thread(target=fetch)
         t.start()
-    
+
     def readable(self, fd, cond, stream):
         data = fd.read(64)
-        gtk.threads_enter()
         if data:
             if stream:
                 stream.write(data)
             else:
                 self.browser.doc.write_stream(data)
-            gtk.threads_leave()
             return True
         else:
             if stream:
@@ -176,7 +175,6 @@ class Fetcher(object):
             else:
                 self.browser.doc.close_stream()
                 self.browser.done()
-            gtk.threads_leave()
             return False
 
 
