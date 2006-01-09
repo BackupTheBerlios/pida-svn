@@ -23,12 +23,20 @@
 
 import os
 
+import gobject
+
 import pida.core.service as service
 
 import pida.pidagtk.contentview as contentview
 import pida.pidagtk.tree as tree
 
 import xml.dom.minidom as minidom
+
+import tempfile
+import time
+import gzip
+
+import threading
 
 defs = service.definitions
 types = service.types
@@ -40,7 +48,7 @@ class lib_list(tree.Tree):
 class bookmark_view(contentview.content_view):
 
     ICON_NAME = 'library'
-    LONG_TITLE = 'documentation library'
+    LONG_TITLE = 'Loading...'
 
     def init(self):
         self.__list = lib_list()
@@ -48,11 +56,16 @@ class bookmark_view(contentview.content_view):
                                  '%(name)s')
         self.__list.connect('double-clicked', self.cb_booklist_clicked)
         self.widget.pack_start(self.__list)
-        for book in self.service.get_books():
-            if hasattr(book, 'bookmarks'):
-                self._add_item(book.bookmarks)
-            else:
-                pass
+        gobject.timeout_add(2000, self.service.fetch)
+
+    def book_found(self, bookroot):
+        def _add():
+            self._add_item(bookroot)
+        gobject.idle_add(_add)
+
+    def books_done(self):
+        self.long_title = 'Documentation library'
+
 
     def _add_item(self, item, parent=None):
         niter = self.__list.add_item(item, parent=parent)
@@ -72,9 +85,13 @@ class document_library(service.service):
     plugin_view_type = bookmark_view
 
     def init(self):
-        pass
+        return
 
-    def get_books(self):
+    def fetch(self):
+        t = threading.Thread(target=self.fetch_books)
+        t.start()
+
+    def fetch_books(self):
         books = []
         pida_directory = os.path.join(self.boss.pida_home, 'library')
         dirs = [pida_directory, '/usr/share/gtk-doc/html',
@@ -84,8 +101,10 @@ class document_library(service.service):
             for name in os.listdir(directory):
                 path = os.path.join(directory, name)
                 if os.path.exists(path):
-                    books.append(book(path))
-        return books
+                    load_book = book(path)
+                    if hasattr(load_book, 'bookmarks'):
+                        self.plugin_view.book_found(load_book.bookmarks)
+        self.plugin_view.books_done()
 
 class book(object):
 
@@ -96,6 +115,16 @@ class book(object):
         for name in os.listdir(path):
             if name.endswith('.devhelp'):
                 config_path = os.path.join(path, name)
+                break
+            elif name.endswith('.devhelp.gz'):
+                print name
+                gz_path = os.path.join(path, name)
+                f = gzip.open(gz_path, 'rb', 1)
+                gz_data = f.read()
+                f.close()
+                fd, config_path = tempfile.mkstemp()
+                os.write(fd, gz_data)
+                os.close(fd)
                 break
         if config_path and os.path.exists(config_path):
             dom = minidom.parse(config_path)
