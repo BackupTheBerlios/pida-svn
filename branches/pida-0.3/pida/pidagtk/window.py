@@ -122,6 +122,7 @@ class pidawindow(gtk.Window):
     def _pack_panes(self, bufferview, pluginview):
         p0 = gtk.HPaned()
         self.__mainbox.pack_start(p0)
+        sidebar_width = self.__manager.opt('layout', 'sidebar_width')
         sidebar_on_right = self.__manager.opt('layout', 'sidebar_on_right')
         sidebar = self._create_sidebar(bufferview, pluginview)
         p1 = gtk.VPaned()
@@ -132,7 +133,7 @@ class pidawindow(gtk.Window):
         else:
             side_func = p0.pack1
             main_func = p0.pack2
-            main_pos = 200
+            main_pos = sidebar_width
         side_func(sidebar)
         main_func(p1)
         p0.set_position(main_pos)

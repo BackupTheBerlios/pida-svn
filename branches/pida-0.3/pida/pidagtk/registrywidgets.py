@@ -364,8 +364,8 @@ class types(object):
         STEP = 1
         
         def __init__(self, option):
-            if hasattr(option, 'adjustment'):
-                adjvals = option.adjustment
+            if hasattr(option, 'lower'):
+                adjvals = option.lower, option.upper, option.step
             else:
                 adjvals = self.MIN, self.MAX, self.STEP
             adj = gtk.Adjustment(0, *adjvals)
