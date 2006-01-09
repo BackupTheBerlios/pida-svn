@@ -134,15 +134,15 @@ class pidawindow(gtk.Window):
             side_func = p0.pack1
             main_func = p0.pack2
             main_pos = sidebar_width
-        side_func(sidebar)
-        main_func(p1)
+        side_func(sidebar, resize=False)
+        main_func(p1, resize=True)
         p0.set_position(main_pos)
         editor = contentbook.Contentholder(show_tabs=False)
         self.__viewbooks['edit'] = editor
-        p1.pack1(editor)
+        p1.pack1(editor, resize=True)
         viewbook = contentbook.Contentholder()
         self.__viewbooks['view'] = viewbook
-        p1.pack2(viewbook)
+        p1.pack2(viewbook, resize=False)
         extb = self.__viewbooks['ext'] = external_book()
         p1.set_position(480)
         self.resize(800, 600)
