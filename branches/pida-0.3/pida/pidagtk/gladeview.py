@@ -57,6 +57,7 @@ class glade_view(contentview.content_view):
             not_found = gtk.Label('this glade file was not found')
             self.widget.pack_start(not_found)
             return
+        gtk.glade.set_custom_handler(self.__get_custom_handler)
         glade_build = glade.XML(glade_file)
         self.__auto_connect(glade_build)
         if top_level_name is None:
@@ -109,6 +110,27 @@ class glade_view(contentview.content_view):
                 self.service.log.info('signal type "%s" does not exist '
                                       'for widget type "%s"',
                                        sig_name, widget)
+
+    def __get_custom_handler(self, glade, function_name, widget_name, 
+            str1, str2, int1, int2):
+        """
+        Generic handler for creating custom widgets, used to
+        enable custom widgets.
+
+        The custom widgets have a creation function specified in design time.
+        Those creation functions are always called with str1,str2,int1,int2 as
+        arguments, that are values specified in design time.
+
+        This handler assumes that we have a method for every custom widget
+        creation function specified in glade.
+
+        If a custom widget has create_foo as creation function, then the
+        method named create_foo is called with str1,str2,int1,int2 as arguments.
+
+        see <http://www.async.com.br/faq/pygtk/index.py?req=show&file=faq22.007.htp>
+        """
+        handler = getattr(self, function_name)
+        return handler(str1, str2, int1, int2)
 
     def __find_gladefile(self, filename):
         from pkg_resources import Requirement, resource_filename
