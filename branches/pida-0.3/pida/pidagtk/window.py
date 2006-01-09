@@ -140,6 +140,7 @@ class pidawindow(gtk.Window):
         self.__viewbooks['view'] = viewbook
         p1.pack2(viewbook)
         extb = self.__viewbooks['ext'] = external_book()
+        p1.set_position(480)
         self.resize(800, 600)
 
     def _create_paneholder(self, name, position):
