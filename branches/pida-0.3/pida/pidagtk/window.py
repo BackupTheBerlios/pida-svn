@@ -30,11 +30,11 @@ import expander
 import contentbook
 
 
-class pidawindow(paned.paned_window):
+class pidawindow(gtk.Window):
     """The Pida main window"""
 
     def __init__(self, manager):
-        paned.paned_window.__init__(self)
+        super(gtk.Window, self).__init__()
         self.__manager = manager
         self.__viewbooks = {}
         from pkg_resources import Requirement, resource_filename
@@ -67,6 +67,7 @@ class pidawindow(paned.paned_window):
             book.detach_pages()
 
     def _create_sidebar(self, bufferview, pluginview):
+        
         bar = gtk.VBox()
         bufs = expander.expander()
         bufs.set_body_widget(bufferview)
@@ -85,14 +86,16 @@ class pidawindow(paned.paned_window):
         return bar
 
     def pack(self, menubar, toolbar, bufferview, pluginview):
+        self.__mainbox = gtk.VBox()
+        self.add(self.__mainbox)
         self._pack_topbar(menubar, toolbar)
         self._pack_panes(bufferview, pluginview)
 
     def _pack_topbar(self, menubar, toolbar):
         self.__toolarea = gtk.VBox()
-        self.top_area.pack_start(self.__toolarea)
+        self.__mainbox.pack_start(self.__toolarea, expand=False)
         self.__toolarea.pack_start(menubar, expand=False)
-        self.__toolarea.pack_start(toolbar, expand=True)
+        self.__toolarea.pack_start(toolbar, expand=False)
         toolbar.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
         self.__menubar = menubar
         self.__toolbar = toolbar
@@ -115,6 +118,27 @@ class pidawindow(paned.paned_window):
         self.set_pane_sticky(panepos, True)
         extb = self.__viewbooks['ext'] = external_book()
         extb.window.set_transient_for(self)
+
+    def _pack_panes(self, bufferview, pluginview):
+        p0 = gtk.HPaned()
+        self.__mainbox.pack_start(p0)
+        sidebar_on_right = self.__manager.opt('layout', 'sidebar_on_right')
+        sidebar = self._create_sidebar(bufferview, pluginview)
+        p1 = gtk.VPaned()
+        if sidebar_on_right:
+            side_func = p0.pack2
+            main_func = p0.pack1
+        else:
+            side_func = p0.pack1
+            main_func = p0.pack2
+        side_func(sidebar)
+        main_func(p1)
+        editor = contentbook.Contentholder(show_tabs=False)
+        self.__viewbooks['edit'] = editor
+        p1.pack1(editor)
+        viewbook = contentbook.Contentholder()
+        self.__viewbooks['view'] = viewbook
+        p1.pack2(viewbook)
         self.resize(800, 600)
 
     def _create_paneholder(self, name, position):
