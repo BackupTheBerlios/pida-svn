@@ -123,6 +123,7 @@ class config_view(contentview.content_view):
         self.__pages = {}
         self.__widgets = {}
         self.__init_widgets()
+        self.__current_page_name = None
 
     def __init_widgets(self):
         pane = gtk.HPaned()
@@ -170,7 +171,7 @@ class config_view(contentview.content_view):
     def __build_page(self, pagename):
         if pagename in self.__pages:
             page = self.__pages[pagename]
-            self.__set_current_page(page)
+            self.__set_current_page(page, pagename)
         elif pagename in self.__registries:
             reg = self.__registries[pagename]
             displayname = self.service.boss.get_service_displayname(pagename)
@@ -182,9 +183,10 @@ class config_view(contentview.content_view):
                 self.__widgets[names] = wid
             self.__notebook.append_page(page)
             page.show_all()
-            self.__set_current_page(page)
+            self.__set_current_page(page, pagename)
 
-    def __set_current_page(self, page):
+    def __set_current_page(self, page, pagename):
+        self.__current_page_name = pagename
         pagenum = self.__notebook.page_num(page)
         self.__notebook.set_current_page(pagenum)
 
@@ -196,6 +198,17 @@ class config_view(contentview.content_view):
         for name, registry in self.__registries.iteritems():
             registry.save()
         self.emit('data-changed')
+
+    def __reset(self):
+        pagename = self.__current_page_name
+        print pagename
+        for i in xrange(self.__notebook.get_n_pages()):
+            self.__notebook.remove_page(i)
+        self.__pages = {}
+        self.__widgets = {}
+        self.set_registries([(name, self.__registries[name])
+                             for name in self.__registries])
+        self.__list.set_selected(pagename)
 
     def set_registries(self, registries):
         self.__list.clear()
@@ -213,7 +226,7 @@ class config_view(contentview.content_view):
         self.__build_page(item.key)
 
     def cb_undo_clicked(self, button):
-        pass
+        self.__reset()
 
     def cb_apply_clicked(self, button):
         self.__apply()
@@ -221,9 +234,10 @@ class config_view(contentview.content_view):
     def cb_save_clicked(self, button):
         self.__apply()
         self.__save()
+        self.close()
 
     def cb_cancel_clicked(self, button):
-        pass
+        self.close()
 
     def show_page(self, pagename):
         self.__list.set_selected(pagename)
