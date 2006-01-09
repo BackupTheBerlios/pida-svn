@@ -45,7 +45,7 @@ class window_manager(service.service):
         class sidebar_width(defs.option):
             """The width of the sidebar."""
             default = 200
-            rtype = types.intrange(100, 1800, 25)
+            rtype = types.intrange(75, 1800, 25)
 
     class panes(defs.optiongroup):
         """Options for panes."""

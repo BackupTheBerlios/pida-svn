@@ -129,7 +129,7 @@ class pidawindow(gtk.Window):
         if sidebar_on_right:
             side_func = p0.pack2
             main_func = p0.pack1
-            main_pos = 600
+            main_pos = 800 - sidebar_width
         else:
             side_func = p0.pack1
             main_func = p0.pack2
