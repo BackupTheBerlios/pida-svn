@@ -204,12 +204,12 @@ class ProjectManager(service.service):
             self.__current_project = project
             self.__current_project.project_type.action_group.set_visible(True)
             self.boss.call_command('window', 'update_action_groups')
-            directory = project.source_directory
-            def browse():
-                if directory is not None:
-                    self.boss.call_command('filemanager', 'browse',
-                                       directory=directory)
-            gobject.timeout_add(100, browse)
+        directory = project.source_directory
+        def browse():
+            if directory is not None:
+                self.boss.call_command('filemanager', 'browse',
+                                    directory=directory)
+        gobject.timeout_add(100, browse)
 
     # external interface
    
