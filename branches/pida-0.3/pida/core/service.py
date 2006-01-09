@@ -431,7 +431,11 @@ class single_view_mixin(object):
 
     def cb_single_view_controlbar_clicked_detach(self, view, toolbar, name):
         assert(view is self.__view)
-        if view.holder.get_parent().__class__.__name__ == 'Window':
+        try:
+            ggp = view.get_parent().get_parent().get_parent()
+        except:
+            ggp = None
+        if ggp.__class__.__name__ == 'external_window':
             bookname = self.single_view_book
         else:
             bookname = 'ext'
@@ -489,7 +493,11 @@ class multi_view_mixin(object):
             self.cb_multi_view_closed(view)
 
     def cb_multi_view_controlbar_clicked_detach(self, view, toolbar, name):
-        if view.holder.get_parent().__class__.__name__ == 'Window':
+        try:
+            ggp = view.get_parent().get_parent().get_parent()
+        except:
+            ggp = None
+        if ggp.__class__.__name__ == 'external_window':
             bookname = self.multi_view_book
         else:
             bookname = 'ext'
