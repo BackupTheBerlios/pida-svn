@@ -513,6 +513,9 @@ class multi_view_mixin(object):
     def cb_multi_view_closed(self, view):
         pass
 
+    def get_multi_view(self, unique_id):
+        return self.__views.get(unique_id, None)
+
 
 service_base_classes =  [options_mixin,
                          commands_mixin,
