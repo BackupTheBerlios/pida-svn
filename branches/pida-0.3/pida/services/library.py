@@ -116,7 +116,6 @@ class book(object):
                 config_path = os.path.join(path, name)
                 break
             elif name.endswith('.devhelp.gz'):
-                print name
                 gz_path = os.path.join(path, name)
                 f = gzip.open(gz_path, 'rb', 1)
                 gz_data = f.read()
