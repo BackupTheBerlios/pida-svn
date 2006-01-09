@@ -128,11 +128,14 @@ class pidawindow(gtk.Window):
         if sidebar_on_right:
             side_func = p0.pack2
             main_func = p0.pack1
+            main_pos = 600
         else:
             side_func = p0.pack1
             main_func = p0.pack2
+            main_pos = 200
         side_func(sidebar)
         main_func(p1)
+        p0.set_position(main_pos)
         editor = contentbook.Contentholder(show_tabs=False)
         self.__viewbooks['edit'] = editor
         p1.pack1(editor)
