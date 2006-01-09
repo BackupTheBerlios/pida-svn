@@ -139,6 +139,7 @@ class pidawindow(gtk.Window):
         viewbook = contentbook.Contentholder()
         self.__viewbooks['view'] = viewbook
         p1.pack2(viewbook)
+        extb = self.__viewbooks['ext'] = external_book()
         self.resize(800, 600)
 
     def _create_paneholder(self, name, position):
@@ -163,36 +164,43 @@ class pidawindow(gtk.Window):
             self.__viewbooks[name].shrink()
 
 
-class external_book(contentbook.Contentholder):
+class external_window(gtk.Window):
 
     def __init__(self, *args):
-        contentbook.Contentholder.__init__(self)
-        self.__create_window()
-        self.connect('empty', self.cb_empty)
+        super(external_window, self).__init__()
+        self.__book = contentbook.Contentholder()
+        self.add(self.__book)
+        self.connect('destroy', self.on_window__destroy)
+        self.resize(600, 480)
+        self.set_position(gtk.WIN_POS_CENTER)
+        self.__book.connect('empty', self.cb_empty)
 
     def cb_empty(self, holder):
-        self.__window.destroy()
-
-    def __create_window(self):
-        self.__window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        self.__window.connect('destroy', self.on_window__destroy)
-        self.__window.add(self)
-        self.__window.resize(600, 480)
-        self.__window.set_position(gtk.WIN_POS_CENTER)
+        self.destroy()
 
     def append_page(self, *args):
-        contentbook.Contentholder.append_page(self, *args)
-        self.__window.show_all()
-        self.__window.present()
+        self.__book.append_page(*args)
+        self.show_all()
+        self.present()
 
     def on_window__destroy(self, window):
         self.remove_pages()
-        self.__window.hide()
-        self.__window.remove(self)
-        self.__create_window()
+        self.hide()
+        self.remove(self.__book)
         return True
 
     def get_window(self):
         return self.__window
     window = property(get_window)
+
+
+class external_book(object):
+
+    def append_page(self, page):
+        ext = external_window()
+        ext.append_page(page)
+
+    def show_all(self):
+        pass
+
 
