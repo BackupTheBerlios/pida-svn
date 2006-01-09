@@ -184,9 +184,9 @@ class external_window(gtk.Window):
         self.present()
 
     def on_window__destroy(self, window):
-        self.remove_pages()
         self.hide()
         self.remove(self.__book)
+        self.__book.remove_pages()
         return True
 
     def get_window(self):

@@ -404,6 +404,8 @@ class single_view_mixin(object):
     def init(self):
         self.__view = None
 
+
+
     def create_single_view(self, *args, **kwargs):
         if self.single_view_type is not None:
             if self.__view is None:
