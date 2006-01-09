@@ -74,7 +74,9 @@ class document_library(service.service):
     def get_books(self):
         books = []
         pida_directory = os.path.join(self.boss.pida_home, 'library')
-        dirs = [pida_directory, '/usr/share/gtk-doc/html']
+        dirs = [pida_directory, '/usr/share/gtk-doc/html',
+                                '/usr/share/devhelp/books',
+                                os.path.expanduser('~/.devhelp/books')]
         for directory in dirs:
             for name in os.listdir(directory):
                 path = os.path.join(directory, name)
