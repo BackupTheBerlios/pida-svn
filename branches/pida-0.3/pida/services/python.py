@@ -38,6 +38,7 @@ import pida.utils.pythonparser as pythonparser
 defs = service.definitions
 types = service.types
 
+import gobject
 
 class python_source_view(contentview.content_view):
 
@@ -56,8 +57,15 @@ class python_source_view(contentview.content_view):
         self.__nodes.connect('double-clicked', self.cb_source_clicked)
 
     def set_source_nodes(self, root_node):
+        exp_paths = []
+        e_paths = []
+        def f(row, path):
+            e_paths.append(path)
+        self.__nodes.view.map_expanded_rows(f)
         self.__nodes.clear()
         self.__set_nodes(root_node)
+        for path in e_paths:
+            self.__nodes.view.expand_row(path, False)
         
     def __set_nodes(self, root_node, piter=None):
         if root_node.linenumber is not None:
@@ -106,8 +114,9 @@ class python(service.service):
                 self.__cached[document.unique_id] = (root_node,
                                document.stat.st_mtime)
             if not root_node:
-                t = threading.Thread(target=load)
-                t.run()
+                load()
+                #t = threading.Thread(target=load)
+                #t.run()
             else:
                 self.service.lang_view.set_source_nodes(root_node)
 

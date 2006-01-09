@@ -33,7 +33,6 @@ import pida.pidagtk.tree as tree
 import xml.dom.minidom as minidom
 
 import tempfile
-import time
 import gzip
 
 import threading
