@@ -56,7 +56,16 @@ class Contentholder(gtk.VBox):
         self.__notebook.popup_disable()
 
     def append_page(self, contentview):
-        self.__notebook.append_page(contentview, tab_label=contentview.icon)
+        tab_label = gtk.EventBox()
+        tab_label.add(contentview.icon)
+        tab_label.show_all()
+        tooltiptext = contentview.LONG_TITLE
+        if not tooltiptext:
+            tooltiptext = contentview.SHORT_TITLE
+        if not tooltiptext:
+            tooltiptext = 'No tooltip set for %s' % contentview
+        icons.tips.set_tip(tab_label, tooltiptext)
+        self.__notebook.append_page(contentview, tab_label=tab_label)
         self.__views[contentview.unique_id] = contentview
         contentview.holder = self
         contentview.connect('short-title-changed',

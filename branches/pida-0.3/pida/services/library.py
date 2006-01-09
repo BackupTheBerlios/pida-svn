@@ -77,7 +77,7 @@ class document_library(service.service):
         dirs = [pida_directory, '/usr/share/gtk-doc/html',
                                 '/usr/share/devhelp/books',
                                 os.path.expanduser('~/.devhelp/books')]
-        for directory in dirs:
+        for directory in [d for d in dirs if os.path.exists(d)]:
             for name in os.listdir(directory):
                 path = os.path.join(directory, name)
                 if os.path.exists(path):
