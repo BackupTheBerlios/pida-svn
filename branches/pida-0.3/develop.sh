@@ -57,6 +57,7 @@ import sys
 import linecache
 
 eggpath = "$eggpath"
+pidadir = "$pidadir/"
 leneggpath = len(eggpath) + 1
 
 def tracer(frame, event, arg):
@@ -64,10 +65,12 @@ def tracer(frame, event, arg):
         if event == 'line':
 	    lineno = frame.f_lineno
 	    filename = frame.f_code.co_filename #frame.f_globals["__file__"] 
+	    realfile = filename
 	    if filename.startswith(eggpath):
 	    	filename = filename[leneggpath:]
-	    line = linecache.getline(filename, lineno)
-            print "%s:%s: %s" % (filename, lineno, line.rstrip())
+		realfile = pidadir + filename
+            line = linecache.getline(realfile, lineno)
+            sys.stderr.write( "%s:%s: %s\n" % (filename, lineno, line.rstrip()) )
     return local_tracer
 
 import pida.core.application as application
