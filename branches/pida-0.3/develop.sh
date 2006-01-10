@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 set -e
 
 me=$(readlink -f $0)
@@ -21,23 +21,32 @@ egg="$distdir/pida-${version//-/_}-py$pyver.egg"
 echo "Adding ${egg#$pidadir/} to '\$PYTHONPATH' ..."
 export PYTHONPATH=$egg:$PYTHONPATH
 
-DEBUG= REMOTE= GDB=
+DEBUG= REMOTE= GDB= PROFILE=
 while [ $# -gt 0 ]; do
     case "$1" in
         -remote) REMOTE=1 ;;
         -debug)  DEBUG=1 ;;
         -gdb)    GDB=1 ;;
+        -profile) PROFILE=1 ;;
         *)       break ;;
     esac
     shift
 done
 
 [ -z "$DEBUG" ] || export PIDA_DEBUG=1
-
 if [ "$REMOTE" ]; then
     pidacmd="$pidadir/pida/utils/pida-remote.py $* &"
+elif [ "$PROFILE" ]; then
+    pidacmd="-c \"import sys
+sys.path = sys.path[1:]
+import profile
+import pida.core.application as application
+profile.run('application.main()')\" -- $*"
 else
-    pidacmd="$pidadir/scripts/pida $*"
+    pidacmd="-c \"import sys
+sys.path = sys.path[1:]
+import pida.core.application as application
+application.main()\" -- $*"
 fi
 echo "Running $pidacmd ..."
 if [ "$GDB" ]; then
