@@ -130,17 +130,17 @@ class paste_manager(service.service):
 
     # UI Definitions
 
-    def act_new_paste(self, action):
-        paste = self.boss.call_command('pastehistory','get_selected')
-        self.call('post_paste', paste=paste)
+#    def act_new_paste(self, action):
+#        paste = self.boss.call_command('paste_history','get_selected')
+#        self.boss.call_command('paste_editor','post_paste',paste)
 
-    def get_menu_definition(self):
-        return """
-                <menubar>
-                <menu name="base_tools" action="base_tools_menu">
-                <menuitem name="newpaste" action="pastemanager+new_paste" />
-                </menu>
-                </menubar>
-        """
+#    def get_menu_definition(self):
+#        return """
+#                <menubar>
+#                <menu name="base_edit" action="base_edit_menu">
+#                <menuitem name="newpaste" action="paste-manager+new_paste" />
+#                </menu>
+#                </menubar>
+#        """
 
 Service = paste_manager
