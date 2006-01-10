@@ -5,6 +5,26 @@ me=$(readlink -f $0)
 pidadir=${me%/*}
 distdir=$pidadir/build/egg
 
+DEBUG= REMOTE= GDB= PROFILE= PDB= TRACE= UPDATE=
+while [ $# -gt 0 ]; do
+    case "$1" in
+	-update) UPDATE=1 ;;
+        -remote) REMOTE=1 ;;
+        -debug)  DEBUG=1 ;;
+        -gdb)    GDB=1 ;;
+        -pdb)    PDB=1 ;;
+        -trace)  TRACE=1 ;;
+        -profile) PROFILE=1 ;;
+        *)       break ;;
+    esac
+    shift
+done
+
+if [ "$UPDATE" ]; then
+	echo "Updating pida ..."
+	svn up $pidadir || true
+fi
+
 # build pida
 echo "Building pida ..."
 ( cd $pidadir
@@ -21,20 +41,6 @@ egg="$distdir/pida-${version//-/_}-py$pyver.egg"
 
 echo "Adding ${egg#$pidadir/} to '\$PYTHONPATH' ..."
 export PYTHONPATH=$egg:$PYTHONPATH
-
-DEBUG= REMOTE= GDB= PROFILE= PDB= TRACE=
-while [ $# -gt 0 ]; do
-    case "$1" in
-        -remote) REMOTE=1 ;;
-        -debug)  DEBUG=1 ;;
-        -gdb)    GDB=1 ;;
-        -pdb)    PDB=1 ;;
-        -trace)  TRACE=1 ;;
-        -profile) PROFILE=1 ;;
-        *)       break ;;
-    esac
-    shift
-done
 
 [ -z "$DEBUG" ] || export PIDA_DEBUG=1
 
