@@ -21,13 +21,14 @@ egg="$distdir/pida-${version//-/_}-py$pyver.egg"
 echo "Adding ${egg#$pidadir/} to '\$PYTHONPATH' ..."
 export PYTHONPATH=$egg:$PYTHONPATH
 
-DEBUG= REMOTE= GDB= PROFILE= PDB=1
+DEBUG= REMOTE= GDB= PROFILE= PDB= TRACE=
 while [ $# -gt 0 ]; do
     case "$1" in
         -remote) REMOTE=1 ;;
         -debug)  DEBUG=1 ;;
         -gdb)    GDB=1 ;;
         -pdb)    PDB=1 ;;
+        -trace)  TRACE=1 ;;
         -profile) PROFILE=1 ;;
         *)       break ;;
     esac
@@ -44,6 +45,25 @@ elif [ "$PDB" ]; then
 import pdb
 pdb.set_trace()
 import pida.core.application as application
+application.main()
+EOT
+    mv $pidacmd.$$ $pidacmd
+    pidacmd="$pidacmd $*"
+elif [ "$TRACE" ]; then
+    pidacmd=$distdir/pida
+    cat<<EOT >> $pidacmd.$$
+import sys
+
+def tracer(frame, event, arg):
+    def local_tracer(frame, event, arg):        
+        if event == 'line':
+	    lineno = frame.f_lineno
+	    filename = frame.f_code.co_filename
+            print "%s:%s: [...]" % (filename, lineno)
+    return local_tracer
+
+import pida.core.application as application
+sys.settrace(tracer)
 application.main()
 EOT
     mv $pidacmd.$$ $pidacmd
