@@ -130,8 +130,9 @@ class paste_history_view(gladeview.glade_view):
     def on_copy__clicked(self,but):
         '''Callback function bound to the toolbar button view that copies the
         selected paste'''
-        self.__x11_clipboard.set_text(self.__tree_selected.get_url())
-        self.__gnome_clipboard.set_text(self.__tree_selected.get_url())
+        if self.__tree_selected != None:
+            self.__x11_clipboard.set_text(self.__tree_selected.get_url())
+            self.__gnome_clipboard.set_text(self.__tree_selected.get_url())
 
     def on_view__clicked(self,but):
         '''Callback function bound to the toolbar button view that shows the
@@ -171,12 +172,14 @@ class paste_history_view(gladeview.glade_view):
     def cb_paste_db_clicked(self,paste,tree_item):
         '''Callback function called when an item is double clicked, and copy it
         to the gnome/gtk clipboard'''
-        self.__gnome_clipboard.set_text(self.__tree_selected.get_url())
+        if self.__tree_selected != None:
+            self.__gnome_clipboard.set_text(self.__tree_selected.get_url())
 
     def cb_paste_m_clicked(self,paste,tree_item):
         '''Callback function called when an item is middle clicked, and copy it
         to the mouse buffer clipboard'''
-        self.__x11_clipboard.set_text(self.__tree_selected.get_url())
+        if self.__tree_selected != None:
+            self.__x11_clipboard.set_text(self.__tree_selected.get_url())
 
 class paste_history(service.service):
     """Displays paste history"""
