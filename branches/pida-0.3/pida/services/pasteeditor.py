@@ -192,7 +192,9 @@ class paste_viewer_view(gladeview.glade_view):
                 label = gtk.Label(option)
                 label.show()
                 hb.add(label)
-                hb.add(self.__paste.get_option(option))
+                label = gtk.Label(self.__paste.get_option(option))
+                label.show()
+                hb.add(label)
 
         if self.__paste.INPUTS != None:
             vb = self.get_widget('vb_entries')
