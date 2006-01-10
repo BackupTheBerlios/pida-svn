@@ -21,3 +21,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+__AUTHORS__ = [ ( "Ali Afshar", "aafshar@gmail.com", ""),
+    ( "Bernard Pratz", "guyzmo@berlios.de", ""),
+    ( "Alejandro Mery", "amery@geeks.cl", ""),
+    ]
