@@ -34,20 +34,22 @@ while [ $# -gt 0 ]; do
 done
 
 [ -z "$DEBUG" ] || export PIDA_DEBUG=1
+
 if [ "$REMOTE" ]; then
     pidacmd="$pidadir/pida/utils/pida-remote.py $* &"
-elif [ "$PROFILE" ]; then
-    pidacmd="-c \"import sys
-sys.path = sys.path[1:]
+elif [ -z "$PROFILE" ]; then
+    pidacmd="$pidadir/scripts/pida $*"
+else
+    pidacmd=$distdir/pida
+    cat<<EOT >> $pidacmd.$$
 import profile
 import pida.core.application as application
-profile.run('application.main()')\" -- $*"
-else
-    pidacmd="-c \"import sys
-sys.path = sys.path[1:]
-import pida.core.application as application
-application.main()\" -- $*"
+profile.run('application.main()')
+EOT
+    mv $pidacmd.$$ $pidacmd
+    pidacmd="$pidacmd $*"
 fi
+
 echo "Running $pidacmd ..."
 if [ "$GDB" ]; then
     exec gdb python -q -x <( echo "run $pidacmd" )
