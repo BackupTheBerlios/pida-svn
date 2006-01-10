@@ -16,6 +16,7 @@ echo "Building pida ..."
 
 pyver=`python -V 2>&1 | cut -d' ' -f2 | cut -c1-3`
 version=`cat $pidadir/data/version`
+eggpath='build/bdist.linux-i686/egg'
 egg="$distdir/pida-${version//-/_}-py$pyver.egg"
 
 echo "Adding ${egg#$pidadir/} to '\$PYTHONPATH' ..."
@@ -53,13 +54,20 @@ elif [ "$TRACE" ]; then
     pidacmd=$distdir/pida
     cat<<EOT >> $pidacmd.$$
 import sys
+import linecache
+
+eggpath = "$eggpath"
+leneggpath = len(eggpath) + 1
 
 def tracer(frame, event, arg):
     def local_tracer(frame, event, arg):        
         if event == 'line':
 	    lineno = frame.f_lineno
-	    filename = frame.f_code.co_filename
-            print "%s:%s: [...]" % (filename, lineno)
+	    filename = frame.f_code.co_filename #frame.f_globals["__file__"] 
+	    if filename.startswith(eggpath):
+	    	filename = filename[leneggpath:]
+	    line = linecache.getline(filename, lineno)
+            print "%s:%s: %s" % (filename, lineno, line.rstrip())
     return local_tracer
 
 import pida.core.application as application
