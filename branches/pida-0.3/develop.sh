@@ -16,7 +16,7 @@ echo "Building pida ..."
 
 pyver=`python -V 2>&1 | cut -d' ' -f2 | cut -c1-3`
 version=`cat $pidadir/data/version`
-eggpath='build/bdist.linux-i686/egg'
+eggpath=$( echo build/bdist.`uname -s`-`uname -m`/egg | tr A-Z a-z )
 egg="$distdir/pida-${version//-/_}-py$pyver.egg"
 
 echo "Adding ${egg#$pidadir/} to '\$PYTHONPATH' ..."
