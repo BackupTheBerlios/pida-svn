@@ -68,9 +68,10 @@ class service_manager(base.pidagroup):
             self.__display_names[cls.NAME] = cls.display_name
             self.__available[group][cls.NAME] = cls
             
-        except ImportError, e:
+        except Exception, e:
             self.log.warn('failed to import %s.%s %s',
                            group, entrypoint, e)
+        
             
 
     def __load_service(self, group, name):
@@ -91,7 +92,6 @@ class service_manager(base.pidagroup):
     def get_display_name(self, servicename):
         if servicename in self.__display_names:
             return self.__display_names[servicename]
-    
 
     def bind(self):
         for service in self:
