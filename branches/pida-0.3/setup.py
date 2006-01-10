@@ -21,15 +21,13 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-
-from distutils.core import setup
 from setuptools import setup
 
 import os
-import sys
-import shutil
 
 VERBOSE = True
+
+VERSION_STRING = '0.3.0'
 
 def log(message):
     if VERBOSE:
@@ -47,30 +45,31 @@ packages = ['pida',
             'pida.utils.vc',
             'pida.utils.pyflakes']
 
-#log('Preparing editors')
-#plugindir = os.path.join('pida', 'editors')
-#for plugin in os.listdir(plugindir):
-#    if not plugin[0] in ['.', '_']:
-#        log('Adding editor "%s"' % plugin)
-#        packages.append('pida.editors.%s' % plugin)
-
 log('Performing setup...')
 
-services = []
-for svc in os.listdir(os.path.join('pida', 'services')):
-    if svc.endswith('.py') and not svc.startswith('_'):
-        name = svc.rsplit('.')[0]
-        services.append('%s = pida.services.%s:Service' % (name, name))
-plugins = []
-for svc in os.listdir(os.path.join('pida', 'plugins')):
-    if svc.endswith('.py') and not svc.startswith('_'):
-        name = svc.rsplit('.')[0]
-        plugins.append('%s = pida.plugins.%s:Plugin' % (name, name))
-editors = []
-for svc in os.listdir(os.path.join('pida', 'editors')):
-    if svc.endswith('.py') and not svc.startswith('_'):
-        name = svc.rsplit('.')[0]
-        editors.append('%s = pida.editors.%s:Service' % (name, name))
+
+def find_entry_points(directory_name, entrypoint_name):
+    entrypoints = []
+    dirpath = os.path.join('pida', directory_name)
+    for svc in os.listdir(dirpath):
+        if svc.endswith('.py') and not svc.startswith('_'):
+            name = svc.split('.', 1)[0]
+            entrypoints.append('%s = pida.%s.%s:%s' %
+                            (name, directory_name, name, entrypoint_name))
+    return entrypoints
+
+services = find_entry_points('services', 'Service')
+plugins = find_entry_points('plugins', 'Plugin')
+editors = find_entry_points('editors', 'Service')
+
+def ensure_version_file_exists():
+    version_path = os.path.join('data', 'version')
+    if not os.path.exists(version_path):
+        f = open(version_path, 'w')
+        f.write('%s\n' % VERSION_STRING)
+        f.close()
+
+ensure_version_file_exists()
 
 pixmaps = []
 for pix in os.listdir(os.path.join('data', 'pixmaps')):
@@ -85,7 +84,7 @@ for ui in os.listdir('glade'):
 #print pixmaps
 #print uis
 setup(name='pida',
-    version='0.3',
+    version=VERSION_STRING,
     author='Ali Afshar',
     author_email='aafshar@gmail.com',
     url='http://pida.berlios.de',
