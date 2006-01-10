@@ -76,7 +76,14 @@ pixmaps = []
 for pix in os.listdir(os.path.join('data', 'pixmaps')):
     if pix.endswith('xpm'):
         pixmaps.append('data/pixmaps/%s' % pix)
-print pixmaps
+
+uis = []
+for ui in os.listdir('glade'):
+    if ui.endswith('glade'):
+        uis.append('glade/%s' % ui)
+
+#print pixmaps
+#print uis
 setup(name='pida',
     version='0.3',
     author='Ali Afshar',
@@ -91,7 +98,7 @@ setup(name='pida',
     scripts=['scripts/pida'],
     data_files=[
                 ('images', ['data/icons.dat']),
-                ('glade', ['glade/project-creator.glade']),
+                ('glade', uis),
                 ('pixmaps', pixmaps),
                 ('version', ['data/version']),
                 ('', ['data/icons/pida-icon.png']),
