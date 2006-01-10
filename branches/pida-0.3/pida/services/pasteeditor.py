@@ -371,7 +371,7 @@ class paste_annotate_view(gladeview.glade_view):
 
 class paste_editor(service.service):
 
-    multi_view_book = 'content'
+    multi_view_book = 'view'
     
     def init(self):
         pass
