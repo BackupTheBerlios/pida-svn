@@ -64,7 +64,8 @@ class service_manager(base.pidagroup):
             cls.NAME = entrypoint.name
             if not hasattr(cls, 'display_name'):
                 cls.display_name = cls.NAME
-                print 'Serives should have a display name %s' % cls.NAME
+                self.log.debug('Services should have a display name %s',
+                                cls.NAME)
             self.__display_names[cls.NAME] = cls.display_name
             self.__available[group][cls.NAME] = cls
             

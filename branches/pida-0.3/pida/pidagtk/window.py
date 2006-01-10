@@ -35,6 +35,7 @@ class pidawindow(gtk.Window):
 
     def __init__(self, manager):
         super(gtk.Window, self).__init__()
+        self.set_title('PIDA loves you')
         self.__manager = manager
         self.__viewbooks = {}
         from pkg_resources import Requirement, resource_filename
