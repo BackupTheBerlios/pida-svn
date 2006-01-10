@@ -1,0 +1,188 @@
+<?xml version="1.0" standalone="no"?> <!--*- mode: xml -*-->
+<!DOCTYPE glade-interface SYSTEM "http://gazpacho.sicem.biz/gazpacho-0.1.dtd">
+<glade-interface>
+    <widget class="GtkWindow" id="window1">
+        <property name="default_height">250</property>
+        <property name="default_width">440</property>
+        <child>
+            <widget class="GtkVBox" id="pida_view">
+                <property name="border_width">12</property>
+                <property name="spacing">12</property>
+                <property name="visible">True</property>
+                <child>
+                    <widget class="GtkLabel" id="title_label">
+                        <property name="ellipsize">start</property>
+                        <property name="label" context="yes" translatable="yes">&lt;big&gt;&lt;b&gt;Create New Paste&lt;/b&gt;&lt;/big&gt;</property>
+                        <property name="use_markup">True</property>
+                        <property name="visible">True</property>
+                        <property name="xalign">0.899999976158</property>
+                        <property name="xpad">12</property>
+                        <property name="ypad">1</property>
+                    </widget>
+                    <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                    </packing>
+                </child>
+                <child>
+                    <widget class="GtkVBox" id="vbox1">
+                        <property name="visible">True</property>
+                        <child>
+                            <widget class="GtkVBox" id="vb_entries">
+                                <property name="visible">True</property>
+                                <child>
+                                    <widget class="GtkHBox" id="hb_title">
+                                        <property name="visible">True</property>
+                                        <child>
+                                            <widget class="GtkLabel" id="post_title_label">
+                                                <property name="label" context="yes" translatable="yes">&lt;b&gt;Title&lt;/b&gt;</property>
+                                                <property name="use_markup">True</property>
+                                                <property name="visible">True</property>
+                                                <property name="width_request">69</property>
+                                            </widget>
+                                            <packing>
+                                                <property name="expand">False</property>
+                                            </packing>
+                                        </child>
+                                        <child>
+                                            <widget class="GtkEntry" id="post_title_entry">
+                                                <property name="visible">True</property>
+                                            </widget>
+                                            <packing>
+                                                <property name="padding">2</property>
+                                                <property name="position">1</property>
+                                            </packing>
+                                        </child>
+                                    </widget>
+                                </child>
+                                <child>
+                                    <widget class="GtkHBox" id="hb_nickname">
+                                        <property name="visible">True</property>
+                                        <child>
+                                            <widget class="GtkLabel" id="post_nickname_label">
+                                                <property name="label" context="yes" translatable="yes">&lt;b&gt;Name&lt;/b&gt;</property>
+                                                <property name="use_markup">True</property>
+                                                <property name="visible">True</property>
+                                                <property name="width_request">70</property>
+                                            </widget>
+                                            <packing>
+                                                <property name="expand">False</property>
+                                            </packing>
+                                        </child>
+                                        <child>
+                                            <widget class="GtkEntry" id="post_name_entry">
+                                                <property name="is_focus">True</property>
+                                                <property name="visible">True</property>
+                                            </widget>
+                                            <packing>
+                                                <property name="position">1</property>
+                                            </packing>
+                                        </child>
+                                    </widget>
+                                    <packing>
+                                        <property name="position">1</property>
+                                    </packing>
+                                </child>
+                            </widget>
+                            <packing>
+                                <property name="expand">False</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkHBox" id="hb_combos">
+                                <property name="visible">True</property>
+                                <child>
+                                    <widget class="GtkHSeparator" id="hseparator_combo">
+                                        <property name="height_request">15</property>
+                                        <property name="visible">True</property>
+                                    </widget>
+                                </child>
+                            </widget>
+                            <packing>
+                                <property name="expand">False</property>
+                                <property name="position">1</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkFrame" id="post_text_label">
+                                <property name="label" context="yes" translatable="yes">Here comes the paste</property>
+                                <property name="visible">True</property>
+                                <child>
+                                    <widget class="GtkScrolledWindow" id="scrolledwindow1">
+                                        <property name="visible">True</property>
+                                        <child>
+                                            <widget class="GtkTextView" id="post_text_entry">
+                                                <property name="visible">True</property>
+                                            </widget>
+                                        </child>
+                                    </widget>
+                                </child>
+                            </widget>
+                            <packing>
+                                <property name="position">2</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkHBox" id="hb_pulsebar">
+                                <property name="visible">True</property>
+                                <child>
+                                    <widget class="GtkHSeparator" id="hseparator_pulse">
+                                        <property name="height_request">15</property>
+                                        <property name="visible">True</property>
+                                    </widget>
+                                </child>
+                            </widget>
+                            <packing>
+                                <property name="expand">False</property>
+                                <property name="position">3</property>
+                            </packing>
+                        </child>
+                    </widget>
+                    <packing>
+                        <property name="position">1</property>
+                    </packing>
+                </child>
+                <child>
+                    <widget class="GtkHButtonBox" id="hbuttonbox1">
+                        <property name="layout_style">end</property>
+                        <property name="spacing">6</property>
+                        <property name="visible">True</property>
+                        <child>
+                            <widget class="GtkButton" id="post_button">
+                                <property name="label">gtk-paste</property>
+                                <property name="use_stock">True</property>
+                                <property name="visible">True</property>
+                            </widget>
+                        </child>
+                        <child>
+                            <widget class="GtkButton" id="clear_button">
+                                <property name="label">gtk-clear</property>
+                                <property name="use_stock">True</property>
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="position">1</property>
+                            </packing>
+                        </child>
+                        <child>
+                            <widget class="GtkButton" id="close_button">
+                                <property name="is_focus">True</property>
+                                <property name="label">gtk-close</property>
+                                <property name="use_stock">True</property>
+                                <property name="visible">True</property>
+                            </widget>
+                            <packing>
+                                <property name="position">2</property>
+                            </packing>
+                        </child>
+                    </widget>
+                    <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="position">2</property>
+                    </packing>
+                </child>
+            </widget>
+        </child>
+    </widget>
+</glade-interface>
