@@ -2,6 +2,7 @@
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 #Copyright (c) 2005 Ali Afshar aafshar@gmail.com
+#Copyright (c) 2006 Bernard Pratz aka Guyzmo, guyzmo@m0g.net
 
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -40,46 +41,6 @@ import gtk
 import os
 import gobject
 import os.path
-
-'''
-class Project(object):
-
-    name = None
-    directory = None
-    environment = None
-    vcs = None
-    vcsname = None
-
-class ProjectTree(tree.Tree):
-
-    SORT_BY = 'name'
-
-    markup_format_string = ('<b>%(name)s</b> ('
-                            '<span color="#0000c0">%(vcs_name)s</span>'
-                            ')\n%(source_directory)s')
-
-    def set_projects(self, projects):
-        self.clear()
-        for project in projects:
-            # remove
-            project.key = project.name
-            self.add_item(project, key=project.name)
-
-
-class ProjectTreeItem(tree.TreeItem):
-
-    def __get_markup(self):
-        directory = self.value.directory
-        vcs = self.value.vcsname
-        wd = directory
-        wd = wd.replace(os.path.expanduser('~'), '~')
-        b = ('<span><b>%s</b> ('
-            '<span foreground="#0000c0">%s</span>)\n'
-            '%s</span>') % (self.value.name, vcs, wd)
-        return b
-    markup = property(__get_markup)
-
-'''
 
 class paste_tree(tree.Tree):
     '''Tree listing all the pastes'''
