@@ -1,0 +1,37 @@
+# Everyone, thank-you so much!
+# Every single person/entity here has provided a service free of charge.
+
+(authors)
+Cristi Birzan <gcbirzan at wolfheart to ro>
+Fernando San Martin Woerner
+Tiago Cogumbreiro
+Stephen Kennedy <stevek at gnome dot org>
+
+(additional script authors)
+pida-local script   Alejandro Mery <amery at geeks dot cl>
+
+(people helpful and willing to test stuff)
+garduletz	Lucian Stănescu <luci at wolfheart dot ro>
+iphithus	James Rayner <iphitus at gmail dot com>
+mawimawi    Martin Winkler 
+housetier	Lasse Pommerenke <housetier at gmail dot com>
+
+(for hosting the project)
+Berlios.de
+
+(for providing an irc channel and being just plain useful)
+Freenode and the squeaky wheel system.
+
+(other packagers)
+Debian Maintainer <jluebbe at lasnet dot de> Jan Luebbe
+Gentoo Ebuild <bjoern dot michaelsen at gmail dot com>
+Gentoo SVN Ebuild  <pythonhead at gentoo dot org> Rob Cakebread
+Archlinux packager <angeloth at tin dot it>
+T2 packager <amery at geeks dot cl> Alejandro Mery 
+
+(authors of integrated tools)
+Vim, Python, GTK, PyGTK, Gazpacho, VTE, XTerm
+
+And frankly, any user!
+
+Ali (aafshar@gmail.com)
