@@ -1,2 +1,0 @@
-?package(pida):needs="X11" section="Apps/Programming"\
-  title="pida" command="/usr/bin/pida"
