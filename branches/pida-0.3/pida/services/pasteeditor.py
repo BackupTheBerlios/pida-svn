@@ -137,15 +137,15 @@ class paste_editor_view(gladeview.glade_view):
                     self.__text_entry.get_buffer().get_end_iter()))
         
         if self.__pastebin.OPTIONS != None:
-            options = []
+            options = {}
             for option in self.__pastebin.OPTIONS.keys():
-                options.append({option:self.__options[option].get_active_text()})
+                options[option] = self.__options[option].get_active_text()
             self.__pastebin.set_options(options)
 
         if self.__pastebin.INPUTS != None:
-            inputs = []
+            inputs = {}
             for name in self.__pastebin.INPUTS.keys():
-                inputs.append({name:self.__inputs[name].get_text()})
+                inputs[name] = self.__inputs[name].get_text()
             self.__pastebin.set_inputs(inputs)
             
         self.__pastebin.set_editor(self)
@@ -344,18 +344,16 @@ class paste_annotate_view(gladeview.glade_view):
                     self.__text_entry.get_buffer().get_start_iter(),
                     self.__text_entry.get_buffer().get_end_iter()))
         
-        #TODO
         if self.__pastebin.OPTIONS != None:
-            options = []
+            options = {}
             for option in self.__pastebin.OPTIONS.keys():
-                options.append({option:self.__options[option].get_active_text()})
+                options[option] = self.__options[option].get_active_text()
             self.__pastebin.set_options(options)
 
-        #TODO
         if self.__pastebin.INPUTS != None:
-            inputs = []
+            inputs = {}
             for name in self.__pastebin.INPUTS.keys():
-                inputs.append({name:self.__inputs[name].get_text()})
+                inputs[name] = self.__inputs[name].get_text()
             self.__pastebin.set_inputs(inputs)
             
         self.__pastebin.set_editor(self)

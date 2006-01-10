@@ -97,8 +97,8 @@ class annotation(object):
 
     def get_option(self, key):
         '''Get the option referenced by key'''
-        if self._input != None:
-            if self._input.has_key(key):
+        if self._option != None:
+            if self._option.has_key(key):
                 return self._option[key]
         return None
 
@@ -152,8 +152,8 @@ class paste_bin(object):
         self._lang = ""
         self._text = ""
         self._url = ""
-        self._option = None
-        self._input = None
+        self._option = {}
+        self._input = {}
 
     '''Constructor'''
     def __init__(self):
@@ -227,8 +227,8 @@ class paste_bin(object):
     passwd = property(get_pass)
 
     def get_option(self, key):
-        if self._input != None:
-            if self._input.has_key(key):
+        if self._option != {}:
+            if self._option.has_key(key):
                 return self._option[key]
         return None
 
@@ -240,7 +240,7 @@ class paste_bin(object):
     syntax = property(get_syntax)
 
     def get_input(self, key):
-        if self._input != None:
+        if self._input != {}:
             if self._input.has_key(key):
                 return self._input[key]
         return None
@@ -324,10 +324,10 @@ class rafb_paste_bin(paste_bin):
 #    INPUTS = {'foo':'bar'}
 
     def paste(self):
-        dataopts = [('text', self._text),
-                    ('name', self._name),
-                    ('desc', self._title),
-                    ('lang', self.get_option('Syntax')),
+        dataopts = [('text', self.text),
+                    ('name', self.name),
+                    ('desc', self.title),
+                    ('lang', self.syntax),
                     ('cvt_tabs', 4),
                     ('submit', 'Paste')]
         self.post(dataopts, self.get_text())
