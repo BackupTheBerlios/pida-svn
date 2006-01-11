@@ -21,6 +21,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import pida
 import pida.core.service as service
 
 import gtk
@@ -79,6 +80,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-authors = ['Ali Afshar <aafshar@gmail.com>']
+authors = [' '.join(a) for a in pida.__AUTHORS__]
 
 Service = help
