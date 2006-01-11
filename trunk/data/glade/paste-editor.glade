@@ -83,6 +83,14 @@
                                         <property name="position">1</property>
                                     </packing>
                                 </child>
+                                <child>
+                                    <widget class="Custom" id="list_sites">
+                                        <property name="creation_function">create_list_box</property>
+                                    </widget>
+                                    <packing>
+                                        <property name="position">2</property>
+                                    </packing>
+                                </child>
                             </widget>
                             <packing>
                                 <property name="expand">False</property>
@@ -104,17 +112,12 @@
                             </packing>
                         </child>
                         <child>
-                            <widget class="GtkFrame" id="post_text_label">
-                                <property name="label" context="yes" translatable="yes">Here comes the paste</property>
+                            <widget class="GtkScrolledWindow" id="scrolledwindow1">
                                 <property name="visible">True</property>
                                 <child>
-                                    <widget class="GtkScrolledWindow" id="scrolledwindow1">
+                                    <widget class="GtkTextView" id="post_text_entry">
+                                        <property name="is_focus">True</property>
                                         <property name="visible">True</property>
-                                        <child>
-                                            <widget class="GtkTextView" id="post_text_entry">
-                                                <property name="visible">True</property>
-                                            </widget>
-                                        </child>
                                     </widget>
                                 </child>
                             </widget>
