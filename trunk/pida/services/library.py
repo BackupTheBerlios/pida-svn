@@ -50,6 +50,8 @@ class bookmark_view(contentview.content_view):
     ICON_NAME = 'library'
     LONG_TITLE = 'Documentation Library'
 
+    HAS_CONTROL_BOX = False
+
     def init(self):
         self.__list = lib_list()
         self.__list.set_property('markup_format_string',
