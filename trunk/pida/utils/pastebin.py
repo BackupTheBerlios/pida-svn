@@ -306,8 +306,10 @@ class paste_bin(object):
         url = self.parse(url, page)
         self.set_text(text)
         self.set_url(url)
+        gtk.threads_enter()
         self.__pastes.push(self)
         self.__close_editor()
+        gtk.threads_leave()
 
     def parse(self, url, page):
         '''Returns the url to the paste'''

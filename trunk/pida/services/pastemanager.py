@@ -67,7 +67,10 @@ class paste_editor_view(gladeview.glade_view):
         self.__title_entry.set_text('') # TODO: Use options
         self.__nickname_entry.set_text('') # TODO: Use options
         self.__text_entry = self.get_widget('post_text_entry')
-        self.__pulse_bar = None
+        self.__pulse_bar = progressbar.progress_bar()
+        self.widget.pack_start(self.__pulse_bar, expand=False)
+        self.__pulse_bar.set_size_request(-1, 12)
+        self.__pulse_bar.set_pulse_step(0.01)
 
     def set_paste_bin(self, pbin):
         '''Sets a pastebin to the view in order to get informations'''
@@ -128,8 +131,9 @@ class paste_editor_view(gladeview.glade_view):
 
     # public api
 
-    def pulse(self, *args):
-        pass
+    def pulse(self):
+        '''Starts the pulse'''
+        self.__pulse_bar.show_pulse()
 
     # UI callbacks
 
@@ -153,6 +157,7 @@ class paste_editor_view(gladeview.glade_view):
             self.__pastebin.set_inputs(inputs)
         self.__pastebin.set_editor(self)
         but.set_sensitive(False)
+        self.service.plugin_view.raise_page()
         self.service.call('post_paste', paste=self.__pastebin)
 
     def on_clear_button__clicked(self,but):

@@ -140,8 +140,8 @@ class content_view(gtk.VBox):
                             self.cb_controlbar_detach_clicked)
         self.__long_title_label = gtk.Label(self.__long_title)
         if self.HAS_TITLE:
-            topbar.pack_start(self.__long_title_label)
-            self.__long_title_label.set_alignment(0, 0.5)
+            self.__toolbar_area.pack_start(self.__long_title_label, padding=6)
+            self.__long_title_label.set_alignment(0.0, 0.5)
             self.__long_title_label.set_selectable(True)
         if self.HAS_CONTROL_BOX:
             if self.HAS_CLOSE_BUTTON:
