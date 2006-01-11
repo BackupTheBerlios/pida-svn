@@ -29,8 +29,18 @@ import sys
 try:
     from setuptools import setup
 except ImportError, e:
-    print 'Fatal: Setuptools is not available. Exiting.'
-    sys.exit(1)
+    s = raw_input('Setuptools is not available. '
+                  'You can install it yourself while this prompt waits, or '
+                  'do you want this script to download and install setuptools?'
+                  ' (y/n default: n) ')
+    if s.lower().startswith('y'):
+        from ez_setup import use_setuptools
+        use_setuptools(download_delay=0)
+    try:
+        from setuptools import setup
+    except ImportError, e:
+        print 'Setuptools is still not available. Exiting.'
+        sys.exit(1)
 
 
 VERSION_STRING = '0.3.0'
