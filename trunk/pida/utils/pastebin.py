@@ -286,7 +286,6 @@ class paste_bin(object):
             gobject.io_add_watch(page, gobject.IO_IN, self.readable, text)
             gtk.threads_leave()
         t = threading.Thread(target=t)
-        print "INFO: Start posting thread"
         self.__wait_editor()
         t.start()
 
@@ -309,7 +308,6 @@ class paste_bin(object):
         self.set_url(url)
         self.__pastes.push(self)
         self.__close_editor()
-        print "INFO: Stop posting thread"
 
     def parse(self, url, page):
         '''Returns the url to the paste'''
@@ -335,7 +333,7 @@ class rafb_paste_bin(paste_bin):
 class pida_paste_bin(paste_bin):
     '''Pida's paste bin handler'''
 
-    URL = 'http://pseudoscience.co.uk:8080/freenode/pida/paste_bin'
+    URL = 'http://pseudoscience.co.uk:8080/freenode/pida/PasteBin'
 
     def paste(self):
         dataopts = [('nick', self.get_name()),
@@ -343,6 +341,7 @@ class pida_paste_bin(paste_bin):
         self.post(dataopts, self.get_text())
 
     def parse(self, url, page):
+        print page
         for s in page.split():
             if s.startswith('href'):
                 if s.count('view='):
@@ -408,7 +407,6 @@ class husk_paste_bin(paste_bin):
     # Does not work, doesn't parse the right page
     def parse(self, url, page):
         for s in page.split():
-            print s
             if s.startswith('href'):
                 if s.count('display/'):
                     return s.split('"')[1]

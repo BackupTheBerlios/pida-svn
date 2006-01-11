@@ -125,25 +125,10 @@ class paste_editor_view(gladeview.glade_view):
                 self.__options[option].set_active(0)
         self.__text_entry.get_buffer().set_text("")
 
-    # public interface
+    # public api
 
-    def pulse(self):
-        '''Starts the pulse'''
-        return
-        #if self.__pulse_bar == None:
-        #    hb_pulse = self.get_widget('hb_pulsebar')
-        #    hb_pulse.remove(self.get_widget('hseparator_pulse'))
-        #    self.__pulse_bar = progressbar.progress_bar()
-        #    self.__pulse_bar.set_size_request(-1, 12)
-        #    self.__pulse_bar.set_pulse_step(0.01)
-        #    hb_pulse.add(self.__pulse_bar)
-        #self.__pulse_bar.show_pulse()
-
-    def close(self):
-        '''Stops the pulse'''
-        if self.__pulse_bar != None:
-            self.__pulse_bar.hide_pulse()
-        gladeview.glade_view.close(self)
+    def pulse(self, *args):
+        pass
 
     # UI callbacks
 
@@ -167,7 +152,7 @@ class paste_editor_view(gladeview.glade_view):
             self.__pastebin.set_inputs(inputs)
         self.__pastebin.set_editor(self)
         but.set_sensitive(False)
-        self.service.boss.call_command('pastemanager', 'post_paste', paste=self.__pastebin)
+        self.service.call('post_paste', paste=self.__pastebin)
 
     def on_clear_button__clicked(self,but):
         '''Clears the paste'''
@@ -235,6 +220,20 @@ class paste_history_view(gladeview.glade_view):
         self.__history_tree.connect('clicked', self.cb_paste_clicked)
         self.__history_tree.connect('double-clicked', self.cb_paste_db_clicked)
         self.__history_tree.connect('middle-clicked', self.cb_paste_m_clicked)
+        self.__history_tree.connect('right-clicked', self.cb_paste_r_clicked)
+        self.__uim = gtk.UIManager()
+        self.__uim.insert_action_group(self.service.action_group, 0)
+        self.__uim.add_ui_from_string("""
+            <popup>
+            <menuitem name="1" action="pastemanager+new_paste" />
+            <separator />
+            <menuitem name="2" action="pastemanager+view_paste" />
+            <menuitem name="3" action="pastemanager+copy_url_to_clipboard" />
+            <separator />
+            <menuitem name="5" action="pastemanager+remove_paste" />
+            </popup>
+            """)
+        self.__popup_menu = self.__uim.get_widget('/popup')
 
     def set(self, pastes):
         '''Sets the paste list to the tree view.
@@ -250,14 +249,14 @@ class paste_history_view(gladeview.glade_view):
         paste to post'''
         self.service.boss.call_command('pastemanager','create_paste')
 
-    def on_copy__clicked(self,but):
+    def copy_current_paste(self):
         '''Callback function bound to the toolbar button view that copies the
         selected paste'''
         if self.__tree_selected != None:
             self.__x11_clipboard.set_text(self.__tree_selected.get_url())
             self.__gnome_clipboard.set_text(self.__tree_selected.get_url())
 
-    def on_view__clicked(self,but):
+    def view_current_paste(self):
         '''Callback function bound to the toolbar button view that shows the
         selected paste'''
         if self.__tree_selected != None:
@@ -266,16 +265,7 @@ class paste_history_view(gladeview.glade_view):
         else:
             print "ERROR: No paste selected"
 
-    def on_annotate__clicked(self,but):
-        '''Callback function bound to the toolbar button view that annotates
-        selected paste'''
-        if self.__tree_selected != None:
-            self.service.boss.call_command('pastemanager','annotate_paste',
-                paste=self.__tree_selected)
-        else:
-            print "ERROR: No paste selected"
-
-    def on_remove__clicked(self,but):
+    def remove_current_paste(self):
         '''Callback function bound to the toolbar button delete that removes the
         selected paste'''
         if self.__tree_selected != None:
@@ -302,6 +292,9 @@ class paste_history_view(gladeview.glade_view):
         if self.__tree_selected != None:
             self.__x11_clipboard.set_text(self.__tree_selected.get_url())
 
+    def cb_paste_r_clicked(self, paste, tree_item, event):
+        self.__popup_menu.popup(None, None, None, event.button, event.time)
+        
 
 class paste_manager(service.service):
     """Service that manages the pastes and the pastebins"""
@@ -374,10 +367,6 @@ class paste_manager(service.service):
         paste.set_mgr(self)
         paste.paste()
 
-    def cmd_post_annotation(self, annotation):
-        '''TODO: Annotates a post'''
-        print "TODO: Post annotation"
-
     def cmd_view_paste(self, paste):
         '''View a paste'''
         #self.boss.call_command('pasteeditor','view_paste',paste=paste)
@@ -396,6 +385,15 @@ class paste_manager(service.service):
 
     def act_new_paste(self, action):
         self.call('create_paste')
+
+    def act_remove_paste(self, action):
+        self.plugin_view.remove_current_paste()
+
+    def act_copy_url_to_clipboard(self, action):
+        self.plugin_view.copy_current_paste()
+
+    def act_view_paste(self, action):
+        self.plugin_view.view_current_paste()
 
     def get_menu_definition(self):
         return """<menubar>
