@@ -56,6 +56,7 @@ class paste_editor_view(gladeview.glade_view):
         '''Initiate the interface using glade'''
         self.__options = {}
         self.__inputs = {}
+        self.__options_bar = self.get_widget('hseparator_combo')
         self.__list_sites = self.get_widget('list_sites')
         for site in pastebin.BINS.keys():
             self.__list_sites.append_text(site)
@@ -82,7 +83,7 @@ class paste_editor_view(gladeview.glade_view):
     def __pack_combos(self):
         '''Populate all comboboxes'''
         if self.__pastebin.OPTIONS != None:
-            hb = self.get_widget('hb_combos')
+            hb = self.__options_bar
             [hb.remove(child) for child in
                 hb.get_children()]
             for option in self.__pastebin.OPTIONS.keys():
@@ -95,6 +96,7 @@ class paste_editor_view(gladeview.glade_view):
                 self.__options[option].set_active(0)
                 self.__options[option].show()
                 hb.add(self.__options[option])
+            hb.show_all()
     
     def __pack_inputs(self):
         '''Populates all inputs'''
