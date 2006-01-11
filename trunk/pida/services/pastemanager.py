@@ -390,4 +390,19 @@ class paste_manager(service.service):
         '''Get all pastes'''
         return self.pastes
 
+    # ui actions
+
+    def act_new_paste(self, action):
+        self.call('create_paste')
+
+    def get_menu_definition(self):
+        return """<menubar>
+                  <menu name="base_tools" action="base_tools_menu">
+                  <separator />
+                  <menuitem name="newpaste" action="pastemanager+new_paste" />
+                  <separator />
+                  </menu>
+                  </menubar>
+               """
+
 Service = paste_manager
