@@ -48,7 +48,7 @@ class lib_list(tree.Tree):
 class bookmark_view(contentview.content_view):
 
     ICON_NAME = 'library'
-    LONG_TITLE = 'Loading...'
+    LONG_TITLE = 'Documentation Library'
 
     def init(self):
         self.__list = lib_list()
@@ -56,6 +56,7 @@ class bookmark_view(contentview.content_view):
                                  '%(name)s')
         self.__list.connect('double-clicked', self.cb_booklist_clicked)
         self.widget.pack_start(self.__list)
+        self.long_title = 'Loading books...'
         gobject.timeout_add(2000, self.service.fetch)
 
     def book_found(self, bookroot):
@@ -65,7 +66,6 @@ class bookmark_view(contentview.content_view):
 
     def books_done(self):
         self.long_title = 'Documentation library'
-
 
     def _add_item(self, item, parent=None):
         niter = self.__list.add_item(item, parent=parent)
@@ -81,6 +81,8 @@ class bookmark_view(contentview.content_view):
             self.service.log.info('Bad document book "%s"', book.name)
 
 class document_library(service.service):
+
+    display_name = 'Documentation Library'
 
     plugin_view_type = bookmark_view
 
