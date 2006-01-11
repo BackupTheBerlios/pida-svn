@@ -23,6 +23,7 @@
 
 import os
 
+import gtk
 import gobject
 
 import pida.core.service as service
@@ -83,6 +84,14 @@ class document_library(service.service):
 
     plugin_view_type = bookmark_view
 
+    class book_locations(defs.optiongroup):
+        """Locations of books in the file system."""
+        class use_gzipped_book_files(defs.option):
+            """Whether to use devhelp.gz format books."""
+            rtype = types.boolean
+            default = True
+
+
     def init(self):
         return
 
@@ -96,18 +105,21 @@ class document_library(service.service):
         dirs = [pida_directory, '/usr/share/gtk-doc/html',
                                 '/usr/share/devhelp/books',
                                 os.path.expanduser('~/.devhelp/books')]
+        use_gzip = self.opt('book_locations', 'use_gzipped_book_files')
         for directory in [d for d in dirs if os.path.exists(d)]:
             for name in os.listdir(directory):
                 path = os.path.join(directory, name)
                 if os.path.exists(path):
-                    load_book = book(path)
+                    load_book = book(path, use_gzip)
                     if hasattr(load_book, 'bookmarks'):
+                        gtk.threads_enter()
                         self.plugin_view.book_found(load_book.bookmarks)
+                        gtk.threads_leave()
         self.plugin_view.books_done()
 
 class book(object):
 
-    def __init__(self, path):
+    def __init__(self, path, include_gz=True):
         self.directory = path
         self.root = None
         config_path = None
