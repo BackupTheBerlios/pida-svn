@@ -59,28 +59,10 @@ EOT
 elif [ "$TRACE" ]; then
     pidacmd=$distdir/pida
     cat<<EOT >> $pidacmd.$$
-import sys
-import linecache
-
-eggpath = "$eggpath"
-pidadir = "$pidadir/"
-leneggpath = len(eggpath) + 1
-
-def tracer(frame, event, arg):
-    def local_tracer(frame, event, arg):        
-        if event == 'line':
-	    lineno = frame.f_lineno
-	    filename = frame.f_code.co_filename #frame.f_globals["__file__"] 
-	    realfile = filename
-	    if filename.startswith(eggpath):
-	    	filename = filename[leneggpath:]
-		realfile = pidadir + filename
-            line = linecache.getline(realfile, lineno)
-            sys.stderr.write( "%s:%s: %s\n" % (filename, lineno, line.rstrip()) )
-    return local_tracer
-
 import pida.core.application as application
-sys.settrace(tracer)
+import pida.utils.debug as debug
+
+debug.setTracer( eggpath="$eggpath", pidadir = "$pidadir/" )
 application.main()
 EOT
     mv $pidacmd.$$ $pidacmd
