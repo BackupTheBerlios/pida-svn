@@ -82,11 +82,12 @@ class paste_editor_view(gladeview.glade_view):
 
     def __pack_combos(self):
         '''Populate all comboboxes'''
+        hb = self.__options_bar
+        [hb.remove(child) for child in
+            hb.get_children()]
         if self.__pastebin.OPTIONS != None:
-            hb = self.__options_bar
-            [hb.remove(child) for child in
-                hb.get_children()]
             for option in self.__pastebin.OPTIONS.keys():
+                print option, hb.get_children()
                 label = gtk.Label(option)
                 label.show()
                 hb.add(label)
