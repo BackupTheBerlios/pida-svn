@@ -87,7 +87,6 @@ class paste_editor_view(gladeview.glade_view):
             hb.get_children()]
         if self.__pastebin.OPTIONS != None:
             for option in self.__pastebin.OPTIONS.keys():
-                print option, hb.get_children()
                 label = gtk.Label(option)
                 label.show()
                 hb.add(label)
