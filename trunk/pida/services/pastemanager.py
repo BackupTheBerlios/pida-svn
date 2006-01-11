@@ -92,7 +92,8 @@ class paste_editor_view(gladeview.glade_view):
                 hb.add(label)
                 self.__options[option] = gtk.combo_box_new_text()
                 for value in self.__pastebin.OPTIONS[option]:
-                    self.__options[option].append_text(value)
+                    if len(value):
+                        self.__options[option].append_text(value)
                 self.__options[option].set_active(0)
                 self.__options[option].show()
                 hb.add(self.__options[option])
