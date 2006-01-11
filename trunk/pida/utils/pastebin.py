@@ -330,6 +330,7 @@ class rafb_paste_bin(paste_bin):
                     ('submit', 'Paste')]
         self.post(dataopts, self.get_text())
 
+
 class pida_paste_bin(paste_bin):
     '''Pida's paste bin handler'''
 
@@ -341,7 +342,6 @@ class pida_paste_bin(paste_bin):
         self.post(dataopts, self.get_text())
 
     def parse(self, url, page):
-        print page
         for s in page.split():
             if s.startswith('href'):
                 if s.count('view='):
