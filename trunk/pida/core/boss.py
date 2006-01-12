@@ -55,11 +55,11 @@ class boss(base.pidacomponent):
         try:
             self.call_command('editormanager', 'start')
         except:
-            self.warn('editor failed to start')
+            self.log.warn('editor failed to start')
         try:
             self.call_command('terminal', 'execute_shell')
         except:
-            self.warn('terminal emulator not configured correctly')
+            self.log.warn('terminal emulator not configured correctly')
 
     def reset(self):
         """Reset live configuration options."""
