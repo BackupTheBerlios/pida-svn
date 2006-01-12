@@ -202,7 +202,7 @@ class Tree(gtk.VBox):
                     self.emit('right-clicked', self.selected, event)
                 else:
                     self.emit('right-clicked', None, event)
-            return True
+                return True
             if event.button == 2:
                 pathinf = self.__view.get_path_at_pos(int(event.x), int(event.y))
                 if pathinf is not None:
