@@ -299,6 +299,11 @@ class paste_history_view(gladeview.glade_view):
             self.__x11_clipboard.set_text(self.__tree_selected.get_url())
 
     def cb_paste_r_clicked(self, paste, tree_item, event):
+        sensitives = (tree_item is not None)
+        for action in ['pastemanager+remove_paste',
+                       'pastemanager+view_paste',
+                       'pastemanager+copy_url_to_clipboard']:
+            self.service.action_group.get_action(action).set_sensitive(sensitives)
         self.__popup_menu.popup(None, None, None, event.button, event.time)
         
 
