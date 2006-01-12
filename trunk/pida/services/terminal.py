@@ -77,15 +77,15 @@ class terminal_manager(service.service):
         """Shell options."""
         class command(defs.option):
             """The command used for the shell."""
-            default = 'bash'
+            default = os.environ['SHELL'] or 'bash'
             rtype = types.string
 
     class general(defs.optiongroup):
         """Terminal options."""
         class terminal_type(defs.option):
             """The default terminal type used."""
-            default = 'vte'
-            rtype = types.stringlist('vte', 'moo')
+            default = 'Vte'
+            rtype = types.stringlist('Vte', 'Moo')
         class terminal_location(defs.option):
             """Where newly started terminals will appear by default"""
             rtype = types.stringlist(*view_location_map.keys())
@@ -109,7 +109,7 @@ class terminal_manager(service.service):
     def cmd_execute(self, command_args=[], command_line='',
                     term_type=None, icon_name='terminal', kwdict={}):
         if term_type == None:
-            term_type = self.opt('general', 'terminal_type')
+            term_type = self.opt('general', 'terminal_type').lower()
         self.create_multi_view(term_type=term_type,
                                command_args=command_args,
                                icon_name=icon_name,
