@@ -21,11 +21,15 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+# system import(s)
 import os
+import logging
 
 
 def set_boss(boss):
+    """Called by the boss itself. Singletonish behaviour."""
     pidaobject.boss = boss
+
 
 class pidaobject(object):
     """The base pida class."""
@@ -36,6 +40,7 @@ class pidaobject(object):
     def init(self, *args, **kw):
         """The actual constructor."""
 
+
 class pidalogenabled(object):
     """Logging mixin."""
 
@@ -43,7 +48,6 @@ class pidalogenabled(object):
         self.log = self.__build_logger(self.__class__.__name__)
 
     def  __build_logger(self, name):
-        import logging
         format_str = ('%(levelname)s '
                       '%(module)s.%(name)s:%(lineno)s '
                       '%(message)s')
@@ -60,24 +64,6 @@ class pidalogenabled(object):
         return logger
         
 
-class pidaserializable(object):
-    
-    class __record__(object):
-        __fields__ = []
-
-    def get_record(self):
-        record = pidaobject()
-        for field, typ in self.__record__.__fields__:
-            setattr(record, field, getattr(self, field, None))
-        record.__fields__ = list(self.__record__.__fields__)
-        return record
-
-    def set_record(self, value):
-        for field in value.__fields__:
-            setattr(self, field, getattr(value, field, None))
-
-    record = property(get_record, set_record)
-
 class pidacomponent(pidalogenabled, pidaobject):
     """A single component."""
     def __init__(self, *args, **kw):
@@ -87,6 +73,7 @@ class pidacomponent(pidalogenabled, pidaobject):
     def is_leaf(self):
         return True
     is_leaf = property(is_leaf)
+
 
 class pidagroup(pidacomponent):
     """A group of components."""
@@ -149,6 +136,7 @@ class pidagroup(pidacomponent):
     def is_leaf(self):
         return False
     is_leaf = property(is_leaf)
+
 
 class pidamanager(pidagroup):
     """Manage components within top-level groups."""
