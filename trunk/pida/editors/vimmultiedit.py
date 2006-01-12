@@ -22,8 +22,8 @@
 #SOFTWARE.
 
 import gtk
-import vimedit
 import pida.utils.vim.vimcom as vimcom
+import pida.core.service as service
 import pida.pidagtk.contentview as contentview
 
 class vim_plugin_view(contentview.content_view):
@@ -54,11 +54,11 @@ class vim_plugin_view(contentview.content_view):
         return self.__serverlist.get_active_text()
     current_server = property(get_current_server)
 
-class vim_multi_editor(vimedit.Service):
+class vim_multi_editor(vimcom.vim_editor, service.service):
 
     plugin_view_type = vim_plugin_view
 
-    def cmd_start(self):
+    def start(self):
         self.__cw = vimcom.communication_window(self)
         self.get_service('editormanager').events.emit('started')
 
