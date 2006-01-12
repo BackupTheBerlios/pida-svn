@@ -20,18 +20,22 @@
 #LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
-import os
 
+
+# pida core import(s)
 import pida.core.service as service
-defs = service.definitions
-types = service.types
 
+# pida utils import(s)
 import pida.utils.vim.vimcom as vimcom
 import pida.utils.vim.vimembed as vimembed
 
+defs = service.definitions
+types = service.types
+
+
 class vim_embedded_editor(vimcom.vim_editor, service.service):
 
-    display_name = 'Vim'
+    display_name = 'Embedded Vim'
 
     single_view_type = vimembed.vim_embed
     single_view_book = 'edit'
@@ -40,18 +44,20 @@ class vim_embedded_editor(vimcom.vim_editor, service.service):
         self.__srv = None
         vimcom.vim_editor.init(self)
 
-    class general(defs.optiongroup):
+    class vim_command(defs.optiongroup):
+        """Vim command options."""
         class use_cream(defs.option):
             rtype = types.boolean
             default = False
 
     def get_server(self):
+        """Return our only server."""
         return self.__srv
     server = property(get_server)
 
     def start(self):
         self.create_single_view()
-        if self.opt('general', 'use_cream'):
+        if self.opt('vim_command', 'use_cream'):
             command = 'cream'
         else:
             command = 'gvim'
@@ -71,11 +77,8 @@ class vim_embedded_editor(vimcom.vim_editor, service.service):
 
     def confirm_single_view_controlbar_clicked_close(self, view):
         self.call('close', filename=self.__currentfile)
-        #self.__cw.close_current_buffer(self.__srv)
         return False
 
 
-
 Service = vim_embedded_editor
-    
 
