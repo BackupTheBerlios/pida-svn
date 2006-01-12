@@ -105,7 +105,7 @@ class GazpachoApplication(application.Application):
         # Widget view
         widget_view = WidgetTreeView(self)
         self._add_view(widget_view)
-        page_num = notebook.append_page(widget_view, gtk.Label(_('Widgets')))
+        page_num = notebook.append_page(widget_view, gtk.Label(('Widgets')))
 
         state = WidgetUIMState()
         self._uim_states[page_num] = state
@@ -113,7 +113,7 @@ class GazpachoApplication(application.Application):
         # Action view
         self.gactions_view = GActionsView(self)
         self._add_view(self.gactions_view)
-        page_num = notebook.append_page(self.gactions_view, gtk.Label(_('Actions')))
+        page_num = notebook.append_page(self.gactions_view, gtk.Label(('Actions')))
 
         state = ActionUIMState(self.gactions_view)
         self._uim_states[page_num] = state
@@ -121,7 +121,7 @@ class GazpachoApplication(application.Application):
         # Sizegroup view
         self.sizegroup_view = SizeGroupView(self)
         self._add_view(self.sizegroup_view)
-        page_num = notebook.append_page(self.sizegroup_view, gtk.Label(_('Size Groups')))
+        page_num = notebook.append_page(self.sizegroup_view, gtk.Label(('Size Groups')))
 
         state = SizeGroupUIMState(self.sizegroup_view)
         self._uim_states[page_num] = state
