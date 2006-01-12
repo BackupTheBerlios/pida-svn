@@ -116,9 +116,7 @@ class document_library(service.service):
                 if os.path.exists(path):
                     load_book = book(path, use_gzip)
                     if hasattr(load_book, 'bookmarks'):
-                        gtk.threads_enter()
                         self.plugin_view.book_found(load_book.bookmarks)
-                        gtk.threads_leave()
         self.plugin_view.books_done()
 
 class book(object):
