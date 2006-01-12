@@ -52,6 +52,7 @@ class terminal_view(contentview.content_view):
                            self.service.opt('fonts_and_colours',
                                             'font'))
         terminal.connect_child_exit(self.cb_exited)
+        terminal.connect_title(self.set_long_title)
         terminal.execute(command_args, **kw)
 
     def cb_exited(self):
@@ -220,6 +221,12 @@ class vte_terminal(pida_terminal):
         if 'directory' in kw:
             kwdict['directory'] = kw['directory']
         return kwdict
+
+    def connect_title(self, callback):
+        def title_changed(term):
+            title = term.get_window_title()
+            callback(title)
+        self.__term.connect('window-title-changed', title_changed)
         
 
 class moo_terminal(pida_terminal):
@@ -243,6 +250,9 @@ class moo_terminal(pida_terminal):
         if 'directory' in kw:
             kwdict['working_dir'] = kw['directory']
         return kwdict
+
+    def connect_title(self, callback):
+        pass
 
 class dumb_terminal(pida_terminal):
 
