@@ -58,13 +58,20 @@ class terminal_view(contentview.content_view):
     def cb_exited(self):
         self.close()
         
+view_location_map = {'View Pane':'view',
+                     'Quick Pane':'content',
+                     'Detached':'ext'}
 
 class terminal_manager(service.service):
 
     display_name = 'Terminals'
 
     multi_view_type = terminal_view
-    multi_view_book = 'view'
+
+    def get_multi_view_book_type(self):
+        opt = self.opt('general', 'terminal_location')
+        return view_location_map[opt]
+    multi_view_book = property(get_multi_view_book_type)
 
     class shell(defs.optiongroup):
         """Shell options."""
@@ -79,6 +86,11 @@ class terminal_manager(service.service):
             """The default terminal type used."""
             default = 'vte'
             rtype = types.stringlist('vte', 'moo')
+        class terminal_location(defs.option):
+            """Where newly started terminals will appear by default"""
+            rtype = types.stringlist(*view_location_map.keys())
+            default = 'View Pane'
+
     class fonts_and_colours(defs.optiongroup):
         """Fonts and colours for the terminal"""
         class background_colour(defs.option):

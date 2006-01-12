@@ -23,10 +23,15 @@
 
 import gtk
 import pida.utils.vim.vimcom as vimcom
+import pida.utils.vim.vimeditor as vimeditor
 import pida.core.service as service
 import pida.pidagtk.contentview as contentview
 
+
 class vim_plugin_view(contentview.content_view):
+    """View holding the vim controls."""
+
+    ICON_NAME = 'vim'
 
     def init(self):
         self.__serverlist = gtk.combo_box_new_text()
@@ -54,7 +59,10 @@ class vim_plugin_view(contentview.content_view):
         return self.__serverlist.get_active_text()
     current_server = property(get_current_server)
 
-class vim_multi_editor(vimcom.vim_editor, service.service):
+
+class vim_multi_editor(vimeditor.vim_editor, service.service):
+
+    display_name = 'External Vim'
 
     plugin_view_type = vim_plugin_view
 
@@ -73,6 +81,7 @@ class vim_multi_editor(vimcom.vim_editor, service.service):
     def get_server(self):
         return self.plugin_view.current_server
     server = property(get_server)
+
 
 Service = vim_multi_editor
 

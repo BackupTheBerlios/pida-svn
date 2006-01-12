@@ -28,12 +28,13 @@ import pida.core.service as service
 # pida utils import(s)
 import pida.utils.vim.vimcom as vimcom
 import pida.utils.vim.vimembed as vimembed
+import pida.utils.vim.vimeditor as vimeditor
 
 defs = service.definitions
 types = service.types
 
 
-class vim_embedded_editor(vimcom.vim_editor, service.service):
+class vim_embedded_editor(vimeditor.vim_editor, service.service):
 
     display_name = 'Embedded Vim'
 
@@ -42,7 +43,7 @@ class vim_embedded_editor(vimcom.vim_editor, service.service):
 
     def init(self):
         self.__srv = None
-        vimcom.vim_editor.init(self)
+        vimeditor.vim_editor.init(self)
 
     class vim_command(defs.optiongroup):
         """Vim command options."""
