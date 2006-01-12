@@ -21,42 +21,32 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+# system import(s)
+import os
 
-import pida.core.service as service
-import pida.pidagtk.contentbook as contentbook
-import pida.pidagtk.contentview as contentview
-import pida.pidagtk.expander as expander
-
-import gazpacho.app.app as application
-from gazpacho import editor
-from gazpacho.properties import PropertyCustomEditor, UNICHAR_PROPERTIES, prop_registry 
-from gazpacho import signaleditor
-from gazpacho.sizegroupeditor import SizeGroupView
-from gazpacho import palette
-from gazpacho.placeholder import Placeholder
-from gazpacho.project import Project
-from gazpacho.sizegroupeditor import SizeGroupView
-from gazpacho.util import rebuild
-from gazpacho.widget import Widget
-from gazpacho.widgetview import WidgetTreeView
-from gazpacho.widgetregistry import widget_registry
-from gazpacho.uimstate import WidgetUIMState, ActionUIMState, SizeGroupUIMState
-from gazpacho.actioneditor import GActionsView
-
-from gazpacho.editor import Editor
-
+# gtk import(s)
 import gtk
-import gobject
+
+# gazpacho imports
+from gazpacho import palette
+from gazpacho import signaleditor
+from gazpacho.editor import Editor
+import gazpacho.app.app as application
+from gazpacho.actioneditor import GActionsView
+from gazpacho.widgetview import WidgetTreeView
+from gazpacho.sizegroupeditor import SizeGroupView
+from gazpacho.properties import PropertyCustomEditor
+from gazpacho.uimstate import WidgetUIMState, ActionUIMState, SizeGroupUIMState
+
+# pida core import(s)
+import pida.core.service as service
 import pida.core.document as document
 
-class gazpacho_holder(contentview.content_view):
-
-    HAS_DETACH_BUTTON = False
-    HAS_CLOSE_BUTTON = False
-    HAS_LABEL = False
+# pidagtk import(s)
+import pida.pidagtk.contentview as contentview
 
 
-class GazpachoApplication(application.Application):
+class gazpacho_application(application.Application):
     
     def __init__(self, app_window, view):
         self.__app_window = app_window
@@ -74,9 +64,7 @@ class GazpachoApplication(application.Application):
 
     def get_window(self):
         return self.__app_window
-
     window = property(get_window)
-
   
     def _application_window_create(self):
         application_window = gtk.VBox()
@@ -127,7 +115,7 @@ class GazpachoApplication(application.Application):
         self._uim_states[page_num] = state
 
         # Add property editor
-        self._editor = Editor(self)
+        self._editor = widget_editor(self)
         self._editor.row_activated_cb = self.cb_signal_activated
         vpaned.add2(self._editor)
 
@@ -186,20 +174,15 @@ class GazpachoApplication(application.Application):
                 return
             self._save_cb(None)
             self.__view.cb_signal_activated(callbackname, self._project.path)
-            #self.cb.evt('signaledited', self._project.path,
-            #                widgetname,
-            #                widgettype,
-            #                signalname,
-            #                callbackname)
-        #print self._project.path
 
-class EmbeddedGazpacho(contentview.content_view):
+
+class gazpacho_view(contentview.content_view):
 
     HAS_TITLE = False
 
     def init(self):
         self.__main_window = self.service.boss.get_main_window()
-        self.__gazpacho = GazpachoApplication(self.__main_window, self)
+        self.__gazpacho = gazpacho_application(self.__main_window, self)
         self.widget.pack_start(self.__gazpacho.get_container())
         
 
@@ -292,11 +275,11 @@ class EmbeddedGazpacho(contentview.content_view):
                               callback_name=signalname)
 
 
-class Gazpacho(service.service):
+class gazpacho_service(service.service):
 
     display_name = 'Gazpacho'
 
-    single_view_type = EmbeddedGazpacho
+    single_view_type = gazpacho_view
     single_view_book = 'edit'
 
     class glade_handler(document.document_handler):
@@ -455,9 +438,6 @@ class Gazpacho(service.service):
     current_document = property(get_current_document, set_current_document)
             
 
-import pida.core.document as document
-import os
-
 class gazpacho_document(document.dummyfile_document):
 
     ICON_NAME = 'gazpacho'
@@ -474,172 +454,8 @@ class gazpacho_document(document.dummyfile_document):
         return MU % (dn, fn)
     markup = property(get_markup)
 
-class iEditor(gtk.Notebook):
 
-    __gsignals__ = {
-        'add_signal':(gobject.SIGNAL_RUN_LAST, None,
-                      (str, long, int, str))
-        }
-    
-    def __init__(self, app, row_activated_cb=lambda *a: None):
-        gtk.Notebook.__init__(self)
-        self._app = app
-        self.row_activated_cb = row_activated_cb
-
-    def make_pages(self):
-
-        # The editor has (at this moment) four tabs this are pointers to the
-        # vboxes inside each tab.
-        self._vbox_widget, v1 = self._notebook_page(_('Widget'))
-        self._vbox_packing, v2 = self._notebook_page(_('Packing'))
-        self._vbox_common, v3 = self._notebook_page(_('Common'))
-        self._vbox_signals, v4 = self._notebook_page(_('Signals'))
-        self.set_page(0)
-
-        # A handy reference to the widget that is loaded in the editor. None
-        # if no widgets are selected
-        self._loaded_widget = None
-
-        # A list of properties for the current widget
-        # XXX: We might want to cache this
-        self._widget_properties = []
-        
-        self._signal_editor = None
-
-        self._tooltips = gtk.Tooltips()
-
-        # Display some help
-        help_label = gtk.Label(_("Select a widget to edit its properties"))
-        help_label.show()
-        self._vbox_widget.pack_start(help_label)
-        
-    def _notebook_page(self, name):
-        vbox = gtk.VBox()
-        scrolled_window = gtk.ScrolledWindow()
-        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        scrolled_window.add_with_viewport(vbox)
-        scrolled_window.set_shadow_type(gtk.SHADOW_NONE)
-        self.append_page(scrolled_window, tab_label=gtk.Label(name))
-        return vbox, scrolled_window
-        
-    def do_add_signal(self, id_widget, type_widget, id_signal, callback_name):
-        pass
-
-    def _create_property_pages(self, widget, adaptor):
-        # Create the pages, one for widget properties and
-        # one for the common ones
-        widget_table = editor.EditorPage()
-        widget_table.append_name_field(adaptor)
-        self._vbox_widget.pack_start(widget_table, False)
-        
-        common_table = editor.EditorPage()
-        self._vbox_common.pack_start(common_table, False)
-
-        packing_table = editor.EditorPage()
-        self._vbox_packing.pack_start(packing_table, False)
-        
-        # Put the property widgets on the right page
-        widget_properties = []
-        parent = widget.gtk_widget.get_parent()
-        for property_class in prop_registry.list(adaptor.type_name,
-                                                 parent):
-
-            if not property_class.editable:
-                continue
-            
-            if property_class.child:
-                page = packing_table
-            elif property_class.owner_type in (gtk.Object.__gtype__,
-                                               gtk.Widget.__gtype__):
-                page = common_table
-            else:
-                page = widget_table
-
-            property_widget = page.append_item(property_class,
-                                               self._tooltips,
-                                               self._app)
-            if property_widget:
-                widget_properties.append(property_widget)
-                
-        self._widget_properties = widget_properties
-
-        # XXX: Remove this, show all widgets individually instead
-        widget_table.show_all()
-        common_table.show_all()
-        packing_table.show_all()
-        
-    def _create_signal_page(self):
-        if self._signal_editor:
-            return self._signal_editor
-        self._signal_editor = signaleditor.SignalEditor(self, self._app)
-        self._signal_editor._signals_list.connect('row-activated',
-            self.row_activated_cb)
-        self._vbox_signals.pack_start(self._signal_editor)
-
-    def _get_parent_types(self, widget):
-        retval = [type(widget)]
-        while True:
-            parent = widget.get_parent()
-            if not parent:
-                return retval
-            retval.append(type(parent))
-            widget = parent
-    
-    def _needs_rebuild(self, widget):
-        """
-        Return True if we need to rebuild the current property pages, False
-        if it's not require.
-        """
-        
-        if not self._loaded_widget:
-            return True
-
-        # Check if we need to rebuild the interface, otherwise we might end
-        # up with a (child) properties which does not belong to us
-        # FIXME: This implementation is not optimal, in some cases it'll
-        # rebuild even when it doesn't need to, a better way would be
-        # to compare child properties.
-        if (self._get_parent_types(self._loaded_widget.gtk_widget) !=
-            self._get_parent_types(widget.gtk_widget)):
-            return True
-
-        return False
-        
-    def _load_widget(self, widget):
-        if self._needs_rebuild(widget):
-            self.clear()
-            self._create_property_pages(widget, widget.adaptor)
-            self._create_signal_page()
-
-        for widget_property in self._widget_properties:
-            widget_property.load(widget)
-        self._signal_editor.load_widget(widget)
-
-        self._loaded_widget = widget
-
-    def clear(self):
-        "Clear the content of the editor"
-        for vbox in (self._vbox_widget,
-                     self._vbox_common,
-                     self._vbox_packing):
-            map(vbox.remove, vbox.get_children())
-        self._loaded_widget = None
- 
-    def display(self, widget):
-        "Display a widget in the editor"
-        
-        # Skip widget if it's already loaded or None
-        if self._loaded_widget == widget or not widget:
-            return
-
-        self._load_widget(widget)
-
-    def refresh(self):
-        "Reread properties and update the editor"
-        if self._loaded_widget:
-            self._load_widget(self._loaded_widget)
-
-class Editor(Editor):
+class widget_editor(Editor):
 
     def _create_signal_page(self):
         if self._signal_editor:
@@ -648,6 +464,7 @@ class Editor(Editor):
         self._signal_editor._signals_list.connect('row-activated',
             self.row_activated_cb)
         self._vbox_signals.pack_start(self._signal_editor)
+
 
 empty_gazpacho_document = """<?xml version="1.0" standalone="no"?>
 <!--*- mode: xml -*-->
@@ -655,5 +472,5 @@ empty_gazpacho_document = """<?xml version="1.0" standalone="no"?>
 <glade-interface/>
 """
 
-Service = Gazpacho
+Service = gazpacho_service
 
