@@ -55,6 +55,7 @@ class boss(base.pidacomponent):
         try:
             self.call_command('editormanager', 'start')
         except:
+            raise
             self.log.warn('editor failed to start')
         try:
             self.call_command('terminal', 'execute_shell')

@@ -37,10 +37,15 @@ class vim_editor(service.service):
     single_view_book = 'edit'
 
     def init(self):
-        self.__files = []
+        self.__files = {}
         self.__old_shortcuts = {'n':{}, 'v':{}}
         self.__srv = None
         self.__currentfile = None
+        self.__cw = vimcom.communication_window(self)
+
+    def get_server(self):
+        return self.__srv
+    server = property(get_server)
 
     class general(defs.optiongroup):
         class use_cream(defs.option):
@@ -52,7 +57,6 @@ class vim_editor(service.service):
             default = ''
 
     def cmd_start(self):
-        self.__cw = vimcom.communication_window(self)
         self.create_single_view()
         if self.opt('general', 'use_cream'):
             command = 'cream'
@@ -61,55 +65,65 @@ class vim_editor(service.service):
         self.single_view.run(command)
 
     def cmd_revert(self):
-        self.__cw.revert(self.__srv)
+        self.__cw.revert(self.server)
 
     def cmd_close(self, filename):
-        self.__cw.close_buffer(self.__srv, filename)
+        self.__cw.close_buffer(self.server, filename)
 
     def cmd_edit(self, filename):
         """Open and edit."""
         if filename != self.__currentfile:
-            if filename in self.__files:
-                self.__cw.change_buffer(self.__srv, filename)
+            if filename in self.__files.setdefault(self.server, []):
+                self.__cw.change_buffer(self.server, filename)
+                self.__cw.foreground(self.server)
             else:
-                self.__cw.open_file(self.__srv, filename)
-                self.__files.append(filename)
+                found = False
+                for server in self.__files:
+                    serverfiles = self.__files[server]
+                    if filename in serverfiles:
+                        self.__cw.change_buffer(server, filename)
+                        self.__cw.foreground(server)
+                        found = True
+                        break
+                if not found:
+                    self.__cw.open_file(self.server, filename)
+                    self.__files[self.server].append(filename)
             self.__currentfile = filename
-        self.single_view.raise_page()
-        self.single_view.long_title = filename
+        if self.single_view is not None:
+            self.single_view.raise_page()
+            self.single_view.long_title = filename
 
     def cmd_undo(self):
-        self.__cw.undo(self.__srv)
+        self.__cw.undo(self.server)
 
     def cmd_redo(self):
-        self.__cw.redo(self.__srv)
+        self.__cw.redo(self.server)
 
     def cmd_cut(self):
-        self.__cw.cut(self.__srv)
+        self.__cw.cut(self.server)
 
     def cmd_copy(self):
-        self.__cw.copy(self.__srv)
+        self.__cw.copy(self.server)
 
     def cmd_paste(self):
-        self.__cw.paste(self.__srv)
+        self.__cw.paste(self.server)
 
     def cmd_save(self):
-        self.__cw.save(self.__srv)
+        self.__cw.save(self.server)
 
     def cmd_goto_line(self, linenumber):
-        self.__cw.goto_line(self.__srv, linenumber)
+        self.__cw.goto_line(self.server, linenumber)
 
     def has_started(self):
-        return self.__srv is not None
+        return self.server is not None
     started = property(has_started)
 
     def vim_new_serverlist(self, serverlist):
         if self.single_view.servername in serverlist and not self.started:
             self.__srv = self.single_view.servername
-            self.__cw.send_ex(self.__srv, '%s' % VIMSCRIPT)
-            #gobject.timeout_add(3000, self.reset)
+            self.__cw.init_server(self.server)
             self.reset()
-            self.__files = []
+            self.__files = {}
             self.get_service('editormanager').events.emit('started')
 
     def confirm_single_view_controlbar_clicked_close(self, view):
@@ -117,16 +131,12 @@ class vim_editor(service.service):
         #self.__cw.close_current_buffer(self.__srv)
         return False
 
-    # move to the vimcom library
-
-
-
     def __load_shortcuts(self):
         for mapc in ['n']:
-            if self.__old_shortcuts[mapc].setdefault(self.__srv, []):
-                for sc in self.__old_shortcuts[mapc][self.__srv]:
-                    self.__cw.send_ex(self.__srv, UNMAP_COM % (mapc, sc))
-            self.__old_shortcuts[mapc][self.__srv] = []
+            if self.__old_shortcuts[mapc].setdefault(self.server, []):
+                for sc in self.__old_shortcuts[mapc][self.server]:
+                    self.__cw.send_ex(self.server, UNMAP_COM % (mapc, sc))
+            self.__old_shortcuts[mapc][self.server] = []
             #l = self.options.get('shortcut-leader').value
             globalkpsopts = self.boss.option_group('keyboardshortcuts')
             globalkps = []
@@ -142,8 +152,8 @@ class vim_editor(service.service):
                     try:
                         #c = self.options.get(name).value()
                         sc = ''.join([l, c])
-                        self.__old_shortcuts[mapc][self.__srv].append(sc)
-                        self.__cw.send_ex(self.__srv, NMAP_COM % (mapc, c, command))
+                        self.__old_shortcuts[mapc][self.server].append(sc)
+                        self.__cw.send_ex(self.server, NMAP_COM % (mapc, c, command))
                     except registry.BadRegistryKey:
                         pass
             gobject.timeout_add(200, load)
@@ -153,7 +163,7 @@ class vim_editor(service.service):
             pass
             colorscheme = self.opt('display', 'colour_scheme')
             if colorscheme:
-                self.__cw.set_colorscheme(self.__srv, colorscheme)
+                self.__cw.set_colorscheme(self.server, colorscheme)
             #self.__load_shortcuts()
 
     def open_file_line(self, filename, linenumber):
@@ -164,9 +174,9 @@ class vim_editor(service.service):
             self.goto_line(linenumber)
 
     def goto_line(self, linenumber):
-        self.__cw.change_cursor(self.__srv, 1, linenumber)
+        self.__cw.change_cursor(self.server, 1, linenumber)
 
-    def vim_bufferchange(self, cwd, filename):
+    def vim_bufferchange(self, server, cwd, filename):
         #for fcall, args in self.__bufferevents:
         #    fcall(*args)
         #self.__bufferevents = []
@@ -181,22 +191,22 @@ class vim_editor(service.service):
             self.boss.call_command('buffermanager', 'open_file',
                                     filename=filename)
 
-    def vim_bufferunload(self, filename, *args):
+    def vim_bufferunload(self, server, filename, *args):
         print 'vim unloaded "%s"' % filename
         if filename != '':
             # unloaded an empty new file
-            if filename in self.__files:
-                self.__files.remove(filename)
+            if filename in self.__files[server]:
+                self.__files[server].remove(filename)
                 self.boss.call_command('buffermanager', 'file_closed',
                                         filename=filename)
                 self.__currentfile = None
             else:
                 self.log.info('vim unloaded an unknown file %s', filename)
 
-    def vim_filesave(self, *args):
+    def vim_filesave(self, server, *args):
         self.boss.call_command('buffermanager', 'reset_current_document')
 
-    def vim_globalkp(self, name):
+    def vim_globalkp(self, server, name):
         self.boss.command('keyboardshortcuts', 'keypress-by-name',
                            kpname=name)
 
@@ -205,7 +215,7 @@ class vim_editor(service.service):
             self.boss.call_command('buffermanager', 'file_closed',
                                     filename=filename)
             self.call('close', filename=filename)
-        self.__files = []
+        self.__files = {}
         self.__currentfile = None
         
 

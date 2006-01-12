@@ -355,7 +355,7 @@ class communication_window(gtk.Window):
         else:
             # It is not alive, restart it.
             self.vim_hidden.start()
-        
+
     def get_server_wid(self, servername):
         """
         Get the X Window id for a named Vim server.
@@ -403,6 +403,9 @@ class communication_window(gtk.Window):
         # Call the event.
         #self.do_evt('serverlist', serverlist)
         self.cb.vim_new_serverlist(serverlist)
+
+    def init_server(self, servername):
+        self.send_ex(servername, '%s' % VIMSCRIPT)
 
     def fetch_cwd(self, servername):
         """
@@ -614,16 +617,57 @@ class communication_window(gtk.Window):
             self.cb_reply_async(s)
 
     def cb_reply_async(self, data):
+        if data.count(':'):
+            server, data = data.split(':', 1)
+        else:
+            server = None
         if data.count(','):
             evt, d = data.split(',', 1)
-            self.vim_event(evt, d)
+            self.vim_event(server, evt, d)
         else:
             self.do_log('bad async reply', data, 10)
 
-    def vim_event(self, evt, d):
+    def vim_event(self, server, evt, d):
         funcname = 'vim_%s' % evt
         if hasattr(self.cb, funcname):
-            getattr(self.cb, funcname)(*d.split(','))
+            getattr(self.cb, funcname)(server, *d.split(','))
         else:
             print 'unhandled event', evt
+
+
+VIMSCRIPT = ''':silent function! Bufferlist()
+let i = 1
+    let max = bufnr('$') + 1
+    let lis = ""
+    while i < max
+        if bufexists(i)
+            let lis = lis.";".i.":".bufname(i)
+        endif
+        let i = i + 1
+    endwhile
+    return lis
+endfunction
+:silent function! Yank_visual()
+    y
+    return @"
+endfunction
+:silent function! Async_event(e)
+    let c = "call server2client('".expand('<client>')."', '".a:e."')"
+    try
+        exec c
+    catch /.*/
+        echo c
+    endtry
+endfunction
+:silent augroup pida
+:set guioptions-=T
+:set guioptions-=m
+:silent au! pida
+:silent au pida BufEnter * call Async_event(v:servername.":bufferchange,".getcwd().",".bufname('%'))
+:silent au pida BufDelete * call Async_event("bufferunload,".expand('<amatch>'))
+:silent au pida VimLeave * call Async_event("shutdown,")
+:silent au pida VimEnter * call Async_event("started,")
+:silent au pida BufWritePost * call Async_event("filesave,")
+:echo "PIDA connected"
+'''
         
