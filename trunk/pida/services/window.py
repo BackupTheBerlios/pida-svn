@@ -36,6 +36,8 @@ class PaneSize(types.integer):
 class window_manager(service.service):
     """Class to control the main window."""
 
+    display_name = 'Window'
+
     class layout(defs.optiongroup):
         """The layout options."""
         class sidebar_on_right(defs.option):

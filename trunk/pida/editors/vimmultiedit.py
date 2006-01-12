@@ -26,16 +26,19 @@ import pida.utils.vim.vimcom as vimcom
 import pida.utils.vim.vimeditor as vimeditor
 import pida.core.service as service
 import pida.pidagtk.contentview as contentview
+import pida.pidagtk.icons as icons
 
 
-class vim_plugin_view(contentview.content_view):
+class vim_plugin_view(gtk.HBox):
     """View holding the vim controls."""
 
-    ICON_NAME = 'vim'
-
-    def init(self):
+    def __init__(self, service):
+        self.service = service
+        gtk.HBox.__init__(self, spacing=3)
+        icon = icons.icons.get_image('vim')
+        self.pack_start(icon, expand=False)
         self.__serverlist = gtk.combo_box_new_text()
-        self.widget.pack_start(self.__serverlist, expand=False)
+        self.pack_start(self.__serverlist)
 
     def set_serverlist(self, serverlist):
         current = self.__serverlist.get_active_text()
@@ -64,10 +67,12 @@ class vim_multi_editor(vimeditor.vim_editor, service.service):
 
     display_name = 'External Vim'
 
-    plugin_view_type = vim_plugin_view
-
     def start(self):
+        self.view = vim_plugin_view(service=self)
         self.__cw = vimcom.communication_window(self)
+        self.view.show_all()
+        self.get_service('buffermanager').\
+            single_view.widget.pack_start(self.view, expand=False)
         self.get_service('editormanager').events.emit('started')
 
     def vim_new_serverlist(self, serverlist):
@@ -76,10 +81,10 @@ class vim_multi_editor(vimeditor.vim_editor, service.service):
                 if 'PIDA_EMBEDDED' not in server:
                     self.__cw.init_server(server)
                     yield server
-        self.plugin_view.set_serverlist(_serverlist())
+        self.view.set_serverlist(_serverlist())
 
     def get_server(self):
-        return self.plugin_view.current_server
+        return self.view.current_server
     server = property(get_server)
 
 
