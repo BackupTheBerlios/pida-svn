@@ -194,7 +194,6 @@ class vte_terminal(pida_terminal):
     def init(self):
         import vte
         self.__term = vte.Terminal()
-        self.__term.set_size_request(-1, 10)
         self.__term.connect('child-exited', self.cb_exited)
 
     def configure(self, fg, bg, font):
@@ -202,8 +201,8 @@ class vte_terminal(pida_terminal):
         fgcol = gtk.gdk.color_parse(fg)
         self.__term.set_colors(fgcol, bgcol, [])
         self.__term.set_font_from_string(font)
-        self.__term.set_size(60, 10)
-        self.__term.set_size_request(-1, 50)
+        self.__term.set_size(30, 10)
+        self.__term.set_size_request(1, 50)
 
     def get_widget(self):
         return self.__term
