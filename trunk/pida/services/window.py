@@ -44,6 +44,11 @@ class window_manager(service.service):
             """Whether the sidebar will appear on the right."""
             default = False
             rtype = types.boolean
+        class vertical_sidebar_split(defs.option):
+            """Whether the main sidebar componens will be split by a vertical separator"""
+            rtype = types.boolean
+            default = False
+
         class sidebar_width(defs.option):
             """The width of the sidebar."""
             default = 200

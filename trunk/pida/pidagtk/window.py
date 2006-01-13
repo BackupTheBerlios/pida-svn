@@ -68,8 +68,14 @@ class pidawindow(gtk.Window):
             book.detach_pages()
 
     def _create_sidebar(self, bufferview, pluginview):
-        
+        sidebar_horiz = self.__manager.opt('layout',
+                                           'vertical_sidebar_split')
+        if sidebar_horiz:
+            box = gtk.HPaned()
+        else:
+            box = gtk.VPaned()
         bar = gtk.VBox()
+        box.pack1(bar, resize=True)
         bufs = expander.expander()
         bufs.set_body_widget(bufferview)
         l = gtk.Label('Buffer list')
@@ -78,13 +84,15 @@ class pidawindow(gtk.Window):
         bufs.expand()
         bar.pack_start(bufs, expand=True)
         bar.pack_start(pluginview)
+        bar2 = gtk.VBox()
+        box.pack2(bar2, resize=True)
         vb = self.__viewbooks['language'] = contentbook.contentbook('Languages')
-        bar.pack_start(vb)
+        bar2.pack_start(vb)
         vb.collapse()
         vb = self.__viewbooks['content'] = contentbook.contentbook('Quick View')
-        bar.pack_start(vb)
+        bar2.pack_start(vb)
         vb.collapse()
-        return bar
+        return box
 
     def pack(self, menubar, toolbar, bufferview, pluginview):
         self.__mainbox = gtk.VBox()
