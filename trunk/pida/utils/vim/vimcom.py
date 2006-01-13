@@ -625,7 +625,7 @@ class communication_window(gtk.Window):
             evt, d = data.split(',', 1)
             self.vim_event(server, evt, d)
         else:
-            self.do_log('bad async reply', data, 10)
+            print 'bad async reply', data
 
     def vim_event(self, server, evt, d):
         funcname = 'vim_%s' % evt
