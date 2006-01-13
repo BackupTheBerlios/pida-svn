@@ -196,3 +196,7 @@ class vim_editor(object):
     def get_vim_window(self):
         return self.__cw
     vim_window= property(get_vim_window)
+
+    def get_current_file(self):
+        return self.__currentfile
+    current_file = property(get_current_file)

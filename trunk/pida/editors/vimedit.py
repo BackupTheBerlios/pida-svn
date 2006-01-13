@@ -77,7 +77,7 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
     started = property(has_started)
 
     def confirm_single_view_controlbar_clicked_close(self, view):
-        self.call('close', filename=self.__currentfile)
+        self.call('close', filename=self.current_file)
         return False
 
 
