@@ -43,7 +43,7 @@ except ImportError, e:
         sys.exit(1)
 
 
-VERSION_STRING = '0.3.0'
+VERSION_STRING = '0.3.0beta'
 
 
 # base pida packages
