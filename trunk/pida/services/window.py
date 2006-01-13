@@ -76,11 +76,12 @@ class window_manager(service.service):
 
     def cmd_update_action_groups(self):
         self.__uim.ensure_update()
-        tp = self.toolbar.get_parent()
-        if tp:
-            tp.remove(self.toolbar)
+        
+        ht = self.toolbar.get_parent()
+        if ht:
+            ht.remove(self.toolbar)
         self.toolbar = self.__uim.get_widget('/toolbar')
-        tp.pack_start(self.toolbar)
+        ht.add(self.toolbar)
 
     def cmd_shrink_content(self, bookname):
         self.__window.shrinkbook(bookname)

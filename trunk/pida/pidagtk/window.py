@@ -103,8 +103,12 @@ class pidawindow(gtk.Window):
     def _pack_topbar(self, menubar, toolbar):
         self.__toolarea = gtk.VBox()
         self.__mainbox.pack_start(self.__toolarea, expand=False)
-        self.__toolarea.pack_start(menubar, expand=False)
-        self.__toolarea.pack_start(toolbar, expand=False)
+        menubar_handle = gtk.HandleBox()
+        menubar_handle.add(menubar)
+        self.__toolarea.pack_start(menubar_handle, expand=False)
+        toolbar_handle = gtk.HandleBox()
+        toolbar_handle.add(toolbar)
+        self.__toolarea.pack_start(toolbar_handle, expand=False)
         toolbar.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
         self.__menubar = menubar
         self.__toolbar = toolbar
