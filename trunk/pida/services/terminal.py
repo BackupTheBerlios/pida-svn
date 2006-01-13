@@ -303,6 +303,11 @@ class dumb_terminal(pida_terminal):
         data = '%s\nChild exited' % data
         model.insert_with_tags(start, data, self.__tag)
         self.__view.scroll_to_iter(model.get_end_iter(), 0.0, False)
+
+
+    def connect_title(self, callback):
+        pass
+
         
 
     widget = property(get_widget)
