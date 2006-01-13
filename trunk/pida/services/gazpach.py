@@ -412,16 +412,6 @@ class gazpacho_service(service.service):
         """Start the user interface designer Gazpacho."""
         self.call('start')
         
-    def get_menu_definition(self):
-        return """
-            <menubar>
-            <menu name="base_tools" action="base_tools_menu">
-            <separator />
-            <menuitem name="gazpacho" action="gazpach+user_interface_designer" />
-            </menu>
-            </menubar>
-            """
-
     def cb_single_view_closed(self, view):
         self.boss.call_command('buffermanager', 'file_closed',
                         filename=self.current_document.filename)

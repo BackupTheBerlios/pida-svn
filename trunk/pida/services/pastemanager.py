@@ -28,6 +28,7 @@ import gtk
 # pida import(s)
 import pida.pidagtk.tree as tree
 import pida.pidagtk.gladeview as gladeview
+import pida.pidagtk.contentview as contentview
 import pida.pidagtk.progressbar as progressbar
 
 # pida utils import(s)
@@ -200,7 +201,7 @@ class paste_tree(tree.Tree):
         self.del_item()
 
 
-class paste_history_view(gladeview.glade_view):
+class paste_history_view(contentview.content_view):
     SHORT_TITLE = 'Paste History'
     LONG_TITLE = 'Paste History'
     ICON_NAME = 'paste'
@@ -210,15 +211,12 @@ class paste_history_view(gladeview.glade_view):
     HAS_SEPARATOR = False
     HAS_TITLE = True
 
-    glade_file_name = 'paste-history.glade'
+    #glade_file_name = 'paste-history.glade'
 
-    def create_paste_tree(self, str1, str2, int1, int2):
-        '''Returns a paste_tree object'''
-        return paste_tree()
-
-    def init_glade(self):
+    def init(self):
         '''Constructor of the Paste History View.'''
-        self.__history_tree = self.get_widget('paste_tree')
+        self.__history_tree = paste_tree()
+        self.widget.pack_start(self.__history_tree)
         self.__x11_clipboard = gtk.Clipboard(selection="PRIMARY")
         self.__gnome_clipboard = gtk.Clipboard(selection="CLIPBOARD")
         self.__registry = registry.registry()

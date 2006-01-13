@@ -325,9 +325,11 @@ TERMINAL_TYPES = {TT_HIDDEN: hidden_terminal,
 def make_terminal(terminal_type_name, **kw):
     if terminal_type_name in TERMINAL_TYPES:
         terminal_type = TERMINAL_TYPES[terminal_type_name]
-        terminal = terminal_type()
-        kw = terminal.translate_kwargs(**kw)
-        return terminal, kw
+    else:
+        terminal_type = vte_terminal
+    terminal = terminal_type()
+    kw = terminal.translate_kwargs(**kw)
+    return terminal, kw
 
 
 class popen(object):
