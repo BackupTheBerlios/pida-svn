@@ -1,0 +1,111 @@
+<?xml version="1.0" standalone="no"?> <!--*- mode: xml -*-->
+<!DOCTYPE glade-interface SYSTEM "http://gazpacho.sicem.biz/gazpacho-0.1.dtd">
+<glade-interface>
+    <widget class="GtkWindow" id="window1">
+        <property name="default_height">250</property>
+        <property name="default_width">440</property>
+        <child>
+            <widget class="GtkVBox" id="pida_view">
+                <property name="spacing">2</property>
+                <property name="visible">True</property>
+                <child>
+                    <widget class="GtkHBox" id="hbox1">
+                        <property name="visible">True</property>
+                        <child>
+                            <widget class="GtkHBox" id="hbox4">
+                                <property name="visible">True</property>
+                                <child>
+                                    <widget class="GtkButton" id="add">
+                                        <property name="is_focus">True</property>
+                                        <property name="visible">True</property>
+                                        <child>
+                                            <widget class="GtkImage" id="GtkImage13">
+                                                <property name="stock">gtk-add</property>
+                                                <property name="visible">True</property>
+                                            </widget>
+                                        </child>
+                                    </widget>
+                                </child>
+                                <child>
+                                    <widget class="GtkButton" id="copy">
+                                        <property name="is_focus">True</property>
+                                        <property name="visible">True</property>
+                                        <child>
+                                            <widget class="GtkImage" id="GtkImage14">
+                                                <property name="stock">gtk-copy</property>
+                                                <property name="visible">True</property>
+                                            </widget>
+                                        </child>
+                                    </widget>
+                                    <packing>
+                                        <property name="position">1</property>
+                                    </packing>
+                                </child>
+                                <child>
+                                    <widget class="GtkButton" id="view">
+                                        <property name="is_focus">True</property>
+                                        <property name="visible">True</property>
+                                        <child>
+                                            <widget class="GtkImage" id="GtkImage14">
+                                                <property name="stock">gtk-find</property>
+                                                <property name="visible">True</property>
+                                            </widget>
+                                        </child>
+                                    </widget>
+                                    <packing>
+                                        <property name="position">2</property>
+                                    </packing>
+                                </child>
+                                <child>
+                                    <widget class="GtkButton" id="button4">
+                                        <property name="is_focus">True</property>
+                                        <property name="sensitive">False</property>
+                                        <property name="visible">True</property>
+                                        <child>
+                                            <widget class="GtkImage" id="GtkImage15">
+                                                <property name="stock">gtk-find-and-replace</property>
+                                                <property name="visible">True</property>
+                                            </widget>
+                                        </child>
+                                    </widget>
+                                    <packing>
+                                        <property name="position">3</property>
+                                    </packing>
+                                </child>
+                                <child>
+                                    <widget class="GtkButton" id="remove">
+                                        <property name="is_focus">True</property>
+                                        <property name="visible">True</property>
+                                        <child>
+                                            <widget class="GtkImage" id="GtkImage16">
+                                                <property name="stock">gtk-remove</property>
+                                                <property name="visible">True</property>
+                                            </widget>
+                                        </child>
+                                    </widget>
+                                    <packing>
+                                        <property name="position">4</property>
+                                    </packing>
+                                </child>
+                            </widget>
+                        </child>
+                    </widget>
+                    <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                    </packing>
+                </child>
+                <child>
+                    <widget class="Custom" id="paste_tree">
+                        <property name="creation_function">create_paste_tree</property>
+                        <property name="is_focus">True</property>
+                        <property name="visible">True</property>
+                    </widget>
+                    <packing>
+                        <property name="position">1</property>
+                    </packing>
+                </child>
+            </widget>
+        </child>
+    </widget>
+</glade-interface>

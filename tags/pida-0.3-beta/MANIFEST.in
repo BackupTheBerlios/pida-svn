@@ -1,0 +1,12 @@
+
+include AUTHORS
+include CONTRIUTORS
+include CHANGELOG
+include RELNOTES
+include TODO
+include *.py
+include *.sh
+include *.cfg
+recursive-include pida *.py
+recursive-include scripts/*
+recursive-include data/*
