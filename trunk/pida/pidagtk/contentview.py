@@ -86,6 +86,7 @@ class content_view(gtk.VBox):
         self.__init_long_title()
         self.__init_widgets(widget)
         self.__holder = None
+        self.set_size_request(0,0)
         self.init(**kw)
 
     def __init_icon(self, icon_name):
