@@ -541,6 +541,7 @@ class communication_window(gtk.Window):
     def goto_line(self, server, linenumber):
         self.send_ex(server, '%s' % linenumber)
         self.send_esc(server)
+        self.send_keys(server, 'zz')
         self.send_keys(server, 'zv')
 
     def revert(self, server):
