@@ -130,6 +130,7 @@ class FileBrowser(contentview.content_view):
         self.__fileview.connect('double-clicked', self.cb_file_activated)
         self.__fileview.connect('right-clicked', self.cb_file_rightclicked)
         self.__currentdirectory = None
+        self.t = None
 
     def display(self, directory, rootpath=None, statuses=[], glob='*', hidden=True):
         def _display():
@@ -156,9 +157,7 @@ class FileBrowser(contentview.content_view):
                     fsi = FileSystemItem(path)
                     fsi.status = ' '
                     icon = None
-                    gtk.threads_enter()
                     self.__fileview.add_item(fsi)
-                    gtk.threads_leave()
             else:
                 for s in statuses[::-1]:
                     fsi = FileSystemItem(s.path)
@@ -166,14 +165,13 @@ class FileBrowser(contentview.content_view):
                         fsi.status = SMAP[s.state]
                     except KeyError:
                         fsi.status = '%s %s' % (s.state, s.states[s.state])
-                    gtk.threads_enter()
                     self.__fileview.add_item(fsi)
-                    gtk.threads_leave()
             self.__fileview.show_all()
+            self.t = None
 
         if os.path.isdir(directory):
-            t = threading.Thread(target=_display)
-            t.run()
+            self.t = threading.Thread(target=_display)
+            self.t.run()
 
 
             #self.emit('directory-changed', directory)
