@@ -37,7 +37,7 @@ class editor_manager(service.service):
         """General editor options"""
         class editor_type(defs.option):
             """Which editor pIDA will use."""
-            rtype = types.stringlist('Vim', 'Moo', 'Vim external')
+            rtype = types.stringlist('Vim', 'Moo', 'Vim external', 'Culebra')
             default = 'Vim'            
 
     def cmd_close(self, filename):
@@ -81,6 +81,8 @@ class editor_manager(service.service):
             editor = 'mooedit'
         elif editor_name == 'Vim external':
             editor = 'vimmultiedit'
+        elif editor_name == 'Culebra':
+            editor = 'culebraedit'
         else:
             self.log.error('No text editor')
             editor = 'No working editor'

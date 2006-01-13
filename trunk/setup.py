@@ -56,6 +56,7 @@ base_packages = ['pida',
 
 # extra utility packages
 util_packages = ['pida.utils.vim',
+                 'pida.utils.culebra',
                  'pida.utils.vc',
                  'pida.utils.pyflakes']
 
