@@ -667,7 +667,7 @@ endfunction
 :set guioptions-=m
 :silent au! pida
 :silent au pida BufEnter * call Async_event(v:servername.":bufferchange,".getcwd().",".bufname('%'))
-:silent au pida BufDelete * call Async_event(v:servername.":bufferunload,".expand('<amatch>'))
+:silent au pida BufWipeout * call Async_event(v:servername.":bufferunload,".expand('<amatch>'))
 :silent au pida VimLeave * call Async_event(v:servername.":shutdown,")
 :silent au pida VimEnter * call Async_event(v:servername.":started,")
 :silent au pida BufWritePost * call Async_event(v:servername.":filesave,")
