@@ -156,7 +156,9 @@ class FileBrowser(contentview.content_view):
                     fsi = FileSystemItem(path)
                     fsi.status = ' '
                     icon = None
+                    gtk.threads_enter()
                     self.__fileview.add_item(fsi)
+                    gtk.threads_leave()
             else:
                 for s in statuses[::-1]:
                     fsi = FileSystemItem(s.path)
@@ -164,7 +166,9 @@ class FileBrowser(contentview.content_view):
                         fsi.status = SMAP[s.state]
                     except KeyError:
                         fsi.status = '%s %s' % (s.state, s.states[s.state])
+                    gtk.threads_enter()
                     self.__fileview.add_item(fsi)
+                    gtk.threads_leave()
             self.__fileview.show_all()
 
         if os.path.isdir(directory):

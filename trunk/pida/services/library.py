@@ -63,7 +63,9 @@ class bookmark_view(contentview.content_view):
 
     def book_found(self, bookroot):
         def _add():
+            gtk.threads_enter()
             self._add_item(bookroot)
+            gtk.threads_leave()
         gobject.idle_add(_add)
 
     def books_done(self):
@@ -117,7 +119,9 @@ class document_library(service.service):
                     load_book = book(path, use_gzip)
                     if hasattr(load_book, 'bookmarks'):
                         self.plugin_view.book_found(load_book.bookmarks)
+        gtk.threads_enter()
         self.plugin_view.books_done()
+        gtk.threads_leave()
 
 class book(object):
 

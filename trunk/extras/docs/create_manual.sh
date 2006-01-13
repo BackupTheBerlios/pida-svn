@@ -1,4 +1,4 @@
-rm -rf ../../docs/html
+rm -rf ../../docs/manual-html
 latex2html pidamanual.tex -local_icons -verbosity 0 -ascii_mode
-mv pidamanual ../../docs/html
-cp pidamanual.css ../../docs/html
+mv pidamanual ../../docs/manual-html
+cp pidamanual.css ../../docs/manual-html
