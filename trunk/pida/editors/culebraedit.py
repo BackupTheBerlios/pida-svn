@@ -63,8 +63,7 @@ class culebra_editor(service.service):
         self.__view_file(filename)
 
     def cmd_revert(self):
-        #self.__currentview.editor.reload()
-        pass
+        raise NotImplementedError
 
     def __load_file(self, filename):
         view = self.create_multi_view(filename=filename)
@@ -79,7 +78,7 @@ class culebra_editor(service.service):
         self.get_service('editormanager').events.emit('started')
 
     def cmd_goto_line(self, linenumber):
-        self.__currentview.editor.move_cursor(linenumber - 1, 0, True)
+        raise NotImplementedError
 
     def cmd_save(self):
         raise NotImplementedError
