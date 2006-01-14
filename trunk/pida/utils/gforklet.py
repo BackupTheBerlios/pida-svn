@@ -55,13 +55,17 @@ def close_fds(*excluding):
 
 
 def fork_generator(f, fargs, read_callback):
+    parser.reset()
     handler = parameter_handler(read_callback)
     parser.setContentHandler(handler)
-    parser.reset()
     def _read(fd, cond):
         data = os.read(fd, 1024)
         parser.feed(data)
-        return not handler.is_finished
+        if handler.is_finished:
+            os.wait()
+            return False
+        else:
+            return True
     readfd, writefd = os.pipe()
     gobject.io_add_watch(readfd, gobject.IO_IN, _read)
     pid = os.fork()
