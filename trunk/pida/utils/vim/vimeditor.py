@@ -160,7 +160,7 @@ class vim_editor(object):
         self.log.debug('vim buffer change "%s"', filename)
         if filename != self.__currentfile:
             self.__currentfile = filename
-            if filename not in self.__files[server]:
+            if filename not in self.__files.setdefault(server, []):
                 self.__files[server].append(filename)
             self.boss.call_command('buffermanager', 'open_file',
                                     filename=filename)
