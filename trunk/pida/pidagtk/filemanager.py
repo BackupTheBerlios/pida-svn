@@ -153,7 +153,7 @@ class FileBrowser(contentview.content_view):
             
             statuses = self.service.boss.call_command('versioncontrol',
                     'get_statuses', directory=directory)
-            files = [] 
+            files = []
             if statuses is None:
                 def gen():
                     for filename in os.listdir(directory):
@@ -173,9 +173,20 @@ class FileBrowser(contentview.content_view):
                             fsi.status = '%s %s' % (s.state, s.states[s.state])
                         yield fsi
                         #self.__fileview.add_item(fsi)
-            fd = gforklet.fork_generator(gen, [], self.__fileview.add_item)
-            self.__current_fork = fd
-            self.__fileview.show_all()
+            def threaded():
+                def t():
+                    for fsi in gen():
+                        self.__fileview.add_item(fsi)
+                    self.__fileview.show_all()
+                t = threading.Thread(target=t)
+                t.start()
+            
+            def gforked():
+                fd = gforklet.fork_generator(gen, [], self.__fileview.add_item)
+                self.__current_fork = fd
+                self.__fileview.show_all()
+
+            gforked()
 
         if os.path.isdir(directory):
             if self.__current_fork is not None:

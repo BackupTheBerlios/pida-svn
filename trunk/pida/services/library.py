@@ -38,6 +38,8 @@ import gzip
 
 import threading
 
+import pida.utils.gforklet as gforklet
+
 defs = service.definitions
 types = service.types
 
@@ -59,16 +61,18 @@ class bookmark_view(contentview.content_view):
         self.__list.connect('double-clicked', self.cb_booklist_clicked)
         self.widget.pack_start(self.__list)
         self.long_title = 'Loading books...'
-        gobject.timeout_add(2000, self.service.fetch)
 
     def book_found(self, bookroot):
-        def _add():
-            gtk.threads_enter()
-            self._add_item(bookroot)
-            gtk.threads_leave()
-        gobject.idle_add(_add)
+        if bookroot is not None:
+            def _add():
+                self._add_item(bookroot)
+            gobject.idle_add(_add)
+            #_add()
+        else:
+            self.books_done()
 
     def books_done(self):
+        self.__list.show_all()
         self.long_title = 'Documentation library'
 
     def _add_item(self, item, parent=None):
@@ -97,31 +101,40 @@ class document_library(service.service):
             rtype = types.boolean
             default = True
 
-
     def init(self):
-        return
+        gobject.timeout_add(10000, self.fetch)
 
-    def fetch(self):
-        t = threading.Thread(target=self.fetch_books)
+    def fetch_thread(self):
+        def t():
+            for bookmarks in self.fetch_books()():
+                self.plugin_view.book_found(bookmarks)
+        t = threading.Thread(target=t)
         t.start()
 
+    def fetch_forklet(self):
+        gforklet.fork_generator(self.fetch_books(), [],
+                                self.plugin_view.book_found)
+
+    def fetch(self):
+        self.fetch_thread()
+
     def fetch_books(self):
-        books = []
         pida_directory = os.path.join(self.boss.pida_home, 'library')
         dirs = [pida_directory, '/usr/share/gtk-doc/html',
                                 '/usr/share/devhelp/books',
                                 os.path.expanduser('~/.devhelp/books')]
         use_gzip = self.opt('book_locations', 'use_gzipped_book_files')
-        for directory in [d for d in dirs if os.path.exists(d)]:
-            for name in os.listdir(directory):
-                path = os.path.join(directory, name)
-                if os.path.exists(path):
-                    load_book = book(path, use_gzip)
-                    if hasattr(load_book, 'bookmarks'):
-                        self.plugin_view.book_found(load_book.bookmarks)
-        gtk.threads_enter()
-        self.plugin_view.books_done()
-        gtk.threads_leave()
+        def gen():
+            for directory in dirs:
+                if os.path.exists(directory):
+                    for name in os.listdir(directory):
+                        path = os.path.join(directory, name)
+                        if os.path.exists(path):
+                            load_book = book(path, use_gzip)
+                            if hasattr(load_book, 'bookmarks'):
+                                yield load_book.bookmarks
+            yield None
+        return gen
 
 class book(object):
 
