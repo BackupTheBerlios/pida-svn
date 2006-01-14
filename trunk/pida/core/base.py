@@ -22,9 +22,7 @@
 #SOFTWARE.
 
 # system import(s)
-import os
-import logging
-
+import log
 
 def set_boss(boss):
     """Called by the boss itself. Singletonish behaviour."""
@@ -41,33 +39,11 @@ class pidaobject(object):
         """The actual constructor."""
 
 
-class pidalogenabled(object):
-    """Logging mixin."""
-
-    def __init__(self, *args, **kw):
-        self.log = self.__build_logger(self.__class__.__name__)
-
-    def  __build_logger(self, name):
-        format_str = ('%(levelname)s '
-                      '%(module)s.%(name)s:%(lineno)s '
-                      '%(message)s')
-        format = logging.Formatter(format_str)
-        handler = logging.StreamHandler()
-        handler.setFormatter(format)
-        logger = logging.getLogger(name)
-        logger.addHandler(handler)
-        if 'PIDA_DEBUG' in os.environ:
-            level = logging.DEBUG
-        else:
-            level = logging.INFO
-        logger.setLevel(level)
-        return logger
-        
-
-class pidacomponent(pidalogenabled, pidaobject):
+class pidacomponent(log.pidalogger, pidaobject):
     """A single component."""
     def __init__(self, *args, **kw):
-        pidalogenabled.__init__(self)
+        log.pidalogger.__init__(self)
+        self.log.debug('Logger working here too')
         pidaobject.__init__(self, *args, **kw)
 
     def is_leaf(self):
@@ -144,12 +120,12 @@ class pidamanager(pidagroup):
     def init(self):
         pidagroup.init(self, None)
 
-    def get_component(groupname, componentname):
+    def get_component(self, groupname, componentname):
         group = self.get(groupname)
         if group is not None:
             return group.get(componentname)
 
-    def add_component(groupname, componentname, component):
+    def add_component(self, groupname, componentname, component):
         group = self.get(groupname)
         if group is not None:
             group.add(componentname, component)

@@ -518,6 +518,11 @@ class multi_view_mixin(object):
     def get_multi_view(self, unique_id):
         return self.__views.get(unique_id, None)
 
+    def get_multi_views(self):
+        for view in self.__views.values():
+            yield view
+    multi_views = property(get_multi_views)
+
 
 service_base_classes =  [options_mixin,
                          commands_mixin,
