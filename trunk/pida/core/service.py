@@ -487,10 +487,12 @@ class multi_view_mixin(object):
 
     def cb_multi_view_controlbar_clicked_close(self, view, toolbar, name):
         if self.confirm_multi_view_controlbar_clicked_close(view):
-            view.remove()
-            del self.__views[view.unique_id]
-            view.destroy()
-            self.cb_multi_view_closed(view)
+            def closed():
+                view.remove()
+                self.cb_multi_view_closed(view)
+                del self.__views[view.unique_id]
+                #view.destroy()
+            gtk.idle_add(closed)
 
     def cb_multi_view_controlbar_clicked_detach(self, view, toolbar, name):
         try:

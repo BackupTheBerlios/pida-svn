@@ -44,12 +44,12 @@ class sizer(gtk.EventBox):
     def cb_release(self, eb, ev):
         #self.drag_unhighlight()
         #self.grab_remove()
-        self.emit('drag-stopped')
-        self.emit('clicked')
         try:
             self.__button_image.set_from_pixbuf(self.__pixbufs[1])
         except AttributeError:
             pass
+        self.emit('drag-stopped')
+        self.emit('clicked')
         return True
 
     def cb_press(self, eb, ev):

@@ -45,7 +45,8 @@ types = service.types
 
 class lib_list(tree.Tree):
 
-    SORT_LIST = ['name', 'title']
+    pass
+    #SORT_LIST = ['name', 'title']
 
 class bookmark_view(contentview.content_view):
 
@@ -67,7 +68,6 @@ class bookmark_view(contentview.content_view):
             def _add():
                 self._add_item(bookroot)
             gobject.idle_add(_add)
-            #_add()
         else:
             self.books_done()
 
