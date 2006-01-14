@@ -24,18 +24,18 @@
 import sys
 import linecache
 
-_eggpath = 'build/bdist.linux-i686/egg'	# overwritten by develop.sh
-_pidadir = '' # overwritten by develop.sh
-_leneggpath = 0
+eggpath = ''	# overwritten by develop.sh
+pidadir = '' # overwritten by develop.sh
+leneggpath = 0
 
 def configure_tracer( eggpath = '', pidadir = '' ):
-    global _eggpath, _pida_dir,  _leneggpath
+    import pida.utils.debug as debug
     if eggpath:
-        _eggpath = eggpath
+        debug.eggpath = eggpath
     if pidadir:
-        _pidadir = pidadir
+        debug.pidadir = pidadir
 
-    _leneggpath = len(_eggpath) + 1
+    debug.leneggpath = len(debug.eggpath) + 1
 
 def start_tracing():
     sys.settrace(tracer)
@@ -45,15 +45,21 @@ def stop_tracing():
 
 def tracer(frame, event, arg):
     def local_tracer(frame, event, arg):        
+        import pida.utils.debug as debug
         if event == 'line':
             lineno = frame.f_lineno
             filename = frame.f_code.co_filename #frame.f_globals["__file__"] 
             realfile = filename
-            if filename.startswith(_eggpath):
-                filename = filename[_leneggpath:]
-                realfile = _pidadir + filename
+            if filename.startswith(debug.eggpath):
+                filename = filename[debug.leneggpath:]
+                realfile = debug.pidadir + filename
             line = linecache.getline(realfile, lineno)
-            sys.stderr.write( "%s:%s: %s\n" % 
+
+            try:
+                sys.stderr.write( "%s:%s: %s\n" % 
+                    (filename, lineno, line.rstrip()) )
+            except IOError:
+                sys.stdout.write( "[STDOUT] %s:%s: %s\n" % 
                     (filename, lineno, line.rstrip()) )
     return local_tracer
 
