@@ -45,21 +45,21 @@ export PYTHONPATH=$egg:$PYTHONPATH
 
 [ -z "$DEBUG" ] || export PIDA_DEBUG=1
 
+pidacmd=$distdir/pida
+tmpfile=$pidacmd.$$
 if [ "$REMOTE" ]; then
     pidacmd="$pidadir/pida/utils/pida-remote.py $* &"
 elif [ "$PDB" ]; then
-    pidacmd=$distdir/pida
-    cat<<EOT >> $pidacmd.$$
+    cat<<EOT > $tmpfile
 import pdb
 pdb.set_trace()
 import pida.core.application as application
 application.main()
 EOT
-    mv $pidacmd.$$ $pidacmd
+    mv $tmpfile $pidacmd
     pidacmd="$pidacmd $*"
 else
-    pidacmd=$distdir/pida
-    cat<<EOT > $pidacmd.$$
+    cat<<EOT > $tmpfile
 import pida.core.application as application
 import pida.utils.debug as debug
 
@@ -74,14 +74,19 @@ EOT
         cat<<EOT
 application.main()
 EOT
-    fi >> $pidacmd.$$
-    mv $pidacmd.$$ $pidacmd
+    fi >> $tmpfile
+    mv $tmpfile $pidacmd
     pidacmd="$pidacmd $*"
 fi
 
 echo "Running $pidacmd ..."
 if [ "$GDB" ]; then
-    echo "run $pidacmd" | exec gdb python -q -x /dev/stdin
+    echo "run $pidacmd" > $tmpfile
+    gdb python -q -x $tmpfile
+    wait
+    errno=$?
+    rm $tmpfile
+    exit $errno
 else
     eval exec "python $pidacmd"
 fi
