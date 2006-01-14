@@ -84,7 +84,3 @@ class test_b_command(unittest.TestCase):
         self.assertEquals(self.__dummykw, {'banana': 'yellow',
                                            'melon': 'green'})
 
-    def test_e_call_bad_argument(self):
-        self.assertRaises(command.exceptions.bad_arguments_error,
-                          self.c2)
-

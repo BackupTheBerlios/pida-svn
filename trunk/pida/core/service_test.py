@@ -100,10 +100,6 @@ class test_a_service_preinit(unittest.TestCase):
         btemplate = self.svc.__bindings__
         self.assert_(btemplate)
 
-    def test_r_bindings_registered(self):
-        btemplate = self.svc.__bindings__[0]
-        self.assertEquals(btemplate.func_name, 'bnd_soothsayer_see_future')
-        
 
 class test_b_service_database_preinit(unittest.TestCase):
 

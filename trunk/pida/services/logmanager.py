@@ -21,6 +21,8 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+disabled
+
 import gtk
 
 #import pida.pidagtk.logmanager as logmanager
