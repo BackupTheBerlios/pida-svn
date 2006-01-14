@@ -100,7 +100,7 @@ def fork_generator(f, fargs, read_callback):
     gobject.io_add_watch(readfd, gobject.IO_IN, _read)
     pid = os.fork()
     if pid == 0:
-        close_fds(readfd, writefd)
+        #close_fds(readfd, writefd)
         os.write(writefd, '<result>')
         for item in f(*fargs):
             item_mu = ('<p>%s</p>' %
