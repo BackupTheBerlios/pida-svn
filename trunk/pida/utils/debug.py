@@ -28,7 +28,7 @@ _eggpath = 'build/bdist.linux-i686/egg'	# overwritten by develop.sh
 _pidadir = '' # overwritten by develop.sh
 _leneggpath = 0
 
-def setTracer( eggpath = '', pidadir = '' ):
+def configure_tracer( eggpath = '', pidadir = '' ):
     global _eggpath, _pida_dir,  _leneggpath
     if eggpath:
         _eggpath = eggpath
@@ -36,10 +36,12 @@ def setTracer( eggpath = '', pidadir = '' ):
         _pidadir = pidadir
 
     _leneggpath = len(_eggpath) + 1
+
+def start_tracing():
     sys.settrace(tracer)
 
-def stopTracer():
-    sys.settrace()
+def stop_tracing():
+    sys.settrace(None)
 
 def tracer(frame, event, arg):
     def local_tracer(frame, event, arg):        
