@@ -32,7 +32,6 @@ import gtk
 import gobject
 
 
-parser = xml.sax.make_parser()
 
  
 class parameter_handler(xml.sax.handler.ContentHandler):
@@ -61,8 +60,11 @@ class parameter_handler(xml.sax.handler.ContentHandler):
 
     def __received_parameter(self, readbuf):
         def _received():
-            item = pickle.loads(str(readbuf))
-            self.__received(item)
+            try:
+                received_item = pickle.loads(str(readbuf))
+                self.__received(received_item)
+            except:
+                pass
         gobject.idle_add(_received)
 
     def get_is_finished(self):
@@ -80,12 +82,15 @@ def close_fds(*excluding):
 
 
 def fork_generator(f, fargs, read_callback):
-    parser.reset()
+    parser = xml.sax.make_parser()
     handler = parameter_handler(read_callback)
     parser.setContentHandler(handler)
     def _read(fd, cond):
         data = os.read(fd, 1024)
-        parser.feed(data)
+        try:
+            parser.feed(data)
+        except:
+            return False
         if handler.is_finished:
             os.wait()
             return False
@@ -105,6 +110,10 @@ def fork_generator(f, fargs, read_callback):
         os.close(readfd)
         os.close(writefd)
         os._exit(0)
+        sys.exit(0)
+    else:
+        return pid, readfd, parser
+        
 
 
 def fork(f, fargs, read_callback):

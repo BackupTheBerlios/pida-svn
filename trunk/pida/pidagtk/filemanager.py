@@ -132,6 +132,7 @@ class FileBrowser(contentview.content_view):
         self.__fileview.connect('right-clicked', self.cb_file_rightclicked)
         self.__currentdirectory = None
         self.t = None
+        self.__current_fork = None
 
     def display(self, directory, rootpath=None, statuses=[], glob='*', hidden=True):
         def _display():
@@ -172,10 +173,26 @@ class FileBrowser(contentview.content_view):
                             fsi.status = '%s %s' % (s.state, s.states[s.state])
                         yield fsi
                         #self.__fileview.add_item(fsi)
-            gforklet.fork_generator(gen, [], self.__fileview.add_item)
+            fd = gforklet.fork_generator(gen, [], self.__fileview.add_item)
+            self.__current_fork = fd
             self.__fileview.show_all()
 
         if os.path.isdir(directory):
+            if self.__current_fork is not None:
+                pid, readfd, parser = self.__current_fork
+                parser.reset()
+                try:
+                    os.close(readfd)
+                except:
+                    pass
+                try:
+                    os.kill(pid, 9)
+                except:
+                    pass
+                try:
+                    os.waitpid(pid)
+                except:
+                    pass
             _display()
         #    self.t = threading.Thread(target=_display)
         #    self.t.run()
