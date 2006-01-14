@@ -35,6 +35,7 @@ import contextwidgets
 def shorten_home_name(directory):
     return directory.replace(os.path.expanduser('~'), '~')
 
+import pida.utils.gforklet as gforklet
 
 DIR_ICON = icons.icons.get_image('filemanager')
 
@@ -151,27 +152,33 @@ class FileBrowser(contentview.content_view):
             
             statuses = self.service.boss.call_command('versioncontrol',
                     'get_statuses', directory=directory)
+            files = [] 
             if statuses is None:
-                for filename in os.listdir(directory):
-                    path = os.path.join(directory, filename)
-                    fsi = FileSystemItem(path)
-                    fsi.status = ' '
-                    icon = None
-                    self.__fileview.add_item(fsi)
+                def gen():
+                    for filename in os.listdir(directory):
+                        path = os.path.join(directory, filename)
+                        fsi = FileSystemItem(path)
+                        fsi.status = ' '
+                        icon = None
+                        #self.__fileview.add_item(fsi)
+                        yield fsi
             else:
-                for s in statuses[::-1]:
-                    fsi = FileSystemItem(s.path)
-                    try:
-                        fsi.status = SMAP[s.state]
-                    except KeyError:
-                        fsi.status = '%s %s' % (s.state, s.states[s.state])
-                    self.__fileview.add_item(fsi)
+                def gen():
+                    for s in statuses[::-1]:
+                        fsi = FileSystemItem(s.path)
+                        try:
+                            fsi.status = SMAP[s.state]
+                        except KeyError:
+                            fsi.status = '%s %s' % (s.state, s.states[s.state])
+                        yield fsi
+                        #self.__fileview.add_item(fsi)
+            gforklet.fork_generator(gen, [], self.__fileview.add_item)
             self.__fileview.show_all()
-            self.t = None
 
         if os.path.isdir(directory):
-            self.t = threading.Thread(target=_display)
-            self.t.run()
+            _display()
+        #    self.t = threading.Thread(target=_display)
+        #    self.t.run()
 
 
             #self.emit('directory-changed', directory)

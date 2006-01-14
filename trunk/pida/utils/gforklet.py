@@ -8,6 +8,7 @@ import gobject
 
 
 parser = xml.sax.make_parser()
+import cgi
 
  
 class parameter_handler(xml.sax.handler.ContentHandler):
@@ -27,15 +28,17 @@ class parameter_handler(xml.sax.handler.ContentHandler):
  
     def endElement(self, name):
         if name == 'param':
-            self.__received_parameter()
+            self.__received_parameter(self.__readbuf)
+            self.__readbuf = ''
             self.__current = None
         elif name == 'result':
             self.__finished = True
 
-    def __received_parameter(self):
-        item = pickle.loads(str(self.__readbuf))
-        self.__readbuf = ''
-        self.__received(item)
+    def __received_parameter(self, readbuf):
+        def _received():
+            item = pickle.loads(str(readbuf))
+            self.__received(item)
+        gobject.idle_add(_received)
 
     def get_is_finished(self):
         return self.__finished
@@ -54,6 +57,7 @@ def close_fds(*excluding):
 def fork_generator(f, fargs, read_callback):
     handler = parameter_handler(read_callback)
     parser.setContentHandler(handler)
+    parser.reset()
     def _read(fd, cond):
         data = os.read(fd, 1024)
         parser.feed(data)
@@ -65,7 +69,8 @@ def fork_generator(f, fargs, read_callback):
         close_fds(readfd, writefd)
         os.write(writefd, '<result>')
         for item in f(*fargs):
-            item_mu = '<param name="a">%s</param>' % pickle.dumps(item)
+            item_mu = ('<param name="a">%s</param>' %
+                            pickle.dumps(item))
             os.write(writefd, item_mu)
         os.write(writefd, '</result>')
         os.close(readfd)
@@ -116,4 +121,3 @@ def test():
     t = tester()
     gtk.main()
 
-test()
