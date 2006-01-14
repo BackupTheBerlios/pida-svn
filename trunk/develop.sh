@@ -1,11 +1,13 @@
 #!/bin/sh
+# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
+
 set -e
 
 me=$(readlink -f $0)
 pidadir=${me%/*}
 distdir=$pidadir/build/egg
 
-DEBUG= REMOTE= GDB= PROFILE= PDB= TRACE= UPDATE=
+DEBUG= REMOTE= GDB= PROFILE= PDB= UPDATE=
 while [ $# -gt 0 ]; do
     case "$1" in
 	-update) UPDATE=1 ;;
@@ -13,7 +15,6 @@ while [ $# -gt 0 ]; do
         -debug)  DEBUG=1 ;;
         -gdb)    GDB=1 ;;
         -pdb)    PDB=1 ;;
-        -trace)  TRACE=1 ;;
         -profile) PROFILE=1 ;;
         *)       break ;;
     esac
@@ -56,26 +57,24 @@ application.main()
 EOT
     mv $pidacmd.$$ $pidacmd
     pidacmd="$pidacmd $*"
-elif [ "$TRACE" ]; then
+else
     pidacmd=$distdir/pida
-    cat<<EOT >> $pidacmd.$$
+    cat<<EOT > $pidacmd.$$
 import pida.core.application as application
 import pida.utils.debug as debug
 
-debug.setTracer( eggpath="$eggpath", pidadir = "$pidadir/" )
-application.main()
+debug.configure_tracer( eggpath="$eggpath", pidadir = "$pidadir/" )
 EOT
-    mv $pidacmd.$$ $pidacmd
-    pidacmd="$pidacmd $*"
-elif [ -z "$PROFILE" ]; then
-    pidacmd="$pidadir/scripts/pida $*"
-else
-    pidacmd=$distdir/pida
-    cat<<EOT >> $pidacmd.$$
+    if [ "$PROFILE" ]; then
+        cat<<EOT
 import profile
-import pida.core.application as application
 profile.run('application.main()')
 EOT
+    else
+        cat<<EOT
+application.main()
+EOT
+    fi >> $pidacmd.$$
     mv $pidacmd.$$ $pidacmd
     pidacmd="$pidacmd $*"
 fi
