@@ -1,17 +1,42 @@
+# -*- coding: utf-8 -*- 
+
+# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
+#Copyright (c) 2005 Ali Afshar aafshar@gmail.com
+
+#Permission is hereby granted, free of charge, to any person obtaining a copy
+#of this software and associated documentation files (the "Software"), to deal
+#in the Software without restriction, including without limitation the rights
+#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#copies of the Software, and to permit persons to whom the Software is
+#furnished to do so, subject to the following conditions:
+
+#The above copyright notice and this permission notice shall be included in
+#all copies or substantial portions of the Software.
+
+#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+#SOFTWARE.
+
+# system import(s)
 import os
 import sys
 import xml.sax
 import cPickle as pickle
 
 import gtk
+# gobject import(s)
 import gobject
 
 
 parser = xml.sax.make_parser()
-import cgi
 
  
 class parameter_handler(xml.sax.handler.ContentHandler):
+    """Basic handler for result tree."""
 
     def __init__(self, received_callback):
         self.__current = None
@@ -20,14 +45,14 @@ class parameter_handler(xml.sax.handler.ContentHandler):
         self.__received = received_callback
      
     def startElement(self, name, attributes):
-        if name == 'param':
-            self.__current = attributes['name']
+        if name == 'p':
+            self.__current = True
  
     def characters(self, data):
         self.__readbuf += data
  
     def endElement(self, name):
-        if name == 'param':
+        if name == 'p':
             self.__received_parameter(self.__readbuf)
             self.__readbuf = ''
             self.__current = None
@@ -73,7 +98,7 @@ def fork_generator(f, fargs, read_callback):
         close_fds(readfd, writefd)
         os.write(writefd, '<result>')
         for item in f(*fargs):
-            item_mu = ('<param name="a">%s</param>' %
+            item_mu = ('<p>%s</p>' %
                             pickle.dumps(item))
             os.write(writefd, item_mu)
         os.write(writefd, '</result>')
@@ -81,11 +106,11 @@ def fork_generator(f, fargs, read_callback):
         os.close(writefd)
         os._exit(0)
 
+
 def fork(f, fargs, read_callback):
     def _call(*args):
         yield f(*args)
     fork_generator(_call, fargs, read_callback)
-
     
 
 class dummy(object):
