@@ -125,7 +125,7 @@ class document_library(service.service):
             default = True
 
     def init(self):
-        gobject.timeout_add(3000, self.fetch)
+        self.fetch()
 
     def fetch_thread(self):
         def t():
