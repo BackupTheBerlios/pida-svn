@@ -5,6 +5,8 @@ The PIDA Manual
 :author: Ali Afshar
 :contact: aafshar@gmail.com
 
+.. contents:: Table Of Contents
+
 Front Matter
 ============
 
@@ -39,26 +41,6 @@ not GPL_, or even closed source.
 
 The PIDA Project is owned by Ali Afshar (this author).
 
-The MIT License (PIDA Variation)::
-
-  Copyright (c) 2005-2006 The PIDA Project
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy of
-  this software and associated documentation files (the "Software"), to deal in
-  the Software without restriction, including without limitation the rights to
-  use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-  the Software, and to permit persons to whom the Software is furnished to do so,
-  subject to the following conditions:
-
-  The above copyright notice and this permission notice shall be included in all
-  copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-  IN AN ACTION OF CONTRACT, TORT, TURTLE, OR OTHERWISE, ARISING FROM, OUT OF OR IN
-  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 Authors
@@ -98,13 +80,47 @@ Optional Requirements
 
 Gazpacho User Interface Designer : 0.6.4
   Gazpacho is a GTK (Glade cmpatible) user interface designer. The latest
-version is available at 
+  version is available at the Gazpacho_ web site.
 
 Installing PIDA
 ---------------
 
+If you can get PIDA from your distribution, this is best. Otherwise you will
+need to download the source tarball. Unpack the tarball, and in the top-level
+directory, issue the command (you may require super user access on your computer for a system install)::
+
+  python setup.py install
+
+PIDA will now be installed in your default python location, and be available
+to all users of the system.
+
+
+.. note ::
+  If you do not wish to install PIDA, it can be run from the local directory.
+  (See `Running pida without installing`_)
+
 Running PIDA
 ------------
+
+Running pida after installation
++++++++++++++++++++++++++++++++
+
+If PIDA has been installed, simply issue the command::
+
+  pida
+
+If correctly installed, PIDA will start.
+
+Running pida without installing
++++++++++++++++++++++++++++++++
+
+The ``develop.sh`` script in the top-level source directory can be used to run
+PIDA without installing system-wide. To execute it, issue the command::
+
+  ./develop.sh
+
+The script generates a PIDA egg in a temporary directory for the duration of
+the session.
 
 Using PIDA
 ==========
@@ -132,6 +148,29 @@ Developing PIDA
 ===============
 
 
+Appendix A
+==========
+
+The MIT License::
+
+  Copyright (c) 2005-2006 The PIDA Project
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy of
+  this software and associated documentation files (the "Software"), to deal in
+  the Software without restriction, including without limitation the rights to
+  use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+  the Software, and to permit persons to whom the Software is furnished to do so,
+  subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+  IN AN ACTION OF CONTRACT, TORT, TURTLE, OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 .. _GPL: http://www.opensource.org/licenses/gpl-license.php

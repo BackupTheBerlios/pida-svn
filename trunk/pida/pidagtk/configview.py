@@ -48,6 +48,7 @@ NAME_MU = """%s:"""
 DOC_MU = """<small><i>%s</i></small>"""
 PARENT_TITLE="<big><b>%s</b></big>"
 SECTION_TITLE="<big>%s</big>"
+SECTION_TAB="%s"
 SECTION_DESCRIPTION="<big>%s</big>"
 
 def create_page_from_optiongroup(optiongroup, parentname):
@@ -101,7 +102,9 @@ def create_notebook_from_registry(reg, regname):
     widgets = []
     for group in reg:
         page, wids = create_page_from_optiongroup(group, regname)
-        name_label = gtk.Label(group.name)
+        name_label = gtk.Label()
+        name_label.set_markup(SECTION_TAB %
+        ' '.join(group.name.split('_')).capitalize())
         notebook.append_page(page, tab_label=name_label)
         widgets.extend(wids)
     if len(reg) == 1:
