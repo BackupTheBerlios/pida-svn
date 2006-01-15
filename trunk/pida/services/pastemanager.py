@@ -136,6 +136,9 @@ class paste_editor_view(gladeview.glade_view):
         '''Starts the pulse'''
         self.__pulse_bar.show_pulse()
 
+    def stop_pulse(self):
+        self.__pulse_bar.stop_pulse()
+
     # UI callbacks
 
     def on_post_button__clicked(self,but):
@@ -225,19 +228,6 @@ class paste_history_view(contentview.content_view):
         self.__history_tree.connect('double-clicked', self.cb_paste_db_clicked)
         self.__history_tree.connect('middle-clicked', self.cb_paste_m_clicked)
         self.__history_tree.connect('right-clicked', self.cb_paste_r_clicked)
-        self.__uim = gtk.UIManager()
-        self.__uim.insert_action_group(self.service.action_group, 0)
-        self.__uim.add_ui_from_string("""
-            <popup>
-            <menuitem name="1" action="pastemanager+new_paste" />
-            <separator />
-            <menuitem name="2" action="pastemanager+view_paste" />
-            <menuitem name="3" action="pastemanager+copy_url_to_clipboard" />
-            <separator />
-            <menuitem name="5" action="pastemanager+remove_paste" />
-            </popup>
-            """)
-        self.__popup_menu = self.__uim.get_widget('/popup')
 
     def set(self, pastes):
         '''Sets the paste list to the tree view.
@@ -297,12 +287,26 @@ class paste_history_view(contentview.content_view):
             self.__x11_clipboard.set_text(self.__tree_selected.get_url())
 
     def cb_paste_r_clicked(self, paste, tree_item, event):
+        menu = gtk.Menu()
         sensitives = (tree_item is not None)
-        for action in ['pastemanager+remove_paste',
+        for action in ['pastemanager+new_paste',
+                        None,
+                       'pastemanager+remove_paste',
                        'pastemanager+view_paste',
-                       'pastemanager+copy_url_to_clipboard']:
-            self.service.action_group.get_action(action).set_sensitive(sensitives)
-        self.__popup_menu.popup(None, None, None, event.button, event.time)
+                        None,
+                        'pastemanager+copy_url_to_clipboard']:
+            if action is None:
+                menu.append(gtk.SeparatorMenuItem())
+            else:
+                act = self.service.action_group.get_action(action)
+                if 'new_paste' not in action:
+                    act.set_sensitive(sensitives)
+                mi = gtk.ImageMenuItem()
+                act.connect_proxy(mi)
+                mi.show()
+                menu.append(mi)
+        menu.show_all()
+        menu.popup(None, None, None, event.button, event.time)
         
 
 class paste_manager(service.service):

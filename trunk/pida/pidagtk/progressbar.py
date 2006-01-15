@@ -33,14 +33,14 @@ class progress_bar(gtk.ProgressBar):
 
     def __progress_timeout(self):
         '''Internal function to update the pulse'''
-        if self.get_parent():
-            self.pulse()
+        if self.__loop:
+            self.__idle = gtk.idle_add(self.pulse)
         return self.__loop
 
     def start_pulse(self):
         '''Begins the pulse'''
         self.__loop = True
-        self.timer = gobject.timeout_add (20, self.__progress_timeout)
+        self.timer = gobject.timeout_add (50, self.__progress_timeout)
 
     def show_pulse(self):
         '''Shows and begins the pulse'''

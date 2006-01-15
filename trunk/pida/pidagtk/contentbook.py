@@ -159,7 +159,6 @@ class ContentholderList(content_list):
     def remove_page(self, contentview):
         button = self.__buttons[contentview.unique_id]
         self.remove(button)
-        button.destroy()
         del self.__views[contentview.unique_id]
         del self.__buttons[contentview.unique_id]
 

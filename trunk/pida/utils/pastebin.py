@@ -271,6 +271,7 @@ class paste_bin(object):
         self.__editor.pulse()
 
     def __close_editor(self):
+        self.__editor.stop_pulse()
         self.__editor.close()
 
     def retrieve_data(self):

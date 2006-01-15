@@ -166,7 +166,6 @@ class content_view(gtk.VBox):
 
     def close(self):
         self.remove()
-        self.destroy()
 
     def remove(self):
         if self.__holder is not None:

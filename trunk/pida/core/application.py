@@ -33,6 +33,7 @@ import optparse
 
 # gtk import(s)
 import gtk
+gtk.threads_init()
 
 
 from pkg_resources import Requirement, resource_filename
@@ -125,7 +126,6 @@ class application(object):
 
 
 def main():
-    gtk.threads_init()
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     app = application()
     app.start()

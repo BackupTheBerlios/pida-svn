@@ -72,7 +72,6 @@ class bookmark_view(contentview.content_view):
             self.books_done()
 
     def books_done(self):
-        self.__list.show_all()
         self.long_title = 'Documentation library'
 
     def _add_item(self, item, parent=None):
@@ -102,7 +101,7 @@ class document_library(service.service):
             default = True
 
     def init(self):
-        gobject.timeout_add(10000, self.fetch)
+        gobject.timeout_add(1000, self.fetch)
 
     def fetch_thread(self):
         def t():
