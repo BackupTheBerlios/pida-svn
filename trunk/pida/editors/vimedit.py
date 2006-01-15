@@ -51,6 +51,12 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
             rtype = types.boolean
             default = False
 
+    class vim_events(defs.optiongroup):
+        """How PIDA will react to events from Vim."""
+        class shutdown_with_vim(defs.option):
+            rtype = types.boolean
+            default = True
+
     def get_server(self):
         """Return our only server."""
         return self.__srv
@@ -71,6 +77,14 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
             self.reset()
             self.__files = {}
             self.get_service('editormanager').events.emit('started')
+
+    def after_shutdown(self, server):
+        if self.opt('vim_events', 'shutdown_with_vim'):
+            self.boss.stop()
+        else:
+            self.__srv = None
+            self.single_view.close()
+            self.call('start')
 
     def has_started(self):
         return self.server is not None

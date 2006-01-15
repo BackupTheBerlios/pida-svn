@@ -96,7 +96,5 @@ class vim_embed(contentview.content_view):
     def cb_unplugged(self, socket):
         self.widget.remove(self.__eb)
         self.stop()
-        self.service.shutdown()
-        self.service.call('start')
 
         

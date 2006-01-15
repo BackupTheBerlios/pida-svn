@@ -37,6 +37,7 @@ class vim_editor(object):
             rtype = types.string
             default = ''
 
+
     def init(self):
         self.__files = {}
         self.__old_shortcuts = {'n':{}, 'v':{}}
@@ -185,13 +186,20 @@ class vim_editor(object):
         self.boss.command('keyboardshortcuts', 'keypress-by-name',
                            kpname=name)
 
-    def shutdown(self, *args):
-        for filename in self.__files:
+    def vim_shutdown(self, server, *args):
+        self.clean_after_shutdown(server)
+        self.after_shutdown(server)
+
+    def clean_after_shutdown(self, server):
+        for filename in self.__files.setdefault(server, []):
             self.boss.call_command('buffermanager', 'file_closed',
                                     filename=filename)
             self.call('close', filename=filename)
         self.__files = {}
         self.__currentfile = None
+
+    def after_shutdown(self, server):
+        pass
 
     def get_vim_window(self):
         return self.__cw
