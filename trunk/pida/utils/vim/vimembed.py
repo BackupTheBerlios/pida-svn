@@ -80,7 +80,8 @@ class vim_embed(contentview.content_view):
         if not self.pid:
             popen = subprocess.Popen([self.command, '--servername',
                                       self.servername, '--cmd',
-                                      'let PIDA_EMBEDDED=1'] + args)
+                                      'let PIDA_EMBEDDED=1'] + args,
+                                      close_fds=True)
             self.pid = popen.pid
         self.show_all()
 
