@@ -24,6 +24,7 @@
 
 
 import base
+import storelog
 
 # Core components
 import services
@@ -34,10 +35,11 @@ class ServiceNotFoundError(KeyError):
     the service does not exists.
     """
 
-class boss(base.pidacomponent):
+class boss(base.pidacomponent,storelog.base):
     """ The object in charge of everything """
     
     def __init__(self, application, env):
+        storelog.base.__init__(self)
         # Set the pidaobject base
         base.pidaobject.boss = self
         base.pidacomponent.__init__(self)

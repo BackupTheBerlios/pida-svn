@@ -22,16 +22,30 @@
 #SOFTWARE.
 
 import os
+import pida.core.boss
 import logging
+
+class KeepLogging(logging.Handler):
+    """
+    Handler for storing the logs
+    """
+    def __init__(self,base):
+        logging.Handler.__init__(self)
+        self.base = base
+
+    def emit(self,record):
+        """
+        Stores the record
+        """
+        self.base.boss.push_log_record(record.msecs,record)
 
 class ViewLogging(logging.Handler):
     """
     Handler for logging to a view
     """
-    def __init__(self,boss):
+    def __init__(self,base):
         logging.Handler.__init__(self)
-        self.boss = boss
-        print "ViewLogging started !!!" ## DEBUG
+        self.base = base
 
     def emit(self,record):
         """
@@ -39,26 +53,40 @@ class ViewLogging(logging.Handler):
 
         Format the record and send it
         """
-        
-        self.boss.call_command('logmanager', 'get', record=record)
+        try:
+            self.base.call_command('logmanager', 'refresh')
+        except pida.core.boss.ServiceNotFoundError:
+            logger = logging.getLogger(self.__class__.__name__)
+            format_str = ('%(levelname)s '
+                          '%(module)s.%(name)s:%(lineno)s '
+                          '%(message)s')
+            format = logging.Formatter(format_str)
+            handler = KeepLogging(self.base)
+            handler.setFormatter(format)
+            logger.addHandler(handler)
+            logger.warn("service logmanager missing")
 
-        print "LOGGER : %s" % record
-    
 class pidalogger(object):
     """Logging mixin"""
 
     def __init__(self,*args,**kw):
         self.log = self.__build_logger(self.__class__.__name__)
-
+        
     def __build_logger(self, name):
+        logger = logging.getLogger(name)
+        # We keep STDOUT as handler for now
         format_str = ('%(levelname)s '
                       '%(module)s.%(name)s:%(lineno)s '
                       '%(message)s')
         format = logging.Formatter(format_str)
         handler = logging.StreamHandler()
         handler.setFormatter(format)
-        logger = logging.getLogger(name)
         logger.addHandler(handler)
+        #
+        if 'PIDA_LOG' in os.environ:
+            handler = KeepLogging(self)
+            handler.setFormatter(format)
+            logger.addHandler(handler)
         if 'PIDA_DEBUG' in os.environ:
             level = logging.DEBUG
         else:
@@ -67,5 +95,9 @@ class pidalogger(object):
         return logger
 
     def set_view_handler(self):
-        handler = ViewLogging(self)
-        self.log.addHandler(handler)
+        if 'PIDA_LOG' in os.environ:
+            handler = ViewLogging(self)
+            self.log.addHandler(handler)
+            return True
+        return False
+

@@ -21,8 +21,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-disabled
-
+import time
 import gtk
 
 #import pida.pidagtk.logmanager as logmanager
@@ -33,21 +32,36 @@ import pida.pidagtk.contentview as contentview
 # pida utils import
 import pida.core.service as service
 
+from logging import Formatter
+from logging import getLevelName
+
+class LogItem(tree.TreeItem):
+    def __init__(self,record):
+        tree.TreeItem.__init__(self, record.created, record)
+
+    def __get_created(self):
+        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.value.created))
+    created = property(__get_created)
+
+    def __get_message(self):
+        return self.value.getMessage()
+    message = property(__get_message)
+
 class LogTree(tree.Tree):
     '''Tree listing all the pastes'''
     EDIT_BUTTONS = False
-    SORT_BY = [ 'msecs' , 'name' ]
+    SORT_BY = 'created'
 
-    markup_format_string = ('<b>%(msg)s</b>')
+    markup_format_string =  ('%(created)s %(message)s')
 
     def __init__(self):
         '''Initializes the tree'''
         tree.Tree.__init__(self)
         self.set_property('markup-format-string', self.markup_format_string)
 
-    def push(self, logitem):
+    def push(self, record):
         '''Adds a paste to the Tree'''
-        self.add_item(logitem, key=logitem.msecs)
+        self.add_item(LogItem(record))
 
     def pop(self):
         '''Deletes the currently selected paste'''
@@ -64,24 +78,27 @@ class LogManager(contentview.content_view):
     HAS_SEPARATOR = False
     HAS_TITLE = True
 
-    def init(self,filter=''):
+    def init(self,filter='',logs=None):
         '''Constructor of the Paste History View.'''
 
         print 'new log manager : FILTER=%s' % filter
+
+        self.__logs = logs
         
         hb = gtk.HBox()
         hb.add(gtk.Label('Filter'))
         self.__filter_entry = gtk.Entry()
         hb.add(self.__filter_entry)
-        self.__filter_add = gtk.Button('add','add')
+        self.__filter_add = gtk.Button('Add','Add')
         self.__filter_add.set_use_stock(True)
+        self.__filter_add.connect('clicked', self.cb_filter_add)
         hb.add(self.__filter_add)
         self.widget.pack_start(hb,False,False)
 
         self.__history_tree = LogTree()
         self.widget.pack_start(self.__history_tree)
-        self.__x11_clipboard = gtk.Clipboard(selection="PRIMARY")
-        self.__gnome_clipboard = gtk.Clipboard(selection="CLIPBOARD")
+#        self.__x11_clipboard = gtk.Clipboard(selection="PRIMARY")
+#        self.__gnome_clipboard = gtk.Clipboard(selection="CLIPBOARD")
 #        self.__registry = registry.registry()
         self.__tree_selected = None
         self.__history_tree.connect('clicked', self.cb_paste_clicked)
@@ -104,10 +121,16 @@ class LogManager(contentview.content_view):
 
     # Public interface
 
-    def push(self,record):
-        self.__history_tree.push(record)
+    def refresh(self):
+        self.__history_tree.clear()
+        for log in self.__logs.dict.values(): # Here apply the filter
+            self.__history_tree.push(log)
 
     # Actions
+
+    def cb_filter_add(self,but):
+#        self.service.create_multi_view(filter=self.__filter_entry.get_text())
+        self.service.boss.log.warn("It's only a test...")
 
     def cb_paste_clicked(self,paste,tree_item):
         '''Callback function called when an item is selected in the TreeView'''
@@ -126,15 +149,17 @@ class LogManager(contentview.content_view):
         '''Callback function called when an item is middle clicked, and copy it
         to the mouse buffer clipboard'''
         if self.__tree_selected != None:
-            self.__x11_clipboard.set_text(self.__tree_selected.get_url())
+#            self.__x11_clipboard.set_text(self.__tree_selected.get_url())
+            pass
 
     def cb_paste_r_clicked(self, paste, tree_item, event):
-        sensitives = (tree_item is not None)
-        for action in ['pastemanager+remove_paste',
-                       'pastemanager+view_paste',
-                       'pastemanager+copy_url_to_clipboard']:
-            self.service.action_group.get_action(action).set_sensitive(sensitives)
-        self.__popup_menu.popup(None, None, None, event.button, event.time)
+#        sensitives = (tree_item is not None)
+#        for action in ['pastemanager+remove_paste',
+#                       'pastemanager+view_paste',
+#                       'pastemanager+copy_url_to_clipboard']:
+#            self.service.action_group.get_action(action).set_sensitive(sensitives)
+#        self.__popup_menu.popup(None, None, None, event.button, event.time)
+        pass
 
 class log_manager(service.service):
     NAME = 'log manager'
@@ -147,30 +172,38 @@ class log_manager(service.service):
 
     def start(self):
         self.__view = None
+        self.__first = True
         print "UI started"
-        self.boss.set_view_handler()
+        if self.boss.set_view_handler():
+            self.boss.log.info("Logging service started.")
+        else: 
+            self.stop()
 
     def reset(self):
-        pass
+        self.boss.log.info("Logging service reset.")
 
     def stop(self):
-        pass
+        self.boss.log.info("Logging service stopped.")
+        #Do more..
 
     #private interface
     #public interface
     # commands
 
     def cmd_filter(self,filter):
-        self.__view = self.create_multi_view(filter=filter)
+        self.create_multi_view(filter=filter,logs=self.boss.logs)
         print "LAUNCH NEW FILTER !!!"
 
-    def cmd_get(self,record):
-        if self.__view == None:
-            self.__view = self.create_multi_view()
-        for view in self.multi_views:
-            view.push(record)
-            
+    def cmd_get(self,):
         print 'LOGMANAGER: %s' % record.getMessage()
+
+    def cmd_refresh(self):
+        for view in self.multi_views:
+            view.refresh()
+        else:
+            if self.__first:
+                self.__first = False
+                self.create_multi_view(logs=self.boss.logs)
 
     # ui actions
 
