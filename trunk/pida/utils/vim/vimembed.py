@@ -84,13 +84,4 @@ class vim_embed(contentview.content_view):
                                       close_fds=True)
             self.pid = popen.pid
         self.show_all()
-
-    def stop(self):
-        try:
-            os.kill(self.pid, 15)
-        except OsError:
-            pass
-        self.pid = None
-        self.__socket.destroy()
-
         

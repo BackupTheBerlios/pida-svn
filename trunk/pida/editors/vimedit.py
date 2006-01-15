@@ -84,7 +84,7 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
         else:
             self.single_view.close()
             self.__srv = None
-            self.call('start')
+            #self.call('start')
 
     def has_started(self):
         return self.server is not None
