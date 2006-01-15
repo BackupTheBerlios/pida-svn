@@ -234,9 +234,10 @@ class Tree(gtk.VBox):
         titem = TreeItem(key, item)
         row = [key, titem, self.__get_markup(item)]
         niter = self.model.append(parent, row)
-        def reset(oself):
+        def reset():
             self.model.set_value(niter, 2, self.__get_markup(item))
-        #item.reset_func = reset
+        titem.reset_markup = reset
+        item.reset_markup = reset
         return niter
 
     def __get_markup(self, item):
@@ -301,6 +302,8 @@ class Tree(gtk.VBox):
             self.sort_by(attrname, i, columnid)
         self.__model.set_sort_column_id(0, gtk.SORT_DESCENDING)
         
+    def set_item():
+        pass
 
     def __get_model(self):
         """Return the Tree Model."""
@@ -408,4 +411,28 @@ class IconTree(Tree):
         
 gobject.type_register(Tree)
 
+
+def test():
+    w = gtk.Window()
+    v = gtk.VBox()
+    w.add(v)
+    t = Tree()
+    v.pack_start(t)
+    b = gtk.Button('foo')
+    v.pack_start(b, False)
+    w.show_all()
+
+    def _clicked(button):
+        t.selected.value.key = 'ali'
+        t.selected.reset_markup()
+    b.connect('clicked', _clicked)
+
+    class Dummy(object):
+        key = "fooood"
+        name = 'mess'
+    for i in range(20):
+        d = Dummy()
+        t.add_item(d)
+
+    gtk.main()
 
