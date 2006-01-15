@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
-
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
-#Copyright (c) 2005 Ali Afshar aafshar@gmail.com
+
+#Copyright (c) 2005 The PIDA Project
 
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -21,10 +21,14 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+# gtk import(s)
 import gtk
 import gobject
+
+# pidagtk import(s)
 import toolbar
 from pida.utils.kiwiutils import gsignal, gproperty
+
 
 class TreeItem(object):
     """An item inside a tree-view."""
@@ -360,6 +364,7 @@ class Tree(gtk.VBox):
             self.emit('delete-item')
         toolbar.emit_stop_by_name('clicked')
 
+gobject.type_register(Tree)
 
 class IconTreeItem(TreeItem):
     """I tree item with an icon."""
@@ -406,7 +411,6 @@ class IconTree(Tree):
         #item.reset_func = reset
         return niter
         
-gobject.type_register(Tree)
 
 
 def test():
