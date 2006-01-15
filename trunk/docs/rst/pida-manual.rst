@@ -42,13 +42,12 @@ not GPL_, or even closed source.
 The PIDA Project is owned by Ali Afshar (this author).
 
 
-
 Authors
 -------
 
-Ali Afshar
-Bernard Pratz
-Alejandro Mery
+- Ali Afshar
+- Bernard Pratz
+- Alejandro Mery
 
 Contributors
 ------------
@@ -141,30 +140,29 @@ navigation and version control functions.
 Adding a project to the workbench
 +++++++++++++++++++++++++++++++++
 
-1.  From the *Project* menu select *Add Project*.
+Firstly, from the *Project* menu select *Add Project*, and Enter the
+information into the newly displayed form.
 
-2.  Enter the information into the newly displayed form.
+Name
+  The name you would like to use for the project
 
-    Name :
-      The name you would like to use for the project
+Save In
+  The directory you would like to save the project file in (or the default
+  pida projects directory by default).
 
-    Save In :
-      The directory you would like to save the project file in (or the default
-      pida projects directory by default).
+Type
+  The type of project this project is
 
-    Type :
-      The type of project this project is
+Once you have entered this information click *ok*.
 
-    Once you have entered this information click *ok*.
+You will be presented with the initial project configuration dialog for the
+project.
 
-3.  You will be presented with the initial project configuration dialog for the
-    project.
-
-    Depending on the type of project, you will have different options.
-    The most common option is *Source Directory*. This is the directory that
-    will be navigated to when clicking on a project, and the directory that is
-    used for project functions, including version control.
-    When you are happy with the configuration, press the *save* button.
+Depending on the type of project, you will have different options. The most
+common option is *Source Directory*. This is the directory that will be
+navigated to when clicking on a project, and the directory that is used for
+project functions, including version control. When you are happy with the
+configuration, press the *save* button.
 
 Your new project will have appeared on the project list, and is available to
 browse and use.
@@ -173,6 +171,32 @@ browse and use.
   required. The initial value of the project source directory actually
   defaults to the location of the project source file. This allows you to add
   the project file to a version control system and monitor the changes.
+
+Using a project
++++++++++++++++
+
+First, Locate the project list. It is in the pane marked *plugins* and
+has an icon signifying a project. This pane will be used to access projects.
+
+Selecting a project from this project list will open a file manager in the
+source directory of the project, whatever that is configured to be.
+
+Right-clicking on a project gives the context menu. This context menu is
+divided into three sections of contexts.
+
+Directory 
+    These are file system actions to be performed on the source directory.
+
+Source Code
+    These are version control commands to be performed in the context of the
+    project.
+
+Project
+    These are actions to be performed on the actual project object, e.g.
+    project configuration.
+
+Configuring a project
++++++++++++++++++++++
 
 Version Control
 ---------------
