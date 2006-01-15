@@ -82,8 +82,8 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
         if self.opt('vim_events', 'shutdown_with_vim'):
             self.boss.stop()
         else:
-            self.__srv = None
             self.single_view.close()
+            self.__srv = None
             self.call('start')
 
     def has_started(self):
