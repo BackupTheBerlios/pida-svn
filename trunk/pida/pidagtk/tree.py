@@ -301,9 +301,6 @@ class Tree(gtk.VBox):
         for i, attrname in enumerate(attrnames):
             self.sort_by(attrname, i, columnid)
         self.__model.set_sort_column_id(0, gtk.SORT_DESCENDING)
-        
-    def set_item():
-        pass
 
     def __get_model(self):
         """Return the Tree Model."""
