@@ -55,7 +55,7 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
         """How PIDA will react to events from Vim."""
         class shutdown_with_vim(defs.option):
             rtype = types.boolean
-            default = True
+            default = False
 
     def get_server(self):
         """Return our only server."""
