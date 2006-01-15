@@ -199,6 +199,7 @@ class book(object):
                 os.write(fd, gz_data)
                 os.close(fd)
                 break
+        self.title = None
         if config_path:
             parser = xml.sax.make_parser()
             parser.setFeature(xml.sax.handler.feature_external_ges, 0)
@@ -214,6 +215,8 @@ class book(object):
                     break
             f.close()
             self.title = handler.title
+        if not self.title:
+            self.title = os.path.basename(path)
 
     def load(self):
         config_path = None
