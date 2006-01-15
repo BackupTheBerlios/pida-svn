@@ -77,7 +77,7 @@ class bookmark_view(contentview.content_view):
         self.paned = pane
 
     def book_found(self, book):
-        gobject.idle_add(self.__add_item, book)
+        gobject.idle_add(self.__add_list_item, book)
 
     def __add_list_item(self, item):
         self.__list.add_item(item)
