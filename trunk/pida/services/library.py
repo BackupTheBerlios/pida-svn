@@ -32,6 +32,7 @@ import pida.pidagtk.contentview as contentview
 import pida.pidagtk.tree as tree
 
 import xml.dom.minidom as minidom
+import xml.sax
 
 import tempfile
 import gzip
@@ -45,8 +46,7 @@ types = service.types
 
 class lib_list(tree.Tree):
 
-    pass
-    #SORT_LIST = ['name', 'title']
+    SORT_LIST = ['title']
 
 class bookmark_view(contentview.content_view):
 
@@ -56,36 +56,59 @@ class bookmark_view(contentview.content_view):
     HAS_CONTROL_BOX = False
 
     def init(self):
+        pane = gtk.Notebook()
+        self.widget.pack_start(pane)
+        pane.set_tab_pos(gtk.POS_TOP)
         self.__list = lib_list()
+        label = gtk.Label('Books')
+        #label.set_angle(90)
+        pane.append_page(self.__list, tab_label=label)
+        self.__list.connect('clicked', self.cb_booklist_clicked)
+        self.__list.connect('double-clicked', self.cb_contents_clicked)
         self.__list.set_property('markup_format_string',
+                                 '%(title)s')
+        self.__contents = tree.Tree()
+        label = gtk.Label('Contents')
+        #label.set_angle(90)
+        pane.append_page(self.__contents, tab_label=label)
+        self.__contents.set_property('markup_format_string',
                                  '%(name)s')
-        self.__list.connect('double-clicked', self.cb_booklist_clicked)
-        self.widget.pack_start(self.__list)
+        self.__contents.connect('double-clicked', self.cb_contents_clicked)
         self.long_title = 'Loading books...'
+        self.paned = pane
 
-    def book_found(self, bookroot):
-        if bookroot is not None:
-            def _add():
-                self._add_item(bookroot)
-            gobject.idle_add(_add)
-        else:
-            self.books_done()
+    def book_found(self, book):
+        def _add():
+            self.__list.add_item(book)
+        gtk.idle_add(_add)
 
     def books_done(self):
         self.long_title = 'Documentation library'
 
+    def set_contents(self, book):
+        self.__contents.clear()
+        for item in book.subs:
+            self._add_item(item)
+
     def _add_item(self, item, parent=None):
-        niter = self.__list.add_item(item, parent=parent)
+        niter = self.__contents.add_item(item, parent=parent)
         for child in item.subs:
             self._add_item(child, niter)
         
     def cb_booklist_clicked(self, treeview, item):
+        if item.value.bookmarks is None:
+            item.value.load()
+        self.set_contents(item.value.bookmarks)
+        self.paned.set_current_page(1)
+
+    def cb_contents_clicked(self, treeview, item):
         book = item.value
         if book.path:
             self.service.boss.call_command('webbrowse', 'browse',
-                                       url=book.path)
+                                           url=book.path)
         else:
             self.service.log.info('Bad document book "%s"', book.name)
+        
 
 class document_library(service.service):
 
@@ -101,12 +124,11 @@ class document_library(service.service):
             default = True
 
     def init(self):
-        gobject.timeout_add(1000, self.fetch)
+        gobject.timeout_add(3000, self.fetch)
 
     def fetch_thread(self):
         def t():
-            for bookmarks in self.fetch_books()():
-                self.plugin_view.book_found(bookmarks)
+            self.fetch_books()
         t = threading.Thread(target=t)
         t.start()
 
@@ -123,24 +145,79 @@ class document_library(service.service):
                                 '/usr/share/devhelp/books',
                                 os.path.expanduser('~/.devhelp/books')]
         use_gzip = self.opt('book_locations', 'use_gzipped_book_files')
-        def gen():
-            for directory in dirs:
-                if os.path.exists(directory):
-                    for name in os.listdir(directory):
-                        path = os.path.join(directory, name)
-                        if os.path.exists(path):
-                            load_book = book(path, use_gzip)
-                            if hasattr(load_book, 'bookmarks'):
-                                yield load_book.bookmarks
-            yield None
-        return gen
+
+        def _fetch(directory):
+            if os.path.exists(directory):
+                for name in os.listdir(directory):
+                    path = os.path.join(directory, name)
+                    if os.path.exists(path):
+                        load_book = book(path, use_gzip)
+                        #if hasattr(load_book, 'bookmarks'):
+                        self.plugin_view.book_found(load_book)
+
+        for directory in dirs:
+            _fetch(directory)
+        self.plugin_view.books_done()
+
+xml.sax.handler.feature_external_pes = False
+
+class title_handler(xml.sax.handler.ContentHandler):
+
+    def __init__(self):
+        self.title = 'untitled'
+        self.is_finished = False
+
+    def startElement(self, name, attributes):
+        self.title = attributes['title']
+        self.is_finished = True
+
+    def resolveEntity(self):
+        pass
 
 class book(object):
 
     def __init__(self, path, include_gz=True):
         self.directory = path
-        self.root = None
+        self.key = path
+        self.name = os.path.basename(path)
+        self.bookmarks = None
+        self.short_load()
+
+    def short_load(self):
         config_path = None
+        path = self.directory
+        for name in os.listdir(path):
+            if name.endswith('.devhelp'):
+                config_path = os.path.join(path, name)
+                break
+            elif name.endswith('.devhelp.gz'):
+                gz_path = os.path.join(path, name)
+                f = gzip.open(gz_path, 'rb', 1)
+                gz_data = f.read()
+                f.close()
+                fd, config_path = tempfile.mkstemp()
+                os.write(fd, gz_data)
+                os.close(fd)
+                break
+        if config_path:
+            parser = xml.sax.make_parser()
+            parser.setFeature(xml.sax.handler.feature_external_ges, 0)
+            handler = title_handler()
+            parser.setContentHandler(handler)
+            f = open(config_path)
+            for line in f:
+                try:
+                    parser.feed(line)
+                except:
+                    raise
+                if handler.is_finished:
+                    break
+            f.close()
+            self.title = handler.title
+
+    def load(self):
+        config_path = None
+        path = self.directory
         for name in os.listdir(path):
             if name.endswith('.devhelp'):
                 config_path = os.path.join(path, name)
@@ -170,7 +247,6 @@ class book(object):
                     self.root = indexpath
                     break
                 self.root = indexpath
-        self.name = os.path.basename(path)
         self.key = path
 
     def get_bookmarks(self):
