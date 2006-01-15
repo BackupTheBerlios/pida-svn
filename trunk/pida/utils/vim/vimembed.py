@@ -50,7 +50,6 @@ class vim_embed(contentview.content_view):
 
     def __pack(self):
         socket = gtk.Socket()
-        socket.connect('plug-removed', self.cb_unplugged)
         eb = gtk.EventBox()
         self.widget.pack_start(eb)
         eb.add_events(gtk.gdk.KEY_PRESS_MASK)
@@ -92,9 +91,5 @@ class vim_embed(contentview.content_view):
             pass
         self.pid = None
         self.__socket.destroy()
-
-    def cb_unplugged(self, socket):
-        self.widget.remove(self.__eb)
-        self.stop()
 
         
