@@ -187,6 +187,7 @@ class vim_editor(object):
                            kpname=name)
 
     def vim_shutdown(self, server, *args):
+        print 'vim shutdown'
         self.clean_after_shutdown(server)
         self.after_shutdown(server)
 
