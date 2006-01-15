@@ -128,8 +128,7 @@ Developing PIDA
 ===============
 
 
-FAQ
-===
+
 
 .. _GPL: http://www.opensource.org/licenses/gpl-license.php
 .. _Gazpacho: http://gazpacho.sicem.biz/
