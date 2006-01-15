@@ -198,6 +198,22 @@ Project
 Configuring a project
 +++++++++++++++++++++
 
+Projects are configured using the project configuration dialog. To open the
+project configuration dialog, either:
+
+1.  Select *Properties* from the *Project* menu.
+
+2.  Right click on a project, and in the context menu, select *Configure this
+    project* from the *Project* submenu.
+
+You should click the *Save* button when you have finished and are happy.
+
+The *Undo* button allows you to revert changes to the configuration back to
+the last saved state.
+
+The *Cancel* button closes the dialog without saving any changes. Closing the
+dialog manually will have the same effect as pressing *Cancel*.
+
 Version Control
 ---------------
 
