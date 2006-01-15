@@ -523,7 +523,6 @@ class multi_view_mixin(object):
             yield view
     multi_views = property(get_multi_views)
 
-
 service_base_classes =  [options_mixin,
                          commands_mixin,
                          events_mixin,
@@ -651,7 +650,7 @@ class service_base(base.pidacomponent):
 class service(service_base):
     """A pIDA Service.
         
-    The methods defined in this class itself are efvents in the lifetime of a
+    The methods defined in this class itself are events in the lifetime of a
     service. They are all to be overriden by subclasses.
     """
 
