@@ -125,6 +125,12 @@ the session.
 Using PIDA
 ==========
 
+PIDA is very varied in its features and what you may want to do with it might
+not be what someone else might want to do with it (this is fine). In order to
+familiarise yourself with PIDA, the following chapters are designed to take
+you through the basic common functionality that we think you would all like to
+use.
+
 Projects
 --------
 
@@ -135,8 +141,38 @@ navigation and version control functions.
 Adding a project to the workbench
 +++++++++++++++++++++++++++++++++
 
-1. From the *Project* menu select *Add Project*.
-2. Enter the information into the newly displayed form.
+1.  From the *Project* menu select *Add Project*.
+
+2.  Enter the information into the newly displayed form.
+
+    Name :
+      The name you would like to use for the project
+
+    Save In :
+      The directory you would like to save the project file in (or the default
+      pida projects directory by default).
+
+    Type :
+      The type of project this project is
+
+    Once you have entered this information click *ok*.
+
+3.  You will be presented with the initial project configuration dialog for the
+    project.
+
+    Depending on the type of project, you will have different options.
+    The most common option is *Source Directory*. This is the directory that
+    will be navigated to when clicking on a project, and the directory that is
+    used for project functions, including version control.
+    When you are happy with the configuration, press the *save* button.
+
+Your new project will have appeared on the project list, and is available to
+browse and use.
+
+.. note :: The project file may be stored in the project source directory if
+  required. The initial value of the project source directory actually
+  defaults to the location of the project source file. This allows you to add
+  the project file to a version control system and monitor the changes.
 
 Version Control
 ---------------
