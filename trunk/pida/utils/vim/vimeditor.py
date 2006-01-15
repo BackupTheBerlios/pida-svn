@@ -195,7 +195,6 @@ class vim_editor(object):
         for filename in self.__files.setdefault(server, []):
             self.boss.call_command('buffermanager', 'file_closed',
                                     filename=filename)
-            self.call('close', filename=filename)
         self.__files = {}
         self.__currentfile = None
 
