@@ -71,7 +71,9 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
         self.single_view.run(command)
 
     def vim_new_serverlist(self, serverlist):
-        if self.single_view.servername in serverlist and not self.started:
+        if (self.single_view is not None and
+            self.single_view.servername in serverlist and
+            not self.started):
             self.__srv = self.single_view.servername
             self.vim_window.init_server(self.server)
             self.reset()
@@ -82,9 +84,12 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
         if self.opt('vim_events', 'shutdown_with_vim'):
             self.boss.stop()
         else:
-            self.single_view.close()
-            self.__srv = None
-            #self.call('start')
+            self.restart()
+
+    def restart(self):
+        self.__srv = None
+        self.single_view.close()
+        self.call('start')
 
     def has_started(self):
         return self.server is not None
