@@ -68,6 +68,7 @@ class vim_multi_editor(vimeditor.vim_editor, service.service):
     display_name = 'External Vim'
 
     def start(self):
+        self.__oldservers = []
         self.view = vim_plugin_view(service=self)
         self.__cw = vimcom.communication_window(self)
         self.view.show_all()
@@ -79,9 +80,11 @@ class vim_multi_editor(vimeditor.vim_editor, service.service):
         def _serverlist():
             for server in serverlist:
                 if 'PIDA_EMBEDDED' not in server:
-                    self.__cw.init_server(server)
+                    if server not in self.__oldservers:
+                        self.__cw.init_server(server)
                     yield server
         self.view.set_serverlist(_serverlist())
+        self.__oldservers = serverlist
 
     def get_server(self):
         return self.view.current_server

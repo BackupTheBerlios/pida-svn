@@ -4,8 +4,10 @@ import os
 
 rst_dir = 'rst'
 html_dir = 'html'
+latex_dir = 'latex'
 
 rst2html_command = 'rst2html'
+rst2tex_command = 'rst2latex'
 
 def chdir():
     os.chdir('docs')
@@ -15,10 +17,14 @@ def main():
     for name in os.listdir(rst_dir):
         if name.endswith('.rst'):
             in_path = os.path.join(rst_dir, name)
-            out_path = os.path.join(html_dir,
-                                    name.replace('.rst', '.html'))
+            out_path_html = os.path.join(html_dir,
+                                name.replace('.rst', '.html'))
+            out_path_tex = os.path.join(latex_dir,
+                                name.replace('.rst', '.tex'))
             os.system('%s %s > %s' % (rst2html_command,
-                                      in_path, out_path))
+                                      in_path, out_path_html))
+            os.system('%s %s > %s' % (rst2tex_command,
+                                      in_path, out_path_tex))
 
 
 if __name__ == '__main__':

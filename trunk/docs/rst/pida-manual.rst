@@ -96,6 +96,10 @@ PyGTK : 2.6
 Optional Requirements
 +++++++++++++++++++++
 
+Gazpacho User Interface Designer : 0.6.4
+  Gazpacho is a GTK (Glade cmpatible) user interface designer. The latest
+version is available at 
+
 Installing PIDA
 ---------------
 
