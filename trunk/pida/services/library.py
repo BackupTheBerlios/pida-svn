@@ -22,31 +22,30 @@
 #SOFTWARE.
 
 import os
+import gzip
+import tempfile
+import threading
+
+import xml.sax
+import xml.dom.minidom as minidom
+xml.sax.handler.feature_external_pes = False
 
 import gtk
 import gobject
 
+import pida.utils.gforklet as gforklet
 import pida.core.service as service
-
 import pida.pidagtk.contentview as contentview
 import pida.pidagtk.tree as tree
-
-import xml.dom.minidom as minidom
-import xml.sax
-
-import tempfile
-import gzip
-
-import threading
-
-import pida.utils.gforklet as gforklet
 
 defs = service.definitions
 types = service.types
 
+
 class lib_list(tree.Tree):
 
     SORT_LIST = ['title']
+
 
 class bookmark_view(contentview.content_view):
 
@@ -78,9 +77,11 @@ class bookmark_view(contentview.content_view):
         self.paned = pane
 
     def book_found(self, book):
-        def _add():
-            self.__list.add_item(book)
-        gtk.idle_add(_add)
+        gobject.idle_add(self.__add_item, book)
+
+    def __add_list_item(self, item):
+        self.__list.add_item(item)
+        return False
 
     def books_done(self):
         self.long_title = 'Documentation library'
@@ -159,7 +160,6 @@ class document_library(service.service):
             _fetch(directory)
         self.plugin_view.books_done()
 
-xml.sax.handler.feature_external_pes = False
 
 class title_handler(xml.sax.handler.ContentHandler):
 
@@ -171,8 +171,6 @@ class title_handler(xml.sax.handler.ContentHandler):
         self.title = attributes['title']
         self.is_finished = True
 
-    def resolveEntity(self):
-        pass
 
 class book(object):
 
@@ -258,7 +256,6 @@ class book(object):
         root.name = self.title
         root.path = self.root
         return root
-
 
 
 class book_mark(object):

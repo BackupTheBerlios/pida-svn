@@ -110,6 +110,15 @@ class FileBrowser(contentview.content_view):
     ICON_TEXT = 'files'
 
     def init(self):
+        self.__currentdirectory = None
+        self.__init_widgets()
+
+    def display(self, directory, rootpath=None, statuses=[], glob='*', hidden=True):
+        if os.path.isdir(directory):
+            self.t = threading.Thread(target=self.__display, args=[directory])
+            self.t.run()
+
+    def __init_widgets(self):
         tb = gtk.HBox()
         self.widget.pack_start(tb, expand=False)
         own_tb = toolbar.Toolbar()
@@ -121,108 +130,92 @@ class FileBrowser(contentview.content_view):
         tb.pack_start(own_tb, expand=False)
         self.__toolbar = contextwidgets.context_toolbar()
         tb.pack_start(self.__toolbar, expand=False)
-        #hbox = gtk.HPaned()
-        #self.widget.pack_start(hbox)
-        #sw = gtk.ScrolledWindow()
-        #sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        #hbox.pack2(sw)
         self.__fileview = FileTree(self)
         self.widget.pack_start(self.__fileview)
         self.__fileview.connect('double-clicked', self.cb_file_activated)
         self.__fileview.connect('right-clicked', self.cb_file_rightclicked)
-        self.__currentdirectory = None
-        self.t = None
-        self.__current_fork = None
 
-    def display(self, directory, rootpath=None, statuses=[], glob='*', hidden=True):
-        def _display():
-            self.__fileview.clear()
-            self.set_long_title(shorten_home_name(directory))
-            self.__currentdirectory = directory
-            globaldict = {'directory':directory}
+    def __display(self, directory):
+        self.__currentdirectory = directory
+        self.__set_contexts(directory)
+        self.set_long_title(shorten_home_name(directory))
+        self.__fileview.clear()
+        statuses = self.service.boss.call_command('versioncontrol',
+                   'get_statuses', directory=directory)
+        if statuses is None:
+            gen = self.__get_plain_statuses
+        else:
+            gen = self.__get_vc_statuses
+        for fsi in gen(directory, statuses):
+            gobject.idle_add(self.__add_item, fsi)
+
+    def __add_item(self, fsi):
+        self.__fileview.add_item(fsi)
+        # must return False
+        return False
+
+    def __set_contexts(self, directory):
+        globaldict = {'directory':directory}
+        try:
+            contexts = self.service.boss.call_command('contexts',
+                'get_contexts',
+                contextname='directory',
+                globaldict=globaldict)
+            self.__toolbar.set_contexts(contexts)
+        except self.service.boss.ServiceNotFoundError:
+            pass
+    
+    def __get_plain_statuses(self, directory, statuses):
+        for filename in os.listdir(directory):
+            path = os.path.join(directory, filename)
+            fsi = FileSystemItem(path)
+            fsi.status = ' '
+            icon = None
+            yield fsi
+
+    def __get_vc_statuses(self, directory, statuses):
+        SMAP = {0: 'i', 1:'?', 2:' ', 7: 'M', 6: 'A', 8: 'C', 9:'D'}
+        for s in statuses:
+            fsi = FileSystemItem(s.path)
             try:
-                contexts = self.service.boss.call_command('contexts',
-                                                            'get_contexts',
-                                                contextname='directory',
-                                                globaldict=globaldict)
-                self.__toolbar.set_contexts(contexts)
-            except self.service.boss.ServiceNotFoundError:
-                pass
+                fsi.status = SMAP[s.state]
+            except KeyError:
+                fsi.status = '%s %s' % (s.state, s.states[s.state])
+            yield fsi
 
-            SMAP = {0: 'i', 1:'?', 2:' ', 7: 'M', 6: 'A', 8: 'C', 9:'D'}
-            
-            statuses = self.service.boss.call_command('versioncontrol',
-                    'get_statuses', directory=directory)
-            files = []
-            if statuses is None:
-                def gen():
-                    for filename in os.listdir(directory):
-                        path = os.path.join(directory, filename)
-                        fsi = FileSystemItem(path)
-                        fsi.status = ' '
-                        icon = None
-                        #self.__fileview.add_item(fsi)
-                        yield fsi
-            else:
-                def gen():
-                    for s in statuses[::-1]:
-                        fsi = FileSystemItem(s.path)
-                        try:
-                            fsi.status = SMAP[s.state]
-                        except KeyError:
-                            fsi.status = '%s %s' % (s.state, s.states[s.state])
-                        yield fsi
-                        #self.__fileview.add_item(fsi)
-            def threaded():
-                def t():
-                    for fsi in gen():
-                        self.__fileview.add_item(fsi)
-                    self.__fileview.show_all()
-                t = threading.Thread(target=t)
-                t.start()
-            
-            def gforked():
-                fd = gforklet.fork_generator(gen, [], self.__fileview.add_item)
-                self.__current_fork = fd
-                self.__fileview.show_all()
+    def __popup_file(self, path, event):
+        globaldict = {'filename': path}
+        menu = gtk.Menu()
+        for title, context in [('Version control', 'file_vc'),
+                        ('Parent directory', 'file_parent')]:
+            mroot = gtk.MenuItem(label=title)
+            menu.add(mroot)
+            contexts = self.service.boss.call_command('contexts',
+                                     'get_contexts',
+                                     contextname=context,
+                                     globaldict=globaldict
+                                     )
+            cmenu = contextwidgets.get_menu(contexts)
+            mroot.set_submenu(cmenu)
+        menu.show_all()
+        menu.popup(None, None, None, event.button, event.time)
 
-            gforked()
-
-        if os.path.isdir(directory):
-            if self.__current_fork is not None:
-                pid, readfd, parser = self.__current_fork
-                parser.reset()
-                try:
-                    os.close(readfd)
-                except:
-                    pass
-                try:
-                    os.kill(pid, 9)
-                except:
-                    pass
-                try:
-                    os.waitpid(pid)
-                except:
-                    pass
-            _display()
-        #    self.t = threading.Thread(target=_display)
-        #    self.t.run()
-
-
-            #self.emit('directory-changed', directory)
-
-
-    def Go_up(self):
-        if self.__currentdirectory and self.__currentdirectory != '/':
-            parent = os.path.split(self.__currentdirectory)[0]
-            self.display(parent)
-
-    def set_statuses(self, statuses):
-        for row in self.__fileview.model:
-            if row[0] in statuses:
-                niter = row.iter
-                column = 3
-                self.__fileview.set(niter, column, statuses[row[0]])
+    def __popup_dir(self, path, event):
+        globaldict = {'directory': path}
+        menu = gtk.Menu()
+        for title, context in [('Directory', 'directory'),
+                        ('Source code', 'project_directory')]:
+            mroot = gtk.MenuItem(label=title)
+            menu.add(mroot)
+            contexts = self.service.boss.call_command('contexts',
+                                     'get_contexts',
+                                     contextname=context,
+                                     globaldict=globaldict
+                                     )
+            cmenu = contextwidgets.get_menu(contexts)
+            mroot.set_submenu(cmenu)
+        menu.show_all()
+        menu.popup(None, None, None, event.button, event.time)
 
     def cb_file_activated(self, view, path):
         filepath = self.__fileview.selected.key
@@ -244,44 +237,6 @@ class FileBrowser(contentview.content_view):
             self.__popup_dir(fsi.path, event)
         else:
             self.__popup_file(fsi.path, event)
-
-    def __popup_file(self, path, event):
-
-        globaldict = {'filename': path}
-        menu = gtk.Menu()
-        for title, context in [('Version control', 'file_vc'),
-                        ('Parent directory', 'file_parent')]:
-            mroot = gtk.MenuItem(label=title)
-            menu.add(mroot)
-            contexts = self.service.boss.call_command('contexts',
-                                     'get_contexts',
-                                     contextname=context,
-                                     globaldict=globaldict
-                                     )
-            cmenu = contextwidgets.get_menu(contexts)
-            mroot.set_submenu(cmenu)
-        menu.show_all()
-        menu.popup(None, None, None, event.button, event.time)
-       
-
-    def __popup_dir(self, path, event):
-
-        globaldict = {'directory': path}
-        menu = gtk.Menu()
-        for title, context in [('Directory', 'directory'),
-                        ('Source code', 'project_directory')]:
-            mroot = gtk.MenuItem(label=title)
-            menu.add(mroot)
-            contexts = self.service.boss.call_command('contexts',
-                                     'get_contexts',
-                                     contextname=context,
-                                     globaldict=globaldict
-                                     )
-            cmenu = contextwidgets.get_menu(contexts)
-            mroot.set_submenu(cmenu)
-        menu.show_all()
-        menu.popup(None, None, None, event.button, event.time)
-
 
     def cb_dir_activated(self, tree, item):
         print item.key
