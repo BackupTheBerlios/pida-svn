@@ -23,6 +23,7 @@
 
 
 import gtk
+import textwrap
 import filedialogs
 
 NAME_MU = """<span weight="bold">%s</span>"""
@@ -77,9 +78,11 @@ class registry_widget(gtk.VBox):
         container.pack_start(widget, padding=2)
         container.show()
         self.__help_label = gtk.Label()
-        self.pack_start(self.__help_label, expand=False)
+        self.pack_start(self.__help_label, expand=False, padding=6)
+        self.__help_label.set_alignment(0, 0.5)
         self.__help_label.show()
-        self.__help_label.set_markup(DOC_MU % self.get_help())
+        help = '\n'.join(textwrap.wrap(DOC_MU % self.get_help(), 50))
+        self.__help_label.set_markup(help)
 
     def get_name(self):
         """
