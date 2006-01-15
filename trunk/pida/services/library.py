@@ -128,9 +128,7 @@ class document_library(service.service):
         self.fetch()
 
     def fetch_thread(self):
-        def t():
-            self.fetch_books()
-        t = threading.Thread(target=t)
+        t = threading.Thread(target=self.fetch_books)
         t.start()
 
     def fetch_forklet(self):
