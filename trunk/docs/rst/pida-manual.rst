@@ -140,7 +140,7 @@ navigation and version control functions.
 Adding a project to the workbench
 +++++++++++++++++++++++++++++++++
 
-Firstly, from the *Project* menu select *Add Project*, and Enter the
+Firstly, from the *Project* menu select *New Project*, and Enter the
 information into the newly displayed form.
 
 Name
