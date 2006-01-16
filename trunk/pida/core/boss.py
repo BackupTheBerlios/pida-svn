@@ -40,7 +40,7 @@ class boss(base.pidacomponent):
     
     def __init__(self, application, env):
         # Starts the logger
-        self.logs = storelog.Logs()
+        self.logs = storelog.logs()
         # Set the pidaobject base
         base.pidaobject.boss = self
         base.pidacomponent.__init__(self)

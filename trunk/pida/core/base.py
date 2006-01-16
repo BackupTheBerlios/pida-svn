@@ -43,7 +43,6 @@ class pidacomponent(log.pidalogger, pidaobject):
     """A single component."""
     def __init__(self, *args, **kw):
         log.pidalogger.__init__(self)
-        self.log.debug('Logger working here too')
         pidaobject.__init__(self, *args, **kw)
 
     def is_leaf(self):

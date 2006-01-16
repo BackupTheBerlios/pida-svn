@@ -21,24 +21,37 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-"""
-List of all the logs
-"""
 
-class Logs(object):
+class logs(object):
+    """
+    List of all the logs
+    """
     def __init__(self):
        self.logs = {}
     
     def push_record(self,key,record):
         self.logs[key] = record
 
-    def get_values(self):
-        return self.logs
-    values = property(get_values)
+    def get_top(self): ## DEBUG
+        return self.logs[self.logs.keys()[len(self.logs.keys())-1]]
+    top = property(get_top)
 
     def get_keys(self):
         return self.logs.keys()
     keys = property(get_keys)
 
-    #TODO search in it...
+    def get_values(self):
+        return self.logs
+    values = property(get_values)
 
+    def get_iter(self):
+        for log in self.logs.keys():
+            yield self.logs[log]
+    iter = property(get_iter)
+
+    def filter_list(self,property,filter):
+        for log in self.logs.keys():
+            if hasattr(self.logs[log],property):
+                if filter == getattr(self.logs[log],property):
+                    yield self.logs[log]
+    

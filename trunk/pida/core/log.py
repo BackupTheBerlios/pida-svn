@@ -25,7 +25,7 @@ import os
 import pida.core.boss
 import logging
 
-class KeepLogging(logging.Handler):
+class keep_handler(logging.Handler):
     """
     Handler for storing the logs
     """
@@ -39,7 +39,7 @@ class KeepLogging(logging.Handler):
         """
         self.base.boss.logs.push_record(record.created,record)
 
-class ViewLogging(logging.Handler):
+class view_handler(logging.Handler):
     """
     Handler for logging to a view
     """
@@ -61,7 +61,7 @@ class ViewLogging(logging.Handler):
                           '%(module)s.%(name)s:%(lineno)s '
                           '%(message)s')
             format = logging.Formatter(format_str)
-            handler = KeepLogging(self.base)
+            handler = keep_handler(self.base)
             handler.setFormatter(format)
             logger.addHandler(handler)
             logger.warn("service logmanager missing")
@@ -80,11 +80,12 @@ class pidalogger(object):
                       '%(message)s')
         format = logging.Formatter(format_str)
         handler = logging.StreamHandler()
+        #
         handler.setFormatter(format)
         logger.addHandler(handler)
         #
         if 'PIDA_LOG' in os.environ:
-            handler = KeepLogging(self)
+            handler = keep_handler(self)
             handler.setFormatter(format)
             logger.addHandler(handler)
         if 'PIDA_DEBUG' in os.environ:
@@ -96,7 +97,7 @@ class pidalogger(object):
 
     def set_view_handler(self):
         if 'PIDA_LOG' in os.environ:
-            handler = ViewLogging(self)
+            handler = view_handler(self)
             self.log.addHandler(handler)
             return True
         return False
