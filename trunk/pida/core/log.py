@@ -37,7 +37,7 @@ class KeepLogging(logging.Handler):
         """
         Stores the record
         """
-        self.base.boss.push_log_record(record.msecs,record)
+        self.base.boss.logs.push_record(record.created,record)
 
 class ViewLogging(logging.Handler):
     """

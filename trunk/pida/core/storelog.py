@@ -21,9 +21,6 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import os
-import logging
-
 """
 List of all the logs
 """
@@ -35,16 +32,13 @@ class Logs(object):
     def push_record(self,key,record):
         self.logs[key] = record
 
-    def get_log(self):
+    def get_values(self):
         return self.logs
-    dict = property(get_log)
+    values = property(get_values)
+
+    def get_keys(self):
+        return self.logs.keys()
+    keys = property(get_keys)
 
     #TODO search in it...
 
-class base(object):
-    def __init__(self):
-        self.logs = Logs()
-
-    def push_log_record(self,key,record):
-            self.logs.push_record(key, record)
-            

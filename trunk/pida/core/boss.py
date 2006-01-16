@@ -35,11 +35,12 @@ class ServiceNotFoundError(KeyError):
     the service does not exists.
     """
 
-class boss(base.pidacomponent,storelog.base):
+class boss(base.pidacomponent):
     """ The object in charge of everything """
     
     def __init__(self, application, env):
-        storelog.base.__init__(self)
+        # Starts the logger
+        self.logs = storelog.Logs()
         # Set the pidaobject base
         base.pidaobject.boss = self
         base.pidacomponent.__init__(self)
