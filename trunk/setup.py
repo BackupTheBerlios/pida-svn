@@ -25,6 +25,18 @@
 import os
 import sys
 
+VERSION_STRING = '0.3.0beta'
+
+def ensure_version_file_exists():
+    """Check for existence of version file and create if unavailable."""
+    version_path = os.path.join('data', 'version')
+    if not os.path.exists(version_path):
+        f = open(version_path, 'w')
+        f.write('%s\n' % VERSION_STRING)
+        f.close()
+
+ensure_version_file_exists()
+
 # setuptools import
 try:
     from setuptools import setup
@@ -43,7 +55,6 @@ except ImportError, e:
         sys.exit(1)
 
 
-VERSION_STRING = '0.3.0beta'
 
 
 # base pida packages
@@ -61,13 +72,6 @@ util_packages = ['pida.utils.vim',
                  'pida.utils.pyflakes']
 
 
-def ensure_version_file_exists():
-    """Check for existence of version file and create if unavailable."""
-    version_path = os.path.join('data', 'version')
-    if not os.path.exists(version_path):
-        f = open(version_path, 'w')
-        f.write('%s\n' % VERSION_STRING)
-        f.close()
 
 
 def discover_data_files(directory_name, extension):
@@ -93,7 +97,6 @@ def find_entry_points(directory_name, entrypoint_name):
 
 def main():
     """The main script."""
-    ensure_version_file_exists()
     packages = base_packages + util_packages
     services = find_entry_points('services', 'Service')
     plugins = find_entry_points('plugins', 'Plugin')
