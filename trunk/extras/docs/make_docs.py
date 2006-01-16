@@ -6,7 +6,7 @@ rst_dir = 'rst'
 html_dir = 'html'
 latex_dir = 'latex'
 
-rst2html_command = 'rst2html'
+rst2html_command = 'rst2html --toc-top-backlinks'
 rst2tex_command = 'rst2latex'
 
 def chdir():

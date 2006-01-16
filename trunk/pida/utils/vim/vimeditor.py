@@ -37,7 +37,6 @@ class vim_editor(object):
             rtype = types.string
             default = ''
 
-
     def init(self):
         self.__files = {}
         self.__old_shortcuts = {'n':{}, 'v':{}}
@@ -150,10 +149,6 @@ class vim_editor(object):
         self.__cw.change_cursor(self.server, 1, linenumber)
 
     def vim_bufferchange(self, server, cwd, filename):
-        #for fcall, args in self.__bufferevents:
-        #    fcall(*args)
-        #self.__bufferevents = []
-        #self.manager.emit_event('file-opened', filename=filename)
         if not filename:
             return
         if os.path.abspath(filename) != filename:
@@ -187,7 +182,6 @@ class vim_editor(object):
                            kpname=name)
 
     def vim_shutdown(self, server, *args):
-        print 'vim shutdown'
         self.clean_after_shutdown(server)
         self.after_shutdown(server)
 
@@ -208,3 +202,4 @@ class vim_editor(object):
     def get_current_file(self):
         return self.__currentfile
     current_file = property(get_current_file)
+
