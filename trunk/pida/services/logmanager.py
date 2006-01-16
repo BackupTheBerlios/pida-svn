@@ -249,8 +249,6 @@ class log_history(contentview.content_view):
                 logs = self.__logs.filter_list('levelname',self.__filter) 
             for log in logs:                                              
                 self.add_item(log)
-            if self.boss.logs.last != None:
-                self.single_view.show_log_item(self.boss.logs.last)
 
     # Actions
 
@@ -318,6 +316,8 @@ class log_manager(service.service):
     def cmd_refresh(self):
         for view in self.multi_views:
             view.refresh()
+        if self.single_view:
+            self.single_view.show_log_item(self.boss.logs.last)
 
     def cmd_show_history(self):
         view = self.create_multi_view(logs=self.boss.logs)
