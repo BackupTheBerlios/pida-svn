@@ -21,13 +21,14 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-## Follow TODO markers in the code to see what needs to be done.
-## Documentation will follow (soon :)
+## TODO: Follow TODO markers in the code to see what needs to be done.
+## TODO: Documentation will follow (soon :)
 
 import time
 import gtk
 
 import pida.pidagtk.tree as tree
+import pida.pidagtk.icons as icons
 import pida.pidagtk.entry as entry
 import pida.pidagtk.toolbar as toolbar
 import pida.pidagtk.contentview as contentview
@@ -42,17 +43,46 @@ from logging import getLevelName
 from cgi import escape
 
 class log_item(tree.IconTreeItem):
-    ## TODO add icons
+    ## TODO: add icons
 
     def __init__(self,record):
-        tree.TreeItem.__init__(self, record.created, record)
         self.__detailed = False
+        ( img, self.color ) = self.__get_color_n_img(record)
+        tree.IconTreeItem.__init__(self, record.created, record,image=img)
+
+    def __get_color_n_img(self,record):
+        if record.levelno == 0: # NOTSET
+            return (icons.icons.get_image("about"), "#00FFFF")
+        if record.levelno == 10: # DEBUG
+            return (icons.icons.get_image("dialog-info"), "#3ba33b")
+        if record.levelno == 20: # INFO
+            return (icons.icons.get_image("info"), "#000000")
+        if record.levelno == 30: # WARNING
+            return (icons.icons.get_image("dialog-warning"), "#ffa33b")
+        if record.levelno == 40: # ERROR
+            return (icons.icons.get_image("no"), "#ff00fc")
+        if record.levelno == 50: # CRITICAL
+            return (icons.icons.get_image("stop"), "#FF0000")
 
     def set_detailed(self,det):
         self.__detailed = det
         if hasattr(self,'reset_markup'):
             self.reset_markup()
     
+    def get_color(self,str):
+        return '<span color="%s">%s</span>' % (self.color, str)
+
+    def __get_markup(self):
+        if self.__detailed == True:
+            return escape('%s %s:%s\n%s\n%s %s' % ( self.name, 
+                                    self.module, self.lineno, 
+                                    self.message,
+                                    self.levelname, self.created ))
+        else:
+            return self.get_color(escape('%s %s : %s' % ( self.name, 
+                                    self.module, self.message )))
+    markup = property(__get_markup)
+
     # properties
     def __get_name(self):
         return self.value.name
@@ -107,42 +137,7 @@ class log_item(tree.IconTreeItem):
         return self.value.getMessage()
     message = property(__get_message)
 
-    def __set_color_n_img(self):
-        if self.levelno == 0: # NOTSET
-#            icons.icons.get_image('???') ## TODO
-            self.color = "#00FFFF"
-        else:
-            if self.levelno == 10: # DEBUG
-                self.color = "#3ba33b"
-            else:
-                if self.levelno == 20: # INFO
-                    self.color = "#000000"
-                else:
-                    if self.levelno == 30: # ERROR
-                        self.color = "#ff00fc"
-                    else:
-                        if self.levelno == 40: # WARNING
-                            self.color = "#ffa33b"
-                        else:
-                            if self.levelno == 50: # CRITICAL
-                                self.color = "#FF0000"
-
-    def get_color(self,str):
-        self.__set_color_n_img()
-        return '<span color="%s">%s</span>' % (self.color, str)
-
-    def __get_markup(self):
-        if self.__detailed == True:
-            return escape('%s %s:%s\n%s\n%s %s' % ( self.name, 
-                                    self.module, self.lineno, 
-                                    self.message,
-                                    self.levelname, self.created ))
-        else:
-            return self.get_color(escape('%s %s : %s' % ( self.name, 
-                                    self.module, self.message )))
-    markup = property(__get_markup)
-
-class log_tree(tree.Tree):
+class log_tree(tree.IconTree):
     '''Tree listing all the pastes'''
     EDIT_BUTTONS = False
     SORT_BY = 'created'
@@ -151,6 +146,7 @@ class log_tree(tree.Tree):
         '''Initializes the tree'''
         tree.Tree.__init__(self)
         self.set_property('markup-format-string', '%(markup)s')
+        self.model.set_sort_column_id(0, gtk.SORT_ASCENDING)
 
     def push(self, record):
         '''Adds a paste to the Tree'''
@@ -175,7 +171,7 @@ class log_watch(contentview.content_view):
         self.__label = gtk.Label()
         self.widget.pack_start(self.__label,expand=False)
 
-    def markup(self,item): ## TODO
+    def markup(self,item): ## TODO: refine markups
         self.set_long_title("%s"%item.name)
         return "<b>%s</b> <i>%s</i>\n%s %s:%s\n<b>%s</b>\n" % (
             item.get_color(item.levelname), escape(item.created),
@@ -190,7 +186,7 @@ class log_watch(contentview.content_view):
         self.__label.show()
 
 class log_history(contentview.content_view):
-#    ICON_NAME = '' ## TODO
+#    ICON_NAME = '' ## TODO: Choose icon
     LONG_TITLE = 'Log viewer'
     SHORT_TITLE = 'log'
     ICON_TEXT = 'files'
@@ -220,8 +216,8 @@ class log_history(contentview.content_view):
         self.__filter_entry = entry.completed_entry()
         
         hb.add(self.__filter_entry)
-        self.__filter_add = gtk.Button('Add','Add')
-        self.__filter_add.set_use_stock(True)
+        self.__filter_add = gtk.Button("")
+        self.__filter_add.set_image(icons.icons.get_image("add"))
         self.__filter_add.connect('clicked', self.cb_filter_add)
         hb.add(self.__filter_add)
         self.widget.pack_start(hb,False,False)
@@ -258,26 +254,28 @@ class log_history(contentview.content_view):
 
     def cb_record_clicked(self,record,tree_item):
         '''Callback function called when an item is selected in the TreeView'''
-        self.__tree_selected = tree_item.value
-        self.__tree_selected.set_detailed(True)
         if self.__tree_detailled != None:
             self.__tree_detailled.set_detailed(False)
+
+        self.__tree_selected = tree_item.value
+        self.__tree_selected.set_detailed(True)
+
         self.__tree_detailled = tree_item.value
 
     def cb_record_db_clicked(self,record,tree_item):
         '''Callback function called when an item is double clicked, and show it
         in the panel ? '''
-        pass ## TODO
+        pass ## TODO: Show the record in the watcher
 
     def cb_record_m_clicked(self,record,tree_item):
         '''Callback function called when an item is middle clicked, and copy it
         to the mouse buffer clipboard ?'''
-        pass ## TODO
+        pass ## TODO: copy the message in the buffer clipboard
 
     def cb_record_r_clicked(self, paste, tree_item, event):
         '''Callback function called when an item is right clicked, and show the
         contextual menu...'''
-        pass ## TODO
+        pass ## TODO: show contextual menu
 
 class log_manager(service.service):
     NAME = 'log manager'
