@@ -239,7 +239,7 @@ class Tree(gtk.VBox):
         row = [key, titem, self.__get_markup(item)]
         niter = self.model.append(parent, row)
         def reset():
-            self.model.set_value(niter, 2, self.__get_markup(item))
+            self.model.set_value(niter, 2, self.get_markup(item))
         titem.reset_markup = reset
         item.reset_markup = reset
         return niter
@@ -406,13 +406,12 @@ class IconTree(Tree):
         titem = TreeItem(key, item)
         row = [key, titem, self.get_markup(item), pixbuf]
         niter = self.model.append(parent, row)
-        def reset(oself):
-            self.model.set_value(niter, 2, self.__get_markup(item))
-        #item.reset_func = reset
+        def reset():
+            self.model.set_value(niter, 2, self.get_markup(item))
+        titem.reset_markup = reset
+        item.reset_markup = reset
         return niter
         
-
-
 def test():
     w = gtk.Window()
     v = gtk.VBox()
