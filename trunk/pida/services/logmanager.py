@@ -206,7 +206,7 @@ class log_history(contentview.content_view):
         self.service.log.debug('new log manager with filter on %s' % filter)
 
         self.__filter = filter
-        if filter != None or filter != '':
+        if filter not in (None , ''):
             self.set_long_title('Log filter : %s' % filter)
 
         self.__logs = logs
@@ -242,30 +242,15 @@ class log_history(contentview.content_view):
 
     def refresh(self):
         self.__log_tree.clear()
-        import os
-        if 'SHOW_BUG' in os.environ:
-##################### WHY IS IT NOT WORKING ?! ########################### DEBUG
-            if self.__logs != None:                                           
-                if self.__filter in  (None, ''):                              
-                    logs = self.__logs.iter                                   
-                else:                                                         
-                    logs = self.__logs.filter_list('levelname',self.__filter) 
-                for log in logs:                                              
-                    print 'FOO'         # These two lines get executed when
-                    self.add_item(log)  # leaving pida... not really useful :(
-############################################################################
-        else:
-############################################################################
-            if self.__logs != None:
-                for log in self.__logs.keys:
-                    # Filter on levelname
-                    if self.__filter == self.__logs.values[log].levelname:
-                        self.add_item(self.__logs.values[log])
-                    else:
-                        # If no filter
-                        if self.__filter in ( None, '' ):
-                            self.add_item(self.__logs.values[log])
-############################################################################
+        if self.__logs != None:                                           
+            if self.__filter in  (None, ''):                              
+                logs = self.__logs.iter                                   
+            else:                                                         
+                logs = self.__logs.filter_list('levelname',self.__filter) 
+            for log in logs:                                              
+                self.add_item(log)
+            if self.boss.logs.last != None:
+                self.single_view.show_log_item(self.boss.logs.last)
 
     # Actions
 
@@ -327,19 +312,39 @@ class log_manager(service.service):
     # commands
 
     def cmd_filter(self,filter):
-        self.create_multi_view(filter=filter,logs=self.boss.logs)
+        view = self.create_multi_view(filter=filter,logs=self.boss.logs)
+        view.refresh()
 
     def cmd_refresh(self):
         for view in self.multi_views:
             view.refresh()
-        else:
-            if self.__first:
-                self.__first = False
-                self.create_multi_view(logs=self.boss.logs)
-                self.create_single_view()
-            self.single_view.show_log_item(self.boss.logs.top)
+
+    def cmd_show_history(self):
+        view = self.create_multi_view(logs=self.boss.logs)
+        view.refresh()
+
+    def cmd_show_watcher(self):
+        self.create_single_view()
+        self.single_view.show_log_item(self.boss.logs.last)
 
     # ui actions
+
+    def act_show_log_history(self,action):
+        self.call('show_history')
+
+    def act_show_log_watcher(self,action):
+        self.call('show_watcher')
+
+    def get_menu_definition(self):
+        return """
+        <menubar>
+        <menu name="base_tools" action="base_tools_menu">
+        <separator />
+        <menuitem name="logmanager+show_log_history" action="logmanager+show_log_history" />
+        <menuitem name="logmanager+show_log_watcher" action="logmanager+show_log_watcher" />
+        </menu>
+        </menubar>        
+        """
 
 Service = log_manager
 

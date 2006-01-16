@@ -37,7 +37,18 @@ class keep_handler(logging.Handler):
         """
         Stores the record
         """
-        self.base.boss.logs.push_record(record.created,record)
+        if hasattr(self.base,"boss"):
+            self.base.boss.logs.push_record(record.created,record)
+        else:
+            logger = logging.getLogger(self.__class__.__name__)
+            format_str = ('%(levelname)s '
+                          '%(module)s.%(name)s:%(lineno)s '
+                          '%(message)s')
+            format = logging.Formatter(format_str)
+            handler = logging.StreamHandler()
+            handler.setFormatter(format)
+            logger.addHandler(handler)
+            logger.warn("Log record couldn't be saved :\n * %s"%format.format(record))
 
 class view_handler(logging.Handler):
     """
@@ -74,24 +85,22 @@ class pidalogger(object):
         
     def __build_logger(self, name):
         logger = logging.getLogger(name)
-        # We keep STDOUT as handler for now
+        
         format_str = ('%(levelname)s '
                       '%(module)s.%(name)s:%(lineno)s '
                       '%(message)s')
         format = logging.Formatter(format_str)
-        handler = logging.StreamHandler()
-        #
-        handler.setFormatter(format)
-        logger.addHandler(handler)
-        #
-        if 'PIDA_LOG' in os.environ:
-            handler = keep_handler(self)
+
+        if False: ## TODO Use a preference for that
+            handler = logging.StreamHandler()
             handler.setFormatter(format)
             logger.addHandler(handler)
-        if 'PIDA_DEBUG' in os.environ:
-            level = logging.DEBUG
-        else:
-            level = logging.INFO
+
+        handler = keep_handler(self)
+        handler.setFormatter(format)
+        logger.addHandler(handler)
+
+        level = logging.DEBUG
         logger.setLevel(level)
         return logger
 

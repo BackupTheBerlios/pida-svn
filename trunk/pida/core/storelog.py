@@ -28,13 +28,15 @@ class logs(object):
     """
     def __init__(self):
        self.logs = {}
+       self.__last = None
     
     def push_record(self,key,record):
         self.logs[key] = record
+        self.__last = record
 
-    def get_top(self): ## DEBUG
-        return self.logs[self.logs.keys()[len(self.logs.keys())-1]]
-    top = property(get_top)
+    def get_last(self):
+        return self.__last
+    last = property(get_last)
 
     def get_keys(self):
         return self.logs.keys()
