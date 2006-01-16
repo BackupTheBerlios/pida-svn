@@ -77,17 +77,20 @@ class Buffermanager(service.service):
     def bnd_editormanager_started(self):
         for filename in self.boss.positional_args:
             self.call('open_file', filename=filename)
-        if self.opt('sessions', 'automatically_load_last_session'):
-            most_recent = os.path.join(self.boss.pida_home,
+        if not self.__session_loaded:
+            if self.opt('sessions', 'automatically_load_last_session'):
+                most_recent = os.path.join(self.boss.pida_home,
                                        'most-recent.session')
-            if os.path.exists(most_recent):
-                self.call('load_session', session_filename=most_recent)
+                if os.path.exists(most_recent):
+                    self.call('load_session', session_filename=most_recent)
+            self.__session_loaded = True
         
 
     def init(self):
         self.__currentdocument = None
         self.__documents = {}
         self.__filenames = {}
+        self.__session_loaded = False
         self.__editor = None
 
     def bind(self):
