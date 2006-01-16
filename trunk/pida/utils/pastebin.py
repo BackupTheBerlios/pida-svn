@@ -268,10 +268,10 @@ class paste_bin(object):
     id = property(get_id)
 
     def __wait_editor(self):
-        self.__editor.pulse()
+        self.__editor.service.plugin_view.pulse()
 
     def __close_editor(self):
-        self.__editor.stop_pulse()
+        self.__editor.service.plugin_view.stop_pulse()
         self.__editor.close()
 
     def retrieve_data(self):

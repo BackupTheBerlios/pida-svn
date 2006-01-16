@@ -68,10 +68,6 @@ class paste_editor_view(gladeview.glade_view):
         self.__title_entry.set_text('') # TODO: Use options
         self.__nickname_entry.set_text('') # TODO: Use options
         self.__text_entry = self.get_widget('post_text_entry')
-        self.__pulse_bar = progressbar.progress_bar()
-        self.widget.pack_start(self.__pulse_bar, expand=False)
-        self.__pulse_bar.set_size_request(-1, 12)
-        self.__pulse_bar.set_pulse_step(0.01)
 
     def set_paste_bin(self, pbin):
         '''Sets a pastebin to the view in order to get informations'''
@@ -130,14 +126,6 @@ class paste_editor_view(gladeview.glade_view):
                 self.__options[option].set_active(0)
         self.__text_entry.get_buffer().set_text("")
 
-    # public api
-
-    def pulse(self):
-        '''Starts the pulse'''
-        self.__pulse_bar.show_pulse()
-
-    def stop_pulse(self):
-        self.__pulse_bar.stop_pulse()
 
     # UI callbacks
 
@@ -228,6 +216,10 @@ class paste_history_view(contentview.content_view):
         self.__history_tree.connect('double-clicked', self.cb_paste_db_clicked)
         self.__history_tree.connect('middle-clicked', self.cb_paste_m_clicked)
         self.__history_tree.connect('right-clicked', self.cb_paste_r_clicked)
+        self.__pulse_bar = progressbar.progress_bar()
+        self.widget.pack_start(self.__pulse_bar, expand=False)
+        self.__pulse_bar.set_size_request(-1, 12)
+        self.__pulse_bar.set_pulse_step(0.01)
 
     def set(self, pastes):
         '''Sets the paste list to the tree view.
@@ -307,6 +299,13 @@ class paste_history_view(contentview.content_view):
                 menu.append(mi)
         menu.show_all()
         menu.popup(None, None, None, event.button, event.time)
+
+    def pulse(self):
+        '''Starts the pulse'''
+        self.__pulse_bar.show_pulse()
+
+    def stop_pulse(self):
+        self.__pulse_bar.stop_pulse()
         
 
 class paste_manager(service.service):
