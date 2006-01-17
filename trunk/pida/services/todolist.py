@@ -48,6 +48,8 @@ class todo_view(contentview.content_view):
     LONG_TITLE = 'Todo Viewer'
     ICON_NAME = 'list'
 
+    HAS_CONTROL_BOX = False
+
     def init(self):
         self.__list = tree.Tree()
         self.widget.pack_start(self.__list)
