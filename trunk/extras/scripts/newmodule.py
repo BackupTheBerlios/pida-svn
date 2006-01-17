@@ -59,10 +59,10 @@ def get_module_details():
         raise Exception, 'Must enter a module name.'
     authorname = raw_input('Enter your name: ').strip()
     if not authorname:
-        authorname = 'Ali Afshar'
+        authorname = 'The PIDA Project'
     authoremail = raw_input('Enter your email address: ')
     if not authoremail:
-        authoremail = 'aafshar@gmail.com'
+        authoremail = ''
     return modulename, authorname, authoremail
 
 if __name__ == '__main__':
