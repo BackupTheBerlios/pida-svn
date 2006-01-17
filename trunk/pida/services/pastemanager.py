@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
-#Copyright (c) 2005 Ali Afshar aafshar@gmail.com
-#Copyright (c) 2006 Bernard Pratz aka Guyzmo, guyzmo@m0g.net
+#Copyright (c) 2005-2006 The PIDA Project
 
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
