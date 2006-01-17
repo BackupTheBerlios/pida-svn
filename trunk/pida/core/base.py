@@ -53,8 +53,7 @@ class pidacomponent(log.pidalogger, pidaobject):
         """
         Function to tell the wanted logging behaviour
         """
-        use_stream_handler('ERROR')
-        use_notification_handler()
+        self.use_stream_handler('ERROR')
 
     def is_leaf(self):
         return True

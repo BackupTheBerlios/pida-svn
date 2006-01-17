@@ -32,6 +32,7 @@ import pida.pidagtk.icons as icons
 import pida.pidagtk.entry as entry
 import pida.pidagtk.toolbar as toolbar
 import pida.pidagtk.contentview as contentview
+#import pida.pidagtk.HyperLink as hyperlink
 
 # pida utils import
 import pida.core.service as service
@@ -43,7 +44,6 @@ from logging import getLevelName
 from cgi import escape
 
 class log_item(tree.IconTreeItem):
-    ## TODO: add icons
 
     def __init__(self,record):
         self.__detailed = False
@@ -169,9 +169,9 @@ class log_watch(contentview.content_view):
 
     def init(self):
         self.__label = gtk.Label()
-        self.widget.pack_start(self.__label,expand=False)
+#        self.__label = hyperlink("")
 
-    def markup(self,item): ## TODO: refine markups
+    def markup(self,item):
         self.set_long_title("%s"%item.name)
         return "<b>%s</b> <i>%s</i>\n%s %s:%s\n<b>%s</b>\n" % (
             item.get_color(item.levelname), escape(item.created),
@@ -179,14 +179,32 @@ class log_watch(contentview.content_view):
             escape(item.message))
 
     def show_log_item(self,record):
-        item = log_item(record)
-        self.__label.set_text(self.markup(item))
+        self.widget.removeAll()
+        self.__item = log_item(record)
+        self.__label.set_text(self.markup(self.__item))
         self.__label.set_use_markup(True)
         self.__label.set_line_wrap(True)
+#        self.__button = gtk.Button("TEST")
+#        self.__button.connect('clicked', self.cb_clicked)
+        self.widget.pack_start(self.__label,True)
+#        self.widget.pack_start(self.__button,True)
         self.__label.show()
 
+#        if hasattr(record,'callback'):
+#            foo = record.callback()
+#            foo.call()
+#        else:
+#            print 'has no attribute callback'
+
+    def cb_clicked(self,but):
+        pass
+#        self.service.boss.call_command('editormanager', 'edit',
+#            linenumber=self.__item.pathname)
+#        self.service.boss.call_command('editormanager', 'goto_line',
+#            linenumber=self.__item.lineno)
+
 class log_history(contentview.content_view):
-#    ICON_NAME = '' ## TODO: Choose icon
+    ICON_NAME = 'logviewer'
     LONG_TITLE = 'Log viewer'
     SHORT_TITLE = 'log'
     ICON_TEXT = 'files'
@@ -251,6 +269,9 @@ class log_history(contentview.content_view):
     def cb_filter_add(self,but):
         self.service.cmd_filter(filter=self.__filter_entry.get_text())
         self.service.log.debug("Opened a new log filter view")
+#        callback=foo
+#        print 'testing callback'
+#        self.service.log.critical("TEST INPUT",callback)
 
     def cb_record_clicked(self,record,tree_item):
         '''Callback function called when an item is selected in the TreeView'''
@@ -276,6 +297,10 @@ class log_history(contentview.content_view):
         '''Callback function called when an item is right clicked, and show the
         contextual menu...'''
         pass ## TODO: show contextual menu
+
+#class foo:
+#    def call(self):
+#        print 'clicked !'
 
 class log_manager(service.service):
     NAME = 'log manager'
@@ -309,7 +334,7 @@ class log_manager(service.service):
 
     def cmd_filter(self,filter):
         view = self.create_multi_view(filter=filter,logs=self.boss.logs)
-        view.refresh()
+        self.cmd_refresh()
 
     def cmd_refresh(self):
         for view in self.multi_views:

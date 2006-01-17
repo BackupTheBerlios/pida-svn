@@ -71,9 +71,7 @@ class notification_handler(logging.Handler):
         Format the record and send it
         """
         try:
-            if hasattr(record,'commandname'):
-                if record.commandname != 'logmanager':
-                    self.base.call_command('logmanager', 'refresh')
+            self.base.call_command('logmanager', 'refresh')
         except pida.core.boss.ServiceNotFoundError:
             logger = logging.getLogger(self.__class__.__name__)
             format_str = ('%(levelname)s '
@@ -112,7 +110,6 @@ class pidalogger(object):
     # private interface
     def __build_logger(self, name):
         logger = logging.getLogger(name)
-        self.__keeping = False
         
         level = logging.DEBUG
         logger.setLevel(level)
@@ -152,6 +149,7 @@ class pidalogger(object):
         if hasattr(obj,'logs'):
             self.__base = obj
             self.use_keep_handler()
+            self.init_log()
         else:
             self.use_stream_handler()
 
@@ -169,23 +167,23 @@ class pidalogger(object):
         """
         handler = logging.StreamHandler()
         if level != None:
-            handler.set_level(logging._levelNames[level])
+            handler.setLevel(logging._levelNames[level])
         handler.setFormatter(self.__format)
         self.log.addHandler(handler)
 
     def use_keep_handler(self,level=None):
         handler = keep_handler(self.__base)
-        self.__keeping = True
         if level != None:
-            handler.set_level(logging._levelNames[level])
+            handler.setLevel(logging._levelNames[level])
         self.log.addHandler(handler)
 
     def use_notification_handler(self,level=None):
-        if self.__keeping == False:
+        if self.__base.logs == None:
             return False
         handler = notification_handler(self.__base)
         if level != None:
-            handler.set_level(logging._levelNames[level])
+            handler.setLevel(logging._levelNames[level])
         handler.setFormatter(self.__format)
         self.log.addHandler(handler)
         return True
+
