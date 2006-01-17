@@ -28,12 +28,21 @@ fi
 
 # build pida
 echo "Building pida ..."
-( cd $pidadir
-  python setup.py rotate --dist-dir=$distdir --match=.egg --keep=3
-  python setup.py build
-  grep '^Version:' pida.egg-info/PKG-INFO | cut -d' ' -f2- > data/version
-  python setup.py bdist --dist-dir=$distdir --formats=egg
-) 2>&1 > /dev/null
+if ( cd $pidadir; {
+    touch data/version
+    python setup.py rotate --dist-dir=$distdir --match=.egg --keep=3 &&
+    python setup.py build &&
+    grep '^Version:' pida.egg-info/PKG-INFO | cut -d' ' -f2- > data/version &&
+    python setup.py bdist --dist-dir=$distdir --formats=egg
+    } 2>&1 ) > $pidadir/buildlog.$$; then
+    rm $pidadir/buildlog.$$
+else
+    echo "ERROR: python setup.py failed, log will follow"
+    mv $pidadir/buildlog.$$ $pidadir/buildlog.log
+    sed -e 's,^,  ,' $pidadir/buildlog.log
+    echo "ERROR: END"
+    exit 1
+fi
 
 pyver=`python -V 2>&1 | cut -d' ' -f2 | cut -c1-3`
 version=`cat $pidadir/data/version`
