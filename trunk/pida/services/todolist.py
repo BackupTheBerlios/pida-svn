@@ -37,12 +37,11 @@ types = service.types
 
 class todo_hint(object):
 
-    def __init__(self, line, linenumber):
+    def __init__(self, line, linenumber, marker):
         self.key = linenumber
-        line = line.replace('TODO:', '')
-        line = line.replace('TODO', '')
-        self.line = line.strip().strip('#').strip()
+        self.line = line
         self.linenumber = linenumber
+        self.marker = marker
 
 class todo_view(contentview.content_view):
     
@@ -53,7 +52,9 @@ class todo_view(contentview.content_view):
         self.__list = tree.Tree()
         self.widget.pack_start(self.__list)
         self.__list.set_property('markup-format-string',
-                                 '<tt>%(linenumber)s</tt> <b>%(line)s</b>')
+                                 '<tt>%(linenumber)s </tt>'
+                                 '(<span color="#0000c0">%(marker)s</span>)\n'
+                                 '<b>%(line)s</b>')
         self.__list.connect('double-clicked', self.cb_list_d_clicked)
 
     def set_messages(self, messages):
@@ -72,10 +73,22 @@ class todo(service.service):
     display_name = 'TODO List'
 
     class todo_definition(defs.optiongroup):
-        class insist_on_trailing_colon(defs.option):
-            """Whether the TODO search needs a trailing : character to recognise a TODO"""
+        class use_TODO(defs.option):
+            """Whether the TODO search will use 'TODO' statements"""
             rtype = types.boolean
-            default = False
+            default = True
+        class use_todo(defs.option):
+            """Whether the TODO search will use 'todo' statements"""
+            rtype = types.boolean
+            default = True
+        class use_FIXME(defs.option):
+            """Whether the TODO search will use 'FIXME' statements"""
+            rtype = types.boolean
+            default = True
+        class additional_markers(defs.option):
+            """Additional markers that will be used for TODO searching. (comma separated list)"""
+            rtype = types.string
+            default = ''
 
     class todolist(defs.language_handler):
 
@@ -110,12 +123,24 @@ class todo(service.service):
         """Check the given lines for TODO messages."""
         messages = []
         for i, line in enumerate(lines):
-            searchfor = 'TODO'
-            if self.opt('todo_definition', 'insist_on_trailing_colon'):
-                searchfor = '%s:' % searchfor
-            if searchfor in line:
-                messages.append(todo_hint(line, i + 1))
+            for marker in self.__get_markers():
+                if marker in line:
+                    todo = line.replace(marker, '')
+                    todo = todo.strip().strip('#:').strip()
+                    messages.append(todo_hint(todo, i + 1, marker))
         return messages
+
+    def __get_markers(self):
+        if self.opt('todo_definition', 'use_TODO'):
+            yield 'TODO'
+        if self.opt('todo_definition', 'use_todo'):
+            yield 'todo'
+        if self.opt('todo_definition', 'use_FIXME'):
+            yield 'FIXME'
+        for s in self.opt('todo_definition', 'additional_markers').split(','):
+            marker = s.strip()
+            if marker:
+                yield marker
             
 
 Service = todo
