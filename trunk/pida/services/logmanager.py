@@ -384,7 +384,7 @@ class log_watch(contentview.content_view):
             linenumber=self.__item.lineno)
 
 class log_history(contentview.content_view):
-    ICON_NAME = 'how do I add logviewer.png ?'
+    ICON_NAME = 'logviewer'
     LONG_TITLE = 'Log viewer'
     SHORT_TITLE = 'log'
     ICON_TEXT = 'files'

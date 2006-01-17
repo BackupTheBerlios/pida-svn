@@ -61,3 +61,4 @@ gtk-new new
 view_detailed sourcetree
 devhelp library
 gvim vim
+logviewer logviewer
