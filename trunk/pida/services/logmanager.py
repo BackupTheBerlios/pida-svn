@@ -64,7 +64,7 @@ class log_item(tree.IconTreeItem):
         if record.levelno == 50: # CRITICAL
             return (icons.icons.get_image("stop"), "#FF0000")
         if record.levelno == 60: # USER_INPUT
-            return (icons.icons.get_image("dialog-question"), "#FF0000")
+            return (icons.icons.get_image("dialog-question"), "#880000")
 
     def set_detailed(self,det):
         self.__detailed = det
@@ -75,33 +75,57 @@ class log_item(tree.IconTreeItem):
         return '<span color="%s">%s</span>' % (self.color, str)
 
     def __get_markup(self):
-        if self.__detailed == True:
-            if len(self.value.args) == 3:
-                if self.value.args[0] == 'cb_yesno':
+        if len(self.value.args) == 3:
+            if self.value.args[0] == 'cb_yesno':
+                if self.__detailed == True:
                     return escape('Question at %s %s:%s\n%s\n%s %s' % \
                                 ( self.name, self.module, self.lineno, 
                                   self.value.args[1],
                                   self.levelname, self.created ))
-                if self.value.args[0] == 'cb_okcancel':
+                else:
+                    return self.get_color(escape('Question at %s/%s : %s' % \
+                               ( self.name, self.module, self.value.args[1] )))
+            if self.value.args[0] == 'cb_okcancel':
+                if self.__detailed == True:
                     return escape('Confirmation at %s %s:%s\n%s\n%s %s' % \
                                 ( self.name, self.module, self.lineno, 
                                   self.value.args[1],
                                   self.levelname, self.created ))
-                if self.value.args[0] == 'cb_ok':
+                else:
+                    return self.get_color(escape(
+                                'Confirmation at %s/%s : %s' % \
+                               ( self.name, self.module, self.value.args[1] )))
+            if self.value.args[0] == 'cb_ok':
+                if self.__detailed == True:
                     return escape('Validation at %s %s:%s\n%s\n%s %s' % \
                                 ( self.name, self.module, self.lineno, 
                                   self.value.args[1],
                                   self.levelname, self.created ))
-                if self.value.args[0] == 'cb_entry_ok':
+                else:
+                    return self.get_color(escape('Validation at %s/%s : %s' % \
+                               ( self.name, self.module, self.value.args[1] )))
+            if self.value.args[0] == 'cb_entry_ok':
+                if self.__detailed == True:
                     return escape('Input entry at %s %s:%s\n%s\n%s %s' % \
                                 ( self.name, self.module, self.lineno, 
                                   self.value.args[1],
-                                  self.levelname, self.created ))
-                if self.value.args[0] == 'cb_entry_okcancel':
-                    return escape('Input entry confirmation at %s %s:%s\n%s\n%s %s' % \
+                                 self.levelname, self.created ))
+                else:
+                    return self.get_color(escape(
+                                'Input entry at %s/%s : %s' % \
+                               ( self.name, self.module, self.value.args[1] )))
+            if self.value.args[0] == 'cb_entry_okcancel':
+                if self.__detailed == True:
+                    return escape(
+                      'Input entry confirmation at %s %s:%s\n%s\n%s %s' % \
                                 ( self.name, self.module, self.lineno, 
                                   self.value.args[1],
                                   self.levelname, self.created ))
+                else:
+                    return self.get_color(escape(
+                               'Input entry confirmation at %s %s : %s' % \
+                               ( self.name, self.module, self.value.args[1] )))
+        if self.__detailed == True:
             return escape('%s %s:%s\n%s\n%s %s' % ( self.name, 
                                     self.module, self.lineno, 
                                     self.message,
@@ -226,17 +250,18 @@ class log_watch(contentview.content_view):
                 label.show()
                 vb.pack_start(label,True)
 
-                hb = gtk.HBox()
+                bb = gtk.HButtonBox()
+                bb.set_layout(gtk.BUTTONBOX_END)
                 but_yes = gtk.Button("Yes")
                 but_yes.connect('clicked',cb_yes_clicked)
                 but_yes.show()
                 but_no = gtk.Button("No")
                 but_no.connect('clicked',cb_no_clicked)
                 but_no.show()
-                hb.pack_start(but_yes)
-                hb.pack_start(but_no)
-                hb.show()
-                vb.pack_start(hb,True)
+                bb.pack_start(but_yes,False)
+                bb.pack_start(but_no,False)
+                bb.show()
+                vb.pack_start(bb,True)
 
                 vb.show()
                 return
@@ -252,17 +277,18 @@ class log_watch(contentview.content_view):
                 label.show()
                 vb.pack_start(label,True)
 
-                hb = gtk.HBox()
+                bb = gtk.HButtonBox()
+                bb.set_layout(gtk.BUTTONBOX_END)
                 but_ok = gtk.Button("Ok")
                 but_ok.connect('clicked',cb_ok_clicked)
                 but_ok.show()
                 but_cancel = gtk.Button("Cancel")
                 but_cancel.connect('clicked',cb_cancel_clicked)
                 but_cancel.show()
-                hb.pack_start(but_ok,False)
-                hb.pack_start(but_cancel,False)
-                hb.show()
-                vb.pack_start(hb,True)
+                bb.pack_start(but_ok,False)
+                bb.pack_start(but_cancel,False)
+                bb.show()
+                vb.pack_start(bb,True)
 
                 vb.show()
                 return
@@ -276,10 +302,14 @@ class log_watch(contentview.content_view):
                 label.show()
                 vb.pack_start(label,True)
 
+                bb = gtk.HButtonBox()
+                bb.set_layout(gtk.BUTTONBOX_END)
                 but_ok = gtk.Button("Ok")
                 but_ok.connect('clicked',cb_ok_clicked)
                 but_ok.show()
-                vb.pack_start(but_ok,False)
+                bb.pack_start(but_ok,False)
+                bb.show()
+                vb.pack_start(bb,True)
 
                 vb.show()
                 return
@@ -294,12 +324,17 @@ class log_watch(contentview.content_view):
                 label.show()
                 vb.pack_start(label,True)
 
+                entry.show()
                 vb.pack_start(entry,True)
 
+                bb = gtk.HButtonBox()
+                bb.set_layout(gtk.BUTTONBOX_END)
                 but_ok = gtk.Button("Ok")
                 but_ok.connect('clicked',cb_ok_clicked)
                 but_ok.show()
-                vb.pack_start(but_ok,False)
+                bb.pack_start(but_ok,False)
+                bb.show()
+                vb.pack_start(bb,True)
 
                 vb.show()
                 return
@@ -316,19 +351,21 @@ class log_watch(contentview.content_view):
                 label.show()
                 vb.pack_start(label,True)
 
+                entry.show()
                 vb.pack_start(entry,True)
 
-                hb = gtk.HBox()
+                bb = gtk.HButtonBox()
+                bb.set_layout(gtk.BUTTONBOX_END)
                 but_ok = gtk.Button("Ok")
                 but_ok.connect('clicked',cb_ok_clicked)
                 but_ok.show()
                 but_cancel = gtk.Button("Cancel")
                 but_cancel.connect('clicked',cb_cancel_clicked)
                 but_cancel.show()
-                hb.pack_start(but_ok,False)
-                hb.pack_start(but_cancel,False)
-                hb.show()
-                vb.pack_start(hb,True)
+                bb.pack_start(but_ok,False)
+                bb.pack_start(but_cancel,False)
+                bb.show()
+                vb.pack_start(bb,True)
 
                 vb.show()
 
@@ -472,11 +509,12 @@ class log_manager(service.service):
         view = self.create_multi_view(filter=filter,logs=self.boss.logs)
         self.cmd_refresh()
 
-    def cmd_refresh(self,record):
+    def cmd_refresh(self,record=None):
         for view in self.multi_views:
             view.refresh()
         if self.single_view:
-            self.single_view.show_log_item(record)
+            if record != None:
+                self.single_view.show_log_item(record)
 
     def cmd_show_history(self):
         view = self.create_multi_view(logs=self.boss.logs)
