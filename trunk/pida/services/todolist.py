@@ -33,13 +33,15 @@ import pida.pidagtk.contentview as contentview
 
 
 defs = service.definitions
-
+types = service.types
 
 class todo_hint(object):
 
     def __init__(self, line, linenumber):
         self.key = linenumber
-        self.line = line.replace('TODO:', '').strip().strip('#')
+        line = line.replace('TODO:', '')
+        line = line.replace('TODO', '')
+        self.line = line.strip().strip('#').strip()
         self.linenumber = linenumber
 
 class todo_view(contentview.content_view):
@@ -51,7 +53,7 @@ class todo_view(contentview.content_view):
         self.__list = tree.Tree()
         self.widget.pack_start(self.__list)
         self.__list.set_property('markup-format-string',
-                                 '<tt>%(linenumber)s</tt><b>%(line)s</b>')
+                                 '<tt>%(linenumber)s</tt> <b>%(line)s</b>')
         self.__list.connect('double-clicked', self.cb_list_d_clicked)
 
     def set_messages(self, messages):
@@ -66,6 +68,14 @@ class todo_view(contentview.content_view):
 class todo(service.service):
     
     lang_view_type = todo_view
+
+    display_name = 'TODO List'
+
+    class todo_definition(defs.optiongroup):
+        class insist_on_trailing_colon(defs.option):
+            """Whether the TODO search needs a trailing : character to recognise a TODO"""
+            rtype = types.boolean
+            default = False
 
     class todolist(defs.language_handler):
 
@@ -100,7 +110,10 @@ class todo(service.service):
         """Check the given lines for TODO messages."""
         messages = []
         for i, line in enumerate(lines):
-            if 'TODO:' in line:
+            searchfor = 'TODO'
+            if self.opt('todo_definition', 'insist_on_trailing_colon'):
+                searchfor = '%s:' % searchfor
+            if searchfor in line:
                 messages.append(todo_hint(line, i + 1))
         return messages
             
