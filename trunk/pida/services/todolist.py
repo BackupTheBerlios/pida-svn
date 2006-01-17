@@ -77,10 +77,6 @@ class todo(service.service):
             """Whether the TODO search will use 'TODO' statements"""
             rtype = types.boolean
             default = True
-        class use_todo(defs.option):
-            """Whether the TODO search will use 'todo' statements"""
-            rtype = types.boolean
-            default = True
         class use_FIXME(defs.option):
             """Whether the TODO search will use 'FIXME' statements"""
             rtype = types.boolean
@@ -133,8 +129,6 @@ class todo(service.service):
     def __get_markers(self):
         if self.opt('todo_definition', 'use_TODO'):
             yield 'TODO'
-        if self.opt('todo_definition', 'use_todo'):
-            yield 'todo'
         if self.opt('todo_definition', 'use_FIXME'):
             yield 'FIXME'
         for s in self.opt('todo_definition', 'additional_markers').split(','):
