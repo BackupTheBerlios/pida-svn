@@ -21,7 +21,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import pida.pidalog.log as log
+import pida.utils.pidalog.log as log
 
 def set_boss(boss):
     """Called by the boss itself. Singletonish behaviour."""

@@ -24,7 +24,7 @@
 
 
 import base
-import pida.pidalog.log as log
+import pida.utils.pidalog.log as log
 
 # Core components
 import services

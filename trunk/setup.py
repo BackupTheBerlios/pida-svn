@@ -61,7 +61,6 @@ except ImportError, e:
 base_packages = ['pida',
                  'pida.core',
                  'pida.pidagtk',
-                 'pida.pidalog',
                  'pida.services',
                  'pida.editors',
                  'pida.utils']
@@ -70,6 +69,7 @@ base_packages = ['pida',
 util_packages = ['pida.utils.vim',
                  'pida.utils.culebra',
                  'pida.utils.vc',
+                 'pida.utils.pidalog',
                  'pida.utils.pyflakes']
 
 
