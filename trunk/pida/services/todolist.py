@@ -122,7 +122,7 @@ class todo(service.service):
             for marker in self.__get_markers():
                 if marker in line:
                     todo = line.replace(marker, '')
-                    todo = todo.strip().strip('#:').strip()
+                    todo = todo.strip().strip('#/:').strip()
                     messages.append(todo_hint(todo, i + 1, marker))
         return messages
 
