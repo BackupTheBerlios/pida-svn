@@ -121,8 +121,8 @@ class todo(service.service):
         for i, line in enumerate(lines):
             for marker in self.__get_markers():
                 if marker in line:
-                    todo = line.replace(marker, '')
-                    todo = todo.strip().strip('#/:').strip()
+                    pre, post = line.split(marker, 1)
+                    todo = post.strip().strip(':').strip()
                     messages.append(todo_hint(todo, i + 1, marker))
         return messages
 
