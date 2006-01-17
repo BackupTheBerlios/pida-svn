@@ -70,8 +70,20 @@ class notification_handler(logging.Handler):
 
         Format the record and send it
         """
+
+#def foo():
+#    print "OH!"
+#
+#pida.log.critical("FOO %s %s",foo,"iface")       
+
+#            print 'testing callback'
+#            foo = record.args()
+#            foo.call()
+#        else:   
+#            print 'has no attribute callback'
+
         try:
-            self.base.call_command('logmanager', 'refresh')
+            self.base.call_command('logmanager', 'refresh', record=record)
         except pida.core.boss.ServiceNotFoundError:
             logger = logging.getLogger(self.__class__.__name__)
             format_str = ('%(levelname)s '
@@ -110,6 +122,8 @@ class pidalogger(object):
     # private interface
     def __build_logger(self, name):
         logger = logging.getLogger(name)
+        
+        logging.addLevelName(60,'USER_INPUT')
         
         level = logging.DEBUG
         logger.setLevel(level)
@@ -187,3 +201,12 @@ class pidalogger(object):
         self.log.addHandler(handler)
         return True
 
+'''
+def foo(bool):
+    if bool == True:
+        print "yeah !"
+    else:
+        print "ugh ?! :("
+
+pida.log.log(60,"FOO %s %s %s","cb_yesno","Choose yes",foo)
+'''

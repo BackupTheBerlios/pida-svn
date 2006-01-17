@@ -63,6 +63,8 @@ class log_item(tree.IconTreeItem):
             return (icons.icons.get_image("no"), "#ff00fc")
         if record.levelno == 50: # CRITICAL
             return (icons.icons.get_image("stop"), "#FF0000")
+        if record.levelno == 60: # USER_INPUT
+            return (icons.icons.get_image("dialog-question"), "#FF0000")
 
     def set_detailed(self,det):
         self.__detailed = det
@@ -74,6 +76,32 @@ class log_item(tree.IconTreeItem):
 
     def __get_markup(self):
         if self.__detailed == True:
+            if len(self.value.args) == 3:
+                if self.value.args[0] == 'cb_yesno':
+                    return escape('Question at %s %s:%s\n%s\n%s %s' % \
+                                ( self.name, self.module, self.lineno, 
+                                  self.value.args[1],
+                                  self.levelname, self.created ))
+                if self.value.args[0] == 'cb_okcancel':
+                    return escape('Confirmation at %s %s:%s\n%s\n%s %s' % \
+                                ( self.name, self.module, self.lineno, 
+                                  self.value.args[1],
+                                  self.levelname, self.created ))
+                if self.value.args[0] == 'cb_ok':
+                    return escape('Validation at %s %s:%s\n%s\n%s %s' % \
+                                ( self.name, self.module, self.lineno, 
+                                  self.value.args[1],
+                                  self.levelname, self.created ))
+                if self.value.args[0] == 'cb_entry_ok':
+                    return escape('Input entry at %s %s:%s\n%s\n%s %s' % \
+                                ( self.name, self.module, self.lineno, 
+                                  self.value.args[1],
+                                  self.levelname, self.created ))
+                if self.value.args[0] == 'cb_entry_okcancel':
+                    return escape('Input entry confirmation at %s %s:%s\n%s\n%s %s' % \
+                                ( self.name, self.module, self.lineno, 
+                                  self.value.args[1],
+                                  self.levelname, self.created ))
             return escape('%s %s:%s\n%s\n%s %s' % ( self.name, 
                                     self.module, self.lineno, 
                                     self.message,
@@ -168,8 +196,10 @@ class log_watch(contentview.content_view):
     HAS_TITLE = True
 
     def init(self):
-        self.__label = gtk.Label()
-#        self.__label = hyperlink("")
+        self.__container = gtk.VBox()
+        self.__container.pack_start(gtk.Label("empty"))
+        self.__container.show()
+        self.widget.pack_start(self.__container)
 
     def markup(self,item):
         self.set_long_title("%s"%item.name)
@@ -179,32 +209,145 @@ class log_watch(contentview.content_view):
             escape(item.message))
 
     def show_log_item(self,record):
-        self.widget.removeAll()
-        self.__item = log_item(record)
-        self.__label.set_text(self.markup(self.__item))
-        self.__label.set_use_markup(True)
-        self.__label.set_line_wrap(True)
-#        self.__button = gtk.Button("TEST")
-#        self.__button.connect('clicked', self.cb_clicked)
-        self.widget.pack_start(self.__label,True)
-#        self.widget.pack_start(self.__button,True)
-        self.__label.show()
+        vb = self.__container
+        [vb.remove(child) for child in vb.get_children()]
 
-#        if hasattr(record,'callback'):
-#            foo = record.callback()
-#            foo.call()
-#        else:
-#            print 'has no attribute callback'
+        self.__item = log_item(record)
+
+        if len(record.args) == 3:
+            if record.args[0] == 'cb_yesno':
+                self.set_long_title("Confirmation")
+                def cb_yes_clicked(self):
+                    record.args[2](True)
+                def cb_no_clicked(self):
+                    record.args[2](False)
+
+                label = gtk.Label(record.args[1])
+                label.show()
+                vb.pack_start(label,True)
+
+                hb = gtk.HBox()
+                but_yes = gtk.Button("Yes")
+                but_yes.connect('clicked',cb_yes_clicked)
+                but_yes.show()
+                but_no = gtk.Button("No")
+                but_no.connect('clicked',cb_no_clicked)
+                but_no.show()
+                hb.pack_start(but_yes)
+                hb.pack_start(but_no)
+                hb.show()
+                vb.pack_start(hb,True)
+
+                vb.show()
+                return
+                
+            if record.args[0] == 'cb_okcancel':
+                self.set_long_title("Question")
+                def cb_ok_clicked(self):
+                    record.args[2](True)
+                def cb_cancel_clicked(self):
+                    record.args[2](False)
+
+                label = gtk.Label(record.args[1])
+                label.show()
+                vb.pack_start(label,True)
+
+                hb = gtk.HBox()
+                but_ok = gtk.Button("Ok")
+                but_ok.connect('clicked',cb_ok_clicked)
+                but_ok.show()
+                but_cancel = gtk.Button("Cancel")
+                but_cancel.connect('clicked',cb_cancel_clicked)
+                but_cancel.show()
+                hb.pack_start(but_ok,False)
+                hb.pack_start(but_cancel,False)
+                hb.show()
+                vb.pack_start(hb,True)
+
+                vb.show()
+                return
+
+            if record.args[0] == 'cb_ok':
+                self.set_long_title("Information")
+                def cb_ok_clicked(self):
+                    record.args[2]()
+
+                label = gtk.Label(record.args[1])
+                label.show()
+                vb.pack_start(label,True)
+
+                but_ok = gtk.Button("Ok")
+                but_ok.connect('clicked',cb_ok_clicked)
+                but_ok.show()
+                vb.pack_start(but_ok,False)
+
+                vb.show()
+                return
+
+            if record.args[0] == 'cb_entry_ok':
+                self.set_long_title("Input requested")
+                entry = gtk.Entry()
+                def cb_ok_clicked(self):
+                    record.args[2](entry.get_text())
+                    
+                label = gtk.Label(record.args[1])
+                label.show()
+                vb.pack_start(label,True)
+
+                vb.pack_start(entry,True)
+
+                but_ok = gtk.Button("Ok")
+                but_ok.connect('clicked',cb_ok_clicked)
+                but_ok.show()
+                vb.pack_start(but_ok,False)
+
+                vb.show()
+                return
+
+            if record.args[0] == 'cb_entry_okcancel':
+                self.set_long_title("Input requested")
+                entry = gtk.Entry()
+                def cb_ok_clicked(self):
+                    record.args[2](True,entry.get_text())
+                def cb_cancel_clicked(self):
+                    record.args[2](False,entry.get_text())
+                    
+                label = gtk.Label(record.args[1])
+                label.show()
+                vb.pack_start(label,True)
+
+                vb.pack_start(entry,True)
+
+                hb = gtk.HBox()
+                but_ok = gtk.Button("Ok")
+                but_ok.connect('clicked',cb_ok_clicked)
+                but_ok.show()
+                but_cancel = gtk.Button("Cancel")
+                but_cancel.connect('clicked',cb_cancel_clicked)
+                but_cancel.show()
+                hb.pack_start(but_ok,False)
+                hb.pack_start(but_cancel,False)
+                hb.show()
+                vb.pack_start(hb,True)
+
+                vb.show()
+
+                return
+        label = gtk.Label()
+        label.set_text(self.markup(self.__item))
+        label.set_use_markup(True)
+        label.set_line_wrap(True)
+        label.show()
+        vb.pack_start(label)
 
     def cb_clicked(self,but):
-        pass
-#        self.service.boss.call_command('editormanager', 'edit',
-#            linenumber=self.__item.pathname)
-#        self.service.boss.call_command('editormanager', 'goto_line',
-#            linenumber=self.__item.lineno)
+        self.service.boss.call_command('editormanager', 'edit',
+            linenumber=self.__item.pathname)
+        self.service.boss.call_command('editormanager', 'goto_line',
+            linenumber=self.__item.lineno)
 
 class log_history(contentview.content_view):
-    ICON_NAME = 'logviewer'
+    ICON_NAME = 'how do I add logviewer.png ?'
     LONG_TITLE = 'Log viewer'
     SHORT_TITLE = 'log'
     ICON_TEXT = 'files'
@@ -269,9 +412,6 @@ class log_history(contentview.content_view):
     def cb_filter_add(self,but):
         self.service.cmd_filter(filter=self.__filter_entry.get_text())
         self.service.log.debug("Opened a new log filter view")
-#        callback=foo
-#        print 'testing callback'
-#        self.service.log.critical("TEST INPUT",callback)
 
     def cb_record_clicked(self,record,tree_item):
         '''Callback function called when an item is selected in the TreeView'''
@@ -297,10 +437,6 @@ class log_history(contentview.content_view):
         '''Callback function called when an item is right clicked, and show the
         contextual menu...'''
         pass ## TODO: show contextual menu
-
-#class foo:
-#    def call(self):
-#        print 'clicked !'
 
 class log_manager(service.service):
     NAME = 'log manager'
@@ -336,11 +472,11 @@ class log_manager(service.service):
         view = self.create_multi_view(filter=filter,logs=self.boss.logs)
         self.cmd_refresh()
 
-    def cmd_refresh(self):
+    def cmd_refresh(self,record):
         for view in self.multi_views:
             view.refresh()
         if self.single_view:
-            self.single_view.show_log_item(self.boss.logs.last)
+            self.single_view.show_log_item(record)
 
     def cmd_show_history(self):
         view = self.create_multi_view(logs=self.boss.logs)
