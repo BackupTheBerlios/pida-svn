@@ -24,6 +24,8 @@
 import os
 import os.path
 
+import gtk
+
 import pida.core.service as service
 import pida.core.base as base
 
@@ -179,10 +181,12 @@ class directory_context(default_context):
     def command_new(self, directory):
         self.boss.call_command('newfile', 'create_interactive',
                           directory=directory)
+        gtk.idle_add(self._refresh_filemanager, directory)
 
     def command_dirnew(self, directory):
         self.boss.call_command('newfile', 'create_interactive',
                           directory=directory, mkdir=True)
+        gtk.idle_add(self._refresh_filemanager, directory)
 
     def command_terminal(self, directory):
         self.boss.call_command('terminal', 'execute_shell',
@@ -192,6 +196,15 @@ class directory_context(default_context):
         if directory != '/':
             parent = os.path.split(directory)[0]
             self.boss.call_command('filemanager', 'browse', directory=parent)
+
+    def _refresh_filemanager(self, directory):
+        curdir = self.boss.call_command('filemanager',
+                                        'get_current_directory')
+        if curdir == directory:
+            self.boss.call_command('versioncontrol',
+                'forget_directory', directory=directory)
+            self.boss.call_command('filemanager', 'browse',
+                                   directory=directory)
 
 
 class project_directory_context(default_context):
