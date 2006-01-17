@@ -24,7 +24,7 @@
 
 
 import base
-import storelog
+import pida.pidalog.log as log
 
 # Core components
 import services
@@ -40,7 +40,7 @@ class boss(base.pidacomponent):
     
     def __init__(self, application, env):
         # Starts the logger
-        self.logs = storelog.logs()
+        self.create_log_storage()
         # Set the pidaobject base
         base.pidaobject.boss = self
         base.pidacomponent.__init__(self)

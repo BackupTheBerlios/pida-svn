@@ -21,8 +21,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-# system import(s)
-import log
+import pida.pidalog.log as log
 
 def set_boss(boss):
     """Called by the boss itself. Singletonish behaviour."""
@@ -42,8 +41,20 @@ class pidaobject(object):
 class pidacomponent(log.pidalogger, pidaobject):
     """A single component."""
     def __init__(self, *args, **kw):
-        log.pidalogger.__init__(self)
+        # Sets the logger and the log handlers
+        if hasattr(pidaobject,'boss'):
+            log.pidalogger.__init__(self,pidaobject.boss)
+        else:
+            log.pidalogger.__init__(self)
+        # Do init
         pidaobject.__init__(self, *args, **kw)
+
+    def init_log(self):
+        """
+        Function to tell the wanted logging behaviour
+        """
+        use_stream_handler('ERROR')
+        use_notification_handler()
 
     def is_leaf(self):
         return True

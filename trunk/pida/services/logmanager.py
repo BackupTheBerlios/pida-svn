@@ -291,7 +291,7 @@ class log_manager(service.service):
     def start(self):
         self.__view = None
         self.__first = True
-        if self.boss.set_view_handler():
+        if self.boss.use_notification_handler():
             self.log.debug("Logging service started.")
         else: 
             self.stop()
