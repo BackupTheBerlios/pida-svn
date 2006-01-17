@@ -284,7 +284,7 @@ class log_manager(service.service):
     single_view_type = log_watch
 
     multi_view_type = log_history
-    multi_view_book = 'content'
+    multi_view_book = 'view'
 
     # life cycle
 
