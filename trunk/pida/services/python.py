@@ -82,14 +82,47 @@ class python(service.service):
 
     lang_view_type = python_source_view
 
+    class python_execution(defs.optiongroup):
+        """Options pertaining to python execution"""
+        class python_executable(defs.option):
+            """The command to call when executing python scripts."""
+            rtype = types.string
+            default = 'python'
+        class python_shell(defs.option):
+            rtype = types.string
+            default = 'python'
+
+    def cmd_execute_shell(self):
+        py = self.opt('python_execution', 'python_shell')
+        command_args=[py]
+        self.boss.call_command('terminal', 'execute',
+                               command_args=command_args,
+                               icon_name='execute')
+
     def cmd_execute_file(self, filename):
-        command_args=['python', filename]
+        py = self.opt('python_execution', 'python_executable')
+        command_args=[py, filename]
         self.boss.call_command('terminal', 'execute',
                                command_args=command_args,
                                icon_name='execute')
 
     def bnd_buffermanager_document_modified(self, document):
         self.uncache(document)
+
+    def act_python_shell(self, action):
+        """Start an interactive python shell."""
+        self.call('execute_shell')
+
+    def get_menu_definition(self):
+        return """
+                <menubar>
+                <menu name="base_tools" action="base_tools_menu">
+                <separator />
+                <menuitem name="pyshell" action="python+python_shell" />
+                <separator />
+                </menu>
+                </menubar>
+               """
 
     class python_language(defs.language_handler):
         file_name_globs = ['*.py']

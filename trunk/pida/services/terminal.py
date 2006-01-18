@@ -124,17 +124,12 @@ class terminal_manager(service.service):
         """Start a shell in a terminal emulator."""
         self.call('execute_shell')
 
-    def act_python_shell(self, action):
-        """Start an interactive python shell."""
-        self.call('execute', command_args=['python'])
-
     def get_menu_definition(self):
         return """
             <menubar>
             <menu name="base_tools" action="base_tools_menu">
             <separator />
             <menuitem name="shell" action="terminal+terminal" />
-            <menuitem name="pyshell" action="terminal+python_shell" />
             </menu>
             </menubar>
                 <toolbar>
