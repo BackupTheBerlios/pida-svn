@@ -112,11 +112,12 @@ class FileBrowser(contentview.content_view):
     def init(self):
         self.__currentdirectory = None
         self.__init_widgets()
+        self.__lock = threading.Lock()
 
-    def display(self, directory, rootpath=None, statuses=[], glob='*', hidden=True):
+    def display(self, directory):
         if os.path.isdir(directory):
-            self.t = threading.Thread(target=self.__display, args=[directory])
-            self.t.run()
+            t = threading.Thread(target=self.__display, args=[directory])
+            t.start()
 
     def __init_widgets(self):
         tb = gtk.HBox()
@@ -136,18 +137,23 @@ class FileBrowser(contentview.content_view):
         self.__fileview.connect('right-clicked', self.cb_file_rightclicked)
 
     def __display(self, directory):
+        self.__lock.acquire(True)
         self.__currentdirectory = directory
-        self.__set_contexts(directory)
-        self.set_long_title(shorten_home_name(directory))
-        self.__fileview.clear()
         statuses = self.service.boss.call_command('versioncontrol',
                    'get_statuses', directory=directory)
         if statuses is None:
             gen = self.__get_plain_statuses
         else:
             gen = self.__get_vc_statuses
+        gtk.threads_enter()
+        self.set_long_title(shorten_home_name(directory))
+        self.__set_contexts(directory)
+        self.__fileview.clear()
         for fsi in gen(directory, statuses):
-            gobject.idle_add(self.__add_item, fsi)
+            self.__add_item(fsi)
+        self.__fileview.view.set_model(self.__fileview.model)
+        gtk.threads_leave()
+        self.__lock.release()
 
     def __add_item(self, fsi):
         self.__fileview.add_item(fsi)
