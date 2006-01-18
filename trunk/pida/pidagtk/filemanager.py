@@ -203,6 +203,11 @@ class FileBrowser(contentview.content_view):
                                      )
             cmenu = contextwidgets.get_menu(contexts)
             mroot.set_submenu(cmenu)
+        open_with_menu = self.service.boss.call_command('openwith',
+            'get_openers_menu', filename = path)
+        mroot = gtk.MenuItem(label='Open with')
+        mroot.set_submenu(open_with_menu)
+        menu.add(mroot)
         menu.show_all()
         menu.popup(None, None, None, event.button, event.time)
 
