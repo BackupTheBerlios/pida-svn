@@ -229,7 +229,7 @@ class FileBrowser(contentview.content_view):
             treepath = self.__fileview.selected_path
             if os.path.isdir(filepath):
                 #if self.__fileview.view.row_expanded(treepath):
-                self.display(filepath, self.__fileview.selected_iter)
+                self.display(filepath)
                 #    self.__fileview.view.collapse_row(treepath)
                 #else:
                 #    self.__fileview.view.expand_row(treepath, False)
@@ -245,7 +245,6 @@ class FileBrowser(contentview.content_view):
             self.__popup_file(fsi.path, event)
 
     def cb_dir_activated(self, tree, item):
-        print item.key
         self.display(item.key)
 
     def cb_toolbar_clicked(self, toolbar, name):
