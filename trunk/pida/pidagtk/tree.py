@@ -324,6 +324,7 @@ class Tree(gtk.VBox):
     
     def get_selected_key(self):
         return self.__get_selected(0)
+    selected_key = property(get_selected_key)
 
     def set_selected(self, key):
         """Set the selected item to the first item matching the key."""
