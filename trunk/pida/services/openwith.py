@@ -21,18 +21,25 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import pida.core.service as service
-import gtk
+# system import(s)
 import os
 import glob
-import pida.core.base as base
-import pida.pidagtk.contentview as contentview
-import pida.pidagtk.configview as configview
-import pida.pidagtk.tree as tree
-defs = service.definitions
-
 import ConfigParser as configparser
 import re
+
+# gtk import(s)
+import gtk
+
+# pida core import(s)
+import pida.core.base as base
+import pida.core.service as service
+
+# pidagtk import(s)
+import pida.pidagtk.tree as tree
+import pida.pidagtk.contentview as contentview
+
+defs = service.definitions
+
 
 class command_line_opener(base.pidaobject):
 
