@@ -57,7 +57,13 @@ export PYTHONPATH=$egg:$PYTHONPATH
 pidacmd=$distdir/pida
 tmpfile=$pidacmd.$$
 if [ "$REMOTE" ]; then
-    pidacmd="$pidadir/pida/utils/pida-remote.py $* &"
+    if [ $# -gt 0 ]; then
+        file="$1"; shift
+        [ "${file:0:1}" == "/" ] || file="$PWD/$file"
+    else
+        file=
+    fi
+    pidacmd="$pidadir/pida/utils/pida-remote.py $file $* &"
 elif [ "$PDB" ]; then
     cat<<EOT > $tmpfile
 import pdb
