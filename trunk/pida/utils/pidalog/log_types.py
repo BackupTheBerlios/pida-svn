@@ -62,8 +62,12 @@ class event_log(logging.Logger):
         """
         if logging._srcfile:
             log_tuple = logging.Logger.findCaller(self)
-            print log_tuple
-            fn, lno, func = log_tuple
+            if len(log_tuple) == 3:
+                fn, lno, func = log_tuple
+            elif len(log_tuple) == 2:
+                fn, lno = log_tuple
+                func = '(unknown function)'
+            
         else:
             fn, lno, func = "(unknown file)", 0, "(unknown function)"
         if exc_info:
