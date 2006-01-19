@@ -48,7 +48,10 @@ class pidawindow(gtk.Window):
     def append_page(self, bookname, page):
         if bookname in self.__viewbooks:
             self.__viewbooks[bookname].append_page(page)
-            self.__viewbooks[bookname].show_all()
+            #page.show()
+            
+            self.__viewbooks[bookname]
+            
             if bookname == 'language':
                 if not self.__manager.opt('panes',
                     'automatically_expand_language_bar'):
@@ -68,46 +71,82 @@ class pidawindow(gtk.Window):
             book.detach_pages()
 
     def _create_sidebar(self, bufferview, pluginview):
+        # Check wether the sidebar is horizontal or vertical
         sidebar_horiz = self.__manager.opt('layout',
                                            'vertical_sidebar_split')
         if sidebar_horiz:
             box = gtk.HPaned()
         else:
             box = gtk.VPaned()
+        
+        # Now create the bar
         bar = gtk.VBox()
+        bar.show()
         box.pack1(bar, resize=True)
+        
+        # Create the buffer list
         bufs = expander.expander()
         bufs.set_body_widget(bufferview)
+        bufferview.show()
+        bufs.show()
+        
+        # Create its label
         l = gtk.Label('Buffer list')
+        l.show()
         l.set_alignment(0, 0.5)
         bufs.set_label_widget(l)
+        
+        # Expand it and add it to the bar
         bufs.expand()
         bar.pack_start(bufs, expand=True)
+        
+        # Now add the plugin view
+        pluginview.show()
         bar.pack_start(pluginview)
+        
+        # Create the second part of the bar
         bar2 = gtk.VBox()
+        bar2.show()
         box.pack2(bar2, resize=True)
+        
+        # Add the language view
         vb = self.__viewbooks['language'] = contentbook.contentbook('Languages')
+        vb.show()
         bar2.pack_start(vb)
         vb.collapse()
+        
+        # And add the quick view
         vb = self.__viewbooks['content'] = contentbook.contentbook('Quick View')
+        vb.show()
         bar2.pack_start(vb)
         vb.collapse()
+        
         return box
 
     def pack(self, menubar, toolbar, bufferview, pluginview):
         self.__mainbox = gtk.VBox()
+        self.__mainbox.show()
+        
         self.add(self.__mainbox)
         self._pack_topbar(menubar, toolbar)
         self._pack_panes(bufferview, pluginview)
 
     def _pack_topbar(self, menubar, toolbar):
         self.__toolarea = gtk.VBox()
+        self.__toolarea.show()
+        
+        menubar.show()
         self.__mainbox.pack_start(self.__toolarea, expand=False)
         menubar_handle = gtk.HandleBox()
+        menubar_handle.show()
         menubar_handle.add(menubar)
+        
+        toolbar.show()
         self.__toolarea.pack_start(menubar_handle, expand=False)
         toolbar_handle = gtk.HandleBox()
         toolbar_handle.add(toolbar)
+        toolbar_handle.show()
+        
         self.__toolarea.pack_start(toolbar_handle, expand=False)
         toolbar.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
         self.__menubar = menubar
@@ -133,12 +172,20 @@ class pidawindow(gtk.Window):
         extb.window.set_transient_for(self)
 
     def _pack_panes(self, bufferview, pluginview):
+        # Horizontal paned for editor and sidebar
         p0 = gtk.HPaned()
+        p0.show()
         self.__mainbox.pack_start(p0)
+        
+        # Make it possible to move the sidebar on the left or right
         sidebar_width = self.__manager.opt('layout', 'sidebar_width')
         sidebar_on_right = self.__manager.opt('layout', 'sidebar_on_right')
+        
+        # Creates the sidebar
         sidebar = self._create_sidebar(bufferview, pluginview)
-        p1 = gtk.VPaned()
+        sidebar.show()
+        
+        # Places sidebar
         if sidebar_on_right:
             side_func = p0.pack2
             main_func = p0.pack1
@@ -147,12 +194,20 @@ class pidawindow(gtk.Window):
             side_func = p0.pack1
             main_func = p0.pack2
             main_pos = sidebar_width
+        p1 = gtk.VPaned()
+        p1.show()
+
         side_func(sidebar, resize=False)
         main_func(p1, resize=True)
         p0.set_position(main_pos)
+        
+        # Place the editor
         editor = contentbook.Contentholder(show_tabs=False)
+        editor.show()
         self.__viewbooks['edit'] = editor
         p1.pack1(editor, resize=True)
+        
+        
         viewbook = contentbook.Contentholder()
         self.__viewbooks['view'] = viewbook
         p1.pack2(viewbook, resize=False)
@@ -199,7 +254,7 @@ class external_window(gtk.Window):
 
     def append_page(self, *args):
         self.__book.append_page(*args)
-        self.show_all()
+        self.show()
         self.present()
 
     def on_window__destroy(self, window):

@@ -111,9 +111,13 @@ class content_view(gtk.VBox):
 
     def __init_widgets(self, widget):
         topbar = gtk.VBox()
+        topbar.show()
         self.pack_start(topbar, expand=False)
+        
         titlebar = gtk.HBox()
+        titlebar.show()
         self.pack_start(titlebar, expand=False)
+        
         if widget is not None:
             self.pack_start(widget)
             self.__widget = widget
@@ -123,12 +127,19 @@ class content_view(gtk.VBox):
         else:
             self.__widget = gtk.VBox()
             self.pack_start(self.__widget)
+        
+        self.__widget.show()
         self.__init_topbar(topbar)
         
     def __init_topbar(self, topbar):
         self.__toolbar_area = gtk.HBox()
+        self.__toolbar_area.show()
+        
         topbar.pack_start(self.__toolbar_area, expand=False)
+        # TODO: check if toolbar.Toolbar needs work too
         self.__toolbar = toolbar.Toolbar()
+        self.__toolbar.show()
+        
         self.__toolbar_area.pack_start(self.__toolbar, expand=False)
         self.__toolbar.connect('clicked', self.cb_toolbar_clicked)
         for name, icon, tooltip in self.BUTTONS:
@@ -140,14 +151,21 @@ class content_view(gtk.VBox):
                 detbut.connect('clicked',
                             self.cb_controlbar_detach_clicked)
         self.__long_title_label = gtk.Label(self.__long_title)
+        self.__long_title_label.show()
+        
         if self.HAS_TITLE:
             self.__toolbar_area.pack_start(self.__long_title_label, padding=6)
             self.__long_title_label.set_alignment(0.0, 0.5)
             self.__long_title_label.set_selectable(True)
         if self.HAS_CONTROL_BOX:
             if self.HAS_CLOSE_BUTTON:
-                self.__toolbar_area.pack_start(gtk.Alignment())
+                align = gtk.Alignment()
+                align.show()
+                self.__toolbar_area.pack_start(align)
+                
                 closebut = paned.sizer('close')
+                closebut.show()
+                
                 self.__toolbar_area.pack_start(closebut, expand=False)
                 closebut.connect('clicked',
                             self.cb_controlbar_close_clicked)
@@ -159,6 +177,7 @@ class content_view(gtk.VBox):
         self.__toolbar.add_button(name, icon, tooltip)
 
     def toolbar_add_widget(self, widget, **kw):
+        widget.show()
         self.__toolbar.add_widget(widget, **kw)
 
     def toolbar_add_separator(self):

@@ -44,6 +44,7 @@ class Contentholder(gtk.VBox):
 
     def __init_notebook(self, show_tabs):
         self.__notebook = gtk.Notebook()
+        self.__notebook.show()
         self.pack_start(self.__notebook)
         self.__notebook.set_tab_pos(gtk.POS_BOTTOM)
         self.__notebook.set_scrollable(True)
@@ -57,22 +58,32 @@ class Contentholder(gtk.VBox):
 
     def append_page(self, contentview):
         tab_label = gtk.EventBox()
+        tab_label.show()
+
+        contentview.icon.show()
         tab_label.add(contentview.icon)
+        # TODO: do not use show_all
         tab_label.show_all()
+        
+        # Set the tooltip text
         tooltiptext = contentview.LONG_TITLE
         if not tooltiptext:
             tooltiptext = contentview.SHORT_TITLE
         if not tooltiptext:
             tooltiptext = 'No tooltip set for %s' % contentview
         icons.tips.set_tip(tab_label, tooltiptext)
+        
+        # Add the content view
+        contentview.show()
         self.__notebook.append_page(contentview, tab_label=tab_label)
         self.__views[contentview.unique_id] = contentview
         contentview.holder = self
         contentview.connect('short-title-changed',
                             self.cb_view_short_title_changed)
+                            
         if self.__list_widget is not None:
             self.__list_widget.append_page(contentview)
-        self.__notebook.show_all()
+
         self.set_page(contentview)
 
     def set_page(self, contentview):

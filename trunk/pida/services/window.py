@@ -72,7 +72,7 @@ class window_manager(service.service):
         if not self.__started:
             self.__started = True
             self._pack_window()
-            self.__window.show_all()
+            self.__window.show()
 
     def cmd_update_action_groups(self):
         self.__uim.ensure_update()
@@ -111,6 +111,7 @@ class window_manager(service.service):
             parent=self.boss.get_main_window(),
             buttons=(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT,
                      gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT))
+                     
         hb = gtk.HBox(spacing=6)
         dialog.vbox.pack_start(hb)
         hb.set_border_width(6)
@@ -195,17 +196,27 @@ class window_manager(service.service):
     def _pack_window(self):
         """Populate the window."""
         bufferview = self.get_service('buffermanager').single_view
+        bufferview.show()
+        
         pluginview = contentbook.contentbook('Plugins')
+        pluginview.show()
+        
         for service in self.boss.services:
             if service.plugin_view_type is not None:
                 pluginview.append_page(service.plugin_view)
+                service.plugin_view.show()
+        
         self.__uim.ensure_update()
         menubar = self.__uim.get_toplevels(gtk.UI_MANAGER_MENUBAR)[0]
+        
         self.toolbar = self.__uim.get_toplevels(gtk.UI_MANAGER_TOOLBAR)[0]
+        
         self.__window.drag_dest_set(gtk.DEST_DEFAULT_ALL,
                                     [('text/uri-list', 0, 0)],
                                     gtk.gdk.ACTION_COPY)
+        
         self.__window.pack(menubar, self.toolbar, bufferview, pluginview)
+        
 
     def _connect_drag_events(self):
         def drag_motion(win, drag, x, y, timestamp):
