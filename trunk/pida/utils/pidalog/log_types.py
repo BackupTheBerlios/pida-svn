@@ -61,7 +61,9 @@ class event_log(logging.Logger):
         event supports
         """
         if logging._srcfile:
-            fn, lno, func = logging.Logger.findCaller(self)
+            log_tuple = logging.Logger.findCaller(self)
+            print log_tuple
+            fn, lno, func = log_tuple
         else:
             fn, lno, func = "(unknown file)", 0, "(unknown function)"
         if exc_info:
