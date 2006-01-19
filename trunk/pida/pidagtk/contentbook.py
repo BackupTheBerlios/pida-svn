@@ -62,7 +62,7 @@ class Contentholder(gtk.VBox):
 
         contentview.icon.show()
         tab_label.add(contentview.icon)
-        # TODO: do not use show_all
+        # TODO: teach tiago how to user show_all
         tab_label.show_all()
         
         # Set the tooltip text

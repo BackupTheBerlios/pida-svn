@@ -48,9 +48,7 @@ class pidawindow(gtk.Window):
     def append_page(self, bookname, page):
         if bookname in self.__viewbooks:
             self.__viewbooks[bookname].append_page(page)
-            #page.show()
-            
-            self.__viewbooks[bookname]
+            self.__viewbooks[bookname].show_all()
             
             if bookname == 'language':
                 if not self.__manager.opt('panes',
@@ -254,7 +252,7 @@ class external_window(gtk.Window):
 
     def append_page(self, *args):
         self.__book.append_page(*args)
-        self.show()
+        self.show_all()
         self.present()
 
     def on_window__destroy(self, window):

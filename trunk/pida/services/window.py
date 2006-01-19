@@ -72,7 +72,7 @@ class window_manager(service.service):
         if not self.__started:
             self.__started = True
             self._pack_window()
-            self.__window.show()
+            self.__window.show_all()
 
     def cmd_update_action_groups(self):
         self.__uim.ensure_update()
