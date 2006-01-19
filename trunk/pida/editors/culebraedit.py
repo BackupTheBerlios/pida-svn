@@ -34,8 +34,8 @@ class culebra_view(contentview.content_view):
     HAS_TITLE = False
 
     def init(self, filename=None):
+        self.widget.set_no_show_all(True)
         widget, editor = edit.create_widget(filename)
-        self.set_no_show_all(True)
         self.__editor = editor
         widget.show()
         self.widget.add(widget)
