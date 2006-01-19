@@ -200,11 +200,16 @@ class window_manager(service.service):
         
         pluginview = contentbook.contentbook('Plugins')
         pluginview.show()
+        languageview = contentbook.contentbook('Current File')
         
         for service in self.boss.services:
             if service.plugin_view_type is not None:
                 pluginview.append_page(service.plugin_view)
                 service.plugin_view.show()
+            if service.lang_view_type is not None:
+                languageview.append_page(service.lang_view)
+                service.lang_view.show()
+                
         
         self.__uim.ensure_update()
         menubar = self.__uim.get_toplevels(gtk.UI_MANAGER_MENUBAR)[0]
@@ -215,7 +220,8 @@ class window_manager(service.service):
                                     [('text/uri-list', 0, 0)],
                                     gtk.gdk.ACTION_COPY)
         
-        self.__window.pack(menubar, self.toolbar, bufferview, pluginview)
+        self.__window.pack(menubar, self.toolbar, bufferview, pluginview,
+                           languageview)
         
 
     def _connect_drag_events(self):

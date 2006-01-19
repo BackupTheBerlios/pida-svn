@@ -40,10 +40,10 @@ class language_types(service.service):
 
     def cmd_register_language_handler(self, handler_type):
         handler = handler_type(handler_type.service)
+        handler.action_group.set_visible(False)
         self.boss.call_command('window', 'register_action_group',
                                actiongroup=handler.action_group,
                                uidefinition=handler.get_menu_definition())
-        handler.action_group.set_visible(False)
         self.__register_patterns(self.__langs, handler, 'file_name_globs')
         self.__register_patterns(self.__firsts, handler, 'first_line_globs')
 
@@ -57,15 +57,19 @@ class language_types(service.service):
         for handlerlist in self.__langs.values():
             for handler in handlerlist:
                 handler.action_group.set_visible(False)
-        self.boss.call_command('window', 'remove_pages', bookname='language')
+                if hasattr(handler.service, 'lang_view_type'):
+                    view = handler.service.lang_view
+                    view.set_sensitive(False)
+        #self.boss.call_command('window', 'remove_pages', bookname='language')
         handlers = self.call('get_language_handlers', document=document)
         for handler in handlers:
             handler.action_group.set_visible(True)
             if hasattr(handler.service, 'lang_view_type'):
                 view = handler.service.lang_view
-                self.boss.call_command('window', 'append_page',
-                                       bookname='language',
-                                       view=view)
+                view.set_sensitive(True)
+                #self.boss.call_command('window', 'append_page',
+                #                       bookname='language',
+                #                       view=view)
             handler.load_document(document)
 
     def __register_patterns(self, handlers, handler, attrname='globs'):
