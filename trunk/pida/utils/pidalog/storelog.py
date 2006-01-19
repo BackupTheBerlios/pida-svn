@@ -29,8 +29,13 @@ class logs(object):
     def __init__(self):
        self.logs = {}
        self.__last = None
+
+    def __log_rotate(self):
+        if len(self.logs) > 100:
+            self.logs = self.logs
     
     def push_record(self,key,record):
+        self.__log_rotate()
         self.logs[key] = record
         self.__last = record
 

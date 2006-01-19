@@ -107,6 +107,16 @@ class window_manager(service.service):
         self.__uim.ensure_update()
 
     def cmd_input(self, callback_function, prompt='?', prefill=''):
+        def response(response):
+            if response != None:
+                callback_function(response)
+        if hasattr(self,log):
+            self.log.input(prompt,title=prompt,prefill=prefill,
+                        callback=response,type="entry_okcancel")
+        else:
+            cmd_input_old(callback_function,prompt,prefill)
+
+    def cmd_input_old(self, callback_function, prompt='?', prefill=''):
         dialog = gtk.Dialog(title=prompt,
             parent=self.boss.get_main_window(),
             buttons=(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT,

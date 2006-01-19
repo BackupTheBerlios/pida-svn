@@ -26,6 +26,8 @@ import logging
 import pida.core.boss
 
 import storelog
+import log_types
+import handlers
 
 class keep_handler(logging.Handler):
     """
@@ -54,7 +56,7 @@ class keep_handler(logging.Handler):
             handler = logging.StreamHandler()
             handler.setFormatter(format)
             logger.addHandler(handler)
-            logger.warn("Log record couldn't be saved :\n * %s"%format.format(record))
+            logger.warn("Log record couldn't be stored :\n * %s"%format.format(record))
 
 class notification_handler(logging.Handler):
     """
@@ -70,18 +72,6 @@ class notification_handler(logging.Handler):
 
         Format the record and send it
         """
-
-#def foo():
-#    print "OH!"
-#
-#pida.log.critical("FOO %s %s",foo,"iface")       
-
-#            print 'testing callback'
-#            foo = record.args()
-#            foo.call()
-#        else:   
-#            print 'has no attribute callback'
-
         try:
             self.base.call_command('logmanager', 'refresh', record=record)
         except pida.core.boss.ServiceNotFoundError:
@@ -123,13 +113,11 @@ class pidalogger(object):
     def __build_logger(self, name):
         logger = logging.getLogger(name)
         
-        logging.addLevelName(60,'USER_INPUT')
-        
         level = logging.DEBUG
         logger.setLevel(level)
         return logger
 
-    # public interface
+    # public initialization interface
 
     def create_log_storage(self):
         """
@@ -194,11 +182,14 @@ class pidalogger(object):
     def use_notification_handler(self,level=None):
         if self.__base.logs == None:
             return False
+        logger = logging.getLogger('')
         handler = notification_handler(self.__base)
         if level != None:
             handler.setLevel(logging._levelNames[level])
-        handler.setFormatter(self.__format)
-        self.log.addHandler(handler)
+        format_str = ('%(levelname)s '
+                      '%(module)s.%(name)s:%(lineno)s ')
+        handler.setFormatter(format_str)
+        logger.addHandler(handler)
         return True
 
 '''
@@ -208,5 +199,7 @@ def foo(bool):
     else:
         print "ugh ?! :("
 
+pida.log.input("Do you want to say yes ?",title="Ask the user yes",callback=foo,\
+type='yesno')
 pida.log.log(60,"FOO %s %s %s","cb_yesno","Choose yes",foo)
 '''

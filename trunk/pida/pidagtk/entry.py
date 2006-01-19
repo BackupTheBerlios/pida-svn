@@ -50,7 +50,102 @@ class completed_entry(gtk.Entry):
                 model.append([word])
                 self.comp_list.append(word)
 
-class entry_multi_completion(gtk.Entry):
+class completed_keyword_entry(gtk.Entry):
+    def __init__(self,args):
+        gtk.Entry.__init__(self)
+        
+        self.completion = gtk.EntryCompletion()
+        self.completion.connect("match-selected",
+                            self.on_completion_match)
+        self.completion.set_model(gtk.ListStore(str))
+        self.completion.set_text_column(0)
+        self.set_completion(self.completion)
+        if args:
+            self.set_keys(args)
+        else:
+            self.set_keys('name','levelname')
+
+    def set_keys(self,args):
+        self.model = {}
+        print args
+        for arg in args:
+            self.model[arg] = []
+        self.set_key_dictionary("")
+
+    def add_word(self,key,value):
+        if key not in self.model.keys():
+            self.model[key] = [value]
+            return True
+        if value not in self.model[key]:
+            self.model[key].append(value)
+            return True
+        return False
+
+    def set_key_dictionary(self,string):
+        def last(x):
+            return " ".join(x.split(" ")[-1:])
+
+        print "K1"
+        if ":" in last(string):
+            print "K2"
+            for word in self.model.keys():
+                self.completion.get_model().append([string+' '+word])
+                print string+' '+word
+        else:
+            print "K3"
+            for word in self.model.keys():
+                self.completion.get_model().append([word])
+                print word
+        print "KEY dictionary passed"
+        
+    def set_val_dictionary(self,string):
+        def last(x):
+            return " ".join(x.split(" ")[-1:])
+        empty = False
+        key = last(string)
+        print "V1"
+        print "KEY: %s"%key
+        print "STR: %s"%string
+        if key in self.model.keys():
+            print "V2"
+            for word in self.model[key]:
+                if word not in string:
+                    self.completion.get_model().append([string+":"+word])
+                print string+":"+word
+            print "V3"
+        print "VAL dictionary passed"
+
+    def on_completion_match(self, completion, model, iter):
+        current_text = self.get_text()
+
+        def last(x):
+            return " ".join(current_text.split(" ")[-1:])
+            
+        def val(x):
+            return ":".join(x.split(":")[-1:])
+
+        def key(x):
+            return ":".join(x.split(":")[:-1])
+
+        print "A3: %s"%current_text
+        current_text = model[iter][0]
+        print "B3: %s"%current_text
+
+        if val(last(current_text)) and not key(last(current_text)):
+            self.set_val_dictionary(current_text)
+        else:
+            self.set_key_dictionary(current_text)
+            
+
+        # set back the whole text
+        self.set_text(current_text)
+        # move the cursor at the end
+        self.set_position(-1)
+
+        # stop the event propagation
+        return True
+
+class completed_multi_entry(gtk.Entry):
     def __init__(self):
         gtk.Entry.__init__(self)
         self.completion = gtk.EntryCompletion()
