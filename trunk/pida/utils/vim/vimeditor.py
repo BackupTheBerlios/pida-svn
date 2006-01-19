@@ -162,7 +162,7 @@ class vim_editor(object):
                                     filename=filename)
 
     def vim_bufferunload(self, server, filename, *args):
-        print 'vim unloaded "%s"' % filename
+        self.log.debug('vim unloaded "%s"', filename)
         if filename != '':
             # unloaded an empty new file
             if filename in self.__files.setdefault(server, []):
@@ -172,7 +172,6 @@ class vim_editor(object):
                 self.__currentfile = None
             else:
                 self.log.info('vim unloaded an unknown file %s', filename)
-        print self.__files
 
     def vim_filesave(self, server, *args):
         self.boss.call_command('buffermanager', 'reset_current_document')

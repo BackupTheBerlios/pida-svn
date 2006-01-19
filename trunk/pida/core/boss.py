@@ -39,8 +39,6 @@ class boss(base.pidacomponent):
     """ The object in charge of everything """
     
     def __init__(self, application, env):
-        # Starts the logger
-        self.create_log_storage()
         # Set the pidaobject base
         base.pidaobject.boss = self
         base.pidacomponent.__init__(self)
