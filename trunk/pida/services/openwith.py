@@ -38,10 +38,16 @@ import pida.core.service as service
 import pida.pidagtk.tree as tree
 import pida.pidagtk.contentview as contentview
 
+# registry types
 defs = service.definitions
+
+# markup definitions
+NAME_MU = '<big>%s</big>'
+DEF_MU = '<b>%s</b>'
 
 
 class command_line_opener(base.pidaobject):
+    """A single command line opener."""
 
     def __init__(self, name, commandline, fileglob, in_terminal=True):
         self.__name = name
@@ -94,10 +100,15 @@ class command_line_opener(base.pidaobject):
     glob = property(get_glob, set_glob)
 
 class opener_list(tree.Tree):
+    """Tree view used for opener list."""
 
     EDIT_BOX = True
 
+
 class opener_view(contentview.content_view):
+    """Opener configuration view."""
+
+    LONG_TITLE = 'Open With Configuration'
 
     def init(self):
         self.__current = None
@@ -107,13 +118,14 @@ class opener_view(contentview.content_view):
     def set_openers(self, openers):
         self.__openers = openers
         self.__build_list()
+        if len(self.__openers):
+            self.__list.set_selected(self.__openers[0].name)
 
     def __build_list(self):
         self.__list.clear()
         for opener in self.__openers:
             self.__list.add_item(opener)
         self.__page.set_sensitive(len(self.__openers) > 0)
-        
 
     def __init_pane(self):
         box = gtk.HPaned()
@@ -130,20 +142,31 @@ class opener_view(contentview.content_view):
     def __init_page(self):
         box = gtk.VBox()
         self.__page = box
+        s1 = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
+        s2 = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
         self.__name_label = gtk.Label()
         box.pack_start(self.__name_label, expand=False)
-        box2 = gtk.HBox()
-        box.pack_start(box2, expand=False)
-        lb_command = gtk.Label('Command Line')
+        self.__name_label.set_alignment(0, 0.5)
+        box2 = gtk.HBox(spacing=6)
+        box.pack_start(box2, expand=False, padding=6)
+        lb_command = gtk.Label()
         box2.pack_start(lb_command, expand=False)
+        lb_command.set_markup(DEF_MU % 'Command Line')
+        s1.add_widget(lb_command)
+        lb_command.set_alignment(0, 0.5)
         self.__command_entry = gtk.Entry()
         box2.pack_start(self.__command_entry)
-        box2 = gtk.HBox()
-        box.pack_start(box2, expand=False)
-        lb_glob = gtk.Label('Glob')
+        s2.add_widget(self.__command_entry)
+        box2 = gtk.HBox(spacing=6)
+        box.pack_start(box2, expand=False, padding=6)
+        lb_glob = gtk.Label()
         box2.pack_start(lb_glob, expand=False)
+        lb_glob.set_markup(DEF_MU % 'Glob')
+        s1.add_widget(lb_glob)
+        lb_glob.set_alignment(0, 0.5)
         self.__glob_entry = gtk.Entry()
         box2.pack_start(self.__glob_entry)
+        s2.add_widget(self.__glob_entry)
         return box
 
     def __init_buttons(self):
@@ -161,7 +184,7 @@ class opener_view(contentview.content_view):
 
     def __set_page(self, opener):
         self.__current = opener
-        self.__name_label.set_markup(opener.name)
+        self.__name_label.set_markup(NAME_MU % opener.name)
         self.__command_entry.set_text(opener.commandline)
         self.__glob_entry.set_text(opener.glob)
         
@@ -197,10 +220,12 @@ class opener_view(contentview.content_view):
             self.__store_current()
         opener = item.value
         self.__set_page(opener)
-
         
 
 class open_with(service.service):
+    """Open files by glob with configurable applications."""
+    
+    display_name = 'Open With'
 
     single_view_type = opener_view
     single_view_book = 'ext'
