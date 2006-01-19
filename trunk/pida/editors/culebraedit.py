@@ -34,16 +34,20 @@ class culebra_view(contentview.content_view):
     HAS_TITLE = False
 
     def init(self, filename=None):
-        self.widget.set_border_width(6)
-        sw = gtk.ScrolledWindow()
-        sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.widget.pack_start(sw)
-        self.__editor = edit.create_editor(filename)
-        sw.add(self.__editor)
+        widget, editor = edit.create_widget(filename)
+        self.__editor = editor
+        widget.show()
+        self.widget.add(widget)
 
     def get_editor(self):
         return self.__editor
+        
     editor = property(get_editor)
+
+    def get_buffer(self):
+        return self.__editor.get_buffer()
+        
+    buffer = property(get_buffer)
 
 
 class culebra_editor(service.service):
@@ -52,7 +56,7 @@ class culebra_editor(service.service):
 
     multi_view_type = culebra_view
     multi_view_book = 'edit'
-
+    
     def init(self):
         self.__files = {}
         self.__views = {}
@@ -71,38 +75,71 @@ class culebra_editor(service.service):
         self.__views[view.unique_id] = filename
 
     def __view_file(self, filename):
-        self.__currentview = self.__files[filename]
+        self.current_view = self.__files[filename]
         self.__files[filename].raise_page()
 
     def cmd_start(self):
         self.get_service('editormanager').events.emit('started')
 
     def cmd_goto_line(self, linenumber):
-        raise NotImplementedError
-
+        view = self.current_view.editor
+        buff = self.current_view.buffer
+        
+        # Get line iterator
+        line_iter = buff.get_iter_at_line(linenumber - 1)
+        # Move scroll to the line iterator
+        view.scroll_to_iter(line_iter, 0.25)
+        # Place the cursor at the begining of the line
+        buff.place_cursor(line_iter)
+        
     def cmd_save(self):
-        raise NotImplementedError
+        self.current_view.buffer.save()
+        self.boss.call_command('buffermanager', 'reset_current_document')
 
     def cmd_undo(self):
-        self.__currentview.editor.emit('undo')
+        self.current_view.editor.emit('undo')
 
     def cmd_redo(self):
-        self.__currentview.editor.emit('redo')
+        self.current_view.editor.emit('redo')
 
     def cmd_cut(self):
-        self.__currentview.editor.emit('cut-clipboard')
+        self.current_view.editor.emit('cut-clipboard')
 
     def cmd_copy(self):
-        self.__currentview.editor.emit('copy-clipboard')
+        self.current_view.editor.emit('copy-clipboard')
 
     def cmd_paste(self):
-        self.__currentview.editor.emit('paste-clipboard')
+        self.current_view.editor.emit('paste-clipboard')
 
     def cb_multiview_closed(self, view):
         if view.unique_id in self.__views:
             filename = self.__views[view.unique_id]
             self.boss.call_command('buffermanager', 'file_closed',
                                    filename=filename)
+
+    def act_find_buffer(self, action):
+        self.current_view.editor.find_toggle.activate()
+
+    def act_replace_buffer(self, action):
+        self.current_view.editor.replace_toggle.activate()
+
+    def get_menu_definition(self):
+        return """
+        <toolbar>
+            <placeholder name="OpenFileToolbar" />
+            <placeholder name="SaveFileToolbar" />
+            
+            <placeholder name="EditToolbar">
+                <toolitem name="culebra_find" action="culebraedit+find_buffer" />
+                <toolitem name="culebra_replace"
+                action="culebraedit+replace_buffer" />
+            </placeholder>
+            
+            <placeholder name="ProjectToolbar" />
+            <placeholder name="VcToolbar" />
+            <placeholder name="ToolsToolbar"/>
+        </toolbar>
+        """
 
 
 Service = culebra_editor

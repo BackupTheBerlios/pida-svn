@@ -14,6 +14,47 @@ import os
 from gtkutil import *
 from common import *
 
+#####################
+import tempfile
+import os
+
+class SafeFileWrite:
+    """This class enables the user to safely write the contents to a file and
+    if something wrong happens the original file will not be damaged. It writes
+    the contents in a temporary file and when the file descriptor is closed the
+    contents are transfered to the real filename."""
+    
+    def __init__(self, filename):
+        self.filename = filename
+        basedir = os.path.dirname(filename)
+        # must be in the same directory so that renaming works
+        fd, self.tmp_filename = tempfile.mkstemp(dir=basedir)
+        os.close(fd)
+        self.fd = open(self.tmp_filename, "w")
+        
+    def __getattr__(self, attr):
+        return getattr(self.fd, attr)
+    
+    def close(self):
+        self.fd.close()
+        
+        try:
+            os.unlink(self.filename)
+        except OSError:
+            pass
+        os.rename(self.tmp_filename, self.filename)
+    
+    def abort(self):
+        """Abort is used to cancel the changes made and remove the temporary
+        file. The original filename will not be altered."""
+        self.fd.close()
+        try:
+            os.unlink(self.tmp_filename)
+        except OSError:
+            pass
+
+#####################
+
 class _SearchMethod(ChildObject):
 
     can_find_forward = False
@@ -145,7 +186,6 @@ class _SearchMethod(ChildObject):
         except StopIteration:
             self._no_more_entries(find_forward)
             return False
-
 
 
 
@@ -335,3 +375,9 @@ class CulebraBuffer(gtksourceview.SourceBuffer):
         if disable_highlight:
             self.search_highlight = True
         return replaced
+
+    def save(self):
+        """Saves the current buffer to the file"""
+        fd = SafeFileWrite(self.filename)
+        fd.write(self.get_text(*self.get_bounds()))
+        fd.close()

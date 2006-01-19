@@ -100,13 +100,10 @@ class CulebraView(gtksourceview.SourceView):
 
 
 
-def create_window(filename):
-    w = gtk.Window()
-    w.set_title("Culebra")
+def create_widget(filename):
 
     vbox = gtk.VBox(spacing=12)
     vbox.show()
-    w.add(vbox)
 
     scroller = gtk.ScrolledWindow()
     scroller.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -114,6 +111,7 @@ def create_window(filename):
     vbox.add(scroller)
 
     editor = create_editor(filename)
+    editor.set_name("editor")
     editor.show()
     scroller.add(editor)
     
@@ -121,7 +119,7 @@ def create_window(filename):
     vbox.pack_end(editor.search_bar.widget, False, False)
     
     
-    return w
+    return vbox, editor
 
 
 # XXX: move this to CulebraBuffer class?
@@ -166,15 +164,15 @@ def create_editor(filename):
     view.set_buffer(buff)
     
     
-    def on_foo(editor):
-        buff.search_text = "a"
-        buff.replace_text = "b"
-        buff.search()
-        buff.replace()
+#    def on_foo(editor):
+#        buff.search_text = "a"
+#        buff.replace_text = "b"
+#        buff.search()
+#        buff.replace()
 #        buff.replace_all()
 #        editor.replace_toggle.activate()
         
-    gobject.timeout_add(100, on_foo, view)
+#    gobject.timeout_add(100, on_foo, view)
 #    gobject.timeout_add(4000, on_foo, view)
     return view
 
