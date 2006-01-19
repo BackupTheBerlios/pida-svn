@@ -116,11 +116,12 @@ class culebra_editor(service.service):
     def cmd_paste(self):
         self.current_view.editor.emit('paste-clipboard')
 
-    def cb_multiview_closed(self, view):
+    def cb_multi_view_closed(self, view):
         if view.unique_id in self.__views:
             filename = self.__views[view.unique_id]
             self.boss.call_command('buffermanager', 'file_closed',
                                    filename=filename)
+            
 
     def _create_actions(self):
         ui_def = """
