@@ -67,7 +67,6 @@ class completed_keyword_entry(gtk.Entry):
 
     def set_keys(self,args):
         self.model = {}
-        print args
         for arg in args:
             self.model[arg] = []
         self.set_key_dictionary("")
@@ -85,35 +84,22 @@ class completed_keyword_entry(gtk.Entry):
         def last(x):
             return " ".join(x.split(" ")[-1:])
 
-        print "K1"
         if ":" in last(string):
-            print "K2"
             for word in self.model.keys():
                 self.completion.get_model().append([string+' '+word])
-                print string+' '+word
         else:
-            print "K3"
             for word in self.model.keys():
                 self.completion.get_model().append([word])
-                print word
-        print "KEY dictionary passed"
         
     def set_val_dictionary(self,string):
         def last(x):
             return " ".join(x.split(" ")[-1:])
         empty = False
         key = last(string)
-        print "V1"
-        print "KEY: %s"%key
-        print "STR: %s"%string
         if key in self.model.keys():
-            print "V2"
             for word in self.model[key]:
                 if word not in string:
                     self.completion.get_model().append([string+":"+word])
-                print string+":"+word
-            print "V3"
-        print "VAL dictionary passed"
 
     def on_completion_match(self, completion, model, iter):
         current_text = self.get_text()
@@ -127,9 +113,7 @@ class completed_keyword_entry(gtk.Entry):
         def key(x):
             return ":".join(x.split(":")[:-1])
 
-        print "A3: %s"%current_text
         current_text = model[iter][0]
-        print "B3: %s"%current_text
 
         if val(last(current_text)) and not key(last(current_text)):
             self.set_val_dictionary(current_text)

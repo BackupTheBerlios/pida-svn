@@ -201,5 +201,4 @@ def foo(bool):
 
 pida.log.input("Do you want to say yes ?",title="Ask the user yes",callback=foo,\
 type='yesno')
-pida.log.log(60,"FOO %s %s %s","cb_yesno","Choose yes",foo)
 '''

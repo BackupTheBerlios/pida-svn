@@ -25,11 +25,6 @@ import sys
 import types
 import logging
 
-USER_NOTIFY = 100
-USER_INPUT = 110
-logging.addLevelName(USER_INPUT,'USER_INPUT')
-logging.addLevelName(USER_NOTIFY,'USER_NOTIFY')
-
 class event_record(logging.LogRecord):
     def __init__(self,name,level,pathname,lineno,msg,args,
                     exc_info,callback,title,prefill,type):
@@ -47,7 +42,6 @@ class event_record(logging.LogRecord):
 
     def callback(self,value):
         self.answered_value = value
-        print "val : %s"%value
         self.__callback(value)
 
 class event_log(logging.Logger):

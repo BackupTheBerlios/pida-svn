@@ -378,7 +378,6 @@ class log_history(contentview.content_view):
     def refresh(self):
         self.__log_tree.clear()
         if self.__logs != None:                                           
-            print "#################### %s"%self.__filter
             if self.__filter in  (None, ''):                              
                 logs = self.__logs.iter
                 for log in logs:
@@ -388,7 +387,6 @@ class log_history(contentview.content_view):
                 for attr in self.__filter.keys():
                     logs[attr] = self.__logs.filter_list(attr,self.__filter[attr])
                 for attr in logs.keys():
-                    print "attr: %s" % attr
                     for log in logs[attr]:
                         self.add_item(log)
 
@@ -419,7 +417,6 @@ class log_history(contentview.content_view):
     def cb_record_m_clicked(self,tree,tree_item):
         '''Callback function called when an item is middle clicked, and copy it
         to the mouse buffer clipboard ?'''
-        print 'middle clicked'
         self.service.cmd_show_watcher(tree_item.value.value)
 
     def cb_record_r_clicked(self, paste, tree_item, event):
@@ -458,16 +455,13 @@ class log_manager(service.service):
     # commands
 
     def cmd_filter(self,filter):
-        print "cmd_filter : %s"%filter
         request = {}
         if " " in filter:
             pairs = filter.split(" ")
             for pair in pairs:
                 if len(pair.split(":")) == 2:
-                    print "!!!"
                     (key,val) = pair.split(":")
                     request[key] = val
-                    print "key:%s, val:%s"%(key,val)
         else:
             if len(filter.split(":")) == 2:
                 (key,val) = filter.split(":")
