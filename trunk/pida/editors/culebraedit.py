@@ -26,16 +26,16 @@ import gtk
 import pida.core.service as service
 import pida.pidagtk.contentview as contentview
 
-import pida.utils.culebra.edit as edit
+from pida.utils.culebra import edit
 
 
 class culebra_view(contentview.content_view):
 
     HAS_TITLE = False
 
-    def init(self, filename=None):
+    def init(self, filename=None, action_group=None):
         self.widget.set_no_show_all(True)
-        widget, editor = edit.create_widget(filename)
+        widget, editor = edit.create_widget(filename, action_group)
         self.__editor = editor
         widget.show()
         self.widget.add(widget)
@@ -61,6 +61,7 @@ class culebra_editor(service.service):
     def init(self):
         self.__files = {}
         self.__views = {}
+        self._create_actions()
 
     def cmd_edit(self, filename=None):
         if filename not in self.__files:
@@ -71,7 +72,10 @@ class culebra_editor(service.service):
         raise NotImplementedError
 
     def __load_file(self, filename):
-        view = self.create_multi_view(filename=filename)
+        view = self.create_multi_view(
+            filename=filename,
+            action_group=self._action_group
+        )
         self.__files[filename] = view
         self.__views[view.unique_id] = filename
 
@@ -118,29 +122,92 @@ class culebra_editor(service.service):
             self.boss.call_command('buffermanager', 'file_closed',
                                    filename=filename)
 
-    def act_find_buffer(self, action):
-        self.current_view.editor.find_toggle.activate()
-
-    def act_replace_buffer(self, action):
-        self.current_view.editor.replace_toggle.activate()
-
-    def get_menu_definition(self):
-        return """
+    def _create_actions(self):
+        ui_def = """
         <toolbar>
             <placeholder name="OpenFileToolbar" />
             <placeholder name="SaveFileToolbar" />
             
             <placeholder name="EditToolbar">
-                <toolitem name="culebra_find" action="culebraedit+find_buffer" />
-                <toolitem name="culebra_replace"
-                action="culebraedit+replace_buffer" />
+                <toolitem name="culebra_find_toggle"
+                action="%s" />
+                <toolitem name="CulebraReplaceToggle"
+                action="%s" />
             </placeholder>
             
             <placeholder name="ProjectToolbar" />
             <placeholder name="VcToolbar" />
             <placeholder name="ToolsToolbar"/>
         </toolbar>
-        """
+        """ % (edit.ACTION_FIND_TOGGLE, edit.ACTION_REPLACE_TOGGLE)
+        
 
+        ag = gtk.ActionGroup("culebraactions")
+        ag.add_toggle_actions((
+            (
+                edit.ACTION_FIND_TOGGLE,
+                gtk.STOCK_FIND,
+                "_Find...",
+                None,
+                "Shows or hides the find bar"
+            ),
+            
+            (
+                edit.ACTION_REPLACE_TOGGLE,
+                gtk.STOCK_FIND_AND_REPLACE,
+                "_Replace...",
+                None,
+                "Shows or hides the replace bar"
+            ),
+            
+        ))
+        
+        ag.add_actions((
+            (
+                edit.ACTION_FIND_FORWARD,
+                gtk.STOCK_GO_FORWARD,
+                "Find Forward",
+                None,
+                "Finds the next matching word"
+            ),
+            (
+                edit.ACTION_FIND_BACKWARD,
+                gtk.STOCK_GO_BACK,
+                "Find Backward",
+                None,
+                "Finds the previous matching word"
+            ),
+            (
+                edit.ACTION_REPLACE_FORWARD,
+                gtk.STOCK_GO_FORWARD,
+                "Replace Forward",
+                None,
+                "Replaces the next matching word"
+            ),
+            (
+                edit.ACTION_REPLACE_BACKWARD,
+                gtk.STOCK_GO_BACK,
+                "Replace Backward",
+                None,
+                "Replaces the previous matching word"
+            ),
+            (
+                edit.ACTION_REPLACE_ALL,
+                gtk.STOCK_FIND_AND_REPLACE,
+                "Replace All",
+                None,
+                "Replaces every the matching word"
+            ),
+            
+        ))
+        
+        self._action_group = ag
+        self.boss.call_command(
+            "window",
+            "register_action_group",
+            actiongroup=ag,
+            uidefinition=ui_def
+        )
+        
 
 Service = culebra_editor

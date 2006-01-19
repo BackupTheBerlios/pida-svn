@@ -14,14 +14,15 @@ class ReplaceBar(ChildObject):
     This component implements an event that validates when the selection is
     synchronized with the selected text.
     """
-    def __init__(self, parent, search_bar, toggle_find, toggle_replace, replace_forward, replace_all):
+    def __init__(self, parent, search_bar, action_group):
         super(ReplaceBar, self).__init__(parent)
         self._search_bar = weakref.ref(search_bar)
-
-        self.toggle_find = toggle_find
-        self.toggle_replace = toggle_replace
-        self.replace_forward = replace_forward
-        self.replace_all = replace_all
+        action = lambda name: get_action(action_group.get_action, name)
+        
+        self.toggle_find = action(ACTION_FIND_TOGGLE)
+        self.toggle_replace = action(ACTION_REPLACE_TOGGLE)
+        self.replace_forward = action(ACTION_REPLACE_FORWARD)
+        self.replace_all = action(ACTION_REPLACE_ALL)
         # XXX: this is only here because there's one replace_bar per buffer
         # TODO: make it non dependant and make it 
         #self.bind(self.get_buffer())
@@ -89,7 +90,7 @@ class ReplaceBar(ChildObject):
         hig_add = lambda container, widget: \
                   container.pack_start(widget, expand = False, fill = False)
         
-        hbox = gtk.HBox(spacing = 6)
+        hbox = gtk.HBox(spacing=6)
         hbox.connect("key-release-event", self.on_key_pressed)
         hbox.connect("show", self.on_show)
         hbox.connect("hide", self.on_hide)
@@ -101,12 +102,12 @@ class ReplaceBar(ChildObject):
         self.replace_entry.show()
         hig_add(hbox, self.replace_entry)
         
-        btn = gtk.Button(stock = gtk.STOCK_FIND_AND_REPLACE)
+        btn = gtk.Button(stock=gtk.STOCK_FIND_AND_REPLACE)
         self.replace_forward.connect_proxy(btn)
         btn.show()
         hig_add(hbox, btn)
         
-        btn = gtk.Button(stock = gtk.STOCK_FIND_AND_REPLACE)
+        btn = gtk.Button(stock=gtk.STOCK_FIND_AND_REPLACE)
         btn.set_label("Replace All")
         self.replace_all.connect_proxy(btn)
         btn.show()

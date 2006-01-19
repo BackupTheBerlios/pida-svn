@@ -19,6 +19,15 @@ RESPONSE_REPLACE_ALL,
 
 KEY_ESCAPE = gtk.gdk.keyval_from_name("Escape")
 
+ACTION_FIND_TOGGLE = "CulebraFindToggle"
+ACTION_FIND_FORWARD = "CulebraFindForward"
+ACTION_FIND_BACKWARD = "CulebraFindBackward"
+ACTION_REPLACE_TOGGLE = "CulebraReplaceToggle"
+ACTION_REPLACE_FORWARD = "CulebraReplaceForward"
+ACTION_REPLACE_BACKWARD = "CulebraReplaceBackward"
+ACTION_REPLACE_ALL = "CulebraReplaceAll"
+
+
 ###############
 # Actual code
 
@@ -37,4 +46,7 @@ def escape_text(txt):
 def unescape_text(txt):
     return txt.replace("¬", "\t").replace("¶", "\n")
 
-
+def get_action(get_action, name):
+    action = get_action(name)
+    assert action is not None, name
+    return action

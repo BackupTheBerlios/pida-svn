@@ -35,7 +35,7 @@ BLOCK_SIZE = 2048
 
 
 class CulebraView(gtksourceview.SourceView):
-    def __init__(self):
+    def __init__(self, action_group):
         
         gtksourceview.SourceView.__init__(self)
             
@@ -51,28 +51,10 @@ class CulebraView(gtksourceview.SourceView):
         if font_desc is not None:
             self.modify_font(font_desc)
         
-        show_find = gtk.ToggleAction(
-            "FindToggle",
-            "Find...",
-            "Finds a string in current document",
-            gtk.STOCK_FIND
-        )
-        self.find_toggle = show_find
-        self.find_fw = gtk.Action("FindForward", "Find next", "Finds the string forward", gtk.STOCK_FIND)
-        self.find_bw = gtk.Action("FindBackwards", "Find back", "Finds the string backwards", gtk.STOCK_FIND)
-        self.replace_fw = gtk.Action("ReplaceForward", "Replace next", "Replaces the string forward", gtk.STOCK_FIND_AND_REPLACE)
-        self.replace_toggle = gtk.ToggleAction("ReplaceToggle", "Replace...", "Replaces the string forward", gtk.STOCK_FIND_AND_REPLACE)
-        self.replace_all = gtk.Action("ReplaceAll", "Replace all", "Replaces all the occurrences", gtk.STOCK_FIND_AND_REPLACE)
-        self.search_bar = SearchBar(self, self.find_fw, self.find_bw, show_find)
-        actions =(
-            self.find_toggle,
-            self.replace_toggle,
-            self.replace_fw,
-            self.replace_all
-        )
-        self.replace_bar = ReplaceBar(self, self.search_bar, *actions)
-        self.find_fw.connect("activate", self.on_find_forward)
-        self.find_bw.connect("activate", self.on_find_backwards)
+        self.search_bar = SearchBar(self, action_group)
+        self.replace_bar = ReplaceBar(self, self.search_bar, action_group)
+        action_group.get_action(ACTION_FIND_FORWARD).connect("activate", self.on_find_forward)
+        action_group.get_action(ACTION_FIND_BACKWARD).connect("activate", self.on_find_backwards)
     
     def set_buffer(self, buff):
         self.replace_bar.set_buffer(buff)
@@ -100,7 +82,7 @@ class CulebraView(gtksourceview.SourceView):
 
 
 
-def create_widget(filename):
+def create_widget(filename, action_group):
 
     vbox = gtk.VBox(spacing=12)
     vbox.show()
@@ -110,7 +92,7 @@ def create_widget(filename):
     scroller.show()
     vbox.add(scroller)
 
-    editor = create_editor(filename)
+    editor = create_editor(filename, action_group)
     editor.set_name("editor")
     editor.show()
     scroller.add(editor)
@@ -158,8 +140,8 @@ def load_buffer(filename, buff=None):
     return buff
     
             
-def create_editor(filename):
-    view = CulebraView()
+def create_editor(filename, action_group):
+    view = CulebraView(action_group)
     buff = load_buffer(filename)
     view.set_buffer(buff)
     

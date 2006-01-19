@@ -9,12 +9,12 @@ from gtkutil import *
 
 
 class SearchBar(ChildObject):
-    def __init__(self, parent, find_forward, find_backwards, show_find):
+    def __init__(self, parent, action_group):
         super(SearchBar, self).__init__(parent)
 
-        self.find_forward = find_forward
-        self.find_backwards = find_backwards
-        self.show_find = show_find
+        self.find_forward = action_group.get_action(ACTION_FIND_FORWARD)
+        self.find_backwards = action_group.get_action(ACTION_FIND_BACKWARD)
+        self.show_find = action_group.get_action(ACTION_FIND_TOGGLE)
         self._widget = None
         self.show_find.connect("toggled", self.on_toggle_find)
     
