@@ -110,7 +110,7 @@ class window_manager(service.service):
         def response(response):
             if response != None:
                 callback_function(response)
-        if hasattr(self,log):
+        if hasattr(self,'log'):
             self.log.input(prompt,title=prompt,prefill=prefill,
                         callback=response,type="entry_okcancel")
         else:
