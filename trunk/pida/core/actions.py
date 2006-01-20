@@ -26,7 +26,6 @@ import gtk
 
 # pida core import(s)
 import base
-
 import string
 
 (
@@ -35,7 +34,92 @@ TYPE_TOGGLE,
 TYPE_NORMAL
 ) = range(3)
 
+_ACTIONS = {
+    TYPE_NORMAL: gtk.Action,
+    TYPE_TOGGLE: gtk.ToggleAction,
+    TYPE_RADIO: gtk.RadioAction
+}
+
+def split_function_name(name):
+    return name.split('_', 1)[-1]
+
+def create_actions(meths, action_prefix):
+    '''This function grabs a list of methods and an 'action_prefix' and
+    returns a list of actions.
+    
+    Accepted method properties are:
+    
+     * 'name', sets the action's 'name' property
+     * 'label', sets the action's 'label' property
+     * 'stock_id', sets the action's 'stock-id' property
+     * 'type', on of TYPE_NORMAL, TYPE_TOGGLE and TYPE_RADIO.
+       Defaults to TYPE_NORMAL
+     * 'value', only used on TYPE_RADIO. Sets the gtk.RadioAction's value
+     * 'group', only used on TYPE_RADIO. Sets the gtk.RadioAction's group
+     * 'is_important', sets the action's 'is-important' property
+     
+    '''
+    
+    radio_elements = {}
+    actions = []
+    
+    for meth in meths:
+        name = split_function_name(meth.__name__)
+        
+        actname = "%s+%s" % (action_prefix, name)
+        actname = getattr(meth, "name", actname)
+        
+        name = getattr(meth, "name", name)
+        words = map(string.capitalize, name.split('_'))
+        label = " ".join(words)
+        label = getattr(meth, "label", label)
+        stock_id = "gtk-%s%s" % (words[0][0].lower(), words[0][1:])
+        stock_id = getattr(meth, "stock_id", stock_id)
+        doc = meth.func_doc
+        
+        action_type = getattr(meth, "type", TYPE_NORMAL)
+        action_factory = _ACTIONS[action_type]
+        
+        args = ()
+        # gtk.RadioAction has one more argument in the constructor
+        if action_type == TYPE_RADIO:
+            args = [getattr(meth, "value")]
+        
+        action = action_factory(actname, label, doc, stock_id, *args)
+
+        # gtk.RadioAction has an important property that needs to be set
+        if action_type == TYPE_RADIO:
+            radio_elements[name] = (action, getattr(meth, "group", None))
+        
+        action.set_property("is-important", getattr(meth, "is_important", False))
+            
+        action.connect("activate", meth)
+        actions.append(action)
+    
+    # Now we create the radio groups
+    for name, (action, group) in radio_elements.iteritems():
+        if group is None:
+            continue
+            
+        group = radio_elements[group][0]
+        action.set_group(group)
+
+    return actions
+
 def decorate_action(meth, **kwargs):
+    '''This function is used to decorate methods, it is *not* a python decorator
+    to use it you just need to do::
+    
+        class MyService(service.service):
+            def act_my_action(self, action):
+                """My tooltip text"""
+            
+            decorate_action(act_my_action, label="A cool label")
+    
+    So it is used to decorate the function and returns nothing.
+    It accepts the same keyword arguments as the 'create_action' function.
+    '''
+            
     for key, val in kwargs.iteritems():
         setattr(meth, key, val)
 
@@ -93,11 +177,6 @@ def action(**kwargs):
 class action_handler(base.pidacomponent):
 
     type_name = 'action-handler'
-    __actions = {
-        TYPE_NORMAL: gtk.Action,
-        TYPE_TOGGLE: gtk.ToggleAction,
-        TYPE_RADIO: gtk.RadioAction
-    }
 
     def __init__(self, service):
         self.__service = service
@@ -110,52 +189,13 @@ class action_handler(base.pidacomponent):
     def __init_actiongroup(self):
         agname = "%s+%s" % (self.__service.NAME, self.type_name)
         self.__action_group = gtk.ActionGroup(agname)
-        radio_elements = {}
         
-        for attr in dir(self):
-            if not attr.startswith("act_"):
-                continue
-                
-            meth = getattr(self, attr)
-            
-            name = attr[4:]
-            actname = "%s+%s" % (agname, name)
-            actname = getattr(meth, "name", actname)
-            
-            name = getattr(meth, "name", name)
-            words = map(string.capitalize, name.split('_'))
-            label = " ".join(words)
-            label = getattr(meth, "label", label)
-            stock_id = "gtk-%s%s" % (words[0][0].lower(), words[0][1:])
-            stock_id = getattr(meth, "stock_id", stock_id)
-            doc = meth.func_doc
-            
-            action_type = getattr(meth, "type", TYPE_NORMAL)
-            action_factory = self.__actions[action_type]
-            
-            args = ()
-            # gtk.RadioAction has one more argument in the constructor
-            if action_type == TYPE_RADIO:
-                args = [getattr(meth, "value")]
-            
-            action = action_factory(actname, label, doc, stock_id, *args)
+        methods = [getattr(self, attr) \
+                   for attr in dir(self) \
+                   if attr.startswith("act_")]
 
-            # gtk.RadioAction has an important property that needs to be set
-            if action_type == TYPE_RADIO:
-                radio_elements[name] = (action, getattr(meth, "group", None))
-            
-            action.set_property("is-important", getattr(meth, "is_important", False))
-                
-            action.connect("activate", meth)
-            self.__action_group.add_action(action)
-        
-        # Now we create the radio groups
-        for name, (action, group) in radio_elements.iteritems():
-            if group is None:
-                continue
-                
-            group = radio_elements[group][0]
-            action.set_group(group)
+        add_action = self.__action_group.add_action
+        map(add_action, create_actions(methods, agname))
         
 
     def get_action_group(self):

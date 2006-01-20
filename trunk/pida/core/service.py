@@ -28,7 +28,7 @@ import command
 import shelve
 import registry
 import databases
-
+import actions
 import definitions
 
 types = registry.types
@@ -39,13 +39,8 @@ import gtk
 # system imports
 import os
 
-
-import pida.utils.servicetemplates as servicetemplates
-
-
-split_function_name = servicetemplates.split_function_name
-get_actions_for_funcs = servicetemplates.get_actions_for_funcs
-build_optiongroup_from_class = servicetemplates.build_optiongroup_from_class
+from actions import split_function_name
+from pida.utils.servicetemplates import build_optiongroup_from_class
 
 
 class options_mixin(object):
@@ -263,9 +258,15 @@ class actions_mixin(object):
                 actiongroup=self.action_group, uidefinition=menudef)
 
     def __init(self):
-        for action in get_actions_for_funcs(self.__class__.__actions__,
-                                                self):
-            self.__action_group.add_action(action)
+        # First we need to get the methods instead of the functions
+        # create_actions accepts only methods and not class functions
+        get_method = lambda func: getattr(self, func.__name__)
+        meths = map(get_method, self.__class__.__actions__)
+        # Now we can create the actions
+        acts = actions.create_actions(meths, self.NAME)
+        # Finally for each action we add it to the group
+        add_action = self.__action_group.add_action
+        map(add_action, acts)
 
     def get_action_group(self):
         return self.__action_group
