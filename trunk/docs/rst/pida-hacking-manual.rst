@@ -49,7 +49,7 @@ Another way of creating actions is the *implicit creation*. Pida has a nice
 feature that turns every method you prefix with a 'act_' into a 'gtk.Action' and
 then the action name.
 
-The action name is generated with the 'servicename+action_name', where
+The action name is generated with the 'module+servicename+action_name', where
 'action_name' is the method name ignoring the 'act_' part. The tooltip text is
 generated from the doc string of the method.
 
