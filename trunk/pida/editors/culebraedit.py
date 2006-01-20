@@ -23,9 +23,9 @@
 
 import gtk
 
-import pida.core.service as service
-import pida.pidagtk.contentview as contentview
-
+from pida.pidagtk import contentview
+from pida.core import actions
+from pida.core import service
 from pida.utils.culebra import edit
 
 
@@ -50,7 +50,6 @@ class culebra_view(contentview.content_view):
         
     buffer = property(get_buffer)
 
-
 class culebra_editor(service.service):
 
     display_name = 'Culebra Text Editor'
@@ -59,6 +58,9 @@ class culebra_editor(service.service):
     multi_view_book = 'edit'
     
     def init(self):
+        print "AAAAAAAAAAAAAA"
+        print isinstance(self, actions.action_handler)
+        
         self.__files = {}
         self.__views = {}
         self._populate_action_group()
@@ -134,17 +136,22 @@ class culebra_editor(service.service):
             </placeholder>
         </toolbar>
         """ % (edit.ACTION_FIND_TOGGLE, edit.ACTION_REPLACE_TOGGLE)
+    
+    
+    def act_find_toggle(self, action):
+        """Shows or hides the find bar"""
         
+    actions.decorate_action(
+        act_find_toggle,
+        name = edit.ACTION_FIND_TOGGLE,
+        stock_id = gtk.STOCK_FIND,
+        label = "_Find",
+        type = actions.TYPE_TOGGLE,
+    )
+
+
     def _populate_action_group(self):
         self.action_group.add_toggle_actions((
-            (
-                edit.ACTION_FIND_TOGGLE,
-                gtk.STOCK_FIND,
-                "_Find...",
-                None,
-                "Shows or hides the find bar"
-            ),
-            
             (
                 edit.ACTION_REPLACE_TOGGLE,
                 gtk.STOCK_FIND_AND_REPLACE,
