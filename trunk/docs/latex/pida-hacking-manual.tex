@@ -1,0 +1,280 @@
+\documentclass[10pt,a4paper,english]{article}
+\usepackage{babel}
+\usepackage{ae}
+\usepackage{aeguill}
+\usepackage{shortvrb}
+\usepackage[latin1]{inputenc}
+\usepackage{tabularx}
+\usepackage{longtable}
+\setlength{\extrarowheight}{2pt}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{multirow}
+\usepackage{ifthen}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\usepackage[DIV12]{typearea}
+%% generator Docutils: http://docutils.sourceforge.net/
+\newlength{\admonitionwidth}
+\setlength{\admonitionwidth}{0.9\textwidth}
+\newlength{\docinfowidth}
+\setlength{\docinfowidth}{0.9\textwidth}
+\newlength{\locallinewidth}
+\newcommand{\optionlistlabel}[1]{\bf #1 \hfill}
+\newenvironment{optionlist}[1]
+{\begin{list}{}
+  {\setlength{\labelwidth}{#1}
+   \setlength{\rightmargin}{1cm}
+   \setlength{\leftmargin}{\rightmargin}
+   \addtolength{\leftmargin}{\labelwidth}
+   \addtolength{\leftmargin}{\labelsep}
+   \renewcommand{\makelabel}{\optionlistlabel}}
+}{\end{list}}
+\newlength{\lineblockindentation}
+\setlength{\lineblockindentation}{2.5em}
+\newenvironment{lineblock}[1]
+{\begin{list}{}
+  {\setlength{\partopsep}{\parskip}
+   \addtolength{\partopsep}{\baselineskip}
+   \topsep0pt\itemsep0.15\baselineskip\parsep0pt
+   \leftmargin#1}
+ \raggedright}
+{\end{list}}
+% begin: floats for footnotes tweaking.
+\setlength{\floatsep}{0.5em}
+\setlength{\textfloatsep}{\fill}
+\addtolength{\textfloatsep}{3em}
+\renewcommand{\textfraction}{0.5}
+\renewcommand{\topfraction}{0.5}
+\renewcommand{\bottomfraction}{0.5}
+\setcounter{totalnumber}{50}
+\setcounter{topnumber}{50}
+\setcounter{bottomnumber}{50}
+% end floats for footnotes
+% some commands, that could be overwritten in the style file.
+\newcommand{\rubric}[1]{\subsection*{~\hfill {\it #1} \hfill ~}}
+\newcommand{\titlereference}[1]{\textsl{#1}}
+% end of "some commands"
+\title{The PIDA's Hacking Manual}
+\author{}
+\date{}
+\hypersetup{
+pdftitle={The PIDA's Hacking Manual},
+pdfauthor={Tiago Cogumbreiro}
+}
+\raggedbottom
+\begin{document}
+\maketitle
+
+%___________________________________________________________________________
+\begin{center}
+\begin{tabularx}{\docinfowidth}{lX}
+\textbf{Author}: &
+	Tiago Cogumbreiro \\
+\textbf{Contact}: &
+	\href{mailto:cogumbreiro@users.sf.net}{cogumbreiro@users.sf.net} \\
+\end{tabularx}
+\end{center}
+
+\setlength{\locallinewidth}{\linewidth}
+
+Title overline too short.
+\begin{quote}{\ttfamily \raggedright \noindent
+===============~\\
+The~PIDA's~Hacking~Manual~\\
+===============
+}\end{quote}
+
+\hypertarget{table-of-contents}{}
+\pdfbookmark[0]{Table Of Contents}{table-of-contents}
+\subsubsection*{~\hfill Table Of Contents\hfill ~}
+\begin{list}{}{}
+\item {} \href{\#creating-gtk-action-s}{Creating gtk.Action's}
+\begin{list}{}{}
+\item {} \href{\#the-hard-way}{The Hard Way}
+
+\item {} \href{\#the-fast-way}{The Fast Way}
+
+\end{list}
+
+\item {} \href{\#integrating-into-menu-and-toolbar}{Integrating into menu and toolbar}
+
+\end{list}
+
+
+
+%___________________________________________________________________________
+
+\hypertarget{creating-gtk-action-s}{}
+\pdfbookmark[0]{Creating gtk.Action's}{creating-gtk-action-s}
+\section*{Creating gtk.Action's}
+
+First you need to know that there's a gtk.Action group associated with
+each service. It's name is the 'classname'.
+It can be accessed through 'self.action{\_}group'.
+
+
+%___________________________________________________________________________
+
+\hypertarget{the-hard-way}{}
+\pdfbookmark[1]{The Hard Way}{the-hard-way}
+\subsection*{The Hard Way}
+
+In order to add actions to the service's action group you just need
+to add them in the 'init()' method which is called to initialized the
+service.
+
+Example:
+\begin{quote}{\ttfamily \raggedright \noindent
+import~pida.core.service~as~service~\\
+import~gtk~\\
+~\\
+class~MyService(service.service):~\\
+~~~~def~init(self):~\\
+~~~~~~~~self.action{\_}group.add{\_}actions({[}~\\
+~~~~~~~~~~~~("GoForward",gtk.STOCK{\_}GO{\_}FORWARD,~None,~\\
+~~~~~~~~~~~~~"This~makes~it~go~forward"),~\\
+~~~~~~~~])~\\
+~~~~~~~~~\\
+~~~~~~~~act~=~self.action{\_}group.get{\_}action("GoForward")~\\
+~~~~~~~~act.connect("activate",~self.on{\_}go{\_}forward)~\\
+~~~~~\\
+~~~~def~on{\_}go{\_}forward(self,~action):~\\
+~~~~~~~~print~"Go~forward!"
+}\end{quote}
+
+
+%___________________________________________________________________________
+
+\hypertarget{the-fast-way}{}
+\pdfbookmark[1]{The Fast Way}{the-fast-way}
+\subsection*{The Fast Way}
+
+Another way of creating actions is the \emph{implicit creation}. Pida has a nice
+feature that turns every method you prefix with a '{\color{red}\bfseries{}act{\_}}' into a 'gtk.Action' and
+then the action name.
+
+The action name is generated with the 'servicename+action{\_}name', where
+'action{\_}name' is the method name ignoring the '{\color{red}\bfseries{}act{\_}}' part. The tooltip text is
+generated from the doc string of the method.
+
+So, a simillar example would be:
+\begin{quote}{\ttfamily \raggedright \noindent
+import~pida.core.service~as~service~\\
+~\\
+class~MyService(service.service):~\\
+~~~~def~act{\_}go{\_}forward(self,~action):~\\
+~~~~~~~~"{}"{}"This~makes~it~go~forward"{}"{}"~\\
+~~~~~~~~print~"Go~forward!"
+}\end{quote}
+
+As you can see the code is way smaller but it has the following limitations:
+\begin{quote}
+\begin{itemize}
+\item {} 
+implicitly connects to the 'activate' signal
+
+\item {} 
+the stock icon is fetched from the first word (separated by '{\_}'), so in the
+case of gtk.STOCK{\_}GO{\_}FORWARD there's a no go.
+
+\item {} 
+it can only create gtk.Action's, not gtk.ToggleAction's nor
+gtk.RadioAction's.
+
+\end{itemize}
+\end{quote}
+
+
+%___________________________________________________________________________
+
+\hypertarget{integrating-into-menu-and-toolbar}{}
+\pdfbookmark[0]{Integrating into menu and toolbar}{integrating-into-menu-and-toolbar}
+\section*{Integrating into menu and toolbar}
+
+In order to put your gtk.Action's in toolbar and menus you have to
+have a concept of gtk.UIManager. You have 5 available placeholders to put your
+actions for your toolbar:
+\begin{quote}
+\begin{itemize}
+\item {} 
+'OpenFileToolbar'
+
+\item {} 
+'SaveFileToolbar'
+
+\item {} 
+'EditToolbar'
+
+\item {} 
+'ProjectToolbar'
+
+\item {} 
+'VcToolbar'
+
+\item {} 
+'ToolsToolbar'
+
+\end{itemize}
+\end{quote}
+\begin{description}
+%[visit_definition_list_item]
+\item[And 4 available placeholders for your menu entries:] %[visit_definition]
+\begin{itemize}
+\item {} 
+'OpenFileMenu'
+
+\item {} 
+'SaveFileMenu'
+
+\item {} 
+'ExtrasFileMenu'
+
+\item {} 
+'GlobalFileMenu'
+
+\end{itemize}
+
+%[depart_definition]
+%[depart_definition_list_item]
+\end{description}
+
+This is also the order of which they were created.
+
+The next part is that you need to
+return a UIManager definition with the following nature: implement a method
+named 'get{\_}menu{\_}definition' in your service class:
+\begin{quote}{\ttfamily \raggedright \noindent
+import~pida.core.service~as~service~\\
+~\\
+class~MyService(service.service):~\\
+~\\
+~~~~def~get{\_}menu{\_}definition(self):~\\
+~~~~~~~~return~"{}"{}"~\\
+~~~~~~~~~~~~<menubar>~\\
+~~~~~~~~~~~~~~~~<placeholder~name="ExtrasFileMenu">~\\
+~~~~~~~~~~~~~~~~~~~~<menu~name="my{\_}menu{\_}entry"~action="MyAction">~\\
+~~~~~~~~~~~~~~~~</placeholder>~\\
+~~~~~~~~~~~~</menubar>~\\
+~~~~~~~~~~~~<toolbar>~\\
+~~~~~~~~~~~~~~~~<placeholder~name="ToolsToolbar">~\\
+~~~~~~~~~~~~~~~~~~~~<toolitem~name="my{\_}tool{\_}item"~action="MyAction"~/>~\\
+~~~~~~~~~~~~~~~~</placeholder>~\\
+~~~~~~~~~~~~</toolbar>~\\
+~~~~~~~~"{}"{}"
+}\end{quote}
+
+In this example we've plugged our action 'MyAction' to the menu and the toolbar.
+
+
+%___________________________________________________________________________
+
+\section*{Docutils System Messages}
+
+Unknown target name: ``act''.
+
+
+Unknown target name: ``act''.
+
+
+\end{document}

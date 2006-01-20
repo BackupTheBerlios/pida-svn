@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.3.7: http://docutils.sourceforge.net/" />
+<title>The PIDA's Hacking Manual</title>
+<meta name="author" content="Tiago Cogumbreiro" />
+<link rel="stylesheet" href="default.css" type="text/css" />
+</head>
+<body>
+<div class="document" id="the-pida-s-hacking-manual">
+<h1 class="title">The PIDA's Hacking Manual</h1>
+<table class="docinfo" frame="void" rules="none">
+<col class="docinfo-name" />
+<col class="docinfo-content" />
+<tbody valign="top">
+<tr><th class="docinfo-name">Author:</th>
+<td>Tiago Cogumbreiro</td></tr>
+<tr><th class="docinfo-name">Contact:</th>
+<td><a class="first last reference" href="mailto:cogumbreiro&#64;users.sf.net">cogumbreiro&#64;users.sf.net</a></td></tr>
+</tbody>
+</table>
+<div class="system-message">
+<p class="system-message-title">System Message: WARNING/2 (<tt class="docutils">rst/pida-hacking-manual.rst</tt>, line 1)</p>
+<p>Title overline too short.</p>
+<pre class="literal-block">
+===============
+The PIDA's Hacking Manual
+===============
+</pre>
+</div>
+<div class="contents topic" id="table-of-contents">
+<p class="topic-title first"><a name="table-of-contents">Table Of Contents</a></p>
+<ul class="simple">
+<li><a class="reference" href="#creating-gtk-action-s" id="id1" name="id1">Creating gtk.Action's</a><ul>
+<li><a class="reference" href="#the-hard-way" id="id2" name="id2">The Hard Way</a></li>
+<li><a class="reference" href="#the-fast-way" id="id3" name="id3">The Fast Way</a></li>
+</ul>
+</li>
+<li><a class="reference" href="#integrating-into-menu-and-toolbar" id="id4" name="id4">Integrating into menu and toolbar</a></li>
+</ul>
+</div>
+<div class="section" id="creating-gtk-action-s">
+<h1><a class="toc-backref" href="#table-of-contents" name="creating-gtk-action-s">Creating gtk.Action's</a></h1>
+<p>First you need to know that there's a gtk.Action group associated with
+each service. It's name is the 'classname'.
+It can be accessed through 'self.action_group'.</p>
+<div class="section" id="the-hard-way">
+<h2><a class="toc-backref" href="#table-of-contents" name="the-hard-way">The Hard Way</a></h2>
+<p>In order to add actions to the service's action group you just need
+to add them in the 'init()' method which is called to initialized the
+service.</p>
+<p>Example:</p>
+<pre class="literal-block">
+import pida.core.service as service
+import gtk
+
+class MyService(service.service):
+    def init(self):
+        self.action_group.add_actions([
+            (&quot;GoForward&quot;,gtk.STOCK_GO_FORWARD, None,
+             &quot;This makes it go forward&quot;),
+        ])
+        
+        act = self.action_group.get_action(&quot;GoForward&quot;)
+        act.connect(&quot;activate&quot;, self.on_go_forward)
+    
+    def on_go_forward(self, action):
+        print &quot;Go forward!&quot;
+</pre>
+</div>
+<div class="section" id="the-fast-way">
+<h2><a class="toc-backref" href="#table-of-contents" name="the-fast-way">The Fast Way</a></h2>
+<p>Another way of creating actions is the <em>implicit creation</em>. Pida has a nice
+feature that turns every method you prefix with a '<a href="#id5" name="id6"><span class="problematic" id="id6">act_</span></a>' into a 'gtk.Action' and
+then the action name.</p>
+<p>The action name is generated with the 'servicename+action_name', where
+'action_name' is the method name ignoring the '<a href="#id7" name="id8"><span class="problematic" id="id8">act_</span></a>' part. The tooltip text is
+generated from the doc string of the method.</p>
+<p>So, a simillar example would be:</p>
+<pre class="literal-block">
+import pida.core.service as service
+
+class MyService(service.service):
+    def act_go_forward(self, action):
+        &quot;&quot;&quot;This makes it go forward&quot;&quot;&quot;
+        print &quot;Go forward!&quot;
+</pre>
+<p>As you can see the code is way smaller but it has the following limitations:</p>
+<blockquote>
+<ul class="simple">
+<li>implicitly connects to the 'activate' signal</li>
+<li>the stock icon is fetched from the first word (separated by '_'), so in the
+case of gtk.STOCK_GO_FORWARD there's a no go.</li>
+<li>it can only create gtk.Action's, not gtk.ToggleAction's nor
+gtk.RadioAction's.</li>
+</ul>
+</blockquote>
+</div>
+</div>
+<div class="section" id="integrating-into-menu-and-toolbar">
+<h1><a class="toc-backref" href="#table-of-contents" name="integrating-into-menu-and-toolbar">Integrating into menu and toolbar</a></h1>
+<p>In order to put your gtk.Action's in toolbar and menus you have to
+have a concept of gtk.UIManager. You have 5 available placeholders to put your
+actions for your toolbar:</p>
+<blockquote>
+<ul class="simple">
+<li>'OpenFileToolbar'</li>
+<li>'SaveFileToolbar'</li>
+<li>'EditToolbar'</li>
+<li>'ProjectToolbar'</li>
+<li>'VcToolbar'</li>
+<li>'ToolsToolbar'</li>
+</ul>
+</blockquote>
+<dl class="docutils">
+<dt>And 4 available placeholders for your menu entries:</dt>
+<dd><ul class="first last simple">
+<li>'OpenFileMenu'</li>
+<li>'SaveFileMenu'</li>
+<li>'ExtrasFileMenu'</li>
+<li>'GlobalFileMenu'</li>
+</ul>
+</dd>
+</dl>
+<p>This is also the order of which they were created.</p>
+<p>The next part is that you need to
+return a UIManager definition with the following nature: implement a method
+named 'get_menu_definition' in your service class:</p>
+<pre class="literal-block">
+import pida.core.service as service
+
+class MyService(service.service):
+
+    def get_menu_definition(self):
+        return &quot;&quot;&quot;
+            &lt;menubar&gt;
+                &lt;placeholder name=&quot;ExtrasFileMenu&quot;&gt;
+                    &lt;menu name=&quot;my_menu_entry&quot; action=&quot;MyAction&quot;&gt;
+                &lt;/placeholder&gt;
+            &lt;/menubar&gt;
+            &lt;toolbar&gt;
+                &lt;placeholder name=&quot;ToolsToolbar&quot;&gt;
+                    &lt;toolitem name=&quot;my_tool_item&quot; action=&quot;MyAction&quot; /&gt;
+                &lt;/placeholder&gt;
+            &lt;/toolbar&gt;
+        &quot;&quot;&quot;
+</pre>
+<p>In this example we've plugged our action 'MyAction' to the menu and the toolbar.</p>
+</div>
+<div class="system-messages section">
+<h1><a>Docutils System Messages</a></h1>
+<div class="system-message" id="id5">
+<p class="system-message-title">System Message: <a name="id5">ERROR/3</a> (<tt class="docutils">rst/pida-hacking-manual.rst</tt>, line 48); <em><a href="#id6">backlink</a></em></p>
+Unknown target name: &quot;act&quot;.</div>
+<div class="system-message" id="id7">
+<p class="system-message-title">System Message: <a name="id7">ERROR/3</a> (<tt class="docutils">rst/pida-hacking-manual.rst</tt>, line 52); <em><a href="#id8">backlink</a></em></p>
+Unknown target name: &quot;act&quot;.</div>
+</div>
+</div>
+</body>
+</html>
