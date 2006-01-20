@@ -27,6 +27,8 @@ import gtk
 # pida core import(s)
 import base
 
+import string
+
 class action_handler(base.pidacomponent):
 
     type_name = 'action-handler'
@@ -46,7 +48,7 @@ class action_handler(base.pidacomponent):
             if attr.startswith('act_'):
                 name = attr[4:]
                 actname = '%s+%s' % (agname, name)
-                words = [(s[0].upper() + s[1:]) for s in name.split('_')]
+                words = map(string.capitalize, name.split('_'))
                 label = ' '.join(words)
                 stock_id = 'gtk-%s%s' % (words[0][0].lower(), words[0][1:])
                 func = getattr(self, attr)
