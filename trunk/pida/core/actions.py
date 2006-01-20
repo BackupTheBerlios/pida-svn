@@ -151,9 +151,10 @@ class action_handler(base.pidacomponent):
         
         # Now we create the radio groups
         for name, (action, group) in radio_elements.iteritems():
-            if group is not None:
-                group = radio_elements[group][0]
+            if group is None:
+                continue
                 
+            group = radio_elements[group][0]
             action.set_group(group)
         
 

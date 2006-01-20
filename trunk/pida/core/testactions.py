@@ -65,6 +65,7 @@ class TestHandler(unittest.TestCase):
     def test_actions(self):
         self.assertEquals(10, len(self.actions.list_actions()))
 
+
     def test_action1(self):
         self.checkAction(
             name = "normal_action_1",
@@ -72,7 +73,7 @@ class TestHandler(unittest.TestCase):
             stock_id = "gtk-normal",
             label = "Normal Action 1",
         )
-    
+
     def test_action2(self):
         self.checkAction(
             name = "normal_action_2",
@@ -115,7 +116,57 @@ class TestHandler(unittest.TestCase):
             action_type = gtk.ToggleAction,
         )
 
+    def test_action7(self):
+        self.checkAction(
+            name = "radio1",
+            tooltip = None,
+            stock_id = "gtk-radio1",
+            label = "Radio1",
+            action_type = gtk.RadioAction
+        )
+        act = self.get_action("radio1")
+        self.assertEquals(0, act.get_property("value"))
+        self.assertEquals(2, len(act.get_group()))
+        assert act in act.get_group()
 
+    def test_action8(self):
+        self.checkAction(
+            name = "radio2",
+            tooltip = None,
+            stock_id = "gtk-radio2",
+            label = "Radio2",
+            action_type = gtk.RadioAction
+        )
+        act = self.get_action("radio2")
+        self.assertEquals(1, act.get_property("value"))
+        self.assertEquals(2, len(act.get_group()))
+        assert act in act.get_group()
+
+    def test_action9(self):
+        self.checkAction(
+            action = self.actions.get_action("Something"),
+            tooltip = None,
+            stock_id = "gtk-something",
+            label = "Something",
+            action_type = gtk.RadioAction
+        )
+        act = self.actions.get_action("Something")
+        self.assertEquals(0, act.get_property("value"))
+        self.assertEquals(2, len(act.get_group()))
+        assert act in act.get_group()
+
+    def test_action10(self):
+        self.checkAction(
+            name = "radio4",
+            tooltip = None,
+            stock_id = "gtk-radio4",
+            label = "Radio4",
+            action_type = gtk.RadioAction
+        )
+        act = self.get_action("radio4")
+        self.assertEquals(1, act.get_property("value"))
+        self.assertEquals(2, len(act.get_group()))
+        assert act in act.get_group()
 
 if __name__ == '__main__':
     unittest.main()
