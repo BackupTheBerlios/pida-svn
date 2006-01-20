@@ -61,7 +61,7 @@ class culebra_editor(service.service):
     def init(self):
         self.__files = {}
         self.__views = {}
-        self._create_actions()
+        self._populate_action_group()
 
     def cmd_edit(self, filename=None):
         if filename not in self.__files:
@@ -74,7 +74,7 @@ class culebra_editor(service.service):
     def __load_file(self, filename):
         view = self.create_multi_view(
             filename=filename,
-            action_group=self._action_group
+            action_group=self.action_group
         )
         self.__files[filename] = view
         self.__views[view.unique_id] = filename
@@ -123,28 +123,20 @@ class culebra_editor(service.service):
                                    filename=filename)
             
 
-    def _create_actions(self):
-        ui_def = """
+    def get_menu_definition(self):
+        return """
         <toolbar>
-            <placeholder name="OpenFileToolbar" />
-            <placeholder name="SaveFileToolbar" />
-            
-            <placeholder name="EditToolbar">
-                <toolitem name="culebra_find_toggle"
+            <placeholder name="ProjectToolbar">
+                <toolitem name="CulebraFindToggle"
                 action="%s" />
                 <toolitem name="CulebraReplaceToggle"
                 action="%s" />
             </placeholder>
-            
-            <placeholder name="ProjectToolbar" />
-            <placeholder name="VcToolbar" />
-            <placeholder name="ToolsToolbar"/>
         </toolbar>
         """ % (edit.ACTION_FIND_TOGGLE, edit.ACTION_REPLACE_TOGGLE)
         
-
-        ag = gtk.ActionGroup("culebraactions")
-        ag.add_toggle_actions((
+    def _populate_action_group(self):
+        self.action_group.add_toggle_actions((
             (
                 edit.ACTION_FIND_TOGGLE,
                 gtk.STOCK_FIND,
@@ -163,7 +155,7 @@ class culebra_editor(service.service):
             
         ))
         
-        ag.add_actions((
+        self.action_group.add_actions((
             (
                 edit.ACTION_FIND_FORWARD,
                 gtk.STOCK_GO_FORWARD,
@@ -202,13 +194,6 @@ class culebra_editor(service.service):
             
         ))
         
-        self._action_group = ag
-        self.boss.call_command(
-            "window",
-            "register_action_group",
-            actiongroup=ag,
-            uidefinition=ui_def
-        )
-        
+
 
 Service = culebra_editor
