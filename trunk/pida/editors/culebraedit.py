@@ -119,6 +119,21 @@ class culebra_editor(service.service):
     def cmd_paste(self):
         self.current_view.editor.emit('paste-clipboard')
 
+    def cmd_can_close(self):
+        buffs = [view.buffer for view in self.__files.values() if view.buffer.get_modified()]
+        # If we have no buffers to save, go on
+        if len(buffs) == 0:
+            return True
+            
+        filenames = dict(map(lambda buff: (buff.filename, buff), buffs))
+        parent = self.boss.get_main_window()
+        files, response = hig.save_changes(filenames.keys(), parent=parent)
+        # Save the files that need to be saved
+        for filename in files:
+            # XXX: handle new files
+            filenames[filename].save()
+        return response in (gtk.RESPONSE_CLOSE, gtk.RESPONSE_OK)
+        
     def cb_multi_view_closed(self, view):
         if view.unique_id in self.__views:
             filename = self.__views[view.unique_id]
@@ -141,8 +156,12 @@ class culebra_editor(service.service):
             # either
             return False
         
-        # TODO: get the right parent
-        files, response = hig.save_changes([buff.filename], title="Culebra")
+        parent = self.boss.get_main_window()
+        files, response = hig.save_changes(
+            [buff.filename],
+            parent=parent
+        )
+        
         if response == gtk.RESPONSE_OK:
             buff.save()
             
