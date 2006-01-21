@@ -73,6 +73,14 @@ class editor_manager(service.service):
     def cmd_paste(self):
         self.editor.call('paste')
 
+    def cmd_can_close(self):
+        # XXX: this is related to ticket 93
+        cmd = "can_close"
+        if cmd not in self.editor.commands:
+            return True
+        else:
+            return self.editor.call(cmd)
+
     def get_editor_name(self):
         editor_name = self.opt('general', 'editor_type')
         if editor_name == 'Vim':

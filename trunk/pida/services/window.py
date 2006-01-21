@@ -63,7 +63,7 @@ class window_manager(service.service):
 
     def init(self):
         self.__window = window.pidawindow(self)
-        self.__window.connect('destroy', self.cb_destroy)
+        self.__window.connect('delete-event', self.cb_destroy)
         self._connect_drag_events()
         self._create_uim()
 
@@ -131,8 +131,11 @@ class window_manager(service.service):
     def bnd_buffermanager_document_changed(self, document):
         self.call('set_title', title=document.filename)
 
-    def cb_destroy(self, window):
-        self.boss.stop()
+    def cb_destroy(self, window, *args):
+        can_close = self.boss.call_command("editormanager", "can_close")
+        if can_close:
+            self.boss.stop()
+        return not can_close
 
     def _create_uim(self):
         self.__uim = gtk.UIManager()
