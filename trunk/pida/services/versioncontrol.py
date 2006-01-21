@@ -26,6 +26,7 @@ import os
 import gobject
 
 import pida.core.service as service
+import pida.core.actions as actions
 
 import pida.utils.vc as vc
 
@@ -221,6 +222,7 @@ class version_control(service.service):
                                        directory=directory)
             gobject.timeout_add(200, browse)
 
+    @actions.action(stock_id='gtk-vcs_diff')
     def act_diff_file(self, action):
         self.call('diff_file', filename=self.__currentfile)
 
