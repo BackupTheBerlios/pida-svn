@@ -28,6 +28,8 @@ from pida.core import actions
 from pida.core import service
 from pida.utils.culebra import edit
 
+from rat import hig
+
 
 class culebra_view(contentview.content_view):
 
@@ -58,12 +60,9 @@ class culebra_editor(service.service):
     multi_view_book = 'edit'
     
     def init(self):
-        print "AAAAAAAAAAAAAA"
-        print isinstance(self, actions.action_handler)
         
         self.__files = {}
         self.__views = {}
-        self._populate_action_group()
 
     def cmd_edit(self, filename=None):
         if filename not in self.__files:
@@ -85,6 +84,8 @@ class culebra_editor(service.service):
         self.current_view = self.__files[filename]
         self.__files[filename].raise_page()
 
+    #############
+    # Callbacks
     def cmd_start(self):
         self.get_service('editormanager').events.emit('started')
 
@@ -121,10 +122,36 @@ class culebra_editor(service.service):
     def cb_multi_view_closed(self, view):
         if view.unique_id in self.__views:
             filename = self.__views[view.unique_id]
+            del self.__views[view.unique_id]
+            del self.__files[filename]
             self.boss.call_command('buffermanager', 'file_closed',
                                    filename=filename)
-            
 
+    def confirm_multi_view_controlbar_clicked_close(self, view):
+        buff = view.buffer
+        
+        # If buffer was not modified you can safely close it
+        if not buff.get_modified():
+            return True
+        
+        # When the buffer is new then we need to show the save dialog instead
+        # of a save changes dialog:
+        if buff.is_new:
+            # XXX: this is utterly broken but there's no support for new files
+            # either
+            return False
+        
+        # TODO: get the right parent
+        files, response = hig.save_changes([buff.filename], title="Culebra")
+        if response == gtk.RESPONSE_OK:
+            buff.save()
+            
+        return response in (gtk.RESPONSE_OK, gtk.RESPONSE_CLOSE)
+
+            
+    ############################
+    # UIManager definition
+    
     def get_menu_definition(self):
         return """
         <toolbar>
@@ -137,69 +164,69 @@ class culebra_editor(service.service):
         </toolbar>
         """ % (edit.ACTION_FIND_TOGGLE, edit.ACTION_REPLACE_TOGGLE)
     
+    ####################################
+    # gtk.Action's definition
     
     def act_find_toggle(self, action):
-        """Shows or hides the find bar"""
-        
+        """Search for text"""
     actions.decorate_action(
         act_find_toggle,
         name = edit.ACTION_FIND_TOGGLE,
         stock_id = gtk.STOCK_FIND,
-        label = "_Find",
+        label = "_Find...",
         type = actions.TYPE_TOGGLE,
     )
+    
+    def act_replace_toggle(self, action):
+        """Search and replace text"""
+    actions.decorate_action(
+        act_replace_toggle,
+        name = edit.ACTION_REPLACE_TOGGLE,
+        stock_id = gtk.STOCK_FIND_AND_REPLACE,
+        label = "_Replace...",
+        type = actions.TYPE_TOGGLE,
+    )
+    
+    def act_find_forward(self, action):
+        """Find next matching word"""
+    actions.decorate_action(
+        act_find_forward,
+        name = edit.ACTION_FIND_FORWARD,
+        stock_id = gtk.STOCK_GO_FORWARD,
+    )
+    
+    def act_find_backward(self, action):
+        """Find previous mathing word"""
+    actions.decorate_action(
+        act_find_backward,
+        name = edit.ACTION_FIND_BACKWARD,
+        stock_id = gtk.STOCK_GO_BACK,
+    )
 
+    def act_replace_forward(self, action):
+        """Replaces the next matching word"""
+    actions.decorate_action(
+        act_replace_forward,
+        name = edit.ACTION_REPLACE_FORWARD,
+        stock_id = gtk.STOCK_GO_FORWARD,
+    )
 
-    def _populate_action_group(self):
-        self.action_group.add_toggle_actions((
-            (
-                edit.ACTION_REPLACE_TOGGLE,
-                gtk.STOCK_FIND_AND_REPLACE,
-                "_Replace...",
-                None,
-                "Shows or hides the replace bar"
-            ),
-            
-        ))
-        
-        self.action_group.add_actions((
-            (
-                edit.ACTION_FIND_FORWARD,
-                gtk.STOCK_GO_FORWARD,
-                "Find Forward",
-                None,
-                "Finds the next matching word"
-            ),
-            (
-                edit.ACTION_FIND_BACKWARD,
-                gtk.STOCK_GO_BACK,
-                "Find Backward",
-                None,
-                "Finds the previous matching word"
-            ),
-            (
-                edit.ACTION_REPLACE_FORWARD,
-                gtk.STOCK_GO_FORWARD,
-                "Replace Forward",
-                None,
-                "Replaces the next matching word"
-            ),
-            (
-                edit.ACTION_REPLACE_BACKWARD,
-                gtk.STOCK_GO_BACK,
-                "Replace Backward",
-                None,
-                "Replaces the previous matching word"
-            ),
-            (
-                edit.ACTION_REPLACE_ALL,
-                gtk.STOCK_FIND_AND_REPLACE,
-                "Replace All",
-                None,
-                "Replaces every the matching word"
-            ),
-            
-        ))
+    def act_replace_backward(self, action):
+        """Replaces backward"""
+    actions.decorate_action(
+        act_replace_backward,
+        name = edit.ACTION_REPLACE_BACKWARD,
+        stock_id = gtk.STOCK_GO_BACK,
+    )
+    
+    def act_replace_all(self, action):
+        """Replaces all matching words"""
+    actions.decorate_action(
+        act_replace_all,
+        name = edit.ACTION_REPLACE_ALL,
+        stock_id = gtk.STOCK_FIND_AND_REPLACE,
+        label = "Replace Alll"
+    )
         
 
 
