@@ -73,83 +73,13 @@ class log_item(tree.IconTreeItem):
         return '<span color="%s">%s</span>' % (self.color, str)
 
     def __get_markup(self):
-        if self.value.type == 'yesno':
-            if self.__detailed == True:
-                return escape('Confirmation at %s %s:%s\n%s\n%s %s' % \
-                            ( self.module, self.name, self.lineno, 
-                              self.message,
-                              self.levelname, self.created ))
-            else:
-                return self.get_color(escape(
-                            'Confirmation at %s/%s : %s' % \
-                           ( self.module, self.name, self.message )))
-        if self.value.type == 'okcancel':
-            if self.__detailed == True:
-                return escape('Question at %s %s:%s\n%s\n%s %s' % \
-                            ( self.module, self.name, self.lineno, 
-                              self.message,
-                              self.levelname, self.created ))
-            else:
-                return self.get_color(escape('Question at %s/%s : %s' % \
-                           ( self.module, self.name, self.message )))
-        if self.value.type == 'ok':
-            if self.__detailed == True:
-                return escape('Validation at %s %s:%s\n%s\n%s %s' % \
-                            ( self.module, self.name, self.lineno, 
-                              self.message,
-                              self.levelname, self.created ))
-            else:
-                return self.get_color(escape('Validation at %s/%s : %s' % \
-                           ( self.module, self.name, self.message )))
-        if self.value.type == 'entry_yesno':
-            if self.__detailed == True:
-                return escape(
-                  'Input entry confirmation at %s %s:%s\n%s\n%s %s' % \
-                            ( self.module, self.name, self.lineno, 
-                              self.message,
-                              self.levelname, self.created ))
-            else:
-                return self.get_color(escape(
-                           'Input entry confirmation at %s %s : %s' % \
-                           ( self.module, self.name, self.message )))
-        if self.value.type == 'entry_okcancel':
-            if self.__detailed == True:
-                return escape(
-                  'Input entry confirmation at %s %s:%s\n%s\n%s %s' % \
-                            ( self.module, self.name, self.lineno, 
-                              self.message,
-                              self.levelname, self.created ))
-            else:
-                return self.get_color(escape(
-                           'Input entry confirmation at %s %s : %s' % \
-                           ( self.module, self.name, self.message )))
-        if self.value.type == 'entry_ok':
-            if self.__detailed == True:
-                return escape('Input entry at %s %s:%s\n%s\n%s %s' % \
-                            ( self.module, self.name, self.lineno, 
-                              self.message,
-                             self.levelname, self.created ))
-            else:
-                return self.get_color(escape(
-                            'Input entry at %s/%s : %s' % \
-                               ( self.module, self.name, self.message )))
-        if self.value.type == 'log':
-            if self.__detailed == True:
-                return escape('%s.%s:%s\n%s\n%s %s' % ( self.module, 
-                                        self.name, self.lineno, 
-                                        self.message,
-                                        self.levelname, self.created ))
-            else:
-                return self.get_color(escape('%s.%s : %s' % ( self.module, 
-                                        self.name, self.message )))
         if self.__detailed == True:
-            return escape('%s.%s:%s\n%s\n%s %s\n%s' % ( self.module, 
+            return escape('%s.%s:%s\n%s\n%s %s' % ( self.module, 
                                     self.name, self.lineno, 
                                     self.message,
-                                    self.levelname, self.created,
-                                    "Unrecognized event log."))
+                                    self.levelname, self.created ))
         else:
-            return self.get_color(escape('%s %s : %s' % ( self.module, 
+            return self.get_color(escape('%s.%s : %s' % ( self.module, 
                                     self.name, self.message )))
     markup = property(__get_markup)
 
@@ -211,10 +141,6 @@ class log_item(tree.IconTreeItem):
             
     message = property(__get_message)
 
-    def __get_answered(self):
-        return self.value.answered_value
-    answer = property(__get_answered)
-    
 class log_tree(tree.IconTree):
     '''Tree listing all the pastes'''
     EDIT_BUTTONS = False
@@ -234,74 +160,6 @@ class log_tree(tree.IconTree):
         '''Deletes the currently selected paste'''
         self.del_item()
 
-class log_watch(contentview.content_view):
-    """View showing the last log entry"""
-    LONG_TITLE = 'Log watch'
-    SHORT_TITLE = 'log'
-    ICON_TEXT = 'files'
-    HAS_CONTROL_BOX = True
-    HAS_DETACH_BUTTON = True
-    HAS_CLOSE_BUTTON = False
-    HAS_SEPARATOR = True
-    HAS_TITLE = True
-
-    def init(self):
-        self.__container = gtk.VBox()
-        self.__container.pack_start(gtk.Label("empty"))
-        self.__container.show()
-        self.__locked = False
-        self.widget.pack_start(self.__container)
-
-
-    def __markup(self,item):
-        return "<b>%s</b> <i>%s</i>\n%s %s:%s\n<b>%s</b>\n" % (
-            item.get_color(item.levelname), escape(item.created),
-            item.name, item.module, item.lineno,
-            escape(item.message))
-
-    def show_toolbar(self):
-        def cb_toggle(tog):
-            self.__locked = tog.get_active()
-        bb = gtk.HButtonBox()
-        bb.set_layout(gtk.BUTTONBOX_START)
-        self.but_lock = gtk.ToggleButton()
-        self.but_lock.set_image(icons.icons.get_image("dialog-authentication"))
-        self.but_lock.set_active(self.__locked)
-        self.but_lock.connect('toggled',cb_toggle)
-        bb.pack_start(self.but_lock,False,False)
-        return bb
-
-    def show_log_item(self,record,manual=False):
-        if self.__locked == True and manual == False:
-            return
-
-        vb = self.__container
-        [vb.remove(child) for child in vb.get_children()]
-
-        if record.type == 'yesno':
-            self.set_long_title("Confirmation")
-        if record.type == 'okcancel':
-            self.set_long_title("Question")
-        if record.type == 'ok':
-            self.set_long_title("Information")
-        if record.type == 'entry_yesno':
-            self.set_long_title("Input requested")
-        if record.type == 'entry_okcancel':
-            self.set_long_title("Input requested")
-        if record.type == 'entry_ok':
-            self.set_long_title("Input requested")
-        if record.type == 'log':
-            self.set_long_title(record.name)
-        
-        vb.pack_start(self.show_toolbar(),False,False)
-
-        self.item = log_item(record)
-        dialog_vbox = gtk_log_event.gtk_event_box(
-                record,
-                markup=self.__markup(self.item))
-        vb.pack_start(dialog_vbox, False, False)
-        vb.show_all()
-
 class log_history(contentview.content_view):
     ICON_NAME = 'logviewer'
     LONG_TITLE = 'Log viewer'
@@ -313,9 +171,7 @@ class log_history(contentview.content_view):
     HAS_SEPARATOR = False
     HAS_TITLE = True
 
-    __record__attributes = ['title',
-                            'type',
-                            'name',
+    __record__attributes = ['name',
                             'threadName',
                             'process',
                             'module',
@@ -428,8 +284,6 @@ class log_manager(service.service):
     NAME = 'log manager'
     LONG_TITLE = 'log manager'
 
-    single_view_type = log_watch
-
     multi_view_type = log_history
     multi_view_book = 'view'
 
@@ -438,7 +292,7 @@ class log_manager(service.service):
     def start(self):
         self.__view = None
         self.__first = True
-        if self.boss.use_notification_handler("INFO"):
+        if self.boss.use_notification_handler("INFO",self.cmd_refresh):
             self.log.debug("Logging service started.")
         else: 
             self.stop()
@@ -452,6 +306,7 @@ class log_manager(service.service):
 
     #private interface
     #public interface
+    
     # commands
 
     def cmd_filter(self,filter):
@@ -469,47 +324,18 @@ class log_manager(service.service):
         view = self.create_multi_view(filter=request,logs=self.boss.logs)
         self.cmd_refresh()
 
-    def cmd_refresh(self,record=None):
+    def cmd_refresh(self):
         for view in self.multi_views:
             view.refresh()
-        if record != None:
-            if self.single_view:
-                if hasattr(self.single_view,'item'):
-                    if record.levelno >= self.single_view.item.levelno:
-                        self.single_view.show_log_item(record,False)
-                        self.single_view.raise_page()
-                if record.levelno >= 100:
-                    self.single_view.show_log_item(record,False)
-                    self.single_view.raise_page()
-            else:
-                self.create_single_view()
-                self.single_view.show_log_item(record)
-                self.single_view.raise_page()
                     
     def cmd_show_history(self):
         view = self.create_multi_view(logs=self.boss.logs)
         view.refresh()
 
-    def cmd_show_watcher(self,record=None):
-        if not self.single_view:
-            self.create_single_view()
-        if record == None:
-            self.single_view.show_log_item(self.boss.logs.last,True)
-        else:
-            if hasattr(self.single_view,'item') and \
-                record == self.single_view.item.value:
-                    self.single_view.raise_page()
-            else:
-                self.single_view.show_log_item(record,True)
-            
-
     # ui actions
 
     def act_show_log_history(self,action):
         self.call('show_history')
-
-    def act_show_log_watcher(self,action):
-        self.call('show_watcher')
 
     def get_menu_definition(self):
         return """
@@ -517,7 +343,6 @@ class log_manager(service.service):
         <menu name="base_tools" action="base_tools_menu">
         <separator />
         <menuitem name="logmanager+show_log_history" action="logmanager+show_log_history" />
-        <menuitem name="logmanager+show_log_watcher" action="logmanager+show_log_watcher" />
         </menu>
         </menubar>        
         """

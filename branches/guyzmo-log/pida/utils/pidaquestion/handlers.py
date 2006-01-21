@@ -57,18 +57,18 @@ class notification_handler(logging.Handler):
     """
     Handler for logging to a view
     """
-    def __init__(self,callback):
+    def __init__(self,base):
         logging.Handler.__init__(self)
-        self.callback = callback
+        self.base = base
 
     def emit(self,record):
-        """     
+        """
         Emit a record.
 
         Format the record and send it
         """
         try:
-            self.callback()
+            self.base.call_command('logmanager', 'refresh', record=record)
         except pida.core.boss.ServiceNotFoundError:
             logger = logging.getLogger(self.__class__.__name__)
             format_str = ('%(levelname)s '

@@ -26,8 +26,64 @@ import logging
 import pida.core.boss
 
 import storelog
-#import log_types
+import log_types
 import handlers
+
+class keep_handler(logging.Handler):
+    """
+    Handler for storing the logs
+
+    @param base where the logger will be able to find the store
+    """
+    def __init__(self,base):
+        logging.Handler.__init__(self)
+        self.base = base
+
+    def emit(self,record):
+        """
+        Stores the record
+
+        Here has to be executed push_record on the 
+        """
+        if hasattr(self.base,"logs"):
+            self.base.logs.push_record(record.created,record)
+        else:
+            logger = logging.getLogger(self.__class__.__name__)
+            format_str = ('%(levelname)s '
+                          '%(module)s.%(name)s:%(lineno)s '
+                          '%(message)s')
+            format = logging.Formatter(format_str)
+            handler = logging.StreamHandler()
+            handler.setFormatter(format)
+            logger.addHandler(handler)
+            logger.warn("Log record couldn't be stored :\n * %s"%format.format(record))
+
+class notification_handler(logging.Handler):
+    """
+    Handler for logging to a view
+    """
+    def __init__(self,base):
+        logging.Handler.__init__(self)
+        self.base = base
+
+    def emit(self,record):
+        """
+        Emit a record.
+
+        Format the record and send it
+        """
+        try:
+            self.base.call_command('logmanager', 'refresh', record=record)
+        except pida.core.boss.ServiceNotFoundError:
+            logger = logging.getLogger(self.__class__.__name__)
+            format_str = ('%(levelname)s '
+                          '%(module)s.%(name)s:%(lineno)s '
+                          '%(message)s')
+            format = logging.Formatter(format_str)
+            handler = keep_handler(self.base)
+            handler.setFormatter(format)
+            logger.addHandler(handler)
+            logger.warn("service logmanager missing")
 
 class pidalogger(object):
     """
@@ -117,14 +173,17 @@ class pidalogger(object):
         handler.setFormatter(self.__format)
         self.log.addHandler(handler)
 
-    def use_notification_handler(self,level=None,callback=None):
-        """
-        Enables callback on each log written
-        """
+    def use_keep_handler(self,level=None):
+        handler = keep_handler(self.__base)
+        if level != None:
+            handler.setLevel(logging._levelNames[level])
+        self.log.addHandler(handler)
+
+    def use_notification_handler(self,level=None):
         if self.__base.logs == None:
             return False
         logger = logging.getLogger('')
-        handler = handlers.notification_handler(callback)
+        handler = notification_handler(self.__base)
         if level != None:
             handler.setLevel(logging._levelNames[level])
         format_str = ('%(levelname)s '
@@ -133,10 +192,13 @@ class pidalogger(object):
         logger.addHandler(handler)
         return True
 
-    def use_keep_handler(self,level=None):
-        handler = handlers.keep_handler(self.__base)
-        if level != None:
-            handler.setLevel(logging._levelNames[level])
-        self.log.addHandler(handler)
-        self.__handler = handler
+'''
+def foo(bool):
+    if bool == True:
+        print "yeah !"
+    else:
+        print "ugh ?! :("
 
+pida.log.input("Do you want to say yes ?",title="Ask the user yes",callback=foo,\
+type='yesno')
+'''
