@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
-#Copyright (c) 2005 Ali Afshar aafshar@gmail.com
+#Copyright (c) 2005-2006 The PIDA Project
 
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -185,67 +185,59 @@ class culebra_editor(service.service):
     
     ####################################
     # gtk.Action's definition
-    
-    def act_find_toggle(self, action):
-        """Search for text"""
-    actions.decorate_action(
-        act_find_toggle,
+    @actions.action(
         name = edit.ACTION_FIND_TOGGLE,
         stock_id = gtk.STOCK_FIND,
         label = "_Find...",
         type = actions.TYPE_TOGGLE,
     )
+    def act_find_toggle(self, action):
+        """Search for text"""
     
-    def act_replace_toggle(self, action):
-        """Search and replace text"""
-    actions.decorate_action(
-        act_replace_toggle,
+    @actions.action(
         name = edit.ACTION_REPLACE_TOGGLE,
         stock_id = gtk.STOCK_FIND_AND_REPLACE,
         label = "_Replace...",
         type = actions.TYPE_TOGGLE,
     )
+    def act_replace_toggle(self, action):
+        """Search and replace text"""
     
-    def act_find_forward(self, action):
-        """Find next matching word"""
-    actions.decorate_action(
-        act_find_forward,
+    @actions.action(
         name = edit.ACTION_FIND_FORWARD,
         stock_id = gtk.STOCK_GO_FORWARD,
     )
+    def act_find_forward(self, action):
+        """Find next matching word"""
     
-    def act_find_backward(self, action):
-        """Find previous mathing word"""
-    actions.decorate_action(
-        act_find_backward,
+    @actions.action(
         name = edit.ACTION_FIND_BACKWARD,
         stock_id = gtk.STOCK_GO_BACK,
     )
+    def act_find_backward(self, action):
+        """Find previous mathing word"""
 
-    def act_replace_forward(self, action):
-        """Replaces the next matching word"""
-    actions.decorate_action(
-        act_replace_forward,
+    @actions.action(
         name = edit.ACTION_REPLACE_FORWARD,
         stock_id = gtk.STOCK_GO_FORWARD,
     )
+    def act_replace_forward(self, action):
+        """Replaces the next matching word"""
 
-    def act_replace_backward(self, action):
-        """Replaces backward"""
-    actions.decorate_action(
-        act_replace_backward,
+    @actions.action(
         name = edit.ACTION_REPLACE_BACKWARD,
         stock_id = gtk.STOCK_GO_BACK,
     )
+    def act_replace_backward(self, action):
+        """Replaces backward"""
     
-    def act_replace_all(self, action):
-        """Replaces all matching words"""
-    actions.decorate_action(
-        act_replace_all,
+    @actions.action(
         name = edit.ACTION_REPLACE_ALL,
         stock_id = gtk.STOCK_FIND_AND_REPLACE,
         label = "Replace Alll"
     )
+    def act_replace_all(self, action):
+        """Replaces all matching words"""
         
 
 
