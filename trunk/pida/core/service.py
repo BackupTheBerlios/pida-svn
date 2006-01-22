@@ -41,7 +41,7 @@ import os
 
 from actions import split_function_name
 from pida.utils.servicetemplates import build_optiongroup_from_class
-
+from errors import CommandNotFoundError
 
 class options_mixin(object):
     """Configuration options support."""
@@ -102,15 +102,14 @@ class commands_mixin(object):
                            commandname, result)
             return result
         else:
-            self.log.warn('command not found %s', commandname)
+            raise CommandNotFoundError(commandname)
 
     def __call_command(self, command, **kw):
         return command(**kw)
 
     def call_external(self, servicename, commandname, **kw):
         svc = self.get_service(servicename)
-        if svc is not None:
-            return svc.call(commandname, **kw)
+        return svc.call(commandname, **kw)
 
 
 class data_mixin(object):
@@ -300,12 +299,12 @@ class bindings_mixin(object):
             evtstring = split_function_name(bndfunc.func_name)
             servicename, eventname = evtstring.split('_', 1)
             svc = self.get_service(servicename)
-            if svc is not None:
-                func = getattr(self, bndfunc.func_name)
-                try:
-                    svc.events.register(eventname, func)
-                except AssertionError:
-                    self.log.info('event "%s" does not exist', eventname)
+            func = getattr(self, bndfunc.func_name)
+            # XXX: see ticket #99
+            try:
+                svc.events.register(eventname, func)
+            except AssertionError:
+                self.log.info('event "%s" does not exist', eventname)
 
 
 class document_type_mixin(object):
@@ -319,8 +318,7 @@ class document_type_mixin(object):
         for handler in self.__documenttypes__:
             handler.service = self
             svc = self.get_service('documenttypes')
-            if svc:
-                svc.call('register_file_handler', handler=handler)
+            svc.call('register_file_handler', handler=handler)
 
 
 class language_type_mixin(object):
