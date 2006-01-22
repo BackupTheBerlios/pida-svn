@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*- 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
@@ -28,12 +27,7 @@ import pida.utils.pidalog.log as log
 
 # Core components
 import services
-
-class ServiceNotFoundError(KeyError):
-    """
-    This service is thrown when you try to get_service() and
-    the service does not exists.
-    """
+from errors import ServiceNotFoundError
 
 class boss(base.pidacomponent):
     """ The object in charge of everything """
@@ -56,8 +50,8 @@ class boss(base.pidacomponent):
         try:
             self.call_command('editormanager', 'start')
         except:
-            raise
             self.log.warn('editor failed to start')
+            raise
         try:
             self.call_command('terminal', 'execute_shell')
         except:
@@ -74,12 +68,7 @@ class boss(base.pidacomponent):
     def call_command(self, servicename, commandname, **kw):
         """Call the named command with the keyword arguments."""
         group = self.get_service(servicename)
-        if group:
-            return group.call(commandname=commandname, **kw)
-        else:
-            self.log.warn('Command not found: (%s, %s)' %
-                          (servicename, commandname))
-            return
+        return group.call(commandname=commandname, **kw)
     
     def option_value(self, groupname, name):
         """Get the option value for the grouped named option."""
