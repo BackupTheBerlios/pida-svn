@@ -47,6 +47,7 @@ class CulebraView(gtksourceview.SourceView):
         self.set_show_margin(True)
         self.set_smart_home_end(True)
         self.set_highlight_current_line(True)
+        self.set_insert_spaces_instead_of_tabs(True)
         font_desc = pango.FontDescription('monospace 10')
         if font_desc is not None:
             self.modify_font(font_desc)
