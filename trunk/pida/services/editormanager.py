@@ -21,7 +21,8 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import pida.core.service as service
+from pida.core import service
+from pida.core.errors import *
 
 defs = service.definitions
 types = service.types
@@ -74,14 +75,16 @@ class editor_manager(service.service):
         self.editor.call('paste')
 
     def cmd_can_close(self):
-        # XXX: this is related to ticket 93
-        cmd = "can_close"
-        if cmd not in self.editor.commands:
+        # XXX: this should go away when all the editors implement it
+        # XXX: see ticket #102
+        try:
+            return self.editor.call('can_close')
+        except CommandNotFoundError:
             return True
-        else:
-            return self.editor.call(cmd)
 
     def get_editor_name(self):
+        # XXX: there should be a key, value tupple, so this
+        # XXX: checking could be made unexistant. see ticket #101
         editor_name = self.opt('general', 'editor_type')
         if editor_name == 'Vim':
             editor = 'vimedit'
