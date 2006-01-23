@@ -83,13 +83,16 @@ class document_type_handler(service.service):
                 <placeholder name="GlobalFileMenu" />
                 </menu>
                 <menu name="base_edit" action="base_edit_menu">
-                <menuitem name="Undo" action="documenttypes+document+undo" />
-                <menuitem name="Redo" action="documenttypes+document+redo" />
-                <separator />
-                <menuitem name="Cut" action="documenttypes+document+cut" />
-                <menuitem name="Copy" action="documenttypes+document+copy" />
-                <menuitem name="Paste" action="documenttypes+document+paste" />
+                <placeholder name="EditMenu">
+                    <menuitem name="Undo" action="documenttypes+document+undo" />
+                    <menuitem name="Redo" action="documenttypes+document+redo" />
+                    <separator />
+                    <menuitem name="Cut" action="documenttypes+document+cut" />
+                    <menuitem name="Copy" action="documenttypes+document+copy" />
+                    <menuitem name="Paste" action="documenttypes+document+paste" />
+                </placeholder>
                 </menu>
+                
                 <menu name="base_project" action="base_project_menu">
                 </menu>
                 <menu name="base_tools" action="base_tools_menu">

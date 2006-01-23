@@ -21,8 +21,10 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import pida.core.service as service
+import gtk
 
+import pida.core.service as service
+from pida.core import actions
 import pida.pidagtk.configview as configview
 
 class config_view(configview.config_view):
@@ -47,6 +49,7 @@ class config_manager(service.service):
     def cb_view_data_changed(self, view):
         self.boss.reset()
 
+    @actions.action(stock_id=gtk.STOCK_PREFERENCES, label=None)
     def act_configuration(self, action):
         self.call('edit')
 
@@ -56,12 +59,14 @@ class config_manager(service.service):
                 <menu name="base_file" action="base_file_menu">
                 </menu>
                 <menu name="base_edit" action="base_edit_menu">
+                    <placeholder name="PreferencesMenu">
+                        <separator />
+                        <menuitem name="confedit" action="configmanager+configuration" />
+                    </placeholder>
                 </menu>
                 <menu name="base_project" action="base_project_menu">
                 </menu>
                 <menu name="base_tools" action="base_tools_menu">
-                <separator />
-                <menuitem name="confedit" action="configmanager+configuration" />
                 </menu>
                 </menubar>
                 """
