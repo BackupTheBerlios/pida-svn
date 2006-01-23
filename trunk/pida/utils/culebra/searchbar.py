@@ -7,40 +7,41 @@ import gtk
 from common import *
 from gtkutil import *
 
+from bar import Bar
 
-class SearchBar(ChildObject):
+class SearchBar(Bar):
     def __init__(self, parent, action_group):
-        super(SearchBar, self).__init__(parent)
+        super(SearchBar, self).__init__(parent, action_group)
+        self._widget = None
+        self.entry = gtk.Entry()
+        self.search_model = gtk.ListStore(str)
 
+    def _create_toggle_action(self, action_group):
         self.find_forward = action_group.get_action(ACTION_FIND_FORWARD)
         self.find_backwards = action_group.get_action(ACTION_FIND_BACKWARD)
-        self.show_find = action_group.get_action(ACTION_FIND_TOGGLE)
-        self._widget = None
-        self.show_find.connect("toggled", self.on_toggle_find)
+        return action_group.get_action(ACTION_FIND_TOGGLE)
+    
     
     def create_widget(self):
 
         hbox = gtk.HBox(spacing=6)
         hbox.connect("show", self.on_show)
         hbox.connect("hide", self.on_hide)
-        hbox.connect("key-release-event", self.on_key_pressed)
         
         lbl = gtk.Label("Search:")
         lbl.show()
         hbox.pack_start(lbl, expand = False, fill = False)
         
-        entry = gtk.Entry()
+        entry = self.entry
         entry.connect("changed", self.on_entry_changed)
         entry.connect("focus", self.on_entry_focus)
         entry.connect("activate", self.on_entry_activate)
         self.search_completion = gtk.EntryCompletion()
         entry.set_completion(self.search_completion)
-        self.search_model = gtk.ListStore(str)
         self.search_completion.set_model(self.search_model)
         self.search_completion.set_text_column(0)
         entry.show()
         entry.set_activates_default(True)
-        self.entry = entry
         hbox.pack_start(entry, expand=False, fill=False)
         
 
@@ -59,18 +60,9 @@ class SearchBar(ChildObject):
         
         hbox.pack_start(btn_forward, expand=False, fill=False)
         
-        #-----
-        self.bind(self.get_parent().get_buffer())
-
         return hbox
         
-    def get_widget(self):
-        if self._widget is None:
-            self._widget = self.create_widget()
-        
-        return self._widget
-    
-    widget = property(get_widget)
+
     
     def bind(self, buff):
         search = buff.search_component
@@ -95,7 +87,7 @@ class SearchBar(ChildObject):
             self.btn_forward.grab_focus()
 
     def on_clicked(self, btn):
-        buff = self.get_parent().get_buffer()
+        buff = self.buffer
         buff.search_text = self.entry.get_text()
         if not self.entry.get_text() in [x[0] for x in self.search_model]:
             self.search_model.append((self.entry.get_text(),))
@@ -106,7 +98,7 @@ class SearchBar(ChildObject):
         self.btn_forward.activate()
 
     def on_show(self, dialog):
-        buff = self.get_parent().get_buffer()
+        buff = self.buffer
         
         selected_text = get_buffer_selection(buff)
         if selected_text != "":
@@ -125,22 +117,8 @@ class SearchBar(ChildObject):
     
     def on_hide(self, dialog):
         # Hide search the marks
-        self.get_parent().get_buffer().search_highlight = False
+        self.buffer.search_highlight = False
     
-    def on_key_pressed(self, search_text, event):
-        #When the ESCAPE key is pressed deactivate the Find action 
-        global KEY_ESCAPE
-        
-        if event.keyval == KEY_ESCAPE:
-            self.show_find.set_active(False)
-    
-    def on_toggle_find(self, action):
-        #When the action is active show the bar else it's hidden
-        if action.get_active():
-            self.widget.show()
-        else:
-            self.widget.hide()
-
     def on_entry_focus(self, entry, *args):
         # Select all
         entry.select_region(0, -1)
@@ -159,5 +137,5 @@ class SearchBar(ChildObject):
         is_sensitive = txt != ""
         self.find_forward.set_sensitive(is_sensitive)
         self.find_backwards.set_sensitive(is_sensitive)
-        self.get_parent().get_buffer().search_text = unescape_text(txt)
+        self.buffer.search_text = unescape_text(txt)
     

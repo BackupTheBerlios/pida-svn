@@ -59,6 +59,7 @@ class CulebraView(gtksourceview.SourceView):
     
     def set_buffer(self, buff):
         self.replace_bar.set_buffer(buff)
+        self.search_bar.set_buffer(buff)
         super(CulebraView, self).set_buffer(buff)
     
     def find(self, find_forward):
@@ -80,6 +81,22 @@ class CulebraView(gtksourceview.SourceView):
     
     def on_find_backwards(self, action):
         self.find(False)
+
+    def on_key_pressed(self, search_text, event):
+        global KEY_ESCAPE
+        
+        if event.keyval == KEY_ESCAPE:
+            self.toggle_action.set_active(False)
+
+    def get_widget(self):
+        if self._widget is None:
+            self._widget = self.create_widget()
+            self._widget.connect("key-release-event", self.on_key_pressed)
+
+        
+        return self._widget
+    
+    widget = property(get_widget)
 
 
 

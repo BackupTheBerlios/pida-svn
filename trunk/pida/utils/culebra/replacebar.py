@@ -8,25 +8,23 @@ import weakref
 
 from gtkutil import *
 from common import *
+from bar import Bar
 
-class ReplaceBar(ChildObject):
+class ReplaceBar(Bar):
     """
     This component implements an event that validates when the selection is
     synchronized with the selected text.
     """
     def __init__(self, parent, search_bar, action_group):
-        super(ReplaceBar, self).__init__(parent)
+        super(ReplaceBar, self).__init__(parent, action_group)
         self._search_bar = weakref.ref(search_bar)
+    
+    def _create_toggle_action(self, action_group):
         action = lambda name: get_action(action_group.get_action, name)
-        
         self.toggle_find = action(ACTION_FIND_TOGGLE)
-        self.toggle_replace = action(ACTION_REPLACE_TOGGLE)
         self.replace_forward = action(ACTION_REPLACE_FORWARD)
         self.replace_all = action(ACTION_REPLACE_ALL)
-        # XXX: this is only here because there's one replace_bar per buffer
-        # TODO: make it non dependant and make it 
-        #self.bind(self.get_buffer())
-        self.toggle_replace.connect("activate", self.on_replace_toggled)    
+        return action(ACTION_REPLACE_TOGGLE)
     
     ##############
     # Properties
@@ -37,24 +35,6 @@ class ReplaceBar(ChildObject):
         return self._search_bar()
     
     search_bar = property(get_search_bar)
-    
-    #############
-    # buffer
-    _buffer = None
-    
-    def set_buffer(self, buff):
-        if self._buffer is not None:
-            self.unbind(self.buffer)
-            
-        self._buffer = weakref.ref(buff)
-        self.bind(buff)
-    
-    def get_buffer(self):
-        if self._buffer is None:
-            return None
-        return self._buffer()
-    
-    buffer = property(get_buffer, set_buffer)
     
     ###################
     # replace_entry
@@ -91,7 +71,6 @@ class ReplaceBar(ChildObject):
                   container.pack_start(widget, expand = False, fill = False)
         
         hbox = gtk.HBox(spacing=6)
-        hbox.connect("key-release-event", self.on_key_pressed)
         hbox.connect("show", self.on_show)
         hbox.connect("hide", self.on_hide)
         
@@ -120,15 +99,6 @@ class ReplaceBar(ChildObject):
         
         return hbox
     
-    _widget = None
-    
-    def get_widget(self):
-        if self._widget is None:
-            self._widget = self.create_widget()
-        return self._widget
-    
-    widget = property(get_widget)
-    
     ##################
     # Methods
 
@@ -147,18 +117,6 @@ class ReplaceBar(ChildObject):
         self.toggle_find.set_active(False)
         self.toggle_find.set_sensitive(True)
     
-    def on_key_pressed(self, search_text, event):
-        global KEY_ESCAPE
-        
-        if event.keyval == KEY_ESCAPE:
-            self.toggle_replace.set_active(False)
-
-    def on_replace_toggled(self, action):
-        if action.get_active():
-            self.widget.show()
-        else:
-            self.widget.hide()
-        
     def on_replace_curr(self, btn):
         if not self.replace_entry.get_text() in [x[0] for x in self.replace_model]:
             self.replace_model.append((self.replace_entry.get_text(),))
