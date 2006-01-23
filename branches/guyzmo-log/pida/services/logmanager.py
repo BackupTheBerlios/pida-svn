@@ -37,7 +37,6 @@ import pida.pidagtk.contentview as contentview
 # pida utils import
 import pida.core.base as base
 import pida.core.service as service
-import pida.utils.pidalog.gtk_event as gtk_log_event
 
 # using from imports to avoid to reexecute the logging package
 from cgi import escape
