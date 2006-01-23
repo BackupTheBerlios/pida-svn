@@ -145,7 +145,6 @@ class pidawindow(gtk.Window):
         toolbar_handle.show()
         
         self.__toolarea.pack_start(toolbar_handle, expand=False)
-        toolbar.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
         self.__menubar = menubar
         self.__toolbar = toolbar
 

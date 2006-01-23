@@ -48,6 +48,10 @@ class window_manager(service.service):
             """Whether the main sidebar componens will be split by a vertical separator"""
             rtype = types.boolean
             default = False
+        class small_toolbar(defs.option):
+            """Whether the toolbar will be displayed with small buttons."""
+            rtype = types.boolean
+            default = False
 
         class sidebar_width(defs.option):
             """The width of the sidebar."""
@@ -73,6 +77,11 @@ class window_manager(service.service):
             self.__started = True
             self._pack_window()
             self.__window.show_all()
+        if self.opt('layout', 'small_toolbar'):
+            size = gtk.ICON_SIZE_SMALL_TOOLBAR
+        else:
+            size = gtk.ICON_SIZE_LARGE_TOOLBAR
+        self.toolbar.set_icon_size(size)
 
     def cmd_update_action_groups(self):
         self.__uim.ensure_update()
