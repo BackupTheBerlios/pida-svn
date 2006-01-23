@@ -84,9 +84,6 @@ class CulebraView(gtksourceview.SourceView):
         self.set_show_margin(True)
         self.set_smart_home_end(True)
         self.set_highlight_current_line(True)
-        font_desc = pango.FontDescription('monospace 10')
-        if font_desc is not None:
-            self.modify_font(font_desc)
 
 class GotoLineComponent (binding.Component):
 
