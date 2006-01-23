@@ -258,9 +258,7 @@ class log_history(contentview.content_view):
         if filter == {}:
             filter = None
 
-        self.__filter = filter
-        if filter not in (None , ''):
-            self.set_long_title('Log filter : %s' % filter)
+        self.set_filter(filter)
 
         self.__logs = logs
 
@@ -300,6 +298,11 @@ class log_history(contentview.content_view):
             self.__filter_entry.add_word(attr,getattr(log,attr))
 
     # Public interface
+
+    def self.set_filter(self,filter):
+        self.__filter = filter
+        if filter not in (None , ''):
+            self.set_long_title('Log filter : %s' % filter)
 
     def refresh(self):
         """Refresh the treeview with the logs
@@ -404,6 +407,13 @@ class log_manager(service.service):
         if opt != None:
             markup_font = pango.FontDescription(opt)
 
+    def get_new_views(self):
+        """Get wether the user wants to open new filters in new windows
+        or not."""
+        opt = self.opt('general','open_new_views')
+        if opt:
+            new_views = opt
+
     # life cycle
 
     def start(self):
@@ -420,6 +430,7 @@ class log_manager(service.service):
             self.get_markups()
             self.get_msg_length()
             self.get_multi_view_book_type()
+            self.get_new_views()
         else: 
             self.log.warning("Logging notification service couldn't be started.")
             self.stop()
@@ -431,6 +442,7 @@ class log_manager(service.service):
         self.get_markups()
         self.get_msg_length()
         self.get_multi_view_book_type()
+        self.get_new_views()
         self.cmd_refresh()
 
     def stop(self):
@@ -442,6 +454,11 @@ class log_manager(service.service):
 
     class general(defs.optiongroup):
         """Terminal options"""
+        class open_new_views(defs.option):
+            """If set to true, open new history filters in new views"""
+            rtype = types.boolean
+            default = False
+        
         class history_level_refresh(defs.option):
             """Minimum level (included) shall the history be refreshed"""
             rtype = types.stringlist('DEBUG','INFO','WARNING','CRITICAL')
@@ -516,7 +533,12 @@ $levelno, $pathname, $filename, $exc_info and/or $exc_text"""
         elif len(filter.split(":")) == 2:
             (key,val) = filter.split(":")
             request[key] = val
-        view = self.create_multi_view(filter=request,logs=self.boss.logs)
+        if self.new_views:
+            view = self.create_multi_view(filter=request,logs=self.boss.logs)
+        else:
+            for view in self.multi_views:
+                view.set_filter(request)
+            
         self.cmd_refresh()
 
     def cmd_refresh(self):
