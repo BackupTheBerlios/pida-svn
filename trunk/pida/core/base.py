@@ -21,7 +21,6 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import pida.utils.pidalog.log as log
 
 def set_boss(boss):
     """Called by the boss itself. Singletonish behaviour."""
@@ -38,22 +37,43 @@ class pidaobject(object):
         """The actual constructor."""
 
 
-class pidacomponent(log.pidalogger, pidaobject):
+class pidalogenabled(object):
+    """Logging mixin."""
+
+    def __init__(self, *args, **kw):
+        self.log = self.__build_logger(self.__class__.__name__)
+
+    def  __build_logger(self, name):
+        import logging
+        import os
+        format_str = ('%(levelname)s '
+                      '%(module)s.%(name)s:%(lineno)s '
+                      '%(message)s')
+        format = logging.Formatter(format_str)
+        handler = logging.StreamHandler()
+        handler.setFormatter(format)
+        logger = logging.getLogger(name)
+        logger.addHandler(handler)
+        if 'PIDA_DEBUG' in os.environ:
+            level = logging.DEBUG
+        else:
+            level = logging.INFO
+        logger.setLevel(level)
+        return logger
+
+
+class pidacomponent(pidalogenabled, pidaobject):
     """A single component."""
     def __init__(self, *args, **kw):
-        # Sets the logger and the log handlers
-        if hasattr(pidaobject,'boss'):
-            log.pidalogger.__init__(self,pidaobject.boss)
-        else:
-            log.pidalogger.__init__(self)
         # Do init
+        pidalogenabled.__init__(self, self.__class__.__name__)
         pidaobject.__init__(self, *args, **kw)
 
     def init_log(self):
         """
         Function to tell the wanted logging behaviour
         """
-        self.use_stream_handler('INFO')
+        self.use_stream_handler('ERROR')
 
     def is_leaf(self):
         return True

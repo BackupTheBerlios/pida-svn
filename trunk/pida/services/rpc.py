@@ -21,7 +21,6 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import pida.core.boss
 import pida.core.service as service
 from pida.utils.kiwiutils import gsignal
 import gobject

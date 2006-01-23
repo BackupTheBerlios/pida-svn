@@ -22,10 +22,7 @@
 #SOFTWARE.
 
 import gtk
-
-def split_function_name(name):
-    return name.split('_', 1)[-1]
-
+import string
 
 def build_optiongroup_from_class(classobj, rootregistry):
     group = rootregistry.add_group(classobj.__name__,
@@ -39,13 +36,3 @@ def build_optiongroup_from_class(classobj, rootregistry):
     return group
 
 
-def get_actions_for_funcs(funclist, svc):
-    for func in  funclist:
-        name = split_function_name(func.func_name)
-        actname = '%s+%s' % (svc.NAME, name)
-        words = [(s[0].upper() + s[1:]) for s in name.split('_')]
-        label = ' '.join(words)
-        stock_id = 'gtk-%s%s' % (words[0][0].lower(), words[0][1:])
-        action = gtk.Action(actname, label, func.func_doc, stock_id)
-        action.connect('activate', getattr(svc, func.func_name))
-        yield action

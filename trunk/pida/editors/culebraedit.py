@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
-#Copyright (c) 2005 Ali Afshar aafshar@gmail.com
+#Copyright (c) 2005-2006 The PIDA Project
 
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -23,10 +23,12 @@
 
 import gtk
 
-import pida.core.service as service
-import pida.pidagtk.contentview as contentview
-
+from pida.pidagtk import contentview
+from pida.core import actions
+from pida.core import service
 from pida.utils.culebra import edit
+
+from rat import hig
 
 
 class culebra_view(contentview.content_view):
@@ -50,7 +52,6 @@ class culebra_view(contentview.content_view):
         
     buffer = property(get_buffer)
 
-
 class culebra_editor(service.service):
 
     display_name = 'Culebra Text Editor'
@@ -59,9 +60,9 @@ class culebra_editor(service.service):
     multi_view_book = 'edit'
     
     def init(self):
+        
         self.__files = {}
         self.__views = {}
-        self._create_actions()
 
     def cmd_edit(self, filename=None):
         if filename not in self.__files:
@@ -74,7 +75,7 @@ class culebra_editor(service.service):
     def __load_file(self, filename):
         view = self.create_multi_view(
             filename=filename,
-            action_group=self._action_group
+            action_group=self.action_group
         )
         self.__files[filename] = view
         self.__views[view.unique_id] = filename
@@ -83,6 +84,8 @@ class culebra_editor(service.service):
         self.current_view = self.__files[filename]
         self.__files[filename].raise_page()
 
+    #############
+    # Callbacks
     def cmd_start(self):
         self.get_service('editormanager').events.emit('started')
 
@@ -116,98 +119,126 @@ class culebra_editor(service.service):
     def cmd_paste(self):
         self.current_view.editor.emit('paste-clipboard')
 
-    def cb_multiview_closed(self, view):
+    def cmd_can_close(self):
+        buffs = [view.buffer for view in self.__files.values() if view.buffer.get_modified()]
+        # If we have no buffers to save, go on
+        if len(buffs) == 0:
+            return True
+            
+        filenames = dict(map(lambda buff: (buff.filename, buff), buffs))
+        parent = self.boss.get_main_window()
+        files, response = hig.save_changes(filenames.keys(), parent=parent)
+        # Save the files that need to be saved
+        for filename in files:
+            # XXX: handle new files
+            filenames[filename].save()
+        return response in (gtk.RESPONSE_CLOSE, gtk.RESPONSE_OK)
+        
+    def cb_multi_view_closed(self, view):
         if view.unique_id in self.__views:
             filename = self.__views[view.unique_id]
+            del self.__views[view.unique_id]
+            del self.__files[filename]
             self.boss.call_command('buffermanager', 'file_closed',
                                    filename=filename)
 
-    def _create_actions(self):
-        ui_def = """
-        <toolbar>
-            <placeholder name="OpenFileToolbar" />
-            <placeholder name="SaveFileToolbar" />
+    def confirm_multi_view_controlbar_clicked_close(self, view):
+        buff = view.buffer
+        
+        # If buffer was not modified you can safely close it
+        if not buff.get_modified():
+            return True
+        
+        # When the buffer is new then we need to show the save dialog instead
+        # of a save changes dialog:
+        if buff.is_new:
+            # XXX: this is utterly broken but there's no support for new files
+            # either
+            return False
+        
+        parent = self.boss.get_main_window()
+        files, response = hig.save_changes(
+            [buff.filename],
+            parent=parent
+        )
+        
+        if response == gtk.RESPONSE_OK:
+            buff.save()
             
-            <placeholder name="EditToolbar">
-                <toolitem name="culebra_find_toggle"
+        return response in (gtk.RESPONSE_OK, gtk.RESPONSE_CLOSE)
+
+            
+    ############################
+    # UIManager definition
+    
+    def get_menu_definition(self):
+        return """
+        <toolbar>
+            <placeholder name="ProjectToolbar">
+                <toolitem name="CulebraFindToggle"
                 action="%s" />
                 <toolitem name="CulebraReplaceToggle"
                 action="%s" />
             </placeholder>
-            
-            <placeholder name="ProjectToolbar" />
-            <placeholder name="VcToolbar" />
-            <placeholder name="ToolsToolbar"/>
         </toolbar>
         """ % (edit.ACTION_FIND_TOGGLE, edit.ACTION_REPLACE_TOGGLE)
+    
+    ####################################
+    # gtk.Action's definition
+    @actions.action(
+        name = edit.ACTION_FIND_TOGGLE,
+        stock_id = gtk.STOCK_FIND,
+        label = "_Find...",
+        type = actions.TYPE_TOGGLE,
+    )
+    def act_find_toggle(self, action):
+        """Search for text"""
+    
+    @actions.action(
+        name = edit.ACTION_REPLACE_TOGGLE,
+        stock_id = gtk.STOCK_FIND_AND_REPLACE,
+        label = "_Replace...",
+        type = actions.TYPE_TOGGLE,
+    )
+    def act_replace_toggle(self, action):
+        """Search and replace text"""
+    
+    @actions.action(
+        name = edit.ACTION_FIND_FORWARD,
+        stock_id = gtk.STOCK_GO_FORWARD,
+    )
+    def act_find_forward(self, action):
+        """Find next matching word"""
+    
+    @actions.action(
+        name = edit.ACTION_FIND_BACKWARD,
+        stock_id = gtk.STOCK_GO_BACK,
+    )
+    def act_find_backward(self, action):
+        """Find previous mathing word"""
+
+    @actions.action(
+        name = edit.ACTION_REPLACE_FORWARD,
+        stock_id = gtk.STOCK_GO_FORWARD,
+    )
+    def act_replace_forward(self, action):
+        """Replaces the next matching word"""
+
+    @actions.action(
+        name = edit.ACTION_REPLACE_BACKWARD,
+        stock_id = gtk.STOCK_GO_BACK,
+    )
+    def act_replace_backward(self, action):
+        """Replaces backward"""
+    
+    @actions.action(
+        name = edit.ACTION_REPLACE_ALL,
+        stock_id = gtk.STOCK_FIND_AND_REPLACE,
+        label = "Replace Alll"
+    )
+    def act_replace_all(self, action):
+        """Replaces all matching words"""
         
 
-        ag = gtk.ActionGroup("culebraactions")
-        ag.add_toggle_actions((
-            (
-                edit.ACTION_FIND_TOGGLE,
-                gtk.STOCK_FIND,
-                "_Find...",
-                None,
-                "Shows or hides the find bar"
-            ),
-            
-            (
-                edit.ACTION_REPLACE_TOGGLE,
-                gtk.STOCK_FIND_AND_REPLACE,
-                "_Replace...",
-                None,
-                "Shows or hides the replace bar"
-            ),
-            
-        ))
-        
-        ag.add_actions((
-            (
-                edit.ACTION_FIND_FORWARD,
-                gtk.STOCK_GO_FORWARD,
-                "Find Forward",
-                None,
-                "Finds the next matching word"
-            ),
-            (
-                edit.ACTION_FIND_BACKWARD,
-                gtk.STOCK_GO_BACK,
-                "Find Backward",
-                None,
-                "Finds the previous matching word"
-            ),
-            (
-                edit.ACTION_REPLACE_FORWARD,
-                gtk.STOCK_GO_FORWARD,
-                "Replace Forward",
-                None,
-                "Replaces the next matching word"
-            ),
-            (
-                edit.ACTION_REPLACE_BACKWARD,
-                gtk.STOCK_GO_BACK,
-                "Replace Backward",
-                None,
-                "Replaces the previous matching word"
-            ),
-            (
-                edit.ACTION_REPLACE_ALL,
-                gtk.STOCK_FIND_AND_REPLACE,
-                "Replace All",
-                None,
-                "Replaces every the matching word"
-            ),
-            
-        ))
-        
-        self._action_group = ag
-        self.boss.call_command(
-            "window",
-            "register_action_group",
-            actiongroup=ag,
-            uidefinition=ui_def
-        )
-        
 
 Service = culebra_editor

@@ -23,6 +23,7 @@
 
 # pida import(s)
 import base
+import errors
 
 # system import(s)
 import os
@@ -59,7 +60,7 @@ class registry_item(base.pidacomponent):
         try:
             self.value = value
             return True
-        except exceptions.BadRegistryValue:
+        except errors.BadRegistryValueError:
             self.setdefault()
             return False
 
@@ -67,7 +68,7 @@ class registry_item(base.pidacomponent):
         if self.validate(value):
             self.__value = value
         else:
-            raise exceptions.BadRegistryValue, value
+            raise errors.BadRegistryValueError, value
 
     def get_value(self):
         return self.__value
@@ -198,7 +199,7 @@ class types(object):
             except ValueError:
                 val = int(data[0].lower() in ['t'])
             except:
-                raise exceptions.BadRegistryData
+                raise errors.BadRegistryDataError
             return val
 
     class integer(registry_item):
@@ -206,13 +207,14 @@ class types(object):
             try:
                 val = int(data)
             except:
-                raise exceptions.BadRegistryData
+                raise errors.BadRegistryDataError
             return val
 
     class list(registry_item):
         """"""
 
     class editor(list):
+        # see #101
         choices = ['vim', 'culebra', 'emacs', 'scerpent']
 
     class color(registry_item):
@@ -236,24 +238,6 @@ class types(object):
     def stringlist(*args):
         classdict = {'choices': args}
         return type('stringlist', (types.list,), classdict)
-
-class exceptions(object):
-    """Exceptions used by the registry."""
-    class BadRegistryKey(Exception):
-        pass
-
-    class BadRegistryGroup(Exception):
-        pass
-
-    class BadRegistryValue(Exception):
-        pass
-
-    class BadRegistryData(Exception):
-        pass
-
-    class BadRegistryDefault(Exception):
-        pass
-
 
 CONFIG_FILE_INTRO = (
     '#This is an automatically generated Pida config file.\n'
