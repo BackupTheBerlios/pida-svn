@@ -23,6 +23,8 @@
 
 #TODO Documentation
 
+import string
+
 import time
 import gtk
 
@@ -33,32 +35,82 @@ import pida.pidagtk.contentview as contentview
 #import pida.pidagtk.HyperLink as hyperlink
 
 # pida utils import
+import pida.core.base as base
 import pida.core.service as service
 import pida.utils.pidalog.gtk_event as gtk_log_event
 
 # using from imports to avoid to reexecute the logging package
 from cgi import escape
+from logging import LogRecord
 
-class log_item(tree.IconTreeItem):
+defs = service.definitions
+types = service.types
+
+color = {'notset':  {'color':'#00FFFF','icon':"about"},
+         'debug':   {'color':'#3ba33b','icon':"dialog-info"},
+         'info':    {'color':'#000000','icon':"info"},
+         'warning': {'color':'#ffa33b','icon':"dialog-warning"},
+         'error':   {'color':'#ff00fc','icon':"no"},
+         'critical':{'color':'#ff0000','icon':"stop"}}
+
+markup = {'short':"$module $name:$lineno",
+          'full':"$module $name:$lineno\n$message\n$levelname $created"}
+
+markup_font = None
+
+msg_length = [70]
+
+record_attributes = ['name',
+                     'threadName',
+                     'process',
+                     'module',
+                     'filename',
+                     'lineno',
+                     'msg',
+                     'levelname']
+
+class log_item(tree.IconTreeItem,base.pidacomponent):
 
     def __init__(self,record):
         self.__detailed = False
         ( img, self.color ) = self.__get_color_n_img(record)
         tree.IconTreeItem.__init__(self, record.created, record,image=img)
 
+        self.__mark_up_keys={'module':self.module,
+                              'name':self.name,
+                              'lineno':self.lineno,
+                              'message':self.message,
+                              'levelname':self.levelname,
+                              'created':self.created,
+                              'msg':self.msg,
+                              'args':self.args,
+                              'levelno':self.levelno,
+                              'pathname':self.pathname,
+                              'filename':self.filename,
+                              'exc_info':self.exc_info,
+                              'exc_text':self.exc_text}
+                              
+#        self.set_property('font-desc', markup_font)
+
     def __get_color_n_img(self,record):
         if record.levelno == 0: # NOTSET
-            return (icons.icons.get_image("about"), "#00FFFF")
+            return (icons.icons.get_image(color['notset']['icon']), 
+                                            color['notset']['color'])
         if record.levelno == 10: # DEBUG
-            return (icons.icons.get_image("dialog-info"), "#3ba33b")
+            return (icons.icons.get_image(color['debug']['icon']), 
+                                            color['debug']['color'])
         if record.levelno == 20: # INFO
-            return (icons.icons.get_image("info"), "#000000")
+            return (icons.icons.get_image(color['info']['icon']), 
+                                            color['info']['color'])
         if record.levelno == 30: # WARNING
-            return (icons.icons.get_image("dialog-warning"), "#ffa33b")
+            return (icons.icons.get_image(color['warning']['icon']), 
+                                            color['warning']['color'])
         if record.levelno == 40: # ERROR
-            return (icons.icons.get_image("no"), "#ff00fc")
+            return (icons.icons.get_image(color['error']['icon']), 
+                                            color['error']['color'])
         if record.levelno == 50: # CRITICAL
-            return (icons.icons.get_image("stop"), "#FF0000")
+            return (icons.icons.get_image(color['critical']['icon']), 
+                                            color['critical']['color'])
         if record.levelno == 100: # USER_NOTIFY
             return (icons.icons.get_image("dialog-question"), "#330000")
         if record.levelno == 110: # USER_INPUT
@@ -73,15 +125,41 @@ class log_item(tree.IconTreeItem):
         return '<span color="%s">%s</span>' % (self.color, str)
 
     def __get_markup(self):
-        if self.__detailed == True:
-            return escape('%s.%s:%s\n%s\n%s %s' % ( self.module, 
-                                    self.name, self.lineno, 
-                                    self.message,
-                                    self.levelname, self.created ))
-        else:
-            return self.get_color(escape('%s.%s : %s' % ( self.module, 
-                                    self.name, self.message )))
+        try:
+            try:
+                if self.__detailed == True:
+                    mark_up = string.Template(markup['full'])
+                    return escape(mark_up.substitute(self.__mark_up_keys))
+                mark_up = string.Template(markup['short'])
+                return  self.get_color(escape(mark_up.substitute(
+                                                        self.__mark_up_keys)))
+            except KeyError, ke:
+                print "ERROR: Key %s not available for marking up." % ke
+                raise ke
+        except:
+            print "Turned back log item's markup to default"
+            if self.__detailed == True:
+                    return escape('%s.%s:%s\n%s\n%s %s' % ( self.value.module, 
+                                            self.value.name, self.value.lineno, 
+                                            self.value.message,
+                                            self.value.levelname, 
+                                            self.value.created ))
+            return self.get_color(escape('%s.%s : %s' % ( self.value.module, 
+                            self.value.name, self.value.getMessage() )))
     markup = property(__get_markup)
+
+    # properties
+    def __get_created(self):
+        return time.strftime("%Y-%m-%d %H:%M:%S", 
+                                time.localtime(self.value.created))
+    created = property(__get_created)
+
+    def __get_message(self):
+        msg = self.value.getMessage()
+        if len(msg) > msg_length[0]:
+            return msg[:msg_length[0]-3]+"..."
+        return msg
+    message = property(__get_message)
 
     # properties
     def __get_name(self):
@@ -129,17 +207,9 @@ class log_item(tree.IconTreeItem):
     lineno = property(__get_lineno)
 
     def __get_created(self):
-        return time.strftime("%Y-%m-%d %H:%M:%S", 
+        return time.strftime("%Y-%m-%d %H:%M:%S",
                                 time.localtime(self.value.created))
     created = property(__get_created)
-
-    def __get_message(self):
-        msg = self.value.getMessage()
-        if len(msg) > 70:
-            return msg[:67]+"..."
-        return msg
-            
-    message = property(__get_message)
 
 class log_tree(tree.IconTree):
     '''Tree listing all the pastes'''
@@ -160,6 +230,15 @@ class log_tree(tree.IconTree):
         '''Deletes the currently selected paste'''
         self.del_item()
 
+class markup_validate_string(types.string):
+    def validate(self,value):
+        try:
+            mup = string.Template(value)
+            return escape(mup.substitute(log_item.__dict__))
+        except KeyError, ke:
+            self.log.error("Key %s not available for marking up." % ke)
+            return False
+
 class log_history(contentview.content_view):
     ICON_NAME = 'logviewer'
     LONG_TITLE = 'Log viewer'
@@ -170,15 +249,6 @@ class log_history(contentview.content_view):
     HAS_CLOSE_BUTTON = True
     HAS_SEPARATOR = False
     HAS_TITLE = True
-
-    __record__attributes = ['name',
-                            'threadName',
-                            'process',
-                            'module',
-                            'filename',
-                            'lineno',
-                            'msg',
-                            'levelname']
 
     def init(self,filter=None,logs=None):
         '''Constructor of the Paste History View.'''
@@ -200,8 +270,7 @@ class log_history(contentview.content_view):
         hb = gtk.HBox()
         hb.pack_start(gtk.Label('Filter'),False,False)
 
-        self.__filter_entry = entry.completed_keyword_entry(
-                                                    self.__record__attributes)
+        self.__filter_entry = entry.completed_keyword_entry(record_attributes)
        
         hb.add(self.__filter_entry)
         filter_add = gtk.Button("")
@@ -225,13 +294,16 @@ class log_history(contentview.content_view):
 
     # Private interface
     def add_item(self,log):
+        """Adds an item to the tree"""
         self.__log_tree.push(log)
-        for attr in self.__record__attributes:
+        for attr in record_attributes:
             self.__filter_entry.add_word(attr,getattr(log,attr))
 
     # Public interface
 
     def refresh(self):
+        """Refresh the treeview with the logs
+        TODO: improve updates (only load changes, not the whole tree...)"""
         self.__log_tree.clear()
         if self.__logs != None:                                           
             if self.__filter in  (None, ''):                              
@@ -249,14 +321,16 @@ class log_history(contentview.content_view):
     # Actions
 
     def cb_filter_add(self,but):
+        """Creates a new log history with string filter parameter"""
         self.service.cmd_filter(filter=self.__filter_entry.get_text())
         self.service.log.debug("Opened a new log filter view")
 
     def cb_refresh(self,but):
+        """Callback function to refresh the treeview"""
         self.refresh()
 
     def cb_record_clicked(self,record,tree_item):
-        '''Callback function called when an item is selected in the TreeView'''
+        """Callback function called when an item is selected in the TreeView"""
         if self.__tree_detailled != None:
             self.__tree_detailled.set_detailed(False)
 
@@ -266,39 +340,98 @@ class log_history(contentview.content_view):
         self.__tree_detailled = tree_item.value
 
     def cb_record_db_clicked(self,record,tree_item):
-        '''Callback function called when an item is double clicked, and show it
-        in the panel ? '''
+        """Callback function called when an item is double clicked, and show it
+        in the panel ? """
         pass
 
     def cb_record_m_clicked(self,tree,tree_item):
-        '''Callback function called when an item is middle clicked, and copy it
-        to the mouse buffer clipboard ?'''
+        """Callback function called when an item is middle clicked, and copy it
+        to the mouse buffer clipboard ?"""
         self.service.cmd_show_watcher(tree_item.value.value)
 
     def cb_record_r_clicked(self, paste, tree_item, event):
-        '''Callback function called when an item is right clicked, and show the
-        contextual menu...'''
+        """Callback function called when an item is right clicked, and show the
+        contextual menu..."""
         pass
 
+view_location_map = {'View Pane':'view',
+                     'Quick Pane':'content',
+                     'Detached':'ext'}
 class log_manager(service.service):
     NAME = 'log manager'
     LONG_TITLE = 'log manager'
 
     multi_view_type = log_history
-    multi_view_book = 'view'
+
+    #Get configuration values
+
+    def get_multi_view_book_type(self):
+        """Get view book destination of the log history from configuration"""
+        opt = self.opt('general', 'history_view_location')
+        return view_location_map[opt]
+    multi_view_book = property(get_multi_view_book_type)
+
+    def get_colors(self):
+        """Get level colors from configuration"""
+        for levelname in color.keys():
+            opt = self.opt('fonts_and_colours', '%s_color' % levelname)
+            if opt:
+                color[levelname]['color'] = opt
+
+    def get_icons(self):
+        """Get level icons from configuration"""
+        for levelname in color.keys():
+            opt = self.opt('fonts_and_colours', '%s_icon' % levelname)
+            if opt:
+                color[levelname]['icon'] = opt
+
+    def get_markups(self):
+        """Get logline's markup length from configuration"""
+        for markup_length in markup.keys():
+            opt = self.opt('general','markup_%s' % markup_length)
+            if opt:
+                markup[markup_length] = opt
+
+    def get_msg_length(self):
+        """Get message's max length"""
+        opt = self.opt('general','message_length')
+        if opt:
+            msg_length[0] = int(opt)
+
+    def get_item_font(self):
+        """Get item's font"""
+        opt = self.opt('fonts_and_colours','font')
+        if opt != None:
+            markup_font = pango.FontDescription(opt)
 
     # life cycle
 
     def start(self):
         self.__view = None
         self.__first = True
-        if self.boss.use_notification_handler("INFO",self.cmd_refresh):
-            self.log.debug("Logging service started.")
+        refresh_level = self.opt('general', 'history_level_refresh')
+        if refresh_level in (None, ''):
+            refresh_level = 'DEBUG'
+        if self.boss.use_notification_handler(refresh_level,self.cmd_refresh):
+            self.log.debug("Logging service started. Refreshing at"+\
+                                " level"+refresh_level)
+            self.get_options()
+#            self.get_icons()
+            self.get_markups()
+            self.get_msg_length()
+            self.get_multi_view_book_type()
         else: 
+            self.log.warning("Logging notification service couldn't be started.")
             self.stop()
 
     def reset(self):
         self.log.debug("Logging service reset.")
+        self.get_colors()
+#        self.get_icons()
+        self.get_markups()
+        self.get_msg_length()
+        self.get_multi_view_book_type()
+        self.cmd_refresh()
 
     def stop(self):
         self.log.debug("Logging service stopped.")
@@ -306,7 +439,70 @@ class log_manager(service.service):
 
     #private interface
     #public interface
-    
+
+    class general(defs.optiongroup):
+        """Terminal options"""
+        class history_level_refresh(defs.option):
+            """Minimum level (included) shall the history be refreshed"""
+            rtype = types.stringlist('DEBUG','INFO','WARNING','CRITICAL')
+            default = 'INFO'
+        class history_view_location(defs.option):
+            """Where newly started histories will appear per default"""
+            rtype = types.stringlist(*view_location_map.keys())
+            default = 'View Pane'
+
+        class markup_short(defs.option):
+            """The default markup to display. To customize it is available: 
+$module, $name, $lineno, $message, $levelname, $created, $msg, $args
+$levelno, $pathname, $filename, $exc_info and/or $exc_text"""
+            default = markup['short']
+            rtype = markup_validate_string
+
+        class markup_full(defs.option):
+            """The default markup to display, when selected. To customize 
+it is available: 
+$module, $name, $lineno, $message, $levelname, $created, $msg, $args
+$levelno, $pathname, $filename, $exc_info and/or $exc_text"""
+            default = escape(markup['full'])
+            rtype = markup_validate_string 
+
+        class message_length(defs.option):
+            """How much shall the size of the main message be shortened"""
+            default = msg_length[0]
+            rtype = types.integer
+
+    class fonts_and_colours(defs.optiongroup):
+        """Fonts and colors for the markup"""
+        class notset_color(defs.option):
+            """Change the color of unset log lines"""
+            default = color['notset']['color']
+            rtype = types.color
+
+        class debug_color(defs.option):
+            """Change the color of the DEBUG log lines"""
+            default = color['debug']['color']
+            rtype = types.color
+
+        class info_color(defs.option):
+            """Change the color of the INFO log lines"""
+            default = color['info']['color']
+            rtype = types.color
+
+        class warning_color(defs.option):
+            """Change the color of the WARNING log lines"""
+            default = color['warning']['color']
+            rtype = types.color
+
+        class critical_color(defs.option):
+            """Change the color of the CRITICAL log lines"""
+            default = color['critical']['color']
+            rtype = types.color
+
+        class font(defs.option):
+            """TODO: Change the font of log history"""
+            default = 'None'
+            rtype = types.font
+            
     # commands
 
     def cmd_filter(self,filter):
@@ -317,10 +513,9 @@ class log_manager(service.service):
                 if len(pair.split(":")) == 2:
                     (key,val) = pair.split(":")
                     request[key] = val
-        else:
-            if len(filter.split(":")) == 2:
-                (key,val) = filter.split(":")
-                request[key] = val
+        elif len(filter.split(":")) == 2:
+            (key,val) = filter.split(":")
+            request[key] = val
         view = self.create_multi_view(filter=request,logs=self.boss.logs)
         self.cmd_refresh()
 
