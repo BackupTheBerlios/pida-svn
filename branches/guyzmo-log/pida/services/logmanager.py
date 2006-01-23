@@ -56,9 +56,9 @@ color = {'notset':  {'color':'#00FFFF','icon':"about"},
 markup = {'short':"$module $name:$lineno",
           'full':"$module $name:$lineno\n$message\n$levelname $created"}
 
-markup_font = None
-
-msg_length = [70]
+view_option = {'font':None,
+               'new':False,
+               'length':70}
 
 record_attributes = ['name',
                      'threadName',
@@ -90,7 +90,7 @@ class log_item(tree.IconTreeItem,base.pidacomponent):
                               'exc_info':self.exc_info,
                               'exc_text':self.exc_text}
                               
-#        self.set_property('font-desc', markup_font)
+#        self.set_property('font-desc', view_option['font'])
 
     def __get_color_n_img(self,record):
         if record.levelno == 0: # NOTSET
@@ -156,8 +156,8 @@ class log_item(tree.IconTreeItem,base.pidacomponent):
 
     def __get_message(self):
         msg = self.value.getMessage()
-        if len(msg) > msg_length[0]:
-            return msg[:msg_length[0]-3]+"..."
+        if len(msg) > view_option['length']:
+            return msg[:view_option['length']-3]+"..."
         return msg
     message = property(__get_message)
 
@@ -255,9 +255,6 @@ class log_history(contentview.content_view):
 
         self.service.log.debug('new log manager with filter on %s' % filter)
 
-        if filter == {}:
-            filter = None
-
         self.set_filter(filter)
 
         self.__logs = logs
@@ -299,10 +296,13 @@ class log_history(contentview.content_view):
 
     # Public interface
 
-    def self.set_filter(self,filter):
+    def set_filter(self,filter):
         self.__filter = filter
-        if filter not in (None , ''):
+        if filter not in (None, {}, ''):
             self.set_long_title('Log filter : %s' % filter)
+        else:
+            self.__filter = None
+            self.set_long_title('Log Viewer')
 
     def refresh(self):
         """Refresh the treeview with the logs
@@ -326,7 +326,10 @@ class log_history(contentview.content_view):
     def cb_filter_add(self,but):
         """Creates a new log history with string filter parameter"""
         self.service.cmd_filter(filter=self.__filter_entry.get_text())
-        self.service.log.debug("Opened a new log filter view")
+        if view_option['new']:
+            self.service.log.debug("Opened a new log filter view")
+        else:
+            self.service.log.debug("Set a filter on the log view")
 
     def cb_refresh(self,but):
         """Callback function to refresh the treeview"""
@@ -399,20 +402,20 @@ class log_manager(service.service):
         """Get message's max length"""
         opt = self.opt('general','message_length')
         if opt:
-            msg_length[0] = int(opt)
+            view_option['length'] = int(opt)
 
     def get_item_font(self):
         """Get item's font"""
         opt = self.opt('fonts_and_colours','font')
         if opt != None:
-            markup_font = pango.FontDescription(opt)
+            view_option['font'] = pango.FontDescription(opt)
 
     def get_new_views(self):
         """Get wether the user wants to open new filters in new windows
         or not."""
         opt = self.opt('general','open_new_views')
         if opt:
-            new_views = opt
+            view_option['new'] = opt
 
     # life cycle
 
@@ -485,7 +488,7 @@ $levelno, $pathname, $filename, $exc_info and/or $exc_text"""
 
         class message_length(defs.option):
             """How much shall the size of the main message be shortened"""
-            default = msg_length[0]
+            default = view_option['length']
             rtype = types.integer
 
     class fonts_and_colours(defs.optiongroup):
@@ -533,7 +536,7 @@ $levelno, $pathname, $filename, $exc_info and/or $exc_text"""
         elif len(filter.split(":")) == 2:
             (key,val) = filter.split(":")
             request[key] = val
-        if self.new_views:
+        if view_option['new']:
             view = self.create_multi_view(filter=request,logs=self.boss.logs)
         else:
             for view in self.multi_views:
