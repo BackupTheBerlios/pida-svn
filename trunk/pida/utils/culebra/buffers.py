@@ -378,9 +378,6 @@ class CulebraBuffer(gtksourceview.SourceBuffer):
 
     def save(self):
         """Saves the current buffer to the file"""
-        assert self.filename is not None
         fd = SafeFileWrite(self.filename)
         fd.write(self.get_text(*self.get_bounds()))
         fd.close()
-        self.set_modified(False)
-

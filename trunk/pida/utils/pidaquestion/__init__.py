@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
-#Copyright (c) 2005-2006 The PIDA Project
+#Copyright (c) 2006 Bernard Pratz <guyzmo@m0g.net>
 
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -21,29 +21,3 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-class CommandNotFoundError(KeyError):
-    """
-    This error is raised when you try to access a command that
-    does not exists.
-    """
-
-class ServiceNotFoundError(KeyError):
-    """
-    This service is thrown when you try to get_service() and
-    the service does not exists.
-    """
-
-class BadRegistryKeyError(StandardError):
-    pass
-
-class BadRegistryGroupError(StandardError):
-    pass
-
-class BadRegistryValueError(StandardError):
-    pass
-
-class BadRegistryDataError(StandardError):
-    pass
-
-class BadRegistryDefaultError(StandardError):
-    pass

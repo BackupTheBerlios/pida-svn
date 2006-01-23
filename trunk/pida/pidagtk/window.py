@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
-#Copyright (c) 2005-2006 The PIDA Project
+#Copyright (c) 2005 Ali Afshar aafshar@gmail.com
 
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -68,7 +68,7 @@ class pidawindow(gtk.Window):
             book = self.__viewbooks[bookname]
             book.detach_pages()
 
-    def _create_sidebar(self, bufferview, pluginview, languageview):
+    def _create_sidebar(self, bufferview, pluginview):
         # Check wether the sidebar is horizontal or vertical
         sidebar_horiz = self.__manager.opt('layout',
                                            'vertical_sidebar_split')
@@ -108,9 +108,10 @@ class pidawindow(gtk.Window):
         box.pack2(bar2, resize=True)
         
         # Add the language view
-        vb = self.__viewbooks['languages'] = languageview
+        vb = self.__viewbooks['language'] = contentbook.contentbook('Languages')
         vb.show()
         bar2.pack_start(vb)
+        vb.collapse()
         
         # And add the quick view
         vb = self.__viewbooks['content'] = contentbook.contentbook('Quick View')
@@ -120,13 +121,13 @@ class pidawindow(gtk.Window):
         
         return box
 
-    def pack(self, menubar, toolbar, bufferview, pluginview, languageview):
+    def pack(self, menubar, toolbar, bufferview, pluginview):
         self.__mainbox = gtk.VBox()
         self.__mainbox.show()
         
         self.add(self.__mainbox)
         self._pack_topbar(menubar, toolbar)
-        self._pack_panes(bufferview, pluginview, languageview)
+        self._pack_panes(bufferview, pluginview)
 
     def _pack_topbar(self, menubar, toolbar):
         self.__toolarea = gtk.VBox()
@@ -149,7 +150,7 @@ class pidawindow(gtk.Window):
         self.__menubar = menubar
         self.__toolbar = toolbar
 
-    def _pack_panes(self, bufferview, pluginview, languageview):
+    def _pack_panes(self, bufferview, pluginview):
         editor = contentbook.Contentholder(show_tabs=False)
         self.__viewbooks['edit'] = editor
         self.set_main_widget(editor)
@@ -162,13 +163,13 @@ class pidawindow(gtk.Window):
             panepos = gtk.POS_LEFT
             langpos = gtk.POS_RIGHT
         #self._create_paneholder('language', langpos)
-        sidebar = self._create_sidebar(bufferview, pluginview, languageview)
+        sidebar = self._create_sidebar(bufferview, pluginview)
         self.set_pane_widget(panepos, sidebar)
         self.set_pane_sticky(panepos, True)
         extb = self.__viewbooks['ext'] = external_book()
         extb.window.set_transient_for(self)
 
-    def _pack_panes(self, bufferview, pluginview, languageview):
+    def _pack_panes(self, bufferview, pluginview):
         # Horizontal paned for editor and sidebar
         p0 = gtk.HPaned()
         p0.show()
@@ -179,7 +180,7 @@ class pidawindow(gtk.Window):
         sidebar_on_right = self.__manager.opt('layout', 'sidebar_on_right')
         
         # Creates the sidebar
-        sidebar = self._create_sidebar(bufferview, pluginview, languageview)
+        sidebar = self._create_sidebar(bufferview, pluginview)
         sidebar.show()
         
         # Places sidebar

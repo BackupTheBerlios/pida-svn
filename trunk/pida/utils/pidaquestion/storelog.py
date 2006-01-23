@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
-#Copyright (c) 2005 Ali Afshar aafshar@gmail.com
+#Copyright (c) 2006 Bernard Pratz <bernard@pratz.net>
 
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -21,31 +21,44 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import gtk
 
-def split_function_name(name):
-    return name.split('_', 1)[-1]
+class logs(object):
+    """
+    List of all the logs
+    """
+    def __init__(self):
+       self.logs = {}
+       self.__last = None
 
+    def __log_rotate(self):
+        if len(self.logs) > 100:
+            self.logs = self.logs
+    
+    def push_record(self,key,record):
+        self.__log_rotate()
+        self.logs[key] = record
+        self.__last = record
 
-def build_optiongroup_from_class(classobj, rootregistry):
-    group = rootregistry.add_group(classobj.__name__,
-                                    classobj.__doc__)
-    for classkey in dir(classobj):
-        item = getattr(classobj, classkey)
-        if len(getattr(item, '__bases__', [])):
-            if item.__bases__[0].__name__ == 'option':
-                opt = group.new(item.__name__, item.__doc__,
-                                item.default, item.rtype)
-    return group
+    def get_last(self):
+        return self.__last
+    last = property(get_last)
 
+    def get_keys(self):
+        return self.logs.keys()
+    keys = property(get_keys)
 
-def get_actions_for_funcs(funclist, svc):
-    for func in  funclist:
-        name = split_function_name(func.func_name)
-        actname = '%s+%s' % (svc.NAME, name)
-        words = [(s[0].upper() + s[1:]) for s in name.split('_')]
-        label = ' '.join(words)
-        stock_id = 'gtk-%s%s' % (words[0][0].lower(), words[0][1:])
-        action = gtk.Action(actname, label, func.func_doc, stock_id)
-        action.connect('activate', getattr(svc, func.func_name))
-        yield action
+    def get_values(self):
+        return self.logs
+    values = property(get_values)
+
+    def get_iter(self):
+        for log in self.logs.keys():
+            yield self.logs[log]
+    iter = property(get_iter)
+
+    def filter_list(self,property,filter):
+        for log in self.logs.keys():
+            if hasattr(self.logs[log],property):
+                if filter == getattr(self.logs[log],property):
+                    yield self.logs[log]
+    

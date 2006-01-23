@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
-#Copyright (c) 2005-2006 The PIDA Project
+#Copyright (c) 2005 Ali Afshar aafshar@gmail.com
 
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,6 @@ import os
 import gobject
 
 import pida.core.service as service
-import pida.core.actions as actions
 
 import pida.utils.vc as vc
 
@@ -80,13 +79,13 @@ class version_control(service.service):
     def cmd_get_statuses(self, directory):
         vcs = self.call('get_vcs_for_directory', directory=directory)
         if vcs.NAME == 'Null':
-            self.log.info('"%s" is not version controlled', directory)
+            self.log.info('%s is not version controlled', directory)
         else:
             try:
                 statuses = vcs.listdir(directory)
                 return statuses
             except NotImplementedError:
-                self.log.info('"%s" is not version controlled', directory)
+                self.log.info('%s is not version controlled', directory)
 
     def cmd_diff_file(self, filename):
         if self.opt('meld_integration', 'use_meld_for_diff'):
@@ -222,7 +221,6 @@ class version_control(service.service):
                                        directory=directory)
             gobject.timeout_add(200, browse)
 
-    @actions.action(stock_id='gtk-vcs_diff')
     def act_diff_file(self, action):
         self.call('diff_file', filename=self.__currentfile)
 

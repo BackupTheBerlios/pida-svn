@@ -48,5 +48,5 @@ def unescape_text(txt):
 
 def get_action(get_action, name):
     action = get_action(name)
-    assert action is not None, "Missing action: %r" % name
+    assert action is not None, name
     return action

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
-#Copyright (c) 2005 The PIDA Project
+#Copyright (c) 2005 Ali Afshar aafshar@gmail.com
 
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@ import command
 import shelve
 import registry
 import databases
-import actions
+
 import definitions
 
 types = registry.types
@@ -39,9 +39,14 @@ import gtk
 # system imports
 import os
 
-from actions import split_function_name
-from pida.utils.servicetemplates import build_optiongroup_from_class
-from errors import CommandNotFoundError
+
+import pida.utils.servicetemplates as servicetemplates
+
+
+split_function_name = servicetemplates.split_function_name
+get_actions_for_funcs = servicetemplates.get_actions_for_funcs
+build_optiongroup_from_class = servicetemplates.build_optiongroup_from_class
+
 
 class options_mixin(object):
     """Configuration options support."""
@@ -102,14 +107,15 @@ class commands_mixin(object):
                            commandname, result)
             return result
         else:
-            raise CommandNotFoundError(commandname)
+            self.log.warn('command not found %s', commandname)
 
     def __call_command(self, command, **kw):
         return command(**kw)
 
     def call_external(self, servicename, commandname, **kw):
         svc = self.get_service(servicename)
-        return svc.call(commandname, **kw)
+        if svc is not None:
+            return svc.call(commandname, **kw)
 
 
 class data_mixin(object):
@@ -257,15 +263,9 @@ class actions_mixin(object):
                 actiongroup=self.action_group, uidefinition=menudef)
 
     def __init(self):
-        # First we need to get the methods instead of the functions
-        # create_actions accepts only methods and not class functions
-        get_method = lambda func: getattr(self, func.__name__)
-        meths = map(get_method, self.__class__.__actions__)
-        # Now we can create the actions
-        acts = actions.create_actions(meths, self.NAME)
-        # Finally for each action we add it to the group
-        add_action = self.__action_group.add_action
-        map(add_action, acts)
+        for action in get_actions_for_funcs(self.__class__.__actions__,
+                                                self):
+            self.__action_group.add_action(action)
 
     def get_action_group(self):
         return self.__action_group
@@ -299,12 +299,12 @@ class bindings_mixin(object):
             evtstring = split_function_name(bndfunc.func_name)
             servicename, eventname = evtstring.split('_', 1)
             svc = self.get_service(servicename)
-            func = getattr(self, bndfunc.func_name)
-            # XXX: see ticket #99
-            try:
-                svc.events.register(eventname, func)
-            except AssertionError:
-                self.log.info('event "%s" does not exist', eventname)
+            if svc is not None:
+                func = getattr(self, bndfunc.func_name)
+                try:
+                    svc.events.register(eventname, func)
+                except AssertionError:
+                    self.log.info('event "%s" does not exist', eventname)
 
 
 class document_type_mixin(object):
@@ -318,7 +318,8 @@ class document_type_mixin(object):
         for handler in self.__documenttypes__:
             handler.service = self
             svc = self.get_service('documenttypes')
-            svc.call('register_file_handler', handler=handler)
+            if svc:
+                svc.call('register_file_handler', handler=handler)
 
 
 class language_type_mixin(object):

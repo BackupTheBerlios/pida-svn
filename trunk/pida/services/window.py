@@ -63,7 +63,7 @@ class window_manager(service.service):
 
     def init(self):
         self.__window = window.pidawindow(self)
-        self.__window.connect('delete-event', self.cb_destroy)
+        self.__window.connect('destroy', self.cb_destroy)
         self._connect_drag_events()
         self._create_uim()
 
@@ -107,6 +107,16 @@ class window_manager(service.service):
         self.__uim.ensure_update()
 
     def cmd_input(self, callback_function, prompt='?', prefill=''):
+        def response(response):
+            if response != None:
+                callback_function(response)
+        if hasattr(self,'log'):
+            self.log.input(prompt,title=prompt,prefill=prefill,
+                        callback=response,type="entry_okcancel")
+        else:
+            cmd_input_old(callback_function,prompt,prefill)
+
+    def cmd_input_old(self, callback_function, prompt='?', prefill=''):
         dialog = gtk.Dialog(title=prompt,
             parent=self.boss.get_main_window(),
             buttons=(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT,
@@ -131,11 +141,8 @@ class window_manager(service.service):
     def bnd_buffermanager_document_changed(self, document):
         self.call('set_title', title=document.filename)
 
-    def cb_destroy(self, window, *args):
-        can_close = self.boss.call_command("editormanager", "can_close")
-        if can_close:
-            self.boss.stop()
-        return not can_close
+    def cb_destroy(self, window):
+        self.boss.stop()
 
     def _create_uim(self):
         self.__uim = gtk.UIManager()
@@ -203,16 +210,11 @@ class window_manager(service.service):
         
         pluginview = contentbook.contentbook('Plugins')
         pluginview.show()
-        languageview = contentbook.contentbook('Current File')
         
         for service in self.boss.services:
             if service.plugin_view_type is not None:
                 pluginview.append_page(service.plugin_view)
                 service.plugin_view.show()
-            if service.lang_view_type is not None:
-                languageview.append_page(service.lang_view)
-                service.lang_view.show()
-                
         
         self.__uim.ensure_update()
         menubar = self.__uim.get_toplevels(gtk.UI_MANAGER_MENUBAR)[0]
@@ -223,8 +225,7 @@ class window_manager(service.service):
                                     [('text/uri-list', 0, 0)],
                                     gtk.gdk.ACTION_COPY)
         
-        self.__window.pack(menubar, self.toolbar, bufferview, pluginview,
-                           languageview)
+        self.__window.pack(menubar, self.toolbar, bufferview, pluginview)
         
 
     def _connect_drag_events(self):
