@@ -172,7 +172,8 @@ class GrepView(contentview.content_view):
 
     def from_options(self, options):
         self.__pattern_entry.set_text(options.pattern)
-        if len(options.directories):
+
+        if options.directories is not None and len(options.directories):
             self.__path_entry.set_filename(options.directories[0])
         self.__recursive.set_active(options.recursive)
         self.__ignore_vcs.set_active(options.ignorevcs)
