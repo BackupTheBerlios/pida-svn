@@ -70,13 +70,13 @@ def create_actions(meths, action_prefix):
         actname = getattr(meth, "name", actname)
         
         name = getattr(meth, "name", name)
+        assert name is not None
         words = map(string.capitalize, name.split('_'))
         label = " ".join(words)
         label = getattr(meth, "label", label)
         stock_id = "gtk-%s%s" % (words[0][0].lower(), words[0][1:])
         stock_id = getattr(meth, "stock_id", stock_id)
         doc = meth.func_doc
-        
         action_type = getattr(meth, "type", TYPE_NORMAL)
         action_factory = _ACTIONS[action_type]
         

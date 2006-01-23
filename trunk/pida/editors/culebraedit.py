@@ -175,6 +175,7 @@ class culebra_editor(service.service):
         return """
         <toolbar>
             <placeholder name="ProjectToolbar">
+                <separator />
                 <toolitem name="CulebraFindToggle"
                 action="%s" />
                 <toolitem name="CulebraReplaceToggle"

@@ -20,9 +20,10 @@
 #LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
-
+import gtk
 import pida.core.service as service
 import pida.core.document as document
+from pida.core import actions
 
 types = service.types
 defs = service.definitions
@@ -52,22 +53,28 @@ class document_type_handler(service.service):
             self.service.boss.call_command('editormanager', 'close',
                                             filename=document.filename)
 
+        @actions.action(stock_id=gtk.STOCK_REDO, label=None)
         def act_redo(self, action):
             self.service.boss.call_command('editormanager', 'redo')
 
+        @actions.action(stock_id=gtk.STOCK_UNDO, label=None, is_important=True)
         def act_undo(self, action):
             """Undo the last edit."""
             self.service.boss.call_command('editormanager', 'undo')
 
+        @actions.action(stock_id=gtk.STOCK_CUT, label=None)
         def act_cut(self, action):
             self.service.boss.call_command('editormanager', 'cut')
 
+        @actions.action(stock_id=gtk.STOCK_COPY, label=None)
         def act_copy(self, action):
             self.service.boss.call_command('editormanager', 'copy')
 
+        @actions.action(stock_id=gtk.STOCK_PASTE, label=None)
         def act_paste(self, action):
             self.service.boss.call_command('editormanager', 'paste')
 
+        @actions.action(stock_id=gtk.STOCK_SAVE, label=None, is_important=True)
         def act_save(self, action):
             self.service.boss.call_command('editormanager', 'save')
 

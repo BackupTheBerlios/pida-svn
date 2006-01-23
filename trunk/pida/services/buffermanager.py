@@ -24,11 +24,13 @@
 import glob
 import os
 import gtk
-import pida.core.service as service
-import pida.pidagtk.buffertree as buffertree
 import gobject
 
+import pida.core.service as service
+import pida.pidagtk.buffertree as buffertree
 import pida.pidagtk.contentview as contentview
+
+from pida.core import actions
 
 defs = service.definitions
 types = service.types
@@ -96,9 +98,12 @@ class Buffermanager(service.service):
     def bind(self):
         self.create_single_view()
 
+    @actions.action(stock_id=gtk.STOCK_OPEN, label=None, is_important=True)
     def act_open_file(self, action):
+        """Opens a document"""
         self.boss.call_command('filemanager', 'browse')
 
+    @actions.action(stock_id=gtk.STOCK_QUIT, label=None)
     def act_quit_pida(self, action):
         self.boss.stop()
 
@@ -266,9 +271,7 @@ class Buffermanager(service.service):
                 </menubar>
                 <toolbar>
                 <placeholder name="OpenFileToolbar">
-                <separator />
                 <toolitem name="Open" action="buffermanager+open_file" />
-                <separator />
                 </placeholder>
                 <placeholder name="SaveFileToolbar">
                 </placeholder>
