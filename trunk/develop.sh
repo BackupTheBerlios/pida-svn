@@ -36,11 +36,18 @@ if ( cd $pidadir; {
     python setup.py bdist --dist-dir=$distdir --formats=egg
     } 2>&1 ) > $pidadir/buildlog.$$; then
     rm $pidadir/buildlog.$$
+elif zenity --text-info --title="I'm sorry, python setup.py failed :-(" \
+        --width=400 \
+        --filename="$pidadir/buildlog.$$" 2> /dev/null; then
+    true
 else
     echo "ERROR: python setup.py failed, log will follow"
-    mv $pidadir/buildlog.$$ $pidadir/buildlog.log
-    sed -e 's,^,  ,' $pidadir/buildlog.log
+    sed -e 's,^,  ,' $pidadir/buildlog.$$
     echo "ERROR: END"
+fi
+
+if [ -f $pidadir/buildlog.$$ ]; then
+    mv $pidadir/buildlog.$$ $pidadir/buildlog.log
     exit 1
 fi
 
