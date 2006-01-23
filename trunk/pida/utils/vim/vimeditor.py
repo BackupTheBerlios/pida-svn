@@ -24,6 +24,7 @@
 import os
 
 import pida.core.service as service
+from pida.core import errors
 
 defs = service.definitions
 types = service.types
@@ -128,7 +129,7 @@ class vim_editor(object):
                         sc = ''.join([l, c])
                         self.__old_shortcuts[mapc][self.server].append(sc)
                         self.__cw.send_ex(self.server, NMAP_COM % (mapc, c, command))
-                    except registry.BadRegistryKey:
+                    except errors.BadRegistryKeyError:
                         pass
             gobject.timeout_add(200, load)
 

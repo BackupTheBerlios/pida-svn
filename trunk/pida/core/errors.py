@@ -33,3 +33,17 @@ class ServiceNotFoundError(KeyError):
     the service does not exists.
     """
 
+class BadRegistryKeyError(StandardError):
+    pass
+
+class BadRegistryGroupError(StandardError):
+    pass
+
+class BadRegistryValueError(StandardError):
+    pass
+
+class BadRegistryDataError(StandardError):
+    pass
+
+class BadRegistryDefaultError(StandardError):
+    pass

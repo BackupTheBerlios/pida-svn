@@ -23,6 +23,7 @@
 
 import unittest
 import registry
+import errors
 
 import os
 import tempfile
@@ -80,7 +81,7 @@ class test_b_integer(unittest.TestCase):
         self.assertEquals(self.r.unserialize('1'), 1)
 
     def test_b_unserialize_bad(self):
-        self.assertRaises(registry.exceptions.BadRegistryData,
+        self.assertRaises(errors.BadRegistryDataError,
                           self.r.unserialize, 'foo')
 
     def test_c_load_good(self):
