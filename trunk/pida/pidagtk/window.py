@@ -134,12 +134,9 @@ class pidawindow(gtk.Window):
         
         menubar.show()
         self.__mainbox.pack_start(self.__toolarea, expand=False)
-        menubar_handle = gtk.HandleBox()
-        menubar_handle.show()
-        menubar_handle.add(menubar)
+        self.__toolarea.pack_start(menubar, expand=False)
         
         toolbar.show()
-        self.__toolarea.pack_start(menubar_handle, expand=False)
         toolbar_handle = gtk.HandleBox()
         toolbar_handle.add(toolbar)
         toolbar_handle.show()
