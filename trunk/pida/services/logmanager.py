@@ -23,6 +23,9 @@
 
 #TODO Documentation
 
+# still not really stable
+__disabled__
+
 import string
 
 import time
