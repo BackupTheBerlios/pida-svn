@@ -134,52 +134,64 @@ def indent_selected(buff, indent):
     
     bounds = buff.get_selection_bounds()
     if len(bounds) == 0:
-        return False
-    
+        return
+
     move_home = bounds[0].starts_line()
     
-    for start_iter in selected_line_iterator(buff):
-        buff.insert(start_iter, indent)
+    insert = buff.insert
+    insert_indent = lambda start_iter: insert(start_iter, indent)
+    map(insert_indent, selected_line_iterator(buff))
     
     if move_home:
         start_iter, end_iter = buff.get_selection_bounds()
         start_iter.set_line_offset(0)
         buff.select_range(end_iter, start_iter)
+    
+    
+def _unindent_iter(buff, start_iter, indent, use_subset):
+    # Get the iterator of the end of the text
+    end_iter = start_iter.copy()
+    end_iter.forward_to_line_end()
+    total = len(indent)
+    
+    # Now get the selected text
+    text = buff.get_text(start_iter, end_iter)
+    
+    # Check if the text starts with indent:
+    if text.startswith(indent):
+        count = total
+        # Delete 'count' characters
+        end_iter = start_iter.copy()
+        end_iter.forward_chars(count)
+        buff.delete(start_iter, end_iter)
 
-    return True
-    
-    
+    elif use_subset:
+        for count in range(1, total):
+            if text.startswith(indent[:-count]):
+                # Delete 'count' characters
+                offset = total - count
+                end_iter = start_iter.copy()
+                end_iter.forward_chars(offset)
+                buff.delete(start_iter, end_iter)
+                return
+
+
 def unindent_selected(buff, indent, use_subset=True):
     """
     Unindents selected text of a gtk.TextBuffer 
     """
-    for start_iter in selected_line_iterator(buff):
-        # Get the iterator of the end of the text
+    if len(buff.get_selection_bounds()) == 0:
+        start_iter = buff.get_iter_at_mark(buff.get_insert())
+        # Move the offset to the start of the line
+        start_iter.set_line_offset(0)
+        _unindent_iter(buff, start_iter, indent, use_subset)
         end_iter = start_iter.copy()
         end_iter.forward_to_line_end()
-        total = len(indent)
         
-        # Now get the selected text
-        text = buff.get_text(start_iter, end_iter)
+    unindent_iter = lambda start_iter: _unindent_iter(buff, start_iter, indent, use_subset)
+    map(unindent_iter, selected_line_iterator(buff))
         
-        # Check if the text starts with indent:
-        if text.startswith(indent):
-            count = len(indent)
-            # Delete 'count' characters
-            end_iter = start_iter.copy()
-            end_iter.forward_chars(count)
-            buff.delete(start_iter, end_iter)
-
-        elif use_subset:
-            for count in range(1, len(indent)):
-                if text.startswith(indent[:-count]):
-                    # Delete 'count' characters
-                    offset = len(indent) - count
-                    end_iter = start_iter.copy()
-                    end_iter.forward_chars(offset)
-                    buff.delete(start_iter, end_iter)
-                    break
-
+        
 def _on_key_press(view, event):
     keyname = gtk.gdk.keyval_name(event.keyval)
     buff = view.get_buffer()
@@ -188,11 +200,14 @@ def _on_key_press(view, event):
         tab = " " * view.get_tabs_width()
     else:
         tab = "\t"
+
     if event.state & gtk.gdk.SHIFT_MASK and keyname == "ISO_Left_Tab":
         unindent_selected(buff, tab)
         return True
         
     elif event.keyval == gtk.keysyms.Tab:
+        if len(buff.get_selection_bounds()) == 0:
+            return False
         indent_selected(buff, tab)
         return True
 
