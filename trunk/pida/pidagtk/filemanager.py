@@ -22,6 +22,7 @@
 #SOFTWARE.
 
 import os
+import cgi
 import gtk
 import tree
 import icons
@@ -84,7 +85,7 @@ class FileSystemItem(object):
             color = '#0000c0'
         return ('<tt><span color="%s"><span color="#600060"><b>%s'
                 '</b>  </span>%s</span></tt>' %
-                (color, self.status, self.name))
+                (color, cgi.escape(self.status), cgi.escape(self.name)))
     markup = property(__get_markup)
 
     def get_pixbuf(self):
