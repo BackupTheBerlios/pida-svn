@@ -21,6 +21,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import gtk
 
 import pida.core.service as service
 
@@ -39,6 +40,10 @@ class service_viewer(contentview.content_view):
         self.widget.pack_start(self.__list)
         self.__list.set_property('markup-format-string',
             '%(name)s')
+        self.__list.connect('clicked', self.cb_service_clicked)
+#        self.__list.connect('double-clicked', self.cb_paste_db_clicked)
+#        self.__list.connect('middle-clicked', self.cb_paste_m_clicked)
+        self.__list.connect('right-clicked', self.cb_service_r_clicked)
         for svc in boss.services:
             class si(object):
                 def __init__(self, name):
@@ -61,6 +66,40 @@ class service_viewer(contentview.content_view):
                 eitem = si(event)
                 self.__list.add_item(eitem, None, cmditer)
             
+    def cb_service_r_clicked(self, service, tree_item, event):
+        menu = gtk.Menu()
+        sensitives = (tree_item is not None)
+        for action in ['servicediagnostics+start_service',
+                       'servicediagnostics+reset_service',
+                       'servicediagnostics+stop_service']:
+            if action is None:
+                menu.append(gtk.SeparatorMenuItem())
+            else:
+                act = self.service.action_group.get_action(action)
+                if 'new_paste' not in action:
+                    act.set_sensitive(sensitives)
+                mi = gtk.ImageMenuItem()
+                act.connect_proxy(mi)
+                mi.show()
+                menu.append(mi)
+        menu.show_all() 
+        menu.popup(None, None, None, event.button, event.time)
+
+    def cb_service_clicked(self,tree,tree_item):
+        '''Callback function called when an item is selected in the
+        TreeView'''
+        self.__tree_selected = \
+        self.service.boss.get_service(tree_item.value.name)
+
+    def start_current_service(self):
+        self.__tree_selected.start()
+
+    def reset_current_service(self):
+        self.__tree_selected.reset()
+
+    def stop_current_service(self):
+        self.__tree_selected.stop()
+
 
 class service_diagnostics(service.service):
 
@@ -69,9 +108,18 @@ class service_diagnostics(service.service):
 
     def cmd_view(self):
         view = self.create_single_view()
-    
+
     def act_services(self, action):
         self.call('view')
+
+    def act_start_service(self, action):
+        self.single_view.start_current_service()
+
+    def act_stop_service(self,action):
+        self.single_view.stop_current_service()
+    
+    def act_reset_service(self,action):
+        self.single_view.reset_current_service()
 
     def get_menu_definition(self):
         return """
