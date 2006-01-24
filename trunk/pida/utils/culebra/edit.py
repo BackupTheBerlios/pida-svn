@@ -32,8 +32,6 @@ from gtkutil import *
 BLOCK_SIZE = 2048
 
 
-
-
 class CulebraView(gtksourceview.SourceView):
     def __init__(self, action_group):
         
@@ -48,7 +46,6 @@ class CulebraView(gtksourceview.SourceView):
         self.set_smart_home_end(True)
         self.set_highlight_current_line(True)
         self.set_insert_spaces_instead_of_tabs(True)
-
         font_desc = pango.FontDescription('monospace 10')
         if font_desc is not None:
             self.modify_font(font_desc)
@@ -58,6 +55,9 @@ class CulebraView(gtksourceview.SourceView):
         action_group.get_action(ACTION_FIND_FORWARD).connect("activate", self.on_find_forward)
         action_group.get_action(ACTION_FIND_BACKWARD).connect("activate", self.on_find_backwards)
         make_source_view_indentable(self)
+    
+    def set_background_color(self, color):
+        self.modify_base(gtk.STATE_NORMAL, color)
     
     def set_buffer(self, buff):
         self.replace_bar.set_buffer(buff)

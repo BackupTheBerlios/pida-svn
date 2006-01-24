@@ -22,6 +22,7 @@
 #SOFTWARE.
 
 import gtk
+from gtk import gdk
 
 from pida.pidagtk import contentview
 from pida.core import actions
@@ -30,14 +31,18 @@ from pida.utils.culebra import edit
 
 from rat import hig
 
+defs = service.definitions
+types = service.types
+
 
 class culebra_view(contentview.content_view):
 
     HAS_TITLE = False
 
-    def init(self, filename=None, action_group=None):
+    def init(self, filename=None, action_group=None, background_color=None):
         self.widget.set_no_show_all(True)
         widget, editor = edit.create_widget(filename, action_group)
+        editor.set_background_color(background_color)
         self.__editor = editor
         widget.show()
         self.widget.add(widget)
@@ -59,10 +64,25 @@ class culebra_editor(service.service):
     multi_view_type = culebra_view
     multi_view_book = 'edit'
     
+    class general(defs.optiongroup):
+        class background_color(defs.option):
+            """Change the background color"""
+            default = "#FFFFFF"
+            rtype = types.color
+        
+    
     def init(self):
         
         self.__files = {}
         self.__views = {}
+
+    def get_background_color(self):
+        color = self.opt("general", "background_color")
+        return gdk.color_parse(color)
+        
+    def reset(self):
+        for view in self.__files.values():
+            view.editor.set_background_color(self.get_background_color())
 
     def cmd_edit(self, filename=None):
         if filename not in self.__files:
@@ -75,7 +95,8 @@ class culebra_editor(service.service):
     def __load_file(self, filename):
         view = self.create_multi_view(
             filename=filename,
-            action_group=self.action_group
+            action_group=self.action_group,
+            background_color = self.get_background_color(),
         )
         self.__files[filename] = view
         self.__views[view.unique_id] = filename
