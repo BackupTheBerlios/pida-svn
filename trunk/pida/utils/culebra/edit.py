@@ -59,6 +59,9 @@ class CulebraView(gtksourceview.SourceView):
     def set_background_color(self, color):
         self.modify_base(gtk.STATE_NORMAL, color)
     
+    def set_font_color(self, color):
+        self.modify_text(gtk.STATE_NORMAL, color)
+    
     def set_buffer(self, buff):
         self.replace_bar.set_buffer(buff)
         self.search_bar.set_buffer(buff)

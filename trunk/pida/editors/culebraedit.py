@@ -39,10 +39,11 @@ class culebra_view(contentview.content_view):
 
     HAS_TITLE = False
 
-    def init(self, filename=None, action_group=None, background_color=None):
+    def init(self, filename=None, action_group=None, background_color=None, font_color=None):
         self.widget.set_no_show_all(True)
         widget, editor = edit.create_widget(filename, action_group)
         editor.set_background_color(background_color)
+        editor.set_font_color(font_color)
         self.__editor = editor
         widget.show()
         self.widget.add(widget)
@@ -70,7 +71,12 @@ class culebra_editor(service.service):
             default = "#FFFFFF"
             rtype = types.color
         
-    
+        class font_color(defs.option):
+            """Change the font color"""
+            default = "#000000"
+            rtype = types.color
+            
+            
     def init(self):
         
         self.__files = {}
@@ -79,10 +85,15 @@ class culebra_editor(service.service):
     def get_background_color(self):
         color = self.opt("general", "background_color")
         return gdk.color_parse(color)
+    
+    def get_font_color(self):
+        color = self.opt("general", "font_color")
+        return gdk.color_parse(color)
         
     def reset(self):
         for view in self.__files.values():
             view.editor.set_background_color(self.get_background_color())
+            view.editor.set_font_color(self.get_font_color())
 
     def cmd_edit(self, filename=None):
         if filename not in self.__files:
@@ -97,6 +108,7 @@ class culebra_editor(service.service):
             filename=filename,
             action_group=self.action_group,
             background_color = self.get_background_color(),
+            font_color = self.get_font_color(),
         )
         self.__files[filename] = view
         self.__views[view.unique_id] = filename
