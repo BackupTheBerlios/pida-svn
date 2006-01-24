@@ -48,6 +48,7 @@ class CulebraView(gtksourceview.SourceView):
         self.set_smart_home_end(True)
         self.set_highlight_current_line(True)
         self.set_insert_spaces_instead_of_tabs(True)
+
         font_desc = pango.FontDescription('monospace 10')
         if font_desc is not None:
             self.modify_font(font_desc)
@@ -56,6 +57,7 @@ class CulebraView(gtksourceview.SourceView):
         self.replace_bar = ReplaceBar(self, self.search_bar, action_group)
         action_group.get_action(ACTION_FIND_FORWARD).connect("activate", self.on_find_forward)
         action_group.get_action(ACTION_FIND_BACKWARD).connect("activate", self.on_find_backwards)
+        make_source_view_indentable(self)
     
     def set_buffer(self, buff):
         self.replace_bar.set_buffer(buff)
