@@ -66,7 +66,9 @@ class Buffermanager(service.service):
     single_view_type = BufferView
 
     class sessions(defs.optiongroup):
+        """Session management."""
         class automatically_load_last_session(defs.option):
+            """Whether the session will be reloaded from closing PIDA."""
             rtype = types.boolean
             default = True
     
