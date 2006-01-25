@@ -171,13 +171,13 @@ class TestIndentSelected(unittest.TestCase):
     def test_empty(self):
         buff = gtk.TextBuffer()
         buff.set_text("")
-        indent_selected(buff)
+        indent_selected(buff, "\t")
         self.checkSelected(buff, "")
 
     def test_empty2(self):
         buff = gtk.TextBuffer()
         buff.set_text("ffoo\nbar\n")
-        indent_selected(buff)
+        indent_selected(buff, "\t")
         self.checkSelected(buff, "ffoo\nbar\n")
 
     def test_select_middle(self):
@@ -254,6 +254,19 @@ class TestIndentSelected(unittest.TestCase):
         indent_selected(buff, "\t")
         self.checkSelected(buff, "\t123\n\n\tbar\ngaz")
 
+    def test_skip_middle_line2(self):
+        buff = gtk.TextBuffer()
+        buff.set_text("123\nbar\n\ngaz")
+        start_iter = buff.get_start_iter()
+        end_iter = start_iter.copy()
+        end_iter.forward_chars(9)
+        # Selected the first two lines
+        buff.select_range(start_iter, end_iter)
+        self.assertEquals("123\nbar\n\n", buff.get_text(*buff.get_selection_bounds()))
+
+        indent_selected(buff, "\t")
+        self.checkSelected(buff, "\t123\n\tbar\n\ngaz")
+
 
     def test_full(self):
         # In this case we select the '23' an empty line and a 'b'
@@ -280,10 +293,15 @@ class TestUnindentSelected(unittest.TestCase):
         self.checkSelected(buff, "")
 
     def test_empty2(self):
+        # Because the carret is on the start of the file the first
+        # tab must be removed.
         buff = gtk.TextBuffer()
         buff.set_text("\tffoo\nbar\n")
+        # Move the carret to the begining of the text
+        start_iter = buff.get_start_iter()
+        buff.move_mark(buff.get_insert(), start_iter)
         unindent_selected(buff, "\t")
-        self.checkSelected(buff, "\tffoo\nbar\n")
+        self.checkSelected(buff, "ffoo\nbar\n")
 
     def test_select_middle(self):
         # In this case we only select the '2'
@@ -407,8 +425,26 @@ class TestUnindentSelected(unittest.TestCase):
         
         unindent_selected(buff, "\t")
         self.checkSelected(buff, "123\n\nbar\ngaz")
-
-
+    
+    def test_chomp(self):
+        """This test verifies if unindent eats characters or not"""
+        def checkUnindent(src, dst):
+            buff = gtk.TextBuffer()
+            buff.set_text(src)
+            buff.select_range(*buff.get_bounds())
+            unindent_selected(buff, "    ")
+            self.assertEquals(dst, buff.get_text(*buff.get_bounds()))
+        
+        checkUnindent("foo", "foo")
+        checkUnindent(" foo", "foo")
+        checkUnindent("  foo", "foo")
+        checkUnindent("   foo", "foo")
+        checkUnindent("    foo", "foo")
+        checkUnindent(" " * 5 + "foo", " " * 1 + "foo")
+        checkUnindent(" " * 6 + "foo", " " * 2 + "foo")
+        checkUnindent(" " * 7 + "foo", " " * 3 + "foo")
+        checkUnindent(" " * 8 + "foo", " " * 4 + "foo")
+        
 
 # TODO: when the text is indented the start should move back to the start of the
 # of the line
