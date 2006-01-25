@@ -300,10 +300,10 @@ class bindings_mixin(object):
             servicename, eventname = evtstring.split('_', 1)
             svc = self.get_service(servicename)
             func = getattr(self, bndfunc.func_name)
-            try:
+            if svc.events.has_event(eventname):
                 svc.events.register(eventname, func)
-            except KeyError:
-                self.log.info('event "%s" does not exist', eventname)
+            else:
+                self.log.error('event "%s" does not exist', eventname)
 
 
 class document_type_mixin(object):

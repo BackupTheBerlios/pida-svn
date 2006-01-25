@@ -63,17 +63,15 @@ class event(base.pidacomponent):
             event_sources = {}
             
         for evt_name in event_names:
-            event_sources[evt_name] = self.create_event (evt_name)
+            event_sources[evt_name] = self.create_event(evt_name)
         return event_sources
     
     def has_event(self, event_name):
         return event_name in self.__events
     
     def register (self, event_name, callback):
-        if self.has_event(event_name):
-            self.__events[event_name].append (callback)
-        else:
-            raise KeyError
+        assert self.has_event(event_name)
+        self.__events[event_name].append(callback)
 
     def unregister (self, event_name, callback):
         self.__events.remove (callback)
