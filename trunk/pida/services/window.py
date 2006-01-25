@@ -221,8 +221,9 @@ class window_manager(service.service):
                 pluginview.append_page(service.plugin_view)
                 service.plugin_view.show()
             if service.lang_view_type is not None:
-                languageview.append_page(service.lang_view)
-                service.lang_view.show()
+                pass
+                #languageview.append_page(service.lang_view)
+                #service.lang_view.show()
                 
         
         self.__uim.ensure_update()

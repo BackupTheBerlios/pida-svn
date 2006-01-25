@@ -33,8 +33,19 @@ class language_handler(actions.action_handler):
     def __init__(self, *args):
         actions.action_handler.__init__(self, *args)
         self.service.uncache = self.uncache
+        self.__active = True
 
     def uncache(self, document):
         if document.unique_id in self.cached:
             del self.cached[document.unique_id]
             self.load_document(document)
+
+    def get_active(self):
+        return self.__active
+
+    def set_active(self, active):
+        self.__active = active
+
+    active = property(get_active, set_active)
+
+

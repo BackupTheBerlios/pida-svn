@@ -24,19 +24,53 @@ import glob
 import sre
 import pida.core.service as service
 import pida.core.languages as languages
-
+import pida.core.actions as actions
 import pida.pidagtk.contentview as contentview
+import gtk
+import pida.pidagtk.tree as tree
 
-class lv(contentview.content_view):
+class language_tree(tree.ToggleTree):
     pass
+
+class language_manager_view(contentview.content_view):
+    
+    def init(self):
+        self.__list = language_tree()
+        self.__list.connect('double-clicked', self.cb_list_activated)
+        self.widget.pack_start(self.__list)
+        
+    def set_file_handlers(self, handlers):
+        self.__list.clear()
+        for handler in handlers:
+            self.__list.add_item(handler, key=handler.__class__.__name__)
+        
+    def cb_list_activated(self, tv, item):
+        item.value.active = not item.value.active
+        item.reset_markup()
+        self.service.call('show_handlers')
+
+    
+
+
 
 class language_types(service.service):
 
+    single_view_type = language_manager_view
+    single_view_book = 'ext'
 
     def init(self):
         self.__langs = {}
         self.__firsts = {}
         self.__action_groups = {}
+        self.__current_document = None
+
+    def cmd_edit(self):
+        self.create_single_view()
+        handlers = set()
+        for globhandlers in self.__langs.values() + self.__firsts.values():
+            for handler in globhandlers:
+                handlers.add(handler)
+        self.single_view.set_file_handlers(handlers)
 
     def cmd_register_language_handler(self, handler_type):
         handler = handler_type(handler_type.service)
@@ -49,27 +83,34 @@ class language_types(service.service):
 
     def cmd_get_language_handlers(self, document):
         # will break on meld
-        handlers = (self.__get_lang_handler(document.filename) +
-                    self.__get_first_handler(document.lines[:3]))
+        handlers = ([h for h in self.__get_lang_handler(document.filename) +
+                                self.__get_first_handler(document.lines[:3])
+                            if h.active])
         return set(handlers)
 
-    def cmd_show_handlers(self, document):
+    def cmd_show_handlers(self, document=None):
+        if document is None:
+            document = self.__current_document
+        else:
+            self.__current_document = document
+        if document is None:
+            return
         for handlerlist in self.__langs.values():
             for handler in handlerlist:
                 handler.action_group.set_visible(False)
                 if hasattr(handler.service, 'lang_view_type'):
                     view = handler.service.lang_view
                     view.set_sensitive(False)
-        #self.boss.call_command('window', 'remove_pages', bookname='language')
+        self.boss.call_command('window', 'remove_pages', bookname='languages')
         handlers = self.call('get_language_handlers', document=document)
         for handler in handlers:
             handler.action_group.set_visible(True)
             if hasattr(handler.service, 'lang_view_type'):
                 view = handler.service.lang_view
                 view.set_sensitive(True)
-                #self.boss.call_command('window', 'append_page',
-                #                       bookname='language',
-                #                       view=view)
+                self.boss.call_command('window', 'append_page',
+                                       bookname='languages',
+                                       view=view)
             handler.load_document(document)
 
     def __register_patterns(self, handlers, handler, attrname='globs'):
@@ -93,6 +134,23 @@ class language_types(service.service):
                 if pattern.match(line):
                     matches = matches + self.__firsts[pattern]
         return matches
+
+
+    @actions.action(
+        stock_id = 'configure',
+        label = 'File Type Plugins',
+    )
+    def act_edit(self, action):
+        """File Types Plugins"""
+        self.call('edit')
+
+    def get_menu_definition(self):
+        return """<menubar>
+                    <menu name="base_tools">
+                        <menuitem name="editft" action="languagetypes+edit" />
+                    </menu>
+                </menubar>"""
+        
             
 
 Service = language_types
