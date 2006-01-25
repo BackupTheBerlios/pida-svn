@@ -82,17 +82,13 @@ class version_control(service.service):
     def cmd_get_statuses(self, directory):
         vcs = self.call('get_vcs_for_directory', directory=directory)
         if vcs.NAME == 'Null':
-            self.boss.get_service('logmanager').threads_enter()
             self.log.info('"%s" is not version controlled', directory)
-            self.boss.get_service('logmanager').threads_leave()
         else:
             try:
                 statuses = vcs.listdir(directory)
                 return statuses
             except NotImplementedError:
-                self.boss.get_service('logmanager').threads_enter()
                 self.log.info('"%s" is not version controlled', directory)
-                self.boss.get_service('logmanager').threads_leave()
 
     def cmd_diff_file(self, filename):
         if self.opt('meld_integration', 'use_meld_for_diff'):
@@ -103,9 +99,7 @@ class version_control(service.service):
             basename = os.path.basename(filename)
             vcs = self.call('get_vcs_for_directory', directory=directory)
             if vcs.NAME == 'Null':
-                self.boss.get_service('logmanager').threads_enter()
                 self.log.info('"%s" is not version controlled', directory)
-                self.boss.get_service('logmanager').threads_leave()
             else:
                 try:
                     commandargs = vcs.diff_command() + [basename]
@@ -116,9 +110,7 @@ class version_control(service.service):
                                         kwdict = {'directory':
                                                    directory})
                 except NotImplementedError:
-                    self.boss.get_service('logmanager').threads_enter()
                     self.log.info('Not implemented for %s' % vcs.NAME)
-                    self.boss.get_service('logmanager').threads_leave()
 
     def cmd_update(self, directory):
         vcs = self.call('get_vcs_for_directory', directory=directory)
