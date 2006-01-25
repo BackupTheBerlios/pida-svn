@@ -31,7 +31,6 @@ class Icons(object):
         
         import pkg_resources as pr
         pidareq = pr.Requirement.parse('pida')
-        icon_file = pr.resource_filename(pidareq, 'images/icons.dat')
         icon_names = pr.resource_listdir(pidareq, 'icons')
         stock_ids = set(gtk.stock_list_ids())
         iconfactory = gtk.IconFactory()

@@ -118,7 +118,6 @@ def main():
           package_dir = {'pida': 'pida'},
           scripts=['scripts/pida'],
           data_files=[
-                    ('images', ['data/icons.dat']),
                     ('glade', uis),
                     ('pixmaps', pixmaps),
                     ('icons', icons),

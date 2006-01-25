@@ -1,8 +1,9 @@
-===============
+=========================
 The PIDA's Hacking Manual
-===============
+=========================
 
 :author: Tiago Cogumbreiro
+:author: Ali Afshar
 :contact: cogumbreiro@users.sf.net
 
 .. contents:: Table Of Contents
@@ -122,10 +123,10 @@ Using Icons
 ===========
 
 All icons will be in SVG format, and will be placed in data/icons. To use them
-they can be got using:
-{{{
-pidagtk.icons.icons.get(name)
-}}}
-or using name as a stock_id, whee name is the name of the icon without the svg
+they can be got using::
+
+  pidagtk.icons.icons.get(name)
+
+or using name as a stock_id, where name is the name of the icon without the svg
 extension.
 

@@ -60,7 +60,7 @@
 \date{}
 \hypersetup{
 pdftitle={The PIDA's Hacking Manual},
-pdfauthor={Tiago Cogumbreiro}
+pdfauthor={Tiago Cogumbreiro;Ali Afshar}
 }
 \raggedbottom
 \begin{document}
@@ -71,20 +71,14 @@ pdfauthor={Tiago Cogumbreiro}
 \begin{tabularx}{\docinfowidth}{lX}
 \textbf{Author}: &
 	Tiago Cogumbreiro \\
+\textbf{Author}: &
+	Ali Afshar \\
 \textbf{Contact}: &
 	\href{mailto:cogumbreiro@users.sf.net}{cogumbreiro@users.sf.net} \\
 \end{tabularx}
 \end{center}
 
 \setlength{\locallinewidth}{\linewidth}
-
-Title overline too short.
-\begin{quote}{\ttfamily \raggedright \noindent
-===============~\\
-The~PIDA's~Hacking~Manual~\\
-===============
-}\end{quote}
-
 \hypertarget{table-of-contents}{}
 \pdfbookmark[0]{Table Of Contents}{table-of-contents}
 \subsubsection*{~\hfill Table Of Contents\hfill ~}
@@ -98,6 +92,8 @@ The~PIDA's~Hacking~Manual~\\
 \end{list}
 
 \item {} \href{\#integrating-into-menu-and-toolbar}{Integrating into menu and toolbar}
+
+\item {} \href{\#using-icons}{Using Icons}
 
 \end{list}
 
@@ -154,7 +150,7 @@ Another way of creating actions is the \emph{implicit creation}. Pida has a nice
 feature that turns every method you prefix with a '{\color{red}\bfseries{}act{\_}}' into a 'gtk.Action' and
 then the action name.
 
-The action name is generated with the 'servicename+action{\_}name', where
+The action name is generated with the 'module+servicename+action{\_}name', where
 'action{\_}name' is the method name ignoring the '{\color{red}\bfseries{}act{\_}}' part. The tooltip text is
 generated from the doc string of the method.
 
@@ -265,6 +261,22 @@ class~MyService(service.service):~\\
 }\end{quote}
 
 In this example we've plugged our action 'MyAction' to the menu and the toolbar.
+
+
+%___________________________________________________________________________
+
+\hypertarget{using-icons}{}
+\pdfbookmark[0]{Using Icons}{using-icons}
+\section*{Using Icons}
+
+All icons will be in SVG format, and will be placed in data/icons. To use them
+they can be got using:
+\begin{quote}{\ttfamily \raggedright \noindent
+pidagtk.icons.icons.get(name)
+}\end{quote}
+
+or using name as a stock{\_}id, where name is the name of the icon without the svg
+extension.
 
 
 %___________________________________________________________________________

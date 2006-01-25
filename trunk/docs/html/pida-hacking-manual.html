@@ -6,6 +6,7 @@
 <meta name="generator" content="Docutils 0.3.7: http://docutils.sourceforge.net/" />
 <title>The PIDA's Hacking Manual</title>
 <meta name="author" content="Tiago Cogumbreiro" />
+<meta name="author" content="Ali Afshar" />
 <link rel="stylesheet" href="default.css" type="text/css" />
 </head>
 <body>
@@ -17,19 +18,12 @@
 <tbody valign="top">
 <tr><th class="docinfo-name">Author:</th>
 <td>Tiago Cogumbreiro</td></tr>
+<tr><th class="docinfo-name">Author:</th>
+<td>Ali Afshar</td></tr>
 <tr><th class="docinfo-name">Contact:</th>
 <td><a class="first last reference" href="mailto:cogumbreiro&#64;users.sf.net">cogumbreiro&#64;users.sf.net</a></td></tr>
 </tbody>
 </table>
-<div class="system-message">
-<p class="system-message-title">System Message: WARNING/2 (<tt class="docutils">rst/pida-hacking-manual.rst</tt>, line 1)</p>
-<p>Title overline too short.</p>
-<pre class="literal-block">
-===============
-The PIDA's Hacking Manual
-===============
-</pre>
-</div>
 <div class="contents topic" id="table-of-contents">
 <p class="topic-title first"><a name="table-of-contents">Table Of Contents</a></p>
 <ul class="simple">
@@ -39,6 +33,7 @@ The PIDA's Hacking Manual
 </ul>
 </li>
 <li><a class="reference" href="#integrating-into-menu-and-toolbar" id="id4" name="id4">Integrating into menu and toolbar</a></li>
+<li><a class="reference" href="#using-icons" id="id5" name="id5">Using Icons</a></li>
 </ul>
 </div>
 <div class="section" id="creating-gtk-action-s">
@@ -73,10 +68,10 @@ class MyService(service.service):
 <div class="section" id="the-fast-way">
 <h2><a class="toc-backref" href="#table-of-contents" name="the-fast-way">The Fast Way</a></h2>
 <p>Another way of creating actions is the <em>implicit creation</em>. Pida has a nice
-feature that turns every method you prefix with a '<a href="#id5" name="id6"><span class="problematic" id="id6">act_</span></a>' into a 'gtk.Action' and
+feature that turns every method you prefix with a '<a href="#id6" name="id7"><span class="problematic" id="id7">act_</span></a>' into a 'gtk.Action' and
 then the action name.</p>
-<p>The action name is generated with the 'servicename+action_name', where
-'action_name' is the method name ignoring the '<a href="#id7" name="id8"><span class="problematic" id="id8">act_</span></a>' part. The tooltip text is
+<p>The action name is generated with the 'module+servicename+action_name', where
+'action_name' is the method name ignoring the '<a href="#id8" name="id9"><span class="problematic" id="id9">act_</span></a>' part. The tooltip text is
 generated from the doc string of the method.</p>
 <p>So, a simillar example would be:</p>
 <pre class="literal-block">
@@ -149,13 +144,23 @@ class MyService(service.service):
 </pre>
 <p>In this example we've plugged our action 'MyAction' to the menu and the toolbar.</p>
 </div>
+<div class="section" id="using-icons">
+<h1><a class="toc-backref" href="#table-of-contents" name="using-icons">Using Icons</a></h1>
+<p>All icons will be in SVG format, and will be placed in data/icons. To use them
+they can be got using:</p>
+<pre class="literal-block">
+pidagtk.icons.icons.get(name)
+</pre>
+<p>or using name as a stock_id, where name is the name of the icon without the svg
+extension.</p>
+</div>
 <div class="system-messages section">
 <h1><a>Docutils System Messages</a></h1>
-<div class="system-message" id="id5">
-<p class="system-message-title">System Message: <a name="id5">ERROR/3</a> (<tt class="docutils">rst/pida-hacking-manual.rst</tt>, line 48); <em><a href="#id6">backlink</a></em></p>
+<div class="system-message" id="id6">
+<p class="system-message-title">System Message: <a name="id6">ERROR/3</a> (<tt class="docutils">rst/pida-hacking-manual.rst</tt>, line 49); <em><a href="#id7">backlink</a></em></p>
 Unknown target name: &quot;act&quot;.</div>
-<div class="system-message" id="id7">
-<p class="system-message-title">System Message: <a name="id7">ERROR/3</a> (<tt class="docutils">rst/pida-hacking-manual.rst</tt>, line 52); <em><a href="#id8">backlink</a></em></p>
+<div class="system-message" id="id8">
+<p class="system-message-title">System Message: <a name="id8">ERROR/3</a> (<tt class="docutils">rst/pida-hacking-manual.rst</tt>, line 53); <em><a href="#id9">backlink</a></em></p>
 Unknown target name: &quot;act&quot;.</div>
 </div>
 </div>

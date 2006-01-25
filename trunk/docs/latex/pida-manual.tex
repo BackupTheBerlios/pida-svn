@@ -135,13 +135,17 @@ pdfauthor={Ali Afshar}
 
 \end{list}
 
-\item {} \href{\#terminal-emulators}{Terminal Emulators}
+\item {} \href{\#editing-code}{Editing code}
+\begin{list}{}{}
+\item {} \href{\#keeping-track-of-unfinished-tasks}{Keeping track of unfinished tasks}
 
 \end{list}
 
-\item {} \href{\#developing-pida}{Developing PIDA}
+\end{list}
 
 \item {} \href{\#appendix-a}{Appendix A}
+
+\item {} \href{\#appendix-b-extra-tools-for-vim}{Appendix B: Extra tools for Vim}
 
 \end{list}
 
@@ -575,16 +579,24 @@ control commands which can be carried out n the file or directory.
 
 %___________________________________________________________________________
 
-\hypertarget{terminal-emulators}{}
-\pdfbookmark[1]{Terminal Emulators}{terminal-emulators}
-\subsection*{Terminal Emulators}
+\hypertarget{editing-code}{}
+\pdfbookmark[1]{Editing code}{editing-code}
+\subsection*{Editing code}
 
 
 %___________________________________________________________________________
 
-\hypertarget{developing-pida}{}
-\pdfbookmark[0]{Developing PIDA}{developing-pida}
-\section*{Developing PIDA}
+\hypertarget{keeping-track-of-unfinished-tasks}{}
+\pdfbookmark[2]{Keeping track of unfinished tasks}{keeping-track-of-unfinished-tasks}
+\subsubsection*{Keeping track of unfinished tasks}
+
+Pida now has supports a TODO list, featured in some other python IDEs. As 
+you write code, you can include comment tags with the word ``TODO:'' in. In
+the side panel for browsing source code (the source browser {\&} error buttons),
+click on the small icon at the bottom, and you'll see a list of your tasks 
+still undone. Clicking on one of these will take you to the appropriate place 
+in your document, and you can do whatever small task it was that required the
+note in the first place.
 
 
 %___________________________________________________________________________
@@ -614,6 +626,58 @@ COPYRIGHT~HOLDERS~BE~LIABLE~FOR~ANY~CLAIM,~DAMAGES~OR~OTHER~LIABILITY,~WHETHER~\
 IN~AN~ACTION~OF~CONTRACT,~TORT,~TURTLE,~OR~OTHERWISE,~ARISING~FROM,~OUT~OF~OR~IN~\\
 CONNECTION~WITH~THE~SOFTWARE~OR~THE~USE~OR~OTHER~DEALINGS~IN~THE~SOFTWARE.
 }\end{quote}
+
+
+%___________________________________________________________________________
+
+\hypertarget{appendix-b-extra-tools-for-vim}{}
+\pdfbookmark[0]{Appendix B: Extra tools for Vim}{appendix-b-extra-tools-for-vim}
+\section*{Appendix B: Extra tools for Vim}
+
+For others using Vim, there's a few bits and pieces you might find useful, including:
+
+\href{http://www.vim.org/scripts/script.php?script_id=850}{Pydiction}, which lets you add python modules, including classes and methods, to vim's 
+autocomplete functionality. You can also add your own project(s) to the autocompleting.
+Download from the site, extract it, and put these lines in your .vimrc:
+\begin{quote}{\ttfamily \raggedright \noindent
+if~has("autocmd")~\\
+~~autocmd~FileType~python~set~complete+=k/path/to/pydiction~isk+=.,(~\\
+endif~"~has("autocmd")~
+}\end{quote}
+
+Now when you press Ctrl+n (next), or Ctrl+p (previous), vim should autocomplete to 
+the appropriate python code.
+
+\href{http://www.vim.org/scripts/script.php?script_id=30}{Python.vim}, which has some extra functions for handling python code, including:
+\begin{itemize}
+\item {} 
+Select a block of lines with the same indentation
+
+\item {} 
+Select a function
+
+\item {} 
+Select a class
+
+\item {} 
+Go to previous/next class/function
+
+\item {} 
+Go to the beginning/end of a block
+
+\item {} 
+Comment the selection
+
+\item {} 
+Uncomment the selection
+
+\item {} 
+Jump to the last/next line with the same indent
+
+\item {} 
+Shift a block (left/right)
+
+\end{itemize}
 
 
 %___________________________________________________________________________

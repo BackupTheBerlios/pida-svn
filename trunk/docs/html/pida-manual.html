@@ -57,11 +57,14 @@
 <li><a class="reference" href="#file-browsing-version-control" id="id21" name="id21">File Browsing Version Control</a></li>
 </ul>
 </li>
-<li><a class="reference" href="#terminal-emulators" id="id22" name="id22">Terminal Emulators</a></li>
+<li><a class="reference" href="#editing-code" id="id22" name="id22">Editing code</a><ul>
+<li><a class="reference" href="#keeping-track-of-unfinished-tasks" id="id23" name="id23">Keeping track of unfinished tasks</a></li>
 </ul>
 </li>
-<li><a class="reference" href="#developing-pida" id="id23" name="id23">Developing PIDA</a></li>
+</ul>
+</li>
 <li><a class="reference" href="#appendix-a" id="id24" name="id24">Appendix A</a></li>
+<li><a class="reference" href="#appendix-b-extra-tools-for-vim" id="id25" name="id25">Appendix B: Extra tools for Vim</a></li>
 </ul>
 </div>
 <div class="section" id="front-matter">
@@ -82,11 +85,11 @@ IDE.</p>
 <p>Additionally PIDA insists on stealing excellent ideas from applications it
 cannot embed. For example the Rapid Application Development in the style of
 Microsoft's development products is achieved by the combination of <a class="reference" href="http://gazpacho.sicem.biz/">Gazpacho</a> (a
-user interface designer) and <a href="#id25" name="id26"><span class="problematic" id="id26">Tepache_</span></a> (a code sketcher), via the text editor.</p>
+user interface designer) and <a href="#id26" name="id27"><span class="problematic" id="id27">Tepache_</span></a> (a code sketcher), via the text editor.</p>
 </div>
 <div class="section" id="copyright">
 <h2><a class="toc-backref" href="#table-of-contents" name="copyright">Copyright</a></h2>
-<p>PIDA is released under the <a href="#id27" name="id28"><span class="problematic" id="id28">MIT_</span></a> license. This is not a particularly philosophical
+<p>PIDA is released under the <a href="#id28" name="id29"><span class="problematic" id="id29">MIT_</span></a> license. This is not a particularly philosophical
 decision, except that the PIDA developers consider it a good thing that PIDA is
 not <a class="reference" href="http://www.opensource.org/licenses/gpl-license.php">GPL</a>, or even closed source.</p>
 <p>The PIDA Project is owned by Ali Afshar (this author).</p>
@@ -114,11 +117,11 @@ not <a class="reference" href="http://www.opensource.org/licenses/gpl-license.ph
 <dl class="docutils">
 <dt>Python <span class="classifier-delimiter">:</span> <span class="classifier">2.4</span></dt>
 <dd>Python is most likely installed on UNIX systems. PIDA requires version 2.4,
-which is available to download at <a href="#id29" name="id30"><span class="problematic" id="id30">py24download_</span></a>.</dd>
+which is available to download at <a href="#id30" name="id31"><span class="problematic" id="id31">py24download_</span></a>.</dd>
 <dt>PyGTK <span class="classifier-delimiter">:</span> <span class="classifier">2.6</span></dt>
 <dd>GTK is the graphical toolkit used in PIDA, and PyGTK is the set of bindings
 for the Python programing language. You should use the latest version
-available at <a href="#id31" name="id32"><span class="problematic" id="id32">pygtkdownload_</span></a></dd>
+available at <a href="#id32" name="id33"><span class="problematic" id="id33">pygtkdownload_</span></a></dd>
 </dl>
 </div>
 <div class="section" id="optional-requirements">
@@ -282,12 +285,19 @@ project's source directory.</p>
 control commands which can be carried out n the file or directory.</p>
 </div>
 </div>
-<div class="section" id="terminal-emulators">
-<h2><a class="toc-backref" href="#table-of-contents" name="terminal-emulators">Terminal Emulators</a></h2>
+<div class="section" id="editing-code">
+<h2><a class="toc-backref" href="#table-of-contents" name="editing-code">Editing code</a></h2>
+<div class="section" id="keeping-track-of-unfinished-tasks">
+<h3><a class="toc-backref" href="#table-of-contents" name="keeping-track-of-unfinished-tasks">Keeping track of unfinished tasks</a></h3>
+<p>Pida now has supports a TODO list, featured in some other python IDEs. As 
+you write code, you can include comment tags with the word &quot;TODO:&quot; in. In
+the side panel for browsing source code (the source browser &amp; error buttons),
+click on the small icon at the bottom, and you'll see a list of your tasks 
+still undone. Clicking on one of these will take you to the appropriate place 
+in your document, and you can do whatever small task it was that required the
+note in the first place.</p>
 </div>
 </div>
-<div class="section" id="developing-pida">
-<h1><a class="toc-backref" href="#table-of-contents" name="developing-pida">Developing PIDA</a></h1>
 </div>
 <div class="section" id="appendix-a">
 <h1><a class="toc-backref" href="#table-of-contents" name="appendix-a">Appendix A</a></h1>
@@ -313,19 +323,45 @@ IN AN ACTION OF CONTRACT, TORT, TURTLE, OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 </pre>
 </div>
+<div class="section" id="appendix-b-extra-tools-for-vim">
+<h1><a class="toc-backref" href="#table-of-contents" name="appendix-b-extra-tools-for-vim">Appendix B: Extra tools for Vim</a></h1>
+<p>For others using Vim, there's a few bits and pieces you might find useful, including:</p>
+<p><a class="reference" href="http://www.vim.org/scripts/script.php?script_id=850">Pydiction</a>, which lets you add python modules, including classes and methods, to vim's 
+autocomplete functionality. You can also add your own project(s) to the autocompleting.
+Download from the site, extract it, and put these lines in your .vimrc:</p>
+<pre class="literal-block">
+if has(&quot;autocmd&quot;)
+  autocmd FileType python set complete+=k/path/to/pydiction isk+=.,(
+endif &quot; has(&quot;autocmd&quot;) 
+</pre>
+<p>Now when you press Ctrl+n (next), or Ctrl+p (previous), vim should autocomplete to 
+the appropriate python code.</p>
+<p><a class="reference" href="http://www.vim.org/scripts/script.php?script_id=30">Python.vim</a>, which has some extra functions for handling python code, including:</p>
+<ul class="simple">
+<li>Select a block of lines with the same indentation</li>
+<li>Select a function</li>
+<li>Select a class</li>
+<li>Go to previous/next class/function</li>
+<li>Go to the beginning/end of a block</li>
+<li>Comment the selection</li>
+<li>Uncomment the selection</li>
+<li>Jump to the last/next line with the same indent</li>
+<li>Shift a block (left/right)</li>
+</ul>
+</div>
 <div class="system-messages section">
 <h1><a>Docutils System Messages</a></h1>
-<div class="system-message" id="id25">
-<p class="system-message-title">System Message: <a name="id25">ERROR/3</a> (<tt class="docutils">rst/pida-manual.rst</tt>, line 30); <em><a href="#id26">backlink</a></em></p>
+<div class="system-message" id="id26">
+<p class="system-message-title">System Message: <a name="id26">ERROR/3</a> (<tt class="docutils">rst/pida-manual.rst</tt>, line 30); <em><a href="#id27">backlink</a></em></p>
 Unknown target name: &quot;tepache&quot;.</div>
-<div class="system-message" id="id27">
-<p class="system-message-title">System Message: <a name="id27">ERROR/3</a> (<tt class="docutils">rst/pida-manual.rst</tt>, line 38); <em><a href="#id28">backlink</a></em></p>
+<div class="system-message" id="id28">
+<p class="system-message-title">System Message: <a name="id28">ERROR/3</a> (<tt class="docutils">rst/pida-manual.rst</tt>, line 38); <em><a href="#id29">backlink</a></em></p>
 Unknown target name: &quot;mit&quot;.</div>
-<div class="system-message" id="id29">
-<p class="system-message-title">System Message: <a name="id29">ERROR/3</a> (<tt class="docutils">rst/pida-manual.rst</tt>, line 69); <em><a href="#id30">backlink</a></em></p>
+<div class="system-message" id="id30">
+<p class="system-message-title">System Message: <a name="id30">ERROR/3</a> (<tt class="docutils">rst/pida-manual.rst</tt>, line 69); <em><a href="#id31">backlink</a></em></p>
 Unknown target name: &quot;py24download&quot;.</div>
-<div class="system-message" id="id31">
-<p class="system-message-title">System Message: <a name="id31">ERROR/3</a> (<tt class="docutils">rst/pida-manual.rst</tt>, line 73); <em><a href="#id32">backlink</a></em></p>
+<div class="system-message" id="id32">
+<p class="system-message-title">System Message: <a name="id32">ERROR/3</a> (<tt class="docutils">rst/pida-manual.rst</tt>, line 73); <em><a href="#id33">backlink</a></em></p>
 Unknown target name: &quot;pygtkdownload&quot;.</div>
 </div>
 </div>
