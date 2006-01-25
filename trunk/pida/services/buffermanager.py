@@ -103,7 +103,18 @@ class Buffermanager(service.service):
     @actions.action(stock_id=gtk.STOCK_OPEN, label=None, is_important=True)
     def act_open_file(self, action):
         """Opens a document"""
-        self.boss.call_command('filemanager', 'browse')
+        chooser = gtk.FileChooserDialog(
+                    title='Open a file',
+                    parent=self.boss.get_main_window(),
+                    buttons=(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT,
+                             gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT))
+        def _cb(dlg, response):
+            if response == gtk.RESPONSE_ACCEPT:
+                filename = chooser.get_filename()
+                self.call('open_file', filename=filename)
+            chooser.destroy()
+        chooser.connect('response', _cb)
+        chooser.run()
 
     @actions.action(stock_id=gtk.STOCK_QUIT, label=None)
     def act_quit_pida(self, action):
@@ -208,7 +219,6 @@ class Buffermanager(service.service):
                 model.remove(row.iter)
         document.handler.action_group.set_visible(False)
         self.__currentdocument = None
-            
 
     def __open_file(self, filename):
         document = self.boss.call_command('documenttypes',
