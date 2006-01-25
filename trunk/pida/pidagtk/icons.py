@@ -35,14 +35,16 @@ class Icons(object):
         stock_ids = set(gtk.stock_list_ids())
         iconfactory = gtk.IconFactory()
         self.__theme = gtk.icon_theme_get_default()
+        listed = self.__theme.list_icons()
         for icon in icon_names:
             iconname = icon.split('.', 1)[0]
-            iconres = '/'.join(['icons', icon])
-            iconpath = pr.resource_filename(pidareq, iconres)
-            pixbuf = gtk.gdk.pixbuf_new_from_file(iconpath)
-            iconset = gtk.IconSet(pixbuf)
-            iconfactory.add(iconname, iconset)
-            gtk.icon_theme_add_builtin_icon(iconname, 128, pixbuf)
+            if iconname not in listed:
+                iconres = '/'.join(['icons', icon])
+                iconpath = pr.resource_filename(pidareq, iconres)
+                pixbuf = gtk.gdk.pixbuf_new_from_file(iconpath)
+                iconset = gtk.IconSet(pixbuf)
+                iconfactory.add(iconname, iconset)
+                gtk.icon_theme_add_builtin_icon(iconname, 128, pixbuf)
         iconfactory.add_default()
         self.__iconfactory = iconfactory
 
