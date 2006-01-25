@@ -118,3 +118,14 @@ named 'get_menu_definition' in your service class::
 
 In this example we've plugged our action 'MyAction' to the menu and the toolbar.
 
+Using Icons
+===========
+
+All icons will be in SVG format, and will be placed in data/icons. To use them
+they can be got using:
+{{{
+pidagtk.icons.icons.get(name)
+}}}
+or using name as a stock_id, whee name is the name of the icon without the svg
+extension.
+
