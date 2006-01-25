@@ -21,6 +21,96 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import os
+
+class stream_handler(object):
+    def __init__(self, stream=None):
+        if not stream:
+            stream = sys.stderr
+        self.stream = stream
+        self.level = None
+        self.min_level = None
+
+    def flush(self):
+        self.stream.flush()
+
+    def set_level(self, level, type='='):
+        self.level = level
+        self.level_type = type
+
+    def __level_is_valid(self,record):
+        if self.level is not None:
+            if self.level_type is '=':
+                if record.levelno is not self.level:
+                    return False
+            elif self.level_type is '<':
+                if record.levelno > self.level:
+                    return False
+            elif self.level_type is '>':
+                if record.levelno < self.level:
+                    return False
+        return True
+
+    def emit(self, record):
+        if not self.__level_is_valid(record):
+            return
+        msg = record.getMessage()
+        self.stream.write("%s\n" % msg)
+        self.stream.flush()
+
+    def close(self):
+        pass
+
+class file_handler(stream_handler):
+    def __init__(self, filename, mode='a'):
+        stream = open(filename, mode)
+        stream_handler.__init__(self,stream)
+        self.base_filename = os.path.abspath(filename)
+        self.mode = mode
+
+    def close(self):
+        """
+        Closes the stream
+        """
+        self.flush()
+        self.stream.close()
+
+class rotating_file_handler(file_handler):
+    def __init__(self,filename,mode='a',max_bytes=0,backup_count=0):
+        if max_bytes > 0:
+            mode = 'a'
+        file_handler.__init__(filename,mode)
+        self.max_bytes = max_bytes
+        self.backup_count = backup_count
+
+    def emit(self, record):
+        if self.should_rollover(record):
+            self.rollover()
+        file_handler.emit(record)
+
+    def rollover(self):
+        self.stream.close()
+        if self.backup_count > 0:
+            for i in range(self.backup_count -1, 0, -1):
+                sfn = "%s.%d" % (self.base_filename, i)
+                dfn = "%s.%d" % (self.base_filename, i + 1)
+                if os.path.exists(sfn):
+                    if os.path.exists(dfn):
+                        os.remove(dfn)
+                    os.rename(sfn, dfn)
+            dfn = self.base_filename + ".1"
+            if os.path.exists(dfn):
+                os.remove(dfn)
+            os.rename(self.base_filename, dfn)
+        self.stream = open(self.base_filename, 'w')
+            
+    def should_rollover(self, record):
+        if self.max_bytes > 0:
+            msg = "%s\n" % record.getMessage()
+            self.stream.seex(0,2)
+            if self.stream.tell() + len(msg) >= self.max_bytes:
+                return True
+        return False
 
 class logs(object):
     """
@@ -28,7 +118,17 @@ class logs(object):
     """
     def __init__(self):
        self.logs = {}
+       self.__stream = []
        self.__last = None
+
+    def open_stream(self,file=None,level=None,level_type=None):
+        if file is None:
+            handler = stream_handler()
+        else:
+            handler = file_handler(file)
+        if level is not None:
+            handler.set_level(level,level_type)
+        self.__stream.append(handler)
 
     def __log_rotate(self):
         if len(self.logs) > 100:
@@ -38,6 +138,8 @@ class logs(object):
         self.__log_rotate()
         self.logs[key] = record
         self.__last = record
+        for stream in self.__stream:
+            stream.emit(record)
 
     def get_last(self):
         return self.__last
@@ -50,6 +152,10 @@ class logs(object):
     def get_values(self):
         return self.logs
     values = property(get_values)
+
+    def __iter__(self):
+        for log in self.logs.keys():
+            yield self.logs[log]
 
     def get_iter(self):
         for log in self.logs.keys():
