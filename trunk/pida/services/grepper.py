@@ -38,8 +38,16 @@ import gobject
 import threading
 import linecache
 import cgi
-
+import string
 import gtk
+
+types = service.types
+defs = service.definitions
+
+table = range(0,128) * 2
+hi_bit_chars = string.join(map(chr, range(0200,0400)),"")
+hi_lo_table = string.join(map(chr, table), "")
+all_chars = string.join(map(chr, range(0, 256)), "")
 
 EXPANDER_LABEL_MU = '<span size="small">Details</span>'
 RESULTS_LABEL_MU = '<span size="small">Results</span>'
@@ -197,38 +205,38 @@ class GrepView(contentview.content_view):
 
     def cb_start_clicked(self, button):
         self.service.grep_start()
-        
-#class ContextOption(registry.Integer):
-#    adjustment = 2, 9, 1
-
-#class FindsTotalOption(registry.Integer):
-#    adjustment = 100, 1000, 100
 
 class Grepper(service.service):
 
-    NAME = 'grepper'
-
-    OPTIONS = [('start-detailed',
-                'Whether the search dialog will start with the detailed view.'),
-                #False, registry.Boolean),
-               ('recursive',
-                'Whether the search will recurse directories by default.'),
-                #True, registry.Boolean),
-               ('ignore-vcs',
-                'whether the search will ignore .svn CNS and _darcs etc.'),
-                #True, registry.Boolean),
-               ('context-lines',
-                'the number of lines of context that will be displayed.'),
-                #3, ContextOption),
-               ('start-directory',
-                'the default search start directory'),
-                #os.path.expanduser('~'), registry.Directory),
-               ('maximum-matches',
-                'the maximum number of matches for each search',)]
-                #500, FindsTotalOption)]
-
     single_view_type = GrepView
     single_view_book = 'view'
+
+    display_name = 'Grep Search'
+
+    class default_options(defs.optiongroup):
+        """Options that the search will start with by default."""
+        class start_detailed(defs.option):
+            """Whether the detailed search options will start expanded."""
+            rtype = types.boolean
+            default = False
+        class recursive_search(defs.option):
+            """Whether the search will be recursive by default."""
+            rtype = types.boolean
+            default = True
+        class ignore_version_control_directories(defs.option):
+            """Whether version control directories will be ignored by default."""
+            rtype = types.boolean
+            default = True
+        class start_directory(defs.option):
+            """The default starting search directory"""
+            rtype = types.directory
+            default = os.path.expanduser('~')
+    class results(defs.optiongroup):
+        """Options relating to search results."""
+        class maximum_results(defs.option):
+            """The maximum number of search results."""
+            rtype = types.intrange(5, 5000, 5)
+            default = 500
 
     def grep_start(self):
         self.single_view.clear_results()
@@ -253,22 +261,25 @@ class Grepper(service.service):
                              recursive=None):
         self.create_single_view()
         options = GrepOptions()
-        #if directories is None:
-        #    options.directories = [self.options.get('start-directory').value()]
-        #else:
-        options.directories = directories
-        #if ignorevcs is None:
-        #    options.ignorevcs = self.options.get('ignore-vcs').value()
-        #else:
-        #    options.ignorevcs = ignorevcs
-        #if recursive is None:
-        #    options.recursive = self.options.get('recursive').value()
-        #else:
-        #    options.recursive = recursive
-        options.maxresults = 100#self.options.get('maximum-matches').value()
+        if directories is None:
+            options.directories = [self.opt(
+                'default_options', 'start_directory')]
+        else:
+            options.directories = directories
+        if ignorevcs is None:
+            options.ignorevcs = self.opt(
+                'default_options', 'ignore_version_control_directories')
+        else:
+            options.ignorevcs = ignorevcs
+        if recursive is None:
+            options.recursive = self.opt(
+                'default_options', 'recursive_search')
+        else:
+            options.recursive = recursive
+        options.maxresults = self.opt('results', 'maximum_results')
         self.single_view.from_options(options)
-        #self.editorview.set_details_expanded(
-        #    self.options.get('start-detailed').value())
+        self.single_view.set_details_expanded(self.opt(
+           'default_options', 'start_detailed'))
 
     def cmd_find(self, path, pattern):
         pass
@@ -417,6 +428,8 @@ class PidaGrep(gobject.GObject):
                     self.__finished()
                 if BINARY_RE.match(line):
                     break
+                line = string.translate(line, all_chars, hi_bit_chars)
+                line = string.translate(line, hi_lo_table)
                 matches = self.__pattern.findall(line)
                 if len(matches):
                     self.__nfound = self.__nfound + len(matches)
