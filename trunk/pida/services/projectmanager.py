@@ -105,21 +105,28 @@ class project_view(contentview.content_view):
         self.__toolbar.set_contexts(contexts)
 
     def cb_list_right_clicked(self, treeview, item, event):
-        globaldict = {'directory': item.value.source_directory,
-                      'project': item.value}
         menu = gtk.Menu()
-        for title, context in [('Directory', 'directory'),
-                        ('Source code', 'project_directory'),
-                        ('Project', 'project')]:
-            mroot = gtk.MenuItem(label=title)
-            menu.add(mroot)
-            contexts = self.service.boss.call_command('contexts',
-                                     'get_contexts',
-                                     contextname=context,
-                                     globaldict=globaldict
-                                     )
-            cmenu = contextwidgets.get_menu(contexts)
-            mroot.set_submenu(cmenu)
+        if item is None:
+            for act in ['projectmanager+new_project',
+                        'projectmanager+add_project']:
+                action = self.service.action_group.get_action(act)
+                mi = action.create_menu_item()
+                menu.add(mi)
+        else:
+            globaldict = {'directory': item.value.source_directory,
+                          'project': item.value}
+            for title, context in [('Directory', 'directory'),
+                            ('Source code', 'project_directory'),
+                            ('Project', 'project')]:
+                mroot = gtk.MenuItem(label=title)
+                menu.add(mroot)
+                contexts = self.service.boss.call_command('contexts',
+                                         'get_contexts',
+                                         contextname=context,
+                                         globaldict=globaldict
+                                         )
+                cmenu = contextwidgets.get_menu(contexts)
+                mroot.set_submenu(cmenu)
         menu.show_all()
         menu.popup(None, None, None, event.button, event.time)
 
