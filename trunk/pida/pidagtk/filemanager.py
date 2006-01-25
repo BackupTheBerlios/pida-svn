@@ -38,7 +38,7 @@ def shorten_home_name(directory):
 
 import pida.utils.gforklet as gforklet
 
-DIR_ICON = icons.icons.get_image('filemanager')
+DIR_ICON = icons.icons.get_image('gtk-directory')
 
 class FileTree(tree.IconTree):
 

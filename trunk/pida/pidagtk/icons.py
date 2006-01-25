@@ -28,17 +28,27 @@ defaulticons = gtk.icon_theme_get_default()
 class Icons(object):
 
     def __init__(self, icon_file=None):
-        #icon_file = ('/home/ali/working/pida/pida/branches/'
-        #             'pida-ali/pida/pidagtk/icons.dat')
-        from pkg_resources import Requirement, resource_filename
-        icon_file = resource_filename(Requirement.parse('pida'), 'images/icons.dat')
-        #icon_file = "/usr/share/pida/icons.dat"
-        self.d = shelve.open(icon_file, 'r')
-        self.cs = gtk.gdk.COLORSPACE_RGB
+        
+        import pkg_resources as pr
+        pidareq = pr.Requirement.parse('pida')
+        icon_file = pr.resource_filename(pidareq, 'images/icons.dat')
+        icon_names = pr.resource_listdir(pidareq, 'icons')
+
         stock_ids = set(gtk.stock_list_ids())
         iconfactory = gtk.IconFactory()
         self.__theme = gtk.icon_theme_get_default()
-        for k in self.d:
+        for icon in icon_names:
+            iconname = icon.split('.', 1)[0]
+            iconres = '/'.join(['icons', icon])
+            iconpath = pr.resource_filename(pidareq, iconres)
+            pixbuf = gtk.gdk.pixbuf_new_from_file(iconpath)
+            iconset = gtk.IconSet(pixbuf)
+            iconfactory.add(iconname, iconset)
+            gtk.icon_theme_add_builtin_icon(iconname, 128, pixbuf)
+
+        self.d = shelve.open(icon_file, 'r')
+        self.cs = gtk.gdk.COLORSPACE_RGB
+        for k in []:#self.d:
             stockname = 'gtk-%s' % k
             if stockname not in stock_ids:
                 d, a = self.d[k]
@@ -51,10 +61,16 @@ class Icons(object):
 
     def get(self, name, *args):
         try:
-            return self.__theme.load_icon('gtk-%s' % name, 12, 0)
+            return self.__theme.load_icon('gtk-%s' % name, 14, 0)
         except:
-            print name, 'notfound'
-            return self.__theme.load_icon('gtk-manhole', 12, 0)
+            try:
+                return self.__theme.load_icon('gnome-%s' % name, 14, 0)
+            except:
+                try:
+                    return self.__theme.load_icon('%s' % name, 14, 0)
+                except:
+                    print name, 'notfound'
+                    return self.__theme.load_icon('gtk-brokenimage', 16, 0)
             
     def get_image(self, name, *size):
         im = gtk.Image()

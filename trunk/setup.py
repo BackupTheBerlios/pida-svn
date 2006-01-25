@@ -103,6 +103,7 @@ def main():
     plugins = find_entry_points('plugins', 'Plugin')
     editors = find_entry_points('editors', 'Service')
     pixmaps = discover_data_files('pixmaps', 'xpm')
+    icons = discover_data_files('icons', 'svg')
     uis = discover_data_files('glade', 'glade')
     setup(name='pida',
           version=VERSION_STRING,
@@ -120,6 +121,7 @@ def main():
                     ('images', ['data/icons.dat']),
                     ('glade', uis),
                     ('pixmaps', pixmaps),
+                    ('icons', icons),
                     ('version', ['data/version']),
                     ('', ['data/icons/pida-icon.png']),
                     ],

@@ -37,7 +37,7 @@ import threading
 
 class pyflake_view(contentview.content_view):
 
-    ICON_NAME = 'warning'
+    ICON_NAME = 'gtk-info'
 
     HAS_CONTROL_BOX = False
 

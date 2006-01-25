@@ -46,7 +46,7 @@ class todo_hint(object):
 class todo_view(contentview.content_view):
     
     LONG_TITLE = 'Todo Viewer'
-    ICON_NAME = 'list'
+    ICON_NAME = 'gtk-todo'
 
     HAS_CONTROL_BOX = False
 

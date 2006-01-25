@@ -42,7 +42,7 @@ import gobject
 
 class python_source_view(contentview.content_view):
 
-    ICON_NAME = 'list'
+    ICON_NAME = 'gtk-sourcetree'
 
     HAS_CONTROL_BOX = False
     LONG_TITLE = 'python source browser'

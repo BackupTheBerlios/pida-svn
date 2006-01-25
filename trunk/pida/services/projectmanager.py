@@ -29,6 +29,7 @@ import pida.pidagtk.contextwidgets as contextwidgets
 
 import pida.core.registry as registry
 import pida.core.service as service
+import pida.core.actions as actions
 types = service.types
 defs = service.definitions
 
@@ -276,6 +277,7 @@ class ProjectManager(service.service):
         fdialog.connect('response', response)
         fdialog.run()
 
+    @actions.action(stock_id='vcs_commit')
     def act_commit_project(self, action):
         """Commit the current project to version control"""
         directory = self.__current_project.source_directory
@@ -286,12 +288,14 @@ class ProjectManager(service.service):
     def act_get_project_statuses(self, action):
         pass
 
+    @actions.action(stock_id='vcs_update')
     def act_update_project(self, action):
         """Update the current project from version control"""
         directory = self.__current_project.source_directory
         self.boss.call_command('versioncontrol', 'update',
                                directory=directory)
 
+    @actions.action(stock_id='gtk-remove')
     def act_remove_project_from_workbench(self, action):
         self.call('remove_project', project=self.__current_project)
 
