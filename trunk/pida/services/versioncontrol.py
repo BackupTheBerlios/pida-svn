@@ -40,9 +40,11 @@ class version_control(service.service):
     class meld_integration(defs.optiongroup):
         """How much meld will be used."""
         class use_meld_for_statuses(defs.option):
+            """Whether Meld will be used for file listings."""
             rtype = types.boolean
             default = False
         class use_meld_for_diff(defs.option):
+            """Whether Meld (visual diff) will be used for file diffs."""
             rtype = types.boolean
             default = False
 
