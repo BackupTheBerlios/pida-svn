@@ -33,7 +33,6 @@ class Icons(object):
         pidareq = pr.Requirement.parse('pida')
         icon_file = pr.resource_filename(pidareq, 'images/icons.dat')
         icon_names = pr.resource_listdir(pidareq, 'icons')
-
         stock_ids = set(gtk.stock_list_ids())
         iconfactory = gtk.IconFactory()
         self.__theme = gtk.icon_theme_get_default()
@@ -45,17 +44,6 @@ class Icons(object):
             iconset = gtk.IconSet(pixbuf)
             iconfactory.add(iconname, iconset)
             gtk.icon_theme_add_builtin_icon(iconname, 128, pixbuf)
-
-        self.d = shelve.open(icon_file, 'r')
-        self.cs = gtk.gdk.COLORSPACE_RGB
-        for k in []:#self.d:
-            stockname = 'gtk-%s' % k
-            if stockname not in stock_ids:
-                d, a = self.d[k]
-                pixbuf = gtk.gdk.pixbuf_new_from_data(d, self.cs, *a)
-                iconset = gtk.IconSet(pixbuf)
-                iconfactory.add(stockname, iconset)
-                gtk.icon_theme_add_builtin_icon(stockname, 12, pixbuf)
         iconfactory.add_default()
         self.__iconfactory = iconfactory
 
