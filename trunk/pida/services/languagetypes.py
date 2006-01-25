@@ -20,17 +20,28 @@
 #LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
-import glob
+
+# standard library import(s)
+import os
 import sre
+import glob
+
+# gtk import(s)
+import gtk
+
+# pida import(s)
+import pida.core.actions as actions
 import pida.core.service as service
 import pida.core.languages as languages
-import pida.core.actions as actions
-import pida.pidagtk.contentview as contentview
-import gtk
+
 import pida.pidagtk.tree as tree
-import os
+import pida.pidagtk.contentview as contentview
+
+# TODO: Give the language viewer some love
+
 class language_tree(tree.ToggleTree):
     pass
+
 
 class language_manager_view(contentview.content_view):
     
@@ -49,9 +60,6 @@ class language_manager_view(contentview.content_view):
         item.reset_markup()
         self.service.call('show_handlers')
         self.service.call('save_state')
-
-    
-
 
 
 class language_types(service.service):
@@ -88,7 +96,6 @@ class language_types(service.service):
         self.__register_patterns(self.__langs, handler, 'file_name_globs')
         self.__register_patterns(self.__firsts, handler, 'first_line_globs')
         handler.active = self.__is_active(handler)
-        
 
     def cmd_get_language_handlers(self, document):
         # will break on meld
@@ -132,7 +139,6 @@ class language_types(service.service):
             return handler.__class__.__name__ in actives
         else:
             return True
-        
 
     def __get_active_handlers(self):
         for handler in self.__get_all_handlers():
@@ -169,7 +175,6 @@ class language_types(service.service):
                     matches = matches + self.__firsts[pattern]
         return matches
 
-
     @actions.action(
         stock_id = 'configure',
         label = 'File Type Plugins',
@@ -183,8 +188,7 @@ class language_types(service.service):
                     <menu name="base_tools">
                         <menuitem name="editft" action="languagetypes+edit" />
                     </menu>
-                </menubar>"""
+                  </menubar>"""
         
-            
 
 Service = language_types
