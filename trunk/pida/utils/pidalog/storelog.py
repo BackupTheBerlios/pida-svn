@@ -61,4 +61,8 @@ class logs(object):
             if hasattr(self.logs[log],property):
                 if filter == getattr(self.logs[log],property):
                     yield self.logs[log]
-    
+                elif isinstance(filter,list):
+                    for f in filter:
+                        if f == getattr(self.logs[log],property):
+                            yield self.logs[log]
+

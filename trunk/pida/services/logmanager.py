@@ -59,7 +59,8 @@ markup = {'short':"$module $name:$lineno",
 
 view_option = {'font':None,
                'new':False,
-               'length':70}
+               'length':70,
+               'default_filter':None}
 
 record_attributes = ['name',
                      'threadName',
@@ -338,16 +339,34 @@ class log_history(contentview.content_view):
 
     def set_filter(self,filter):
         '''Sets a filter'''
-        self.__filter = filter
-        if filter not in (None, {}, ''):
+        filter = view_option['default_filter']
+        request = {}
+        if " " in filter:
+            pairs = filter.split(" ")
+            for pair in pairs:
+                if len(pair.split(":")) == 2:
+                    (key,val) = pair.split(":")
+                    if key not in request.keys():
+                        request[key] = []
+                    request[key].append(val)
+        elif len(filter.split(":")) == 2:
+            (key,val) = filter.split(":")
+            if key not in request.keys():
+                request[key] = []
+            request[key].append(val)
+
+        self.__filter = request
+        if request != {}:
             self.set_long_title('Log filter : %s' % filter)
         else:
             self.__filter = None
-            self.set_long_title('Log Viewer')
+            self.set_long_title('Log Viewer (with default filter)')
 
-    def refresh(self):
+    def refresh(self,thread_lock=False):
         '''Refresh the treeview with the logs
         TODO: improve updates (only load changes, not the whole tree...)'''
+        if thread_lock:
+            gtk.threads_enter()
         self.__log_tree.clear()
         if self.__logs != None:                                           
             if self.__filter in  (None, ''):                              
@@ -357,10 +376,16 @@ class log_history(contentview.content_view):
             else:
                 logs = {}
                 for attr in self.__filter.keys():
-                    logs[attr] = self.__logs.filter_list(attr,self.__filter[attr])
+                    if attr not in logs.keys():
+                        logs[attr] = []
+                    for log in self.__logs.filter_list(\
+                                                     attr,self.__filter[attr]):
+                        logs[attr].append(log)
                 for attr in logs.keys():
                     for log in logs[attr]:
                         self.add_item(log)
+        if thread_lock:
+            gtk.threads_leave()
 
     # Actions
 
@@ -435,13 +460,13 @@ class log_manager(service.service):
     def get_markups(self):
         '''Get logline's markup length from configuration'''
         for markup_length in markup.keys():
-            opt = self.opt('general','markup_%s' % markup_length)
+            opt = self.opt('advanced','markup_%s' % markup_length)
             if opt:
                 markup[markup_length] = opt
 
     def get_msg_length(self):
         '''Get message's max length'''
-        opt = self.opt('general','message_length')
+        opt = self.opt('advanced','message_length')
         if opt:
             view_option['length'] = int(opt)
 
@@ -458,11 +483,18 @@ class log_manager(service.service):
         if opt:
             view_option['new'] = opt
 
+    def get_default_filter(self):
+        '''Gets the default filter to apply'''
+        opt = self.opt('general','default_filter')
+        if opt:
+            view_option['default_filter'] = opt
+
     # life cycle
 
     def start(self):
         self.__view = None
         self.__first = True
+        self.__threads = False
         refresh_level = self.opt('general', 'history_level_refresh')
         if refresh_level in (None, ''):
             refresh_level = 'DEBUG'
@@ -474,6 +506,7 @@ class log_manager(service.service):
             self.get_markups()
             self.get_msg_length()
             self.get_multi_view_book_type()
+            self.get_default_filter()
             self.get_new_views()
         else: 
             self.log.warning("Logging notification service couldn't be started.")
@@ -487,6 +520,7 @@ class log_manager(service.service):
         self.get_msg_length()
         self.get_multi_view_book_type()
         self.get_new_views()
+        self.get_default_filter()
         self.cmd_refresh()
 
     def stop(self):
@@ -494,24 +528,35 @@ class log_manager(service.service):
         self.boss.stop_logging()
 
     #private interface
+
     #public interface
 
+    def threads_enter(self):
+        self.__threads = True
+
+    def threads_leave(self):
+        self.__threads = False
+
     class general(defs.optiongroup):
-        '''Terminal options'''
-        class open_new_views(defs.option):
-            '''If set to true, open new history filters in new views'''
-            rtype = types.boolean
-            default = False
-        
+        '''Logging options'''
         class history_level_refresh(defs.option):
             '''Minimum level (included) shall the history be refreshed'''
             rtype = types.stringlist('DEBUG','INFO','WARNING','CRITICAL')
             default = 'INFO'
+
         class history_view_location(defs.option):
             '''Where newly started histories will appear per default'''
             rtype = types.stringlist(*view_location_map.keys())
             default = 'View Pane'
 
+        class default_filter(defs.option):
+            '''Default filter to apply on the logs'''
+            rtype = types.string
+            default = 'levelname:INFO levelname:WARNING levelname:ERROR '+\
+                      'levelname:CRITICAL'
+
+    class advanced(defs.optiongroup):
+        '''Advanced logging options'''
         class markup_short(defs.option):
             '''The default markup to display. To customize it is available: 
 $module, $name, $lineno, $message, $levelname, $created, $msg, $args
@@ -532,6 +577,11 @@ $levelno, $pathname, $filename, $exc_info and/or $exc_text'''
             default = view_option['length']
             rtype = types.integer
 
+        class open_new_views(defs.option):
+            '''If set to true, open new history filters in new views'''
+            rtype = types.boolean
+            default = False
+        
     class fonts_and_colours(defs.optiongroup):
         '''Fonts and colors for the markup'''
         class notset_color(defs.option):
@@ -567,28 +617,17 @@ $levelno, $pathname, $filename, $exc_info and/or $exc_text'''
     # commands
 
     def cmd_filter(self,filter):
-        request = {}
-        if " " in filter:
-            pairs = filter.split(" ")
-            for pair in pairs:
-                if len(pair.split(":")) == 2:
-                    (key,val) = pair.split(":")
-                    request[key] = val
-        elif len(filter.split(":")) == 2:
-            (key,val) = filter.split(":")
-            request[key] = val
         if view_option['new']:
-            view = self.create_multi_view(filter=request,logs=self.boss.logs)
+            view = self.create_multi_view(filter=filter,logs=self.boss.logs)
         else:
             for view in self.multi_views:
-                view.set_filter(request)
-            
+                view.set_filter(filter)
         self.cmd_refresh()
 
     def cmd_refresh(self):
         for view in self.multi_views:
-            view.refresh()
-                    
+            view.refresh(self.__threads)
+
     def cmd_show_history(self):
         view = self.create_multi_view(logs=self.boss.logs)
         view.refresh()
