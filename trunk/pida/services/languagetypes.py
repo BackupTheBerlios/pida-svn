@@ -28,7 +28,7 @@ import pida.core.actions as actions
 import pida.pidagtk.contentview as contentview
 import gtk
 import pida.pidagtk.tree as tree
-
+import os
 class language_tree(tree.ToggleTree):
     pass
 
@@ -48,6 +48,7 @@ class language_manager_view(contentview.content_view):
         item.value.active = not item.value.active
         item.reset_markup()
         self.service.call('show_handlers')
+        self.service.call('save_state')
 
     
 
@@ -63,14 +64,20 @@ class language_types(service.service):
         self.__firsts = {}
         self.__action_groups = {}
         self.__current_document = None
+        self.__state = os.path.join(self.boss.pida_home, 'data', 'filetypes')
+
+    def stop(self):
+        self.call('save_state')
+
+    def cmd_save_state(self):
+        f = open(self.__state, 'w')
+        for handler in self.__get_active_handlers():
+            f.write('%s\n' % handler.__class__.__name__)
+        f.close()
 
     def cmd_edit(self):
         self.create_single_view()
-        handlers = set()
-        for globhandlers in self.__langs.values() + self.__firsts.values():
-            for handler in globhandlers:
-                handlers.add(handler)
-        self.single_view.set_file_handlers(handlers)
+        self.single_view.set_file_handlers(self.__get_all_handlers())
 
     def cmd_register_language_handler(self, handler_type):
         handler = handler_type(handler_type.service)
@@ -80,6 +87,8 @@ class language_types(service.service):
                                uidefinition=handler.get_menu_definition())
         self.__register_patterns(self.__langs, handler, 'file_name_globs')
         self.__register_patterns(self.__firsts, handler, 'first_line_globs')
+        handler.active = self.__is_active(handler)
+        
 
     def cmd_get_language_handlers(self, document):
         # will break on meld
@@ -112,6 +121,31 @@ class language_types(service.service):
                                        bookname='languages',
                                        view=view)
             handler.load_document(document)
+
+    def __is_active(self, handler):
+        if os.path.exists(self.__state):
+            actives = []
+            f = open(self.__state)
+            for line in f:
+                actives.append(line.strip())
+            f.close()
+            return handler.__class__.__name__ in actives
+        else:
+            return True
+        
+
+    def __get_active_handlers(self):
+        for handler in self.__get_all_handlers():
+            if handler.active:
+                yield handler
+
+    def __get_all_handlers(self):
+        handlers = set()
+        for globhandlers in self.__langs.values() + self.__firsts.values():
+            for handler in globhandlers:
+                if handler not in handlers:
+                    handlers.add(handler)
+                    yield handler
 
     def __register_patterns(self, handlers, handler, attrname='globs'):
         patterns = getattr(handler, attrname, [])
