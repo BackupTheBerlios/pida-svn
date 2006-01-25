@@ -55,27 +55,32 @@ class document_type_handler(service.service):
 
         @actions.action(stock_id=gtk.STOCK_REDO, label=None)
         def act_redo(self, action):
+            """Redo the undone action"""
             self.service.boss.call_command('editormanager', 'redo')
 
         @actions.action(stock_id=gtk.STOCK_UNDO, label=None, is_important=True)
         def act_undo(self, action):
-            """Undo the last edit."""
+            """Undo the last action"""
             self.service.boss.call_command('editormanager', 'undo')
 
         @actions.action(stock_id=gtk.STOCK_CUT, label=None)
         def act_cut(self, action):
+            """Cut the selection"""
             self.service.boss.call_command('editormanager', 'cut')
 
         @actions.action(stock_id=gtk.STOCK_COPY, label=None)
         def act_copy(self, action):
+            """Copy the selection"""
             self.service.boss.call_command('editormanager', 'copy')
 
         @actions.action(stock_id=gtk.STOCK_PASTE, label=None)
         def act_paste(self, action):
+            """Paste the clipboard"""
             self.service.boss.call_command('editormanager', 'paste')
 
         @actions.action(stock_id=gtk.STOCK_SAVE, label=None, is_important=True)
         def act_save(self, action):
+            """Save the document"""
             self.service.boss.call_command('editormanager', 'save')
 
         def get_menu_definition(self):

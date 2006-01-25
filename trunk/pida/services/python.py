@@ -155,6 +155,7 @@ class python(service.service):
                 self.service.lang_view.set_source_nodes(root_node)
 
         def act_execute_current_file(self, action):
+            """Runs the current python script"""
             self.service.call('execute_file',
                               filename=self.__document.filename)
 

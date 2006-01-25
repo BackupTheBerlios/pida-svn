@@ -295,6 +295,7 @@ class Grepper(service.service):
             self.__grep.stop()
 
     def act_find(self, action):
+        """Finds text on a document or in a directory"""
         self.call('find_interactive')
 
     def get_menu_definition(self):
