@@ -1,5 +1,6 @@
 import gtk
 import gobject
+import icons
 
 
 class sizer(gtk.EventBox):
@@ -20,9 +21,10 @@ class sizer(gtk.EventBox):
                         gobject.TYPE_NONE,
                         ())}
 
-    def __init__(self, button_name=None, cursor_name=None):
+    def __init__(self, button_name=None, tooltip='', cursor_name=None):
         gtk.EventBox.__init__(self)
         self.__button_name = button_name
+        icons.tips.set_tip(self, tooltip)
         self.__button_image = gtk.Image()
         if button_name is not None:
             self.__pixbufs = get_pixmaps(self.__button_name)

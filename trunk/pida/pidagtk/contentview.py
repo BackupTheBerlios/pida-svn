@@ -146,7 +146,7 @@ class content_view(gtk.VBox):
             self.__toolbar.add_button(name, icon, tooltip)
         if self.HAS_CONTROL_BOX:
             if self.HAS_DETACH_BUTTON:
-                detbut = paned.sizer('menu')
+                detbut = paned.sizer('menu', tooltip='Detach this view')
                 self.__toolbar_area.pack_start(detbut, expand=False)
                 detbut.connect('clicked',
                             self.cb_controlbar_detach_clicked)
@@ -163,7 +163,7 @@ class content_view(gtk.VBox):
                 align.show()
                 self.__toolbar_area.pack_start(align)
                 
-                closebut = paned.sizer('close')
+                closebut = paned.sizer('close', tooltip='Close this view')
                 closebut.show()
                 
                 self.__toolbar_area.pack_start(closebut, expand=False)
