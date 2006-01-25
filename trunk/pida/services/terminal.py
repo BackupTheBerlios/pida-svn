@@ -27,6 +27,7 @@ import pida.core.service as service
 
 # pidagtk import(s)
 import pida.pidagtk.contentview as contentview
+import pida.core.actions as actions
 import gobject
 import gtk
 
@@ -120,6 +121,7 @@ class terminal_manager(service.service):
         self.call('execute', command_args=[shellcommand],
                   term_type=term_type, kwdict=kwdict)
 
+    @actions.action(stock_id='gtk-terminal')
     def act_terminal(self, action):
         """Start a shell in a terminal emulator."""
         self.call('execute_shell')
