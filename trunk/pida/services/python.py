@@ -89,6 +89,7 @@ class python(service.service):
             rtype = types.string
             default = 'python'
         class python_shell(defs.option):
+            """The command to call when executing a python shell."""
             rtype = types.string
             default = 'python'
 
