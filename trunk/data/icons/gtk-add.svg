@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Made by Andrew Fitzsimon (andrew@fitzsimon.com.au)-->
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="&amp;#38;#38;#38;#38;#38;#38;#38;#38;#38;#38;#38;#38;#38;#38;ns_xlink;"
+   xmlns:sodipodi="http://inkscape.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   sodipodi:docname="gtk-add.svg"
+   sodipodi:docbase="/home/andy/Desktop/Work/clients/Canonical/Humility/humility-icons/scalable/stock"
+   inkscape:version="0.41+cvs"
+   sodipodi:version="0.32"
+   id="UbuntuIcon"
+   height="128.0px"
+   width="128.0px">
+  <defs
+     id="defs3">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient2414">
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1;"
+         offset="0"
+         id="stop2416" />
+      <stop
+         style="stop-color:#ffffff;stop-opacity:0;"
+         offset="1"
+         id="stop2418" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient2414"
+       id="linearGradient2420"
+       x1="59.830544"
+       y1="112.41895"
+       x2="59.830544"
+       y2="75.698456"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient2414"
+       id="linearGradient2424"
+       gradientUnits="userSpaceOnUse"
+       x1="59.830544"
+       y1="112.41895"
+       x2="59.830544"
+       y2="75.698456" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient2414"
+       id="linearGradient2428"
+       gradientUnits="userSpaceOnUse"
+       x1="59.830544"
+       y1="112.41895"
+       x2="59.830544"
+       y2="75.698456" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient2414"
+       id="linearGradient2432"
+       gradientUnits="userSpaceOnUse"
+       x1="59.830544"
+       y1="112.41895"
+       x2="59.830544"
+       y2="75.698456" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient2414"
+       id="linearGradient2436"
+       gradientUnits="userSpaceOnUse"
+       x1="59.830544"
+       y1="112.41895"
+       x2="59.830544"
+       y2="75.698456" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient2414"
+       id="linearGradient2440"
+       gradientUnits="userSpaceOnUse"
+       x1="59.830544"
+       y1="112.41895"
+       x2="59.830544"
+       y2="75.698456" />
+    <linearGradient
+       gradientTransform="matrix(0.636963,0.636963,-0.636963,0.636963,62.82107,-17.20828)"
+       inkscape:collect="always"
+       xlink:href="#linearGradient2414"
+       id="linearGradient2444"
+       gradientUnits="userSpaceOnUse"
+       x1="59.830544"
+       y1="112.41895"
+       x2="59.830544"
+       y2="75.698456" />
+    <linearGradient
+       y2="84.066109"
+       x2="72.552216"
+       y1="101.18876"
+       x1="89.674866"
+       gradientTransform="matrix(0.636963,0.636963,-0.636963,0.636963,62.82107,-17.20828)"
+       gradientUnits="userSpaceOnUse"
+       id="linearGradient2961"
+       xlink:href="#linearGradient2414"
+       inkscape:collect="always" />
+  </defs>
+  <sodipodi:namedview
+     inkscape:guide-points="true"
+     inkscape:window-y="311"
+     inkscape:window-x="245"
+     inkscape:window-height="694"
+     inkscape:window-width="760"
+     borderlayer="top"
+     showborder="true"
+     gridopacity="0.08"
+     gridcolor="#3f3fff"
+     gridempopacity="0.15"
+     gridempcolor="#3f3fff"
+     gridempspacing="8"
+     showgrid="true"
+     gridspacingy="4.0px"
+     gridspacingx="4.0px"
+     inkscape:showpageshadow="false"
+     inkscape:current-layer="layer1"
+     inkscape:document-units="px"
+     inkscape:cy="11.179009"
+     inkscape:cx="60.364944"
+     inkscape:zoom="1.0000000"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base"
+     inkscape:grid-points="true"
+     inkscape:grid-bbox="false"
+     gridtolerance="2.0px"
+     showguides="false"
+     inkscape:guide-bbox="false" />
+  <metadata
+     id="metadata4">
+    <rdf:RDF
+       id="RDF5">
+      <cc:Work
+         id="Work6"
+         rdf:about="">
+        <dc:format
+           id="format7">image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage"
+           id="type9" />
+        <dc:title
+           id="title3941">Ubuntu Icon</dc:title>
+        <dc:date
+           id="date3943">2005-06-28</dc:date>
+        <dc:creator
+           id="creator3945">
+          <cc:Agent
+             id="Agent3947">
+            <dc:title
+               id="title3949">andrew@fitzsimon.com.au</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:rights
+           id="rights3951">
+          <cc:Agent
+             id="Agent3953">
+            <dc:title
+               id="title3955">Andrew Fitzsimon</dc:title>
+          </cc:Agent>
+        </dc:rights>
+        <dc:publisher
+           id="publisher3957">
+          <cc:Agent
+             id="Agent3959">
+            <dc:title
+               id="title3961">Cannonical</dc:title>
+          </cc:Agent>
+        </dc:publisher>
+        <dc:identifier
+           id="identifier3963" />
+        <dc:relation
+           id="relation3965">http://andy.fitzsimon.com.au</dc:relation>
+        <dc:language
+           id="language3967" />
+        <dc:subject
+           id="subject3969">
+          <rdf:Bag
+             id="Bag3971">
+            <rdf:li
+               id="li4623">Ubuntu</rdf:li>
+            <rdf:li
+               id="li4625">SVG</rdf:li>
+            <rdf:li
+               id="li4627">Etiquette</rdf:li>
+            <rdf:li
+               id="li4629">AndyFitz</rdf:li>
+            <rdf:li
+               id="li4631">Breezy</rdf:li>
+            <rdf:li
+               id="li4633">GNOME</rdf:li>
+            <rdf:li
+               id="li4635">Inkscape</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+        <dc:coverage
+           id="coverage4637">Ubuntu Icon theme</dc:coverage>
+        <dc:contributor
+           id="contributor4639">
+          <cc:Agent
+             id="Agent4641">
+            <dc:title
+               id="title4643">Andrew Fitzsimon</dc:title>
+          </cc:Agent>
+        </dc:contributor>
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/GPL/2.0/"
+           id="license4645" />
+      </cc:Work>
+      <cc:License
+         id="License4661"
+         rdf:about="http://creativecommons.org/licenses/GPL/2.0/">
+        <cc:permits
+           id="permits4663"
+           rdf:resource="http://web.resource.org/cc/Reproduction" />
+        <cc:permits
+           id="permits4665"
+           rdf:resource="http://web.resource.org/cc/Distribution" />
+        <cc:requires
+           id="requires4667"
+           rdf:resource="http://web.resource.org/cc/Notice" />
+        <cc:permits
+           id="permits4669"
+           rdf:resource="http://web.resource.org/cc/DerivativeWorks" />
+        <cc:requires
+           id="requires4671"
+           rdf:resource="http://web.resource.org/cc/ShareAlike" />
+        <cc:requires
+           id="requires4673"
+           rdf:resource="http://web.resource.org/cc/SourceCode" />
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="layer1"
+     inkscape:groupmode="layer"
+     inkscape:label="Icon">
+    <path
+       style="stroke-opacity:1.0000000;stroke-dashoffset:0.0000000;stroke-dasharray:none;stroke-miterlimit:4.0000000;stroke-linejoin:miter;stroke-linecap:butt;stroke-width:5.2264719;stroke:none;fill-opacity:1.0000000;fill:#267726"
+       d="M 113.64213,50.991850 L 74.649684,50.991866 L 74.649658,11.999979 L 50.992324,11.999963 L 50.992330,50.991865 L 12.000000,50.991860 L 12.000025,74.650322 L 50.992330,74.650302 L 50.992338,113.64234 L 74.649684,113.64233 L 74.649684,74.650302 L 113.64212,74.650324 L 113.64213,50.991850 z "
+       id="path2958" />
+    <path
+       id="path1385"
+       d="M 113.64213,50.991850 L 74.649684,50.991866 L 74.649658,11.999979 L 50.992324,11.999963 L 50.992330,50.991865 L 12.000000,50.991860 L 12.000025,74.650322 L 50.992330,74.650302 L 50.992338,113.64234 L 74.649684,113.64233 L 74.649684,74.650302 L 113.64212,74.650324 L 113.64213,50.991850 z "
+       style="stroke-opacity:1.0000000;stroke-dashoffset:0.0000000;stroke-dasharray:none;stroke-miterlimit:4.0000000;stroke-linejoin:miter;stroke-linecap:butt;stroke-width:5.2264719;stroke:#000000;fill-opacity:0.54395604;fill:#46a046" />
+    <path
+       sodipodi:nodetypes="ccccccccccc"
+       style="fill:url(#linearGradient2961);fill-opacity:1.0000000;stroke:none;stroke-width:5.8020253;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4.0000000;stroke-dasharray:none;stroke-dashoffset:0.0000000;stroke-opacity:1.0000000;opacity:0.45000000"
+       d="M 56.949072,56.938162 C 43.865649,56.823760 30.780376,56.784800 17.696243,56.699301 C 17.696243,60.786477 17.696243,64.873655 17.696243,68.960832 C 30.773741,68.868781 43.852376,68.822624 56.929166,68.702066 C 56.814765,81.785488 56.775805,94.870763 56.690306,107.95489 C 60.777482,107.95489 64.864660,107.95489 68.951838,107.95489 C 68.866344,94.870763 68.827369,81.785488 68.712976,68.702066 C 81.789766,68.822628 94.868402,68.868778 107.94590,68.960832 C 107.94590,64.873655 107.94590,60.786477 107.94590,56.699301 C 94.861768,56.784793 81.776494,56.823769 68.693071,56.938162 C 68.813633,43.861372 56.828514,43.861371 56.949072,56.938162 z "
+       id="path2398" />
+    <path
+       sodipodi:nodetypes="ccccccccc"
+       id="path2963"
+       d="M 70.260870,54.543478 L 112.00000,54.543478 L 112.00000,64.000000 L 16.000000,64.000000 L 16.000000,54.543478 L 53.565217,54.543478 L 53.565217,13.913043 L 70.260870,13.913043 L 70.260870,54.543478 z "
+       style="fill:#ffffff;fill-opacity:0.36813185;stroke:none;stroke-width:5.2264719;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4.0000000;stroke-dasharray:none;stroke-dashoffset:0.0000000;stroke-opacity:1.0000000" />
+  </g>
+  <g
+     inkscape:label="Palette"
+     id="layer2"
+     inkscape:groupmode="layer" />
+</svg>
