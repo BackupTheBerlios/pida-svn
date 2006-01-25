@@ -41,6 +41,7 @@ class Contentholder(gtk.VBox):
         if listwidget is not None:
             listwidget.connect('clicked', self.cb_list_clicked)
         self.__views = {}
+        self.__saved = None
 
     def __init_notebook(self, show_tabs):
         self.__notebook = gtk.Notebook()
@@ -113,6 +114,13 @@ class Contentholder(gtk.VBox):
         del self.__views[contentview.unique_id]
         if len(self.__views) == 0:
             self.emit('empty')
+
+    def save_state(self):
+        self.__saved = self.__notebook.get_current_page()
+
+    def load_state(self):
+        if self.__saved is not None:
+            self.__notebook.set_current_page(self.__saved)
 
     def __get_notebook(self):
         return self.__notebook
