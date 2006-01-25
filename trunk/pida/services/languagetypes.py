@@ -47,7 +47,7 @@ class language_manager_view(contentview.content_view):
     
     def init(self):
         self.__list = language_tree()
-        self.__list.connect('double-clicked', self.cb_list_activated)
+        self.__list.connect('clicked', self.cb_list_activated)
         self.widget.pack_start(self.__list)
         
     def set_file_handlers(self, handlers):
