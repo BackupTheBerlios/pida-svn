@@ -300,10 +300,9 @@ class bindings_mixin(object):
             servicename, eventname = evtstring.split('_', 1)
             svc = self.get_service(servicename)
             func = getattr(self, bndfunc.func_name)
-            # XXX: see ticket #99
             try:
                 svc.events.register(eventname, func)
-            except AssertionError:
+            except KeyError:
                 self.log.info('event "%s" does not exist', eventname)
 
 

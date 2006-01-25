@@ -70,9 +70,11 @@ class event(base.pidacomponent):
         return event_name in self.__events
     
     def register (self, event_name, callback):
-        assert self.has_event(event_name)
-        self.__events[event_name].append (callback)
-    
+        if self.has_event(event_name):
+            self.__events[event_name].append (callback)
+        else:
+            raise KeyError
+
     def unregister (self, event_name, callback):
         self.__events.remove (callback)
 
