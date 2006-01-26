@@ -162,11 +162,13 @@ class directory_context(default_context):
     COMMANDS = [('up', 'up', 'Up',
                  'Browse the parent directoy'),
                 ('new', 'new', 'New',
-                 'Create a new file in this directory'),
+                 'Create a new file here'),
                 ('dirnew', 'directory', 'New Directory',
-                 'Create a new directory in this directory'),
+                 'Create a new directory here'),
                 ('terminal', 'terminal', 'Terminal',
-                'Open a terminal in this directory')]
+                'Open a terminal here'),
+                ('search', 'find', 'Search',
+                'Search text in files here')]
 
     def globals_modifier(self, globaldict):
         return globaldict['directory']
@@ -196,6 +198,10 @@ class directory_context(default_context):
         if directory != '/':
             parent = os.path.split(directory)[0]
             self.boss.call_command('filemanager', 'browse', directory=parent)
+
+    def command_search(self, directory):
+        self.boss.call_command('grepper', 'find_interactive',
+                               directories=[directory])
 
     def _refresh_filemanager(self, directory):
         curdir = self.boss.call_command('filemanager',
