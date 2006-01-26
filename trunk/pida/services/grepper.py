@@ -96,17 +96,12 @@ class GrepView(contentview.content_view):
         hb.pack_start(self.__path_entry)
         self.__recursive = gtk.CheckButton('-R')
         hb.pack_start(self.__recursive, expand=False)
-        hb = gtk.HBox()
-        self.widget.pack_start(hb, expand=False)
-        self.__status_bar = gtk.ProgressBar()
-        self.__status_bar.set_size_request(-1, 32)
-        self.__status_bar.set_pulse_step(0.01)
-        hb.pack_start(self.__status_bar, padding=4)
-        self.__stop_but = gtk.Button(stock=gtk.STOCK_STOP)
-        hb.pack_start(self.__stop_but, expand=False)
-        self.__stop_but.set_sensitive(False)
-        self.__stop_but.connect('clicked', self.cb_stop_clicked)
-        self.__start_but = gtk.Button(stock=gtk.STOCK_FIND)
+        #self.__stop_but = gtk.Button(stock=gtk.STOCK_STOP)
+        #hb.pack_start(self.__stop_but, expand=False)
+        #self.__stop_but.set_sensitive(False)
+        #self.__stop_but.connect('clicked', self.cb_stop_clicked)
+        self.__start_but = gtk.Button(label='gtk-find')
+        self.__start_but.set_use_stock(True)
         hb.pack_start(self.__start_but, expand=False)
         self.__start_but.connect('clicked', self.cb_start_clicked)
         #self.add_button('apply', 'apply', 'Start the search')
@@ -133,15 +128,14 @@ class GrepView(contentview.content_view):
         self.__results_tree.set_property('markup-format-string', '%(markup)s')
         resbox.pack_start(self.__results_tree)
         self.__results_tree.connect('clicked', self.cb_result_activated)
-        self.__context_expander = gtk.Expander(label=RESULTS_LABEL_MU)
-        self.__context_expander.set_use_markup(True)
-        self.widget.pack_start(self.__context_expander, expand=False)
-        self.__context_expander.set_expanded(True)
-        contextbox = gtk.HBox()
-        self.__context_expander.add(contextbox)
-        self.__context_label = gtk.Label()
-        self.__context_label.set_alignment(0, 0)
-        contextbox.pack_start(self.__context_label, padding=4)
+        hb = gtk.HBox()
+        self.widget.pack_start(hb, expand=False)
+        self.__status_bar = gtk.ProgressBar()
+        self.__status_bar.set_size_request(-1, 6)
+        self.__status_bar.set_pulse_step(0.01)
+        hb.pack_start(self.__status_bar, padding=4)
+        self.__status_bar.set_no_show_all(True)
+
 
     def show_status(self, status):
         code, message = status
@@ -195,16 +189,18 @@ class GrepView(contentview.content_view):
         self.__results_tree.add_item(ResultsTreeItem('', result))
 
     def start(self):
-        self.__stop_but.set_sensitive(True)
+        self.__status_bar.show()
+        self.__start_but.set_label(gtk.STOCK_STOP)
 
     def stop(self):
-        self.__stop_but.set_sensitive(False)
-
-    def cb_stop_clicked(self, button):
-        self.service.grep_stop()
+        self.__status_bar.hide()
+        self.__start_but.set_label(gtk.STOCK_FIND)
 
     def cb_start_clicked(self, button):
-        self.service.grep_start()
+        if button.get_label() == gtk.STOCK_STOP:
+            self.service.grep_stop()
+        else:
+            self.service.grep_start()
 
 class Grepper(service.service):
 
