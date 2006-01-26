@@ -157,6 +157,9 @@ class document_type_handler(service.service):
             handler.action_group.set_visible(False)
         return doc
 
+    def cmd_get_document_actions(self):
+        return self.__file_fallback.action_group.list_actions()
+
     def __register_patterns(self, handlers, handler, attrname='globs'):
         patterns = getattr(handler, attrname, [])
         for glob_pattern in patterns:
