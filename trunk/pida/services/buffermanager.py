@@ -120,6 +120,10 @@ class Buffermanager(service.service):
     def act_quit_pida(self, action):
         self.boss.stop()
 
+    @actions.action(stock_id=gtk.STOCK_NEW, label=None)
+    def act_new_file(self, action):
+        self.call('new_file')
+
     def act_save_session(self, action):
         fdialog = gtk.FileChooserDialog('Please select the session file',
                                  parent=self.boss.get_main_window(),
@@ -174,6 +178,9 @@ class Buffermanager(service.service):
         else:
             return 'current'
 
+    def cmd_new_file(self):
+        self.__new_file()
+
     def cmd_open_file_line(self, filename, linenumber):
         self.call('open_file', filename=filename)
         self.editor.call('revert')
@@ -226,6 +233,18 @@ class Buffermanager(service.service):
                                            filename=filename)
         return document
 
+    def __new_file(self):
+        proj = self.boss.call_command('projectmanager',
+                                      'get_current_project')
+        if proj is not None:
+            directory = proj.source_directory
+        else:
+            directory = os.getcwd()
+        def _open(path):
+            self.call('open_file', filename=path)
+        self.boss.call_command('newfile', 'create_interactive',
+                               directory=directory, callback=_open)
+         
     def __add_document(self, document):
         self.__documents[document.filename] = document
         self.__filenames[document.unique_id] = document.filename
@@ -283,6 +302,7 @@ class Buffermanager(service.service):
                 </menubar>
                 <toolbar>
                 <placeholder name="OpenFileToolbar">
+                <toolitem name="New" action="buffermanager+new_file" />
                 <toolitem name="Open" action="buffermanager+open_file" />
                 </placeholder>
                 <placeholder name="SaveFileToolbar">

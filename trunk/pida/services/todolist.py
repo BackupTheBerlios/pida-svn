@@ -102,15 +102,14 @@ class todo(service.service):
             self.__document = document
             messages = None
             if document.unique_id in self.__cached:
-                messages, mod = self.__cached[document.unique_id]
-                if mod != document.stat.st_mtime:
+                messages = self.__cached[document.unique_id]
+                if document.poll():
                     messages = None
             def load():
                 messages = self.service.call('check',
                               lines=document.lines)
                 self.service.lang_view.set_messages(messages)
-                self.__cached[document.unique_id] = (messages,
-                               document.stat.st_mtime)
+                self.__cached[document.unique_id] = messages
             if messages is None:
                 t = threading.Thread(target=load)
                 t.run()

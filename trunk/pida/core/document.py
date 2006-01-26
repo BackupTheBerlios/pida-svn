@@ -126,6 +126,8 @@ class realfile_document(document):
     markup_attributes = ['directory_basename', 'basename', 'directory_colour']
     markup_string = ('<span color="%(directory_colour)s">%(directory_basename)s</span>/'
                      '<b>%(basename)s</b>')
+
+    is_new = False
                      
     def init(self):
         self.__reset()
@@ -161,7 +163,7 @@ class realfile_document(document):
         try:
             stat_info = os.stat(self.filename)
         except OSError:
-            stat_info = [0] * 10
+            stat_info = None
         return stat_info
 
     def __load_mimetype(self):
@@ -225,6 +227,8 @@ class realfile_document(document):
     def poll(self):
         self.__load()
         new_stat = self.__load_stat()
+        if new_stat is None:
+            return False
         if new_stat.st_mtime != self.__stat.st_mtime:
             self.__stat = new_stat
             self.__reset()
