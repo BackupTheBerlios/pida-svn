@@ -106,7 +106,7 @@ class new_file(service.service):
         chooser.set_action(gtk.FILE_CHOOSER_ACTION_SAVE)
         try:
             chooser.set_do_overwrite_confirmation(True)
-        except AtributeError:
+        except AttributeError:
             pass
         chooser.connect('response', self.cb_response)
         options = new_file_options()
