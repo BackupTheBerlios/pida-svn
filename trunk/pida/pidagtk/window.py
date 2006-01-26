@@ -110,7 +110,8 @@ class pidawindow(gtk.Window):
         # Add the language view
         vb = self.__viewbooks['languages'] = languageview
         vb.show()
-        bar2.pack_start(vb)
+        vb.collapse()
+        bar2.pack_start(vb, expand=False)
         
         # And add the quick view
         vb = self.__viewbooks['content'] = contentbook.contentbook('Quick View')

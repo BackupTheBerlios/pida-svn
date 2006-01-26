@@ -215,6 +215,7 @@ class window_manager(service.service):
         pluginview = contentbook.contentbook('Plugins')
         pluginview.show()
         languageview = contentbook.contentbook('Current File')
+        languageview.collapse()
         
         for service in self.boss.services:
             if service.plugin_view_type is not None:
