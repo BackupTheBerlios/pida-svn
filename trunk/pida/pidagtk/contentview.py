@@ -273,6 +273,7 @@ class content_view(gtk.VBox):
         def _click(_eb, event):
             if event.button == 3:
                 self.create_detach_popup(event)
+                return True
         eb.connect('button-press-event', _click)
         import icons
         icon = icons.icons.get_image(self.icon_name)
