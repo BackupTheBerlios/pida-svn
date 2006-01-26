@@ -250,8 +250,7 @@ class content_view(gtk.VBox):
     icon_name = property(get_icon_name, set_icon_name)
     
     def get_icon(self):
-        import icons
-        return icons.icons.get_image(self.icon_name)
+        return self.create_icon()
     icon = property(get_icon)
 
     def get_holder(self):
@@ -267,5 +266,45 @@ class content_view(gtk.VBox):
     def get_prefix(self):
         return self.__prefix
     prefix = property(get_prefix)
+
+    def create_icon(self):
+        eb = gtk.EventBox()
+        eb.add_events(gtk.gdk.BUTTON_PRESS_MASK)
+        def _click(_eb, event):
+            if event.button == 3:
+                self.create_detach_popup(event)
+        eb.connect('button-press-event', _click)
+        import icons
+        icon = icons.icons.get_image(self.icon_name)
+        eb.add(icon)
+        return eb
+
+    def create_detach_popup(self, event):
+        if self.HAS_CONTROL_BOX and (self.HAS_CLOSE_BUTTON or
+                                    self.HAS_DETACH_BUTTON):
+            menu = gtk.Menu()
+            if self.HAS_CLOSE_BUTTON:
+                act = gtk.Action(name='close',
+                                 label='Close',
+                                 tooltip='Close this view',
+                                 stock_id=gtk.STOCK_CLOSE)
+                def _close(_act):
+                    self.__controlbar_clicked('close')
+                act.connect('activate', _close)
+                mi = act.create_menu_item()
+                menu.add(mi)
+            if self.HAS_DETACH_BUTTON:
+                act = gtk.Action(name='detach',
+                                 label='Detach',
+                                 tooltip='Detach this view',
+                                 stock_id='gtk-up')
+                def _det(_act):
+                    self.__controlbar_clicked('detach')
+                act.connect('activate', _det)
+                mi = act.create_menu_item()
+                menu.add(mi)
+            menu.show_all()
+            menu.popup(None, None, None, event.button, event.time)
+        
 
 gobject.type_register(content_view)
