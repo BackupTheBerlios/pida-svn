@@ -25,25 +25,68 @@ import os
 
 import pida.core.service as service
 
+defs = service.definitions
+types = service.types
+
+import pida.pidagtk.contentview as contentview
+
+import gtk
+
+            
 class new_file(service.service):
 
-    def cmd_create_interactive(self, directory, callback=None, mkdir=False):
-        def _callback(name):
-            path = os.path.join(directory, name)
-            if mkdir:
-                os.mkdir(path)
-            else:
-                f = open(path, 'w')
-                f.close()
-            if callback is not None:
-                callback(path)
-            
+    class locations(defs.optiongroup):
+        """Options relating to the location of new files."""
+        class start_in_current_project_directory(defs.option):
+            """Whether files will be made in the current project directory."""
+            rtype = types.boolean
+            default = True
+
+    def cmd_create_interactive(self, directory=None,
+                               mkdir=False):
+        if directory is None:
+            directory = os.getcwd()
+            if self.opt('locations', 'start_in_current_project_directory'):
+                proj = self.boss.call_command('projectmanager',
+                                              'get_current_project')
+                if proj is not None:
+                    directory = proj.source_directory
         if mkdir:
+            def _callback(name):
+                path = os.path.join(directory, name)
+                os.mkdir(path)
             prompt = 'Directory Name'
-        else:
-            prompt = 'File Name'
-        self.boss.call_command('window', 'input',
+            self.boss.call_command('window', 'input',
                                callback_function=_callback,
-                               prompt=prompt)
+                                prompt=prompt)
+        else:
+            view = self.create_view()
+            view.set_current_folder(directory)
+            view.run()
+            
+
+    def cmd_create(self, filename):
+        f = open(filename, 'w')
+        f.close()
+
+    def create_view(self):
+        chooser = gtk.FileChooserDialog("Create New File",
+                        self.boss.get_main_window(),
+                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                        (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT,
+                        gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT))
+        chooser.set_action(gtk.FILE_CHOOSER_ACTION_SAVE)
+        chooser.set_do_overwrite_confirmation(True)
+        chooser.connect('response', self.cb_response)
+        return chooser
+
+    def cb_response(self, dlg, response):
+        if response == gtk.RESPONSE_ACCEPT:
+            filename = dlg.get_filename()
+            self.call('create', filename=dlg.get_filename())
+            self.boss.call_command('buffermanager', 'open_file',
+                                   filename=filename)
+        dlg.destroy()
+        
 
 Service = new_file

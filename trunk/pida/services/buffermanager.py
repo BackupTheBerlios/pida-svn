@@ -120,7 +120,7 @@ class Buffermanager(service.service):
     def act_quit_pida(self, action):
         self.boss.stop()
 
-    @actions.action(stock_id=gtk.STOCK_NEW, label=None)
+    @actions.action(stock_id=gtk.STOCK_NEW, label='New File')
     def act_new_file(self, action):
         self.call('new_file')
 
@@ -234,16 +234,7 @@ class Buffermanager(service.service):
         return document
 
     def __new_file(self):
-        proj = self.boss.call_command('projectmanager',
-                                      'get_current_project')
-        if proj is not None:
-            directory = proj.source_directory
-        else:
-            directory = os.getcwd()
-        def _open(path):
-            self.call('open_file', filename=path)
-        self.boss.call_command('newfile', 'create_interactive',
-                               directory=directory, callback=_open)
+        self.boss.call_command('newfile', 'create_interactive')
          
     def __add_document(self, document):
         self.__documents[document.filename] = document
@@ -286,6 +277,7 @@ class Buffermanager(service.service):
                 <menubar>
                 <menu name="base_file" action="base_file_menu">
                 <placeholder name="OpenFileMenu">
+                <menuitem name="new" action="buffermanager+new_file" />
                 <menuitem name="open" action="buffermanager+open_file" />
                 </placeholder>
                 <placeholder name="SaveFileMenu" />
