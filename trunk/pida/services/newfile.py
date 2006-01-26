@@ -32,6 +32,34 @@ import pida.pidagtk.contentview as contentview
 
 import gtk
 
+class new_file_options(gtk.VBox):
+    
+    def __init__(self):
+        super(new_file_options, self).__init__(spacing=6)
+        hb = gtk.HBox(spacing=6)
+        self.pack_start(hb, expand=False)
+        copycheck = gtk.CheckButton(label='License')
+        copycheck.connect('toggled', self.cb_copy_toggled)
+        hb.pack_start(copycheck, expand=False)
+        self.__copy_combo = gtk.combo_box_new_text()
+        hb.pack_start(self.__copy_combo)
+        copycheck.set_active(False)
+        self.__copy_combo.set_sensitive(False)
+        hb = gtk.HBox(spacing=6)
+        self.pack_start(hb, expand=False)
+        copycheck = gtk.CheckButton(label='Comment Style')
+        copycheck.connect('toggled', self.cb_comment_toggled)
+        hb.pack_start(copycheck, expand=False)
+        self.__comment_combo = gtk.combo_box_new_text()
+        hb.pack_start(self.__comment_combo)
+        copycheck.set_active(True)
+        self.show_all()
+
+    def cb_copy_toggled(self, tgl):
+        self.__copy_combo.set_sensitive(tgl.get_active())
+
+    def cb_comment_toggled(self, tgl):
+        self.__comment_combo.set_sensitive(tgl.get_active())
             
 class new_file(service.service):
 
@@ -78,6 +106,8 @@ class new_file(service.service):
         chooser.set_action(gtk.FILE_CHOOSER_ACTION_SAVE)
         chooser.set_do_overwrite_confirmation(True)
         chooser.connect('response', self.cb_response)
+        options = new_file_options()
+        #chooser.vbox.pack_start(options, expand=False)
         return chooser
 
     def cb_response(self, dlg, response):
