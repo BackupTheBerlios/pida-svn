@@ -104,7 +104,10 @@ class new_file(service.service):
                         (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT,
                         gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT))
         chooser.set_action(gtk.FILE_CHOOSER_ACTION_SAVE)
-        chooser.set_do_overwrite_confirmation(True)
+        try:
+            chooser.set_do_overwrite_confirmation(True)
+        except AtributeError:
+            pass
         chooser.connect('response', self.cb_response)
         options = new_file_options()
         #chooser.vbox.pack_start(options, expand=False)
