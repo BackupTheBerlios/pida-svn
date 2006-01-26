@@ -23,7 +23,6 @@
 
 # pidagtk import(s)
 import toolbar
-import widgets
 import paned
 
 # system imports
@@ -33,7 +32,6 @@ import time
 import gtk
 import gobject
 
-import pida.utils.kiwiutils as kiwiutils
 
 class content_view(gtk.VBox):
     __gsignals__ = {'short-title-changed': (
@@ -57,8 +55,6 @@ class content_view(gtk.VBox):
                         gobject.TYPE_NONE,
                         ())}
     
-    #kutils.gproperty('icon-name', ktypes.str, default='')
-
     ICON_NAME = None
 
     SHORT_TITLE = None
