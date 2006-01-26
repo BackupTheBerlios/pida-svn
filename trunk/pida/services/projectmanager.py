@@ -252,6 +252,9 @@ class ProjectManager(service.service):
     def cmd_get_current_project(self):
         return self.__current_project
 
+    def cmd_get_projects(self):
+        return self.projects
+
     # Actions
 
     def act_new_project(self, action):

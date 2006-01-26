@@ -69,6 +69,10 @@ class new_file(service.service):
             """Whether files will be made in the current project directory."""
             rtype = types.boolean
             default = True
+        class use_project_directories_as_shortcuts(defs.option):
+            """Whether the project directories will be added as shortcuts to the file chooser."""
+            rtype = types.boolean
+            default = True
 
     def cmd_create_interactive(self, directory=None,
                                mkdir=False):
@@ -109,6 +113,10 @@ class new_file(service.service):
         except AttributeError:
             pass
         chooser.connect('response', self.cb_response)
+        if self.opt('locations', 'use_project_directories_as_shortcuts'):
+            projs = self.boss.call_command('projectmanager', 'get_projects')
+            for proj in projs:
+                chooser.add_shortcut_folder(proj.source_directory)
         options = new_file_options()
         #chooser.vbox.pack_start(options, expand=False)
         return chooser
