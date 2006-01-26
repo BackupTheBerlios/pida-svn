@@ -596,6 +596,13 @@ class communication_window(gtk.Window):
     def set_colorscheme(self, server, colorscheme):
         self.send_ex(server, 'colorscheme %s' % colorscheme)
 
+    def set_menu_visible(self, server, visible):
+        if visible:
+            op = '+'
+        else:
+            op = '-'
+        self.send_ex(server, 'set guioptions%s=m' % op)
+
     def quit(self, server):
         self.send_ex(server, 'q')
 

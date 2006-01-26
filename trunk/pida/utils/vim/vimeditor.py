@@ -35,8 +35,13 @@ class vim_editor(object):
 
     class display(defs.optiongroup):
         class colour_scheme(defs.option):
+            """The colour scheme to use in vim (Empty will be ignored)."""
             rtype = types.string
             default = ''
+        class hide_vim_menu(defs.option):
+            """Whether the vim menu will be hidden."""
+            rtype = types.boolean
+            default = False
 
     def init(self):
         self.__files = {}
@@ -137,6 +142,8 @@ class vim_editor(object):
         colorscheme = self.opt('display', 'colour_scheme')
         if colorscheme:
             self.__cw.set_colorscheme(self.server, colorscheme)
+        if self.opt('display', 'hide_vim_menu'):
+            self.__cw.set_menu_visible(self.server, False)
             #self.__load_shortcuts()
 
     def open_file_line(self, filename, linenumber):
