@@ -106,6 +106,29 @@ class project_creator_view(contentview.content_view):
     def set_project_dir(self, path):
         self.__file_chooser.set_filename(path)
 
+class project_options(gtk.VBox):
+
+    def __init__(self):
+        super(project_options, self).__init__()
+        hb = gtk.HBox()
+        self.pack_start(hb, expand=False, padding=3)
+        type_label = gtk.Label('Type')
+        hb.pack_start(type_label, expand=False, padding=3)
+        type_label.set_alignment(0, 0.5)
+        self.__type_combo = gtk.combo_box_new_text()
+        hb.pack_start(self.__type_combo)
+        self.show_all()
+        
+    def set_project_types(self, types):
+        self.__type_combo.get_model().clear()
+        for typename in types:
+            self.__type_combo.append_text(typename)
+        self.__type_combo.set_active(0)
+        self.__type_combo.show_all()
+
+    def get_typename(self):
+        return self.__type_combo.get_active_text()
+
 class project_creator(service.service):
 
     single_view_type = project_creator_view
@@ -118,11 +141,9 @@ class project_creator(service.service):
         pass
 
     def cmd_create_interactive(self):
-        view = self.create_single_view()
-        types = self.boss.call_command('projecttypes',
-            'get_project_type_names')
-        view.set_project_types(types)
-        view.set_project_dir(self.__projectsdir)
+        view = self.create_view()
+        view.set_current_folder(self.__projectsdir)
+        view.run()
 
     def cmd_create(self, project_name, project_directory, project_type_name):
         project_file_name = os.path.join(project_directory,
@@ -137,5 +158,33 @@ class project_creator(service.service):
             name = project_name
         self.boss.call_command('projectmanager', 'edit', projects=None,
                                 current_project = dummy_project())
+
+    def create_view(self):
+        chooser = gtk.FileChooserDialog("Create New File",
+                        self.boss.get_main_window(),
+                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                        (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT,
+                        gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT))
+        chooser.set_action(gtk.FILE_CHOOSER_ACTION_SAVE)
+        try:
+            chooser.set_do_overwrite_confirmation(True)
+        except AttributeError:
+            pass
+        options = project_options()
+        chooser.connect('response', self.cb_response, options)
+        chooser.set_extra_widget(options)
+        types = self.boss.call_command('projecttypes',
+            'get_project_type_names')
+        options.set_project_types(types)
+        return chooser
+
+    def cb_response(self, dlg, response, options):
+        if response == gtk.RESPONSE_ACCEPT:
+            filename = dlg.get_filename()
+            self.call('create',
+                      project_directory=dlg.get_current_folder(),
+                      project_name=os.path.basename(dlg.get_filename()),
+                      project_type_name=options.get_typename())
+        dlg.destroy()
 
 Service = project_creator
