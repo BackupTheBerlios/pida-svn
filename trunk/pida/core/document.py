@@ -121,7 +121,7 @@ class realfile_document(document):
     """A real file on disk."""
     icon_name = 'new'
 
-    markup_prefix = 'ed'
+    markup_prefix = ''
     markup_directory_color = '#0000c0'
     markup_attributes = ['directory_basename', 'basename', 'directory_colour']
     markup_string = ('<span color="%(directory_colour)s">%(directory_basename)s</span>/'
