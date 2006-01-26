@@ -124,6 +124,15 @@ class application(object):
         """Stop PIDA."""
         gtk.main_quit()
 
+def pida_excepthook(exctype, value, tb):
+    if exctype is not KeyboardInterrupt:
+        import pida.pidagtk.debugwindow as debugwindow
+        dw = debugwindow.DebugWindow()
+        dw.show_exception(exctype, value, tb)
+        dw.run()
+        dw.destroy()
+
+sys.excepthook = pida_excepthook
 
 def main():
     warnings.filterwarnings("ignore", category=DeprecationWarning)
