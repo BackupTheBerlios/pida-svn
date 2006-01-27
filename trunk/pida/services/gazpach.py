@@ -145,35 +145,36 @@ class gazpacho_application(application.Application):
         
         return application_window
        
-    def cb_signal_activated(self, tv, path, column):
-        model = tv.get_model()
-        niter = model.get_iter(path)
-        callbackname = model.get_value(niter, 1)
-        widgetname = self._editor._loaded_widget.name
-        widgettype =  self._editor._loaded_widget.gtk_widget
-        signalname =  model.get_value(niter, 0)
-        if callbackname and callbackname.startswith('<'):
-            callbackname = 'on_%s__%s' % (widgetname, signalname.replace('-', '_'))
-            model.set(niter, 1, callbackname, 5, True)
-            cellrenderer = tv.get_column(1).get_cell_renderers()[0]
-            cellrenderer.emit('edited', ':'.join(['%s' % i for i in path]),
-                              callbackname)
-        if callbackname:
-            if not self._project.path:
-                mb = gtk.MessageDialog(parent=self.get_window(),
-                        flags = 0,
-                        type = gtk.MESSAGE_INFO,
-                        buttons = gtk.BUTTONS_OK,
-                        message_format='You must save your user interface '
-                                       'file before continuing.')
-                def mbok(*args):
-                    mb.destroy()
-                mb.connect('response', mbok)
-                mb.run()
-            if not self._project.path:
-                return
-            self._save_cb(None)
-            self.__view.cb_signal_activated(callbackname, self._project.path)
+    def cb_signal_activated(self, editor, widget, signal):
+        print widget, signal
+        #model = tv.get_model()
+        #niter = model.get_iter(path)
+        #callbackname = model.get_value(niter, 1)
+        #widgetname = self._editor._loaded_widget.name
+        #widgettype =  self._editor._loaded_widget.gtk_widget
+        #signalname =  model.get_value(niter, 0)
+        #if callbackname and callbackname.startswith('<'):
+            #callbackname = 'on_%s__%s' % (widgetname, signalname.replace('-', '_'))
+            #model.set(niter, 1, callbackname, 5, True)
+            #cellrenderer = tv.get_column(1).get_cell_renderers()[0]
+            #cellrenderer.emit('edited', ':'.join(['%s' % i for i in path]),
+        #                      callbackname)
+        #if callbackname:
+        #    if not self._project.path:
+        #        mb = gtk.MessageDialog(parent=self.get_window(),
+        #                flags = 0,
+        #                type = gtk.MESSAGE_INFO,
+        #                buttons = gtk.BUTTONS_OK,
+        #                message_format='You must save your user interface '
+        #                               'file before continuing.')
+        #        def mbok(*args):
+        #            mb.destroy()
+        #        mb.connect('response', mbok)
+        #        mb.run()
+        #    if not self._project.path:
+        #        return
+        #    self._save_cb(None)
+        #    self.__view.cb_signal_activated(callbackname, self._project.path)
 
 
 class gazpacho_view(contentview.content_view):
@@ -451,7 +452,7 @@ class widget_editor(Editor):
         if self._signal_editor:
             return self._signal_editor
         self._signal_editor = signaleditor.SignalEditor(self, self._app)
-        self._signal_editor._signals_list.connect('row-activated',
+        self._signal_editor.connect('signal-activated',
             self.row_activated_cb)
         self._vbox_signals.pack_start(self._signal_editor)
 
