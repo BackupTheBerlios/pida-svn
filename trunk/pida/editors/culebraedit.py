@@ -76,12 +76,20 @@ class culebra_editor(service.service):
             default = "#000000"
             rtype = types.color
             
-            
+    ############
+    # Service related methods
     def init(self):
         
         self.__files = {}
         self.__views = {}
 
+    def reset(self):
+        for view in self.__files.values():
+            view.editor.set_background_color(self.get_background_color())
+            view.editor.set_font_color(self.get_font_color())
+    
+    #############
+    # Methods
     def get_background_color(self):
         color = self.opt("general", "background_color")
         return gdk.color_parse(color)
@@ -90,19 +98,6 @@ class culebra_editor(service.service):
         color = self.opt("general", "font_color")
         return gdk.color_parse(color)
         
-    def reset(self):
-        for view in self.__files.values():
-            view.editor.set_background_color(self.get_background_color())
-            view.editor.set_font_color(self.get_font_color())
-
-    def cmd_edit(self, filename=None):
-        if filename not in self.__files:
-            self.__load_file(filename)
-        self.__view_file(filename)
-
-    def cmd_revert(self):
-        raise NotImplementedError
-
     def __load_file(self, filename):
         view = self.create_multi_view(
             filename=filename,
@@ -118,7 +113,16 @@ class culebra_editor(service.service):
         self.__files[filename].raise_page()
 
     #############
-    # Callbacks
+    # Commands
+    def cmd_edit(self, filename=None):
+        if filename not in self.__files:
+            self.__load_file(filename)
+
+        self.__view_file(filename)
+
+    def cmd_revert(self):
+        raise NotImplementedError
+
     def cmd_start(self):
         self.get_service('editormanager').events.emit('started')
 
@@ -167,6 +171,8 @@ class culebra_editor(service.service):
             filenames[filename].save()
         return response in (gtk.RESPONSE_CLOSE, gtk.RESPONSE_OK)
         
+    ###############
+    # Callbacks
     def cb_multi_view_closed(self, view):
         if view.unique_id in self.__views:
             filename = self.__views[view.unique_id]
