@@ -117,10 +117,8 @@ class python(service.service):
     def get_menu_definition(self):
         return """
                 <menubar>
-                <menu name="base_tools" action="base_tools_menu">
-                <separator />
+                <menu name="base_python" action="base_python_menu">
                 <menuitem name="pyshell" action="python+python_shell" />
-                <separator />
                 </menu>
                 </menubar>
                """

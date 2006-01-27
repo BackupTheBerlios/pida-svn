@@ -298,8 +298,9 @@ class Grepper(service.service):
         return """
             <menubar>
             <menu name="base_tools" action="base_tools_menu">
-            <separator />
-            <menuitem name="grepper" action="grepper+find" />
+                <placeholder name="ToolsMenu">
+                    <menuitem name="grepper" action="grepper+find" />
+                </placeholder>
             </menu>
             </menubar>
                 <toolbar>

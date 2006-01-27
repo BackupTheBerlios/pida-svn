@@ -409,9 +409,9 @@ class paste_manager(service.service):
     def get_menu_definition(self):
         return """<menubar>
                   <menu name="base_tools" action="base_tools_menu">
-                  <separator />
+                    <placeholder name="ToolsMenu">
                   <menuitem name="newpaste" action="pastemanager+new_paste" />
-                  <separator />
+                    </placeholder>
                   </menu>
                   </menubar>
                """

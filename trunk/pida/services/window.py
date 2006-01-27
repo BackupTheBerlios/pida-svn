@@ -155,7 +155,9 @@ class window_manager(service.service):
             ('base_project_menu', None, '_Project'),
             ('base_python_menu', None, '_Python'),
             ('base_tools_menu', None, '_Tools'),
-            ('base_help_menu', None, '_Help')
+            ('base_pida_menu', None, '_Debugging Pida'),
+            ('base_help_menu', None, '_Help'),
+            ('base_service_conf_menu', None, '_Service configuration')
             ])
         menudef = """
                 <menubar>
@@ -174,6 +176,15 @@ class window_manager(service.service):
                 <menu name="base_python" action="base_python_menu">
                 </menu>
                 <menu name="base_tools" action="base_tools_menu">
+                <placeholder name="ToolsMenu">
+                </placeholder>
+                <separator />
+                <placeholder name="ExtraToolsMenu">
+                </placeholder>
+                <separator />
+                <menu name="service_conf" action="base_service_conf_menu" />
+                <separator />
+                <menu name="base_pida" action="base_pida_menu" />
                 </menu>
                 <menu name="base_help" action="base_help_menu">
                 </menu>

@@ -285,16 +285,18 @@ class open_with(service.service):
         view = self.create_single_view()
         view.set_openers(self.__openers)
 
-    def act_configure_open_with(self, action):
+    def act_open_with(self, action):
         self.call('configure')
 
     def get_menu_definition(self):
         return """<menubar>
                   <menu name="base_tools" action="base_tools_menu">
-                  <separator />
+                  <menu name="service_conf" action="base_service_conf_menu">
+    
                   <menuitem name="newpaste"
-                        action="openwith+configure_open_with" />
+                        action="openwith+open_with" />
                   <separator />
+                  </menu>
                   </menu>
                   </menubar>
                """

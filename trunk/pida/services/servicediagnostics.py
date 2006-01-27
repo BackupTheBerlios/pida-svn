@@ -77,7 +77,9 @@ class service_diagnostics(service.service):
         return """
                <menubar>
                 <menu name="base_tools" action="base_tools_menu">
+                <menu name="base_pida" action="base_pida_menu">
                 <menuitem name="svcd" action="servicediagnostics+services" />
+                </menu>
                 </menu>
                 </menubar>
                """

@@ -114,8 +114,10 @@ class Manhole(service.service):
         return """
         <menubar>
         <menu name="base_tools" action="base_tools_menu">
+        <menu name="base_pida" action="base_pida_menu">
         <separator />
         <menuitem name="manhole+run" action="manhole+run_manhole" />
+        </menu>
         </menu>
         </menubar>        
         """

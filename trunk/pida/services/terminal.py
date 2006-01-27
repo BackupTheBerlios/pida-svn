@@ -130,8 +130,9 @@ class terminal_manager(service.service):
         return """
             <menubar>
             <menu name="base_tools" action="base_tools_menu">
-            <separator />
+                <placeholder name="ToolsMenu">
             <menuitem name="shell" action="terminal+terminal" />
+                </placeholder>
             </menu>
             </menubar>
                 <toolbar>

@@ -185,8 +185,10 @@ class language_types(service.service):
 
     def get_menu_definition(self):
         return """<menubar>
-                    <menu name="base_tools">
+                  <menu name="base_tools" action="base_tools_menu">
+                  <menu name="service_conf" action="base_service_conf_menu">
                         <menuitem name="editft" action="languagetypes+edit" />
+                    </menu>
                     </menu>
                   </menubar>"""
         

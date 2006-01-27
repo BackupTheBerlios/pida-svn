@@ -41,8 +41,10 @@ class gaphoruml(service.service):
     def get_menu_definition(self):
         return """<menubar>
                     <menu name="base_tools" action="base_tools_menu">
+                    <placeholder name="ExtraToolsMenu">
                     <menuitem name="gaph"
                             action="gaphoruml+start_uml_designer" />
+                    </placeholder>
                     </menu>
                     </menubar>"""
 
