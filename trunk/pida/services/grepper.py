@@ -41,6 +41,8 @@ import cgi
 import string
 import gtk
 
+import pida.core.actions as actions
+
 types = service.types
 defs = service.definitions
 
@@ -290,8 +292,9 @@ class Grepper(service.service):
         if name == 'stop':
             self.__grep.stop()
 
+    @actions.action(stock_id='gtk-searchtool')
     def act_find(self, action):
-        """Finds text on a document or in a directory"""
+        """Find text on a document or in a directory"""
         self.call('find_interactive')
 
     def get_menu_definition(self):
