@@ -21,7 +21,8 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import pida.utils.pidalog.log as log
+import os
+import pida.utils.log as log
 
 def set_boss(boss):
     """Called by the boss itself. Singletonish behaviour."""
@@ -31,23 +32,27 @@ def set_boss(boss):
 class pidaobject(object):
     """The base pida class."""
 
+    pass
+    
+
+class pidalogenabled(pidaobject):
+    """Logging mixin."""
+
     def __init__(self, *args, **kw):
+        pidaobject.__init__(self, *args, **kw)
+        log_file = os.path.join(self.boss.pida_home, 'log', 'pida.log')
+        self.log = log.build_logger(self.__class__.__name__, log_file)
+
+
+class pidacomponent(pidalogenabled):
+    """A single component."""
+
+    def __init__(self, *args, **kw):
+        pidalogenabled.__init__(self, *args, **kw)
         self.init(*args, **kw)
 
     def init(self, *args, **kw):
         """The actual constructor."""
-
-
-class pidacomponent(log.pidalogger, pidaobject):
-    """A single component."""
-    def __init__(self, *args, **kw):
-        # Sets the logger and the log handlers
-        if hasattr(pidaobject,'boss'):
-            log.pidalogger.__init__(self,pidaobject.boss)
-        else:
-            log.pidalogger.__init__(self)
-        # Do init
-        pidaobject.__init__(self, *args, **kw)
 
     def init_log(self):
         """

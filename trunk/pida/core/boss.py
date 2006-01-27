@@ -23,7 +23,6 @@
 
 
 import base
-import pida.utils.pidalog.log as log
 
 # Core components
 import services
@@ -33,13 +32,11 @@ class boss(base.pidacomponent):
     """ The object in charge of everything """
     
     def __init__(self, application, env):
-        # Starts the logger
-        self.create_log_storage("%s/log" % env.home_dir)
-        # Set the pidaobject base
-        base.pidaobject.boss = self
-        base.pidacomponent.__init__(self)
         self.__application = application
         self.__env = env
+        # Set the pidaobject base
+        base.set_boss(self)
+        base.pidacomponent.__init__(self)
 
     def start(self):
         """Start Pida."""

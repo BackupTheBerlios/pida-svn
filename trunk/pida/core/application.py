@@ -45,9 +45,9 @@ def print_version_and_die():
     print 'PIDA, version %s' % pida_version
     sys.exit(0)
 
-class environment(base.pidacomponent):
+class environment(object):
     """Handle environment variable and command line arguments"""
-    def init(self):
+    def __init__(self):
         self.__parseargs()
 
     def __parseargs(self):
