@@ -21,19 +21,16 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-# pIDA import(s)
-import pida.core.base as base
-import pida.core.service as service
-
-# pidagtk import(s)
-import pida.pidagtk.contentview as contentview
-import pida.core.actions as actions
-import gobject
-import gtk
-
-# system import(s)
 import os
 import subprocess
+
+import gtk
+import gobject
+
+import pida.core.base as base
+import pida.core.service as service
+import pida.core.actions as actions
+import pida.pidagtk.contentview as contentview
 
 defs = service.definitions
 types = service.types
