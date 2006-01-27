@@ -294,7 +294,7 @@ class open_with(service.service):
                   <menu name="service_conf" action="base_service_conf_menu">
     
                   <menuitem name="newpaste"
-                        action="configure_openwith+open_with" />
+                        action="openwith+configure_open_with" />
                   <separator />
                   </menu>
                   </menu>
