@@ -67,14 +67,15 @@ record_attributes = ['name',
                      'msg',
                      'levelname']
 
-class log_item(tree.IconTreeItem):
+class log_item(object):
     """Transformation of informations from LogRecord to TreeItem."""
 
     def __init__(self,record):
         """Sets the treeitem up"""
         self.__detailed = False
-        ( img, self.color ) = self.__get_color_n_img(record)
-        tree.IconTreeItem.__init__(self, record.created, record,image=img)
+        ( self.__image, self.color ) = self.__get_color_n_img(record)
+        self.key = record.created
+        self.value = record
 
         self.__mark_up_keys={'module':self.module,
                               'name':self.name,
@@ -90,8 +91,6 @@ class log_item(tree.IconTreeItem):
                               'exc_info':self.exc_info,
                               'exc_text':self.exc_text}
                               
-#        self.set_property('font-desc', view_option['font'])
-
     def __get_color_n_img(self,record):
         """Get a tuple containing a color and an icon for 
         the record's loglevel"""
@@ -121,8 +120,6 @@ class log_item(tree.IconTreeItem):
     def set_detailed(self,det):
         """Sets wether the markup is detailed or not"""
         self.__detailed = det
-        if hasattr(self,'reset_markup'):
-            self.reset_markup()
     
     def get_color(self,str):
         """Returns the color markup"""
@@ -229,6 +226,14 @@ class log_item(tree.IconTreeItem):
         return self.value.lineno
     lineno = property(__get_lineno)
 
+    def get_icon(self):
+        return self.__image
+    icon = property(get_icon)
+
+    def get_pixbuf(self):
+        return getattr(self.icon, 'get_pixbuf', lambda: self.icon)()
+    pixbuf = property(get_pixbuf)
+
 class log_tree(tree.IconTree):
     """Tree listing all the pastes"""
     EDIT_BUTTONS = False
@@ -240,23 +245,11 @@ class log_tree(tree.IconTree):
         self.set_property('markup-format-string', '%(markup)s')
         self.model.set_sort_column_id(0, gtk.SORT_ASCENDING)
         self.view.set_model(self.model)
-
-    def add_item(self, item, parent=None):
-        """overriden add in the tree method"""
-        titem = log_item(item)
-        pixbuf = titem.pixbuf
-        key = titem.created
-        row = [key, titem, self.get_markup(titem), pixbuf]
-        niter = self.model.append(parent, row)
-        def reset():
-            self.model.set_value(niter, 2, self.get_markup(titem))
-        titem.reset_markup = reset
-        item.reset_markup = reset
-        return niter
+#        self.set_property('font-desc', view_option['font']) #??
 
     def push(self, record):
         """Adds a record to the Tree"""
-        self.add_item(record)
+        self.add_item(log_item(record))
 
     def pop(self):
         """Deletes the currently selected paste"""
@@ -400,12 +393,18 @@ class log_history(contentview.content_view):
     def cb_record_clicked(self,record,tree_item):
         """Callback function called when an item is selected in the TreeView"""
         if self.__tree_detailled != None:
-            self.__tree_detailled.set_detailed(False)
+            self.__tree_detailled.value.set_detailed(False)
+            if hasattr(self.__tree_detailled,'reset_markup'):
+                self.__tree_detailled.reset_markup()
 
         self.__tree_selected = tree_item
-        self.__tree_selected.set_detailed(True)
+        self.__tree_selected.value.set_detailed(True)
+
+        if hasattr(self.__tree_selected,'reset_markup'):
+            self.__tree_selected.reset_markup()
 
         self.__tree_detailled = tree_item
+
 
     def cb_record_db_clicked(self,record,tree_item):
         """Callback function called when an item is double clicked, and show it
