@@ -293,7 +293,7 @@ class open_with(service.service):
                   <menu name="base_tools" action="base_tools_menu">
                   <menu name="service_conf" action="base_service_conf_menu">
     
-                  <menuitem name="newpaste"
+                  <menuitem name="owith"
                         action="openwith+configure_open_with" />
                   <separator />
                   </menu>
