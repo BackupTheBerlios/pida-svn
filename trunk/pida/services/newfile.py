@@ -74,6 +74,12 @@ class new_file(service.service):
             rtype = types.boolean
             default = True
 
+    def init(self):
+        self.__projlinks = os.path.join(self.boss.pida_home, 'data',
+                                        'project-shortcuts')
+        if not os.path.exists(self.__projlinks):
+            os.mkdir(self.__projlinks)
+
     def cmd_create_interactive(self, directory=None,
                                mkdir=False):
         if directory is None:
@@ -114,9 +120,8 @@ class new_file(service.service):
             pass
         chooser.connect('response', self.cb_response)
         if self.opt('locations', 'use_project_directories_as_shortcuts'):
-            projs = self.boss.call_command('projectmanager', 'get_projects')
-            for proj in projs:
-                chooser.add_shortcut_folder(proj.source_directory)
+            for directory in self.__create_project_links():
+                chooser.add_shortcut_folder(directory)
         options = new_file_options()
         #chooser.vbox.pack_start(options, expand=False)
         return chooser
@@ -128,6 +133,16 @@ class new_file(service.service):
             self.boss.call_command('buffermanager', 'open_file',
                                    filename=filename)
         dlg.destroy()
+
+    def __create_project_links(self):
+        projs = self.boss.call_command('projectmanager', 'get_projects')
+        for proj in projs:
+            src = proj.source_directory
+            dst = os.path.join(self.__projlinks, proj.name)
+            if os.path.exists(dst):
+                os.unlink(dst)
+            os.symlink(src, dst)
+            yield dst
         
 
 Service = new_file
