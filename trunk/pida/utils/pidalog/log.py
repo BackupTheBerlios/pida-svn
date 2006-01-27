@@ -62,7 +62,7 @@ class pidalogger(object):
 
     # public initialization interface
 
-    def create_log_storage(self):
+    def create_log_storage(self,path=None):
         """
         Constructor of the storage
         
@@ -71,8 +71,10 @@ class pidalogger(object):
 
         It has to be called *before* __init__ in the main 
         application object's thread
+
+        @param path gives the path were all the logs will be written
         """
-        self.logs = storelog.logs()
+        self.logs = storelog.logs(path)
 
     def __init__(self,obj=None):
         """
@@ -108,7 +110,8 @@ class pidalogger(object):
 
     def stop_logging(self):
         logger = logging.getLogger('')
-        logger.removeHandler(self.__notify_handler)
+        if hasattr(self,'__notify_handler'):
+            logger.removeHandler(self.__notify_handler)
         
     def use_stream_handler(self,level=None):
         """
@@ -140,6 +143,10 @@ class pidalogger(object):
         handler = handlers.keep_handler(self.__base)
         if level != None:
             handler.setLevel(logging._levelNames[level])
+        format_str = ('%(relativeCreated)s '
+                      '%(module)s.%(name)s:%(lineno)s '
+                      '%(msg)')
+        handler.setFormatter(format_str)
         self.log.addHandler(handler)
         self.__handler = handler
 

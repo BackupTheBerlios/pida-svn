@@ -23,8 +23,6 @@
 
 #TODO Documentation
 
-__disabled__
-
 import string
 
 import time
@@ -40,8 +38,7 @@ import pida.pidagtk.contentview as contentview
 import pida.core.base as base
 import pida.core.service as service
 
-# using from imports to avoid to reexecute the logging package
-from cgi import escape
+import cgi
 
 defs = service.definitions
 types = service.types
@@ -71,10 +68,10 @@ record_attributes = ['name',
                      'levelname']
 
 class log_item(tree.IconTreeItem):
-    '''Transformation of informations from LogRecord to TreeItem.'''
+    """Transformation of informations from LogRecord to TreeItem."""
 
     def __init__(self,record):
-        '''Sets the treeitem up'''
+        """Sets the treeitem up"""
         self.__detailed = False
         ( img, self.color ) = self.__get_color_n_img(record)
         tree.IconTreeItem.__init__(self, record.created, record,image=img)
@@ -96,8 +93,8 @@ class log_item(tree.IconTreeItem):
 #        self.set_property('font-desc', view_option['font'])
 
     def __get_color_n_img(self,record):
-        '''Get a tuple containing a color and an icon for 
-        the record's loglevel'''
+        """Get a tuple containing a color and an icon for 
+        the record's loglevel"""
         if record.levelno == 0: # NOTSET
             return (icons.icons.get_image(color['notset']['icon']), 
                                             color['notset']['color'])
@@ -122,29 +119,29 @@ class log_item(tree.IconTreeItem):
             return (icons.icons.get_image("dialog-question"), "#880000")
 
     def set_detailed(self,det):
-        '''Sets wether the markup is detailed or not'''
+        """Sets wether the markup is detailed or not"""
         self.__detailed = det
         if hasattr(self,'reset_markup'):
             self.reset_markup()
     
     def get_color(self,str):
-        '''Returns the color markup'''
+        """Returns the color markup"""
         if self.color:
             return '<span color="%s">%s</span>' % (self.color, str)
         else:
             return str
 
     def __get_markup(self):
-        '''Returns the full log item's markup
+        """Returns the full log item's markup
         Interprets the keys and display their values
-        '''
+        """
         try:
             try:
                 if self.__detailed == True:
                     mark_up = string.Template(markup['full'])
-                    return escape(mark_up.substitute(self.__mark_up_keys))
+                    return cgi.escape(mark_up.substitute(self.__mark_up_keys))
                 mark_up = string.Template(markup['short'])
-                return  self.get_color(escape(mark_up.substitute(
+                return  self.get_color(cgi.escape(mark_up.substitute(
                                                         self.__mark_up_keys)))
             except KeyError, ke:
                 print "ERROR: Key %s not available for marking up." % ke
@@ -152,24 +149,24 @@ class log_item(tree.IconTreeItem):
         except:
             print "Turned back log item's markup to default"
             if self.__detailed == True:
-                    return escape('%s.%s:%s\n%s\n%s %s' % ( self.value.module, 
+                    return cgi.escape('%s.%s:%s\n%s\n%s %s' % ( self.value.module, 
                                             self.value.name, self.value.lineno, 
                                             self.value.message,
                                             self.value.levelname, 
                                             self.value.created ))
-            return self.get_color(escape('%s.%s : %s' % ( self.value.module, 
+            return self.get_color(cgi.escape('%s.%s : %s' % ( self.value.module, 
                             self.value.name, self.value.getMessage() )))
     markup = property(__get_markup)
 
     # properties
     def __get_created(self):
-        '''Return the localized creation date'''
+        """Return the localized creation date"""
         return time.strftime("%Y-%m-%d %H:%M:%S", 
                                 time.localtime(self.value.created))
     created = property(__get_created)
 
     def __get_message(self):
-        '''Return the message (cropped at user's preference length)'''
+        """Return the message (cropped at user's preference length)"""
         msg = self.value.getMessage()
         if len(msg) > view_option['length']:
             return msg[:view_option['length']-3]+"..."
@@ -178,74 +175,74 @@ class log_item(tree.IconTreeItem):
 
     # properties
     def __get_name(self):
-        '''Return the logrecord's name'''
+        """Return the logrecord's name"""
         return self.value.name
     name = property(__get_name)
 
     def __get_msg(self):
-        '''Return the logrecord's msg (with keys)'''
+        """Return the logrecord's msg (with keys)"""
         return self.value.msg
     msg = property(__get_msg)
 
     def __get_args(self):
-        '''Return the logrecord's msg keys'''
+        """Return the logrecord's msg keys"""
         return self.value.args
     args = property(__get_args)
 
     def __get_levelno(self):
-        '''Return the logrecord's level #'''
+        """Return the logrecord's level #"""
         return self.value.levelno
     levelno = property(__get_levelno)
 
     def __get_levelname(self):
-        '''Return the logrecord's level name'''
+        """Return the logrecord's level name"""
         return self.value.levelname
     levelname = property(__get_levelname)
 
     def __get_pathname(self):
-        '''Return the logrecord's origin pathname'''
+        """Return the logrecord's origin pathname"""
         return self.value.pathname
     pathname = property(__get_pathname)
 
     def __get_filename(self):
-        '''Return the logrecord's origin filename'''
+        """Return the logrecord's origin filename"""
         return self.value.filename
     filename = property(__get_filename)
 
     def __get_module(self):
-        '''Return the logrecord's origin module name'''
+        """Return the logrecord's origin module name"""
         return self.value.module
     module = property(__get_module)
 
     def __get_exc_info(self):
-        '''Return the logrecord's exception information (if available)'''
+        """Return the logrecord's exception information (if available)"""
         return self.value.exc_info
     exc_info = property(__get_exc_info)
 
     def __get_exc_text(self):
-        '''Return the logrecord's exception text (if available)'''
+        """Return the logrecord's exception text (if available)"""
         return self.value.exc_text
     exc_text = property(__get_exc_text)
 
     def __get_lineno(self):
-        '''Return the logrecord's origin line #'''
+        """Return the logrecord's origin line #"""
         return self.value.lineno
     lineno = property(__get_lineno)
 
 class log_tree(tree.IconTree):
-    '''Tree listing all the pastes'''
+    """Tree listing all the pastes"""
     EDIT_BUTTONS = False
     SORT_BY = 'created'
 
     def __init__(self):
-        '''Initializes the tree'''
+        """Initializes the tree"""
         tree.Tree.__init__(self)
         self.set_property('markup-format-string', '%(markup)s')
         self.model.set_sort_column_id(0, gtk.SORT_ASCENDING)
         self.view.set_model(self.model)
 
     def add_item(self, item, parent=None):
-        '''overriden add in the tree method'''
+        """overriden add in the tree method"""
         titem = log_item(item)
         pixbuf = titem.pixbuf
         key = titem.created
@@ -258,27 +255,27 @@ class log_tree(tree.IconTree):
         return niter
 
     def push(self, record):
-        '''Adds a record to the Tree'''
+        """Adds a record to the Tree"""
         self.add_item(record)
 
     def pop(self):
-        '''Deletes the currently selected paste'''
+        """Deletes the currently selected paste"""
         self.del_item()
 
 class markup_validate_string(types.string):
-    '''Entry string with validation'''
+    """Entry string with validation"""
     def validate(self,value):
         try:
             mup = string.Template(value)
-            return escape(mup.substitute(log_item.__dict__))
+            return cgi.escape(mup.substitute(log_item.__dict__))
         except KeyError, ke:
             self.log.error("Key %s not available for marking up." % ke)
             return False
 
 class log_history(contentview.content_view):
-    '''Log History view
+    """Log History view
     Where all the logs are displayed
-    '''
+    """
 
     ICON_NAME = 'logviewer'
     LONG_TITLE = 'Log viewer'
@@ -291,7 +288,7 @@ class log_history(contentview.content_view):
     HAS_TITLE = True
 
     def init(self,filter=None,logs=None):
-        '''Constructor of the Paste History View.'''
+        """Constructor of the Paste History View."""
 
         self.service.log.debug('new log manager with filter on %s' % filter)
 
@@ -329,7 +326,7 @@ class log_history(contentview.content_view):
 
     # Private interface
     def add_item(self,log):
-        '''Adds an item to the tree'''
+        """Adds an item to the tree"""
         self.__log_tree.push(log)
         for attr in record_attributes:
             self.__filter_entry.add_word(attr,getattr(log,attr))
@@ -337,19 +334,19 @@ class log_history(contentview.content_view):
     # Public interface
 
     def set_filter(self,filter):
-        '''Sets a filter'''
+        """Sets a filter"""
         filter = view_option['default_filter']
         request = {}
-        if " " in filter:
-            pairs = filter.split(" ")
+        if ' ' in filter:
+            pairs = filter.split(' ')
             for pair in pairs:
-                if len(pair.split(":")) == 2:
-                    (key,val) = pair.split(":")
+                if len(pair.split(':')) == 2:
+                    (key,val) = pair.split(':')
                     if key not in request.keys():
                         request[key] = []
                     request[key].append(val)
-        elif len(filter.split(":")) == 2:
-            (key,val) = filter.split(":")
+        elif len(filter.split(':')) == 2:
+            (key,val) = filter.split(':')
             if key not in request.keys():
                 request[key] = []
             request[key].append(val)
@@ -362,8 +359,8 @@ class log_history(contentview.content_view):
             self.set_long_title('Log Viewer (with default filter)')
 
     def refresh(self,thread_lock=False):
-        '''Refresh the treeview with the logs
-        TODO: improve updates (only load changes, not the whole tree...)'''
+        """Refresh the treeview with the logs
+        TODO: improve updates (only load changes, not the whole tree...)"""
         if thread_lock:
             gtk.threads_enter()
         self.__log_tree.clear()
@@ -389,7 +386,7 @@ class log_history(contentview.content_view):
     # Actions
 
     def cb_filter_add(self,but):
-        '''Creates a new log history with string filter parameter'''
+        """Creates a new log history with string filter parameter"""
         self.service.cmd_filter(filter=self.__filter_entry.get_text())
         if view_option['new']:
             self.service.log.debug("Opened a new log filter view")
@@ -397,11 +394,11 @@ class log_history(contentview.content_view):
             self.service.log.debug("Set a filter on the log view")
 
     def cb_refresh(self,but):
-        '''Callback function to refresh the treeview'''
+        """Callback function to refresh the treeview"""
         self.refresh()
 
     def cb_record_clicked(self,record,tree_item):
-        '''Callback function called when an item is selected in the TreeView'''
+        """Callback function called when an item is selected in the TreeView"""
         if self.__tree_detailled != None:
             self.__tree_detailled.set_detailed(False)
 
@@ -411,18 +408,18 @@ class log_history(contentview.content_view):
         self.__tree_detailled = tree_item
 
     def cb_record_db_clicked(self,record,tree_item):
-        '''Callback function called when an item is double clicked, and show it
-        in the panel ? '''
+        """Callback function called when an item is double clicked, and show it
+        in the panel ? """
         pass
 
     def cb_record_m_clicked(self,tree,tree_item):
-        '''Callback function called when an item is middle clicked, and copy it
-        to the mouse buffer clipboard ?'''
+        """Callback function called when an item is middle clicked, and copy it
+        to the mouse buffer clipboard ?"""
         pass
 
     def cb_record_r_clicked(self, paste, tree_item, event):
-        '''Callback function called when an item is right clicked, and show the
-        contextual menu...'''
+        """Callback function called when an item is right clicked, and show the
+        contextual menu..."""
         pass
 
 view_location_map = {'View Pane':'view',
@@ -437,69 +434,64 @@ class log_manager(service.service):
     #Get configuration values
 
     def get_multi_view_book_type(self):
-        '''Get view book destination of the log history from configuration'''
+        """Get view book destination of the log history from configuration"""
         opt = self.opt('general', 'history_view_location')
         return view_location_map[opt]
     multi_view_book = property(get_multi_view_book_type)
 
     def get_colors(self):
-        '''Get level colors from configuration'''
+        """Get level colors from configuration"""
         for levelname in color.keys():
             opt = self.opt('fonts_and_colours', '%s_color' % levelname)
             if opt:
                 color[levelname]['color'] = opt
 
     def get_icons(self):
-        '''Get level icons from configuration'''
+        """Get level icons from configuration"""
         for levelname in color.keys():
             opt = self.opt('fonts_and_colours', '%s_icon' % levelname)
             if opt:
                 color[levelname]['icon'] = opt
 
     def get_markups(self):
-        '''Get logline's markup length from configuration'''
+        """Get logline's markup length from configuration"""
         for markup_length in markup.keys():
             opt = self.opt('advanced','markup_%s' % markup_length)
             if opt:
                 markup[markup_length] = opt
 
     def get_msg_length(self):
-        '''Get message's max length'''
+        """Get message's max length"""
         opt = self.opt('advanced','message_length')
         if opt:
             view_option['length'] = int(opt)
 
-    def get_item_font(self):
-        '''Get item's font'''
-        opt = self.opt('fonts_and_colours','font')
-        if opt != None:
-            view_option['font'] = pango.FontDescription(opt)
+#    def get_item_font(self):
+#        """Get item's font"""
+#        opt = self.opt('fonts_and_colours','font')
+#        if opt != None:
+#            view_option['font'] = pango.FontDescription(opt)
 
     def get_new_views(self):
-        '''Get wether the user wants to open new filters in new windows
-        or not.'''
+        """Get wether the user wants to open new filters in new windows
+        or not."""
         opt = self.opt('general','open_new_views')
         if opt:
             view_option['new'] = opt
 
     def get_default_filter(self):
-        '''Gets the default filter to apply'''
+        """Gets the default filter to apply"""
         opt = self.opt('general','default_filter')
         if opt:
             view_option['default_filter'] = opt
 
     # life cycle
 
-    def start(self):
+    def start(self,reset=False):
         self.__view = None
         self.__first = True
         self.__threads = False
-        refresh_level = self.opt('general', 'history_level_refresh')
-        if refresh_level in (None, ''):
-            refresh_level = 'DEBUG'
-        if self.boss.use_notification_handler(refresh_level,self.cmd_refresh):
-            self.log.debug("Logging service started. Refreshing at"+\
-                                " level"+refresh_level)
+        if self.__use_notification_handler():
             self.get_options()
 #            self.get_icons()
             self.get_markups()
@@ -508,25 +500,45 @@ class log_manager(service.service):
             self.get_default_filter()
             self.get_new_views()
         else: 
-            self.log.warning("Logging notification service couldn't be started.")
+            if not reset:
+                s = "started"
+            else:
+                s = "restarted"
+            self.log.warning("Logging notification service couldn't be %s"%s)
             self.stop()
 
     def reset(self):
         self.log.debug("Logging service reset.")
-        self.get_colors()
-#        self.get_icons()
-        self.get_markups()
-        self.get_msg_length()
-        self.get_multi_view_book_type()
-        self.get_new_views()
-        self.get_default_filter()
+        self.stop(True)
+        self.start(True)
         self.cmd_refresh()
 
-    def stop(self):
-        self.log.debug("Logging service stopped.")
+    def stop(self,reset=False):
+        if not reset:
+            self.log.debug("Logging service stopped.")
         self.boss.stop_logging()
 
     #private interface
+
+    def __use_notification_handler(self):
+        use_notificat = self.opt('advanced','use_automatic_refreshing')
+        refresh_level = self.opt('general', 'history_level_refresh')
+
+        if refresh_level in (None, ''):
+            refresh_level = 'DEBUG'
+        
+        if hasattr(self.boss,'logs') and hasattr(self.boss,'log'):
+            if use_notificat is True:
+                if self.boss.use_notification_handler(refresh_level,\
+                                                             self.cmd_refresh):
+                    self.log.debug("Logging service started. Refreshing at"+\
+                                                       " level"+refresh_level)
+                    return True
+                return False
+            else:
+                self.log.debug("Logging service started. No refreshing.")
+            return True
+        return False
 
     #public interface
 
@@ -537,81 +549,89 @@ class log_manager(service.service):
         self.__threads = False
 
     class general(defs.optiongroup):
-        '''Logging options'''
+        """Logging options"""
         class history_level_refresh(defs.option):
-            '''Minimum level (included) shall the history be refreshed'''
+            """Minimum level (included) shall refresh the history (if enabled)
+            """
             rtype = types.stringlist('DEBUG','INFO','WARNING','CRITICAL')
             default = 'INFO'
 
         class history_view_location(defs.option):
-            '''Where newly started histories will appear per default'''
+            """Where newly started histories will appear per default"""
             rtype = types.stringlist(*view_location_map.keys())
             default = 'View Pane'
 
         class default_filter(defs.option):
-            '''Default filter to apply on the logs'''
+            """Default filter to apply on the logs"""
             rtype = types.string
             default = 'levelname:INFO levelname:WARNING levelname:ERROR '+\
                       'levelname:CRITICAL'
 
     class advanced(defs.optiongroup):
-        '''Advanced logging options'''
+        """Advanced logging options"""
+        class use_automatic_refreshing(defs.option):
+            """Defines wether you want to use refresh on each log or not.
+            Because of issues of this system, it is not enabled per default.
+            """
+            default = False
+            rtype = types.boolean
+        
         class markup_short(defs.option):
-            '''The default markup to display. To customize it is available: 
+            """The default markup to display. To customize it is available: 
 $module, $name, $lineno, $message, $levelname, $created, $msg, $args
-$levelno, $pathname, $filename, $exc_info and/or $exc_text'''
+$levelno, $pathname, $filename, $exc_info and/or $exc_text"""
             default = markup['short']
             rtype = markup_validate_string
 
         class markup_full(defs.option):
-            '''The default markup to display, when selected. To customize 
+            """The default markup to display, when selected. To customize 
 it is available: 
 $module, $name, $lineno, $message, $levelname, $created, $msg, $args
-$levelno, $pathname, $filename, $exc_info and/or $exc_text'''
-            default = escape(markup['full'])
+$levelno, $pathname, $filename, $exc_info and/or $exc_text"""
+            default = cgi.escape(markup['full'])
             rtype = markup_validate_string 
 
         class message_length(defs.option):
-            '''How much shall the size of the main message be shortened'''
+            """How much shall the size of the main message be shortened"""
             default = view_option['length']
             rtype = types.integer
 
         class open_new_views(defs.option):
-            '''If set to true, open new history filters in new views'''
+            """If set to true, open new history filters in new views"""
             rtype = types.boolean
             default = False
         
     class fonts_and_colours(defs.optiongroup):
-        '''Fonts and colors for the markup'''
+        """Fonts and colors for the markup"""
         class notset_color(defs.option):
-            '''Change the color of unset log lines'''
+            """Change the color of unset log lines"""
             default = color['notset']['color']
             rtype = types.color
 
         class debug_color(defs.option):
-            '''Change the color of the DEBUG log lines'''
+            """Change the color of the DEBUG log lines"""
             default = color['debug']['color']
             rtype = types.color
 
         class info_color(defs.option):
-            '''Change the color of the INFO log lines'''
+            """Change the color of the INFO log lines"""
             default = color['info']['color']
             rtype = types.color
 
         class warning_color(defs.option):
-            '''Change the color of the WARNING log lines'''
+            """Change the color of the WARNING log lines"""
             default = color['warning']['color']
             rtype = types.color
 
         class critical_color(defs.option):
-            '''Change the color of the CRITICAL log lines'''
+            """Change the color of the CRITICAL log lines"""
             default = color['critical']['color']
             rtype = types.color
 
-        class font(defs.option):
-            '''TODO: Change the font of log history'''
-            default = 'None'
-            rtype = types.font
+#        class font(defs.option):
+#            """TODO: Change the font of log history"""
+#            default = 'None'
+#            rtype = types.font
             
     # commands
 
@@ -631,20 +651,47 @@ $levelno, $pathname, $filename, $exc_info and/or $exc_text'''
         view = self.create_multi_view(logs=self.boss.logs)
         view.refresh()
 
+    def cmd_open_log(self,logfile):
+        self.boss.call_command('buffermanager','open_file',\
+                filename="%s/log/%s.log" % (self.boss.pida_home,logfile))
+
     # ui actions
 
     def act_show_log_history(self,action):
         self.call('show_history')
 
+    def act_open_debug_log(self,action):
+        self.call('open_log', logfile='debug')
+
+    def act_open_info_log(self,action):
+        self.call('open_log', logfile='info')
+
+    def act_open_warning_log(self,action):
+        self.call('open_log', logfile='warning')
+
+    def act_open_error_log(self,action):
+        self.call('open_log', logfile='error')
+
+    def act_open_critical_log(self,action):
+        self.call('open_log', logfile='critical')
+
     def get_menu_definition(self):
-        return '''
+        return """
         <menubar>
         <menu name="base_tools" action="base_tools_menu">
+        <menu name="base_pida" action="base_pida_menu">
         <separator />
         <menuitem name="logmanager+show_log_history" action="logmanager+show_log_history" />
+        <separator />
+        <menuitem name="logmanager+open_debug_log" action="logmanager+open_debug_log" />
+        <menuitem name="logmanager+open_info_log" action="logmanager+open_info_log" />
+        <menuitem name="logmanager+open_warning_log" action="logmanager+open_warning_log" />
+        <menuitem name="logmanager+open_error_log" action="logmanager+open_error_log" />
+        <menuitem name="logmanager+open_critical_log" action="logmanager+open_critical_log" />
+        </menu>
         </menu>
         </menubar>        
-        '''
+        """
 
 Service = log_manager
 

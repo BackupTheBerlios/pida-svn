@@ -34,7 +34,7 @@ class boss(base.pidacomponent):
     
     def __init__(self, application, env):
         # Starts the logger
-        self.create_log_storage()
+        self.create_log_storage("%s/log" % env.home_dir)
         # Set the pidaobject base
         base.pidaobject.boss = self
         base.pidacomponent.__init__(self)

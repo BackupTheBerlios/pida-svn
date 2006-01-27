@@ -21,7 +21,10 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import time
 import os
+
+from logging import _levelNames as level_names
 
 class stream_handler(object):
     def __init__(self, stream=None):
@@ -29,7 +32,6 @@ class stream_handler(object):
             stream = sys.stderr
         self.stream = stream
         self.level = None
-        self.min_level = None
 
     def flush(self):
         self.stream.flush()
@@ -37,26 +39,31 @@ class stream_handler(object):
     def set_level(self, level, type='='):
         self.level = level
         self.level_type = type
+        self.stream.write("%s pIDA (PID %s) logging on %s started.\n" % (
+                                        time.strftime("%Y/%m/%d %H:%M:%S"),
+                                      os.getpid(),level_names[self.level]))
 
     def __level_is_valid(self,record):
         if self.level is not None:
             if self.level_type is '=':
-                if record.levelno is not self.level:
-                    return False
-            elif self.level_type is '<':
+                if record.levelno is self.level:
+                    return True
+            elif self.level_type is '+':
                 if record.levelno > self.level:
-                    return False
-            elif self.level_type is '>':
+                    return True
+            elif self.level_type is '-':
                 if record.levelno < self.level:
-                    return False
-        return True
+                    return True
+        return False
 
     def emit(self, record):
-        if not self.__level_is_valid(record):
-            return
-        msg = record.getMessage()
-        self.stream.write("%s\n" % msg)
-        self.stream.flush()
+        if self.__level_is_valid(record):
+            msg = record.getMessage()
+            self.stream.write("%s %s %s:%s %s\n" % (
+                time.strftime("%Y/%m/%d %H:%M:%S", \
+                                             time.localtime(record.created)),
+                record.module, record.name, record.lineno, msg))
+            self.stream.flush()
 
     def close(self):
         pass
@@ -79,14 +86,14 @@ class rotating_file_handler(file_handler):
     def __init__(self,filename,mode='a',max_bytes=0,backup_count=0):
         if max_bytes > 0:
             mode = 'a'
-        file_handler.__init__(filename,mode)
+        file_handler.__init__(self,filename,mode)
         self.max_bytes = max_bytes
         self.backup_count = backup_count
 
     def emit(self, record):
         if self.should_rollover(record):
             self.rollover()
-        file_handler.emit(record)
+        file_handler.emit(self,record)
 
     def rollover(self):
         self.stream.close()
@@ -107,7 +114,7 @@ class rotating_file_handler(file_handler):
     def should_rollover(self, record):
         if self.max_bytes > 0:
             msg = "%s\n" % record.getMessage()
-            self.stream.seex(0,2)
+            self.stream.seek(0,2)
             if self.stream.tell() + len(msg) >= self.max_bytes:
                 return True
         return False
@@ -116,26 +123,36 @@ class logs(object):
     """
     List of all the logs
     """
-    def __init__(self):
+    def __init__(self,path=None):
        self.logs = {}
        self.__stream = []
        self.__last = None
+       if path:
+            self.__log_path = path
+            for level in (10,20,30,40,50):
+                if isinstance(level,int):
+                    self.open_stream('%s/%s.log' % (path, \
+                                       level_names[level].lower()), level, '=')
 
     def open_stream(self,file=None,level=None,level_type=None):
         if file is None:
             handler = stream_handler()
         else:
-            handler = file_handler(file)
+            handler = rotating_file_handler(file,max_bytes=102400,backup_count=3)
         if level is not None:
             handler.set_level(level,level_type)
+        # first get all stored logs
+        for log in self.logs:
+            handler.emit(log)
+        # second get all emitted log
         self.__stream.append(handler)
 
-    def __log_rotate(self):
+    def __log_buffer_rotate(self):
         if len(self.logs) > 100:
-            self.logs = self.logs
+            self.logs = {}
     
     def push_record(self,key,record):
-        self.__log_rotate()
+        self.__log_buffer_rotate()
         self.logs[key] = record
         self.__last = record
         for stream in self.__stream:
