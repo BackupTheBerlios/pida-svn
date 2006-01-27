@@ -118,13 +118,16 @@ class Buffermanager(service.service):
 
     @actions.action(stock_id=gtk.STOCK_QUIT, label=None)
     def act_quit_pida(self, action):
+        """Quits the application"""
         self.boss.stop()
 
     @actions.action(stock_id=gtk.STOCK_NEW, label='New File')
     def act_new_file(self, action):
+        """Creates a document"""
         self.call('new_file')
 
     def act_save_session(self, action):
+        """Saves the current session"""
         fdialog = gtk.FileChooserDialog('Please select the session file',
                                  parent=self.boss.get_main_window(),
                                  action=gtk.FILE_CHOOSER_ACTION_SAVE,
@@ -141,6 +144,7 @@ class Buffermanager(service.service):
         fdialog.run()
 
     def act_load_session(self, action):
+        """Loads another session"""
         fdialog = gtk.FileChooserDialog('Please select the session file',
                                  parent=self.boss.get_main_window(),
                                  action=gtk.FILE_CHOOSER_ACTION_OPEN,
