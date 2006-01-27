@@ -31,6 +31,10 @@ class editor_manager(service.service):
 
     display_name = 'Editor'
 
+    def init(self):
+        self.__editor = None
+        self.__editorname = None
+
     class started(defs.event):
         pass
 
@@ -40,6 +44,10 @@ class editor_manager(service.service):
             """Which editor pIDA will use."""
             rtype = types.stringlist('Vim', 'Moo', 'Vim external', 'Culebra')
             default = 'Vim'            
+
+    def reset(self):
+        if self.__editorname is not None and self.get_editor_name() != self.__editorname:
+            raise RuntimeError('You must restart PIDA for the change in editor')
 
     def cmd_close(self, filename):
         self.editor.call('close', filename=filename)
@@ -101,8 +109,10 @@ class editor_manager(service.service):
     editor_name = property(get_editor_name)
 
     def get_editor(self):
-        editor = self.get_editor_name()
-        return self.get_service(editor)
+        if self.__editor is None:
+            self.__editorname = self.get_editor_name()
+            self.__editor = self.get_service(self.__editorname)
+        return self.__editor
     editor = property(get_editor)
 
 Service = editor_manager
