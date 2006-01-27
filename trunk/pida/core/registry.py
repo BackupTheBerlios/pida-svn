@@ -35,6 +35,8 @@ class registry_item(base.pidacomponent):
 
     def init(self, name, doc, default):
         self.__name = name
+        if doc is not None:
+            doc = doc.replace('\n', ' ')
         self.__doc = doc
         self.__value = None
         self.__default = default
