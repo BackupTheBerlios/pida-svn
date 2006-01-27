@@ -59,7 +59,10 @@ egg="$distdir/pida-${version//-/_}-py$pyver.egg"
 echo "Adding ${egg#$pidadir/} to '\$PYTHONPATH' ..."
 export PYTHONPATH=$egg:$PYTHONPATH
 
-[ -z "$DEBUG" ] || export PIDA_DEBUG=1
+if [ "$DEBUG" ]; then 
+    export PIDA_DEBUG=1
+    export PIDA_LOG_STDERR=1
+fi
 
 pidacmd=$distdir/pida
 tmpfile=$pidacmd.$$
