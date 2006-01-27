@@ -147,7 +147,7 @@ class project_creator(service.service):
 
     def cmd_create(self, project_name, project_directory, project_type_name):
         project_file_name = os.path.join(project_directory,
-                                         '%s.pidaproject' % project_name)
+                                         '%s.pida' % project_name)
         f = open(project_file_name, 'w')
         f.write('#%s\n[general]\nsource_directory=%s\n' %
                 (project_type_name, os.path.dirname(project_file_name)))
@@ -166,6 +166,9 @@ class project_creator(service.service):
                         (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT,
                         gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT))
         chooser.set_action(gtk.FILE_CHOOSER_ACTION_SAVE)
+        filt = gtk.FileFilter()
+        filt.add_pattern('*.pida')
+        chooser.set_filter(filt)
         try:
             chooser.set_do_overwrite_confirmation(True)
         except AttributeError:
@@ -181,9 +184,12 @@ class project_creator(service.service):
     def cb_response(self, dlg, response, options):
         if response == gtk.RESPONSE_ACCEPT:
             filename = dlg.get_filename()
+            project_name=os.path.basename(dlg.get_filename())
+            if project_name.endswith('.pida'):
+                project_name = project_name.rsplit('.')[0]
             self.call('create',
                       project_directory=dlg.get_current_folder(),
-                      project_name=os.path.basename(dlg.get_filename()),
+                      project_name=project_name,
                       project_type_name=options.get_typename())
         dlg.destroy()
 
