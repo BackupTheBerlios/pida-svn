@@ -23,6 +23,8 @@
 
 import base
 import pkg_resources
+import traceback
+from cStringIO import StringIO
 
 class service_manager(base.pidagroup):
     """Top level services component group."""
@@ -69,9 +71,11 @@ class service_manager(base.pidagroup):
             self.__display_names[cls.NAME] = cls.display_name
             self.__available[group][cls.NAME] = cls
             
-        except Exception, e:
-            self.log.warn('failed to import %s.%s %s',
-                           group, entrypoint, e)
+        except:
+            buff = StringIO()
+            traceback.print_exc(file=buff)
+            self.log.warn('failed to import %s.%s \n%s',
+                           group, entrypoint, buff.getvalue())
         
             
 
