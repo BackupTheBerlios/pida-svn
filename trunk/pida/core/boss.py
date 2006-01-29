@@ -84,7 +84,7 @@ class boss(base.pidacomponent):
         return self.__editor
 
     def get_services(self):
-        return self.__services.__iter__()
+        return iter(self.__services)
     services = property(get_services)
 
     def get_service_displayname(self, servicename):
