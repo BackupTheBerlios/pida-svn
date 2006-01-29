@@ -22,15 +22,15 @@
 #SOFTWARE.
 
 import gtk
+
+from rat import hig
 from gtk import gdk
 
 from pida.pidagtk import contentview
 from pida.core import actions
 from pida.core import service
-from pida.utils.culebra import edit
-from pida.utils.culebra import sensitive
+from pida.utils.culebra import edit, sensitive, common
 
-from rat import hig
 
 defs = service.definitions
 types = service.types
@@ -243,12 +243,12 @@ class culebra_editor(service.service):
                 action="%s" />
             </placeholder>
         </toolbar>
-        """ % (edit.ACTION_FIND_TOGGLE, edit.ACTION_REPLACE_TOGGLE)
+        """ % (common.ACTION_FIND_TOGGLE, common.ACTION_REPLACE_TOGGLE)
     
     ####################################
     # gtk.Action's definition
     @actions.action(
-        name = edit.ACTION_FIND_TOGGLE,
+        name = common.ACTION_FIND_TOGGLE,
         stock_id = gtk.STOCK_FIND,
         label = "_Find...",
         type = actions.TYPE_TOGGLE,
@@ -257,7 +257,7 @@ class culebra_editor(service.service):
         """Search for text"""
     
     @actions.action(
-        name = edit.ACTION_REPLACE_TOGGLE,
+        name = common.ACTION_REPLACE_TOGGLE,
         stock_id = gtk.STOCK_FIND_AND_REPLACE,
         label = "_Replace...",
         type = actions.TYPE_TOGGLE,
@@ -266,35 +266,35 @@ class culebra_editor(service.service):
         """Search and replace text"""
     
     @actions.action(
-        name = edit.ACTION_FIND_FORWARD,
+        name = common.ACTION_FIND_FORWARD,
         stock_id = gtk.STOCK_GO_FORWARD,
     )
     def act_find_forward(self, action):
         """Find next matching word"""
     
     @actions.action(
-        name = edit.ACTION_FIND_BACKWARD,
+        name = common.ACTION_FIND_BACKWARD,
         stock_id = gtk.STOCK_GO_BACK,
     )
     def act_find_backward(self, action):
         """Find previous mathing word"""
 
     @actions.action(
-        name = edit.ACTION_REPLACE_FORWARD,
+        name = common.ACTION_REPLACE_FORWARD,
         stock_id = gtk.STOCK_GO_FORWARD,
     )
     def act_replace_forward(self, action):
         """Replaces the next matching word"""
 
     @actions.action(
-        name = edit.ACTION_REPLACE_BACKWARD,
+        name = common.ACTION_REPLACE_BACKWARD,
         stock_id = gtk.STOCK_GO_BACK,
     )
     def act_replace_backward(self, action):
         """Replaces backward"""
     
     @actions.action(
-        name = edit.ACTION_REPLACE_ALL,
+        name = common.ACTION_REPLACE_ALL,
         stock_id = gtk.STOCK_FIND_AND_REPLACE,
         label = "Replace Alll"
     )

@@ -12,29 +12,19 @@ __author__ = (
 )
 
 import gtk
-import gtk.gdk
-import gobject
-import sys, os
+import sys
 import pango
 import gtksourceview
-import gnomevfs
-import weakref
-import codecs
-
-from events import *
 
 from replacebar import ReplaceBar
 from searchbar import SearchBar
 from buffers import CulebraBuffer
-
-from common import *
-from gtkutil import *
-BLOCK_SIZE = 2048
+from common import KEY_ESCAPE, ACTION_FIND_FORWARD, ACTION_FIND_BACKWARD
+from gtkutil import make_source_view_indentable
 
 
 class CulebraView(gtksourceview.SourceView):
     def __init__(self, action_group):
-        
         gtksourceview.SourceView.__init__(self)
             
         self.set_auto_indent(True)
@@ -185,15 +175,3 @@ def create_editor(filename, action_group):
 
 
 
-if __name__ == '__main__':
-    import sys
-
-    if len(sys.argv) > 1:
-        fname = sys.argv[-1]
-    else:
-        fname = ""
-    w = create_window(fname)
-    w.connect("delete-event", gtk.main_quit)
-    w.show()
-    w.set_title("Culebra")
-    gtk.main()

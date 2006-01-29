@@ -6,8 +6,10 @@ __author__ = "Tiago Cogumbreiro <cogumbreiro@users.sf.net>"
 import gtk
 import weakref
 
-from gtkutil import *
-from common import *
+from common import ACTION_FIND_TOGGLE, ACTION_REPLACE_FORWARD, ACTION_REPLACE_ALL
+from common import escape_text, unescape_text
+from common import get_action, ACTION_REPLACE_TOGGLE
+
 from bar import Bar
 
 class ReplaceBar(Bar):

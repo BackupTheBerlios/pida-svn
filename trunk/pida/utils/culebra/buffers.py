@@ -3,17 +3,12 @@ __license__ = "MIT License <http://www.opensource.org/licenses/mit-license.php>"
 __copyright__ = "2005, Tiago Cogumbreiro"
 __author__ = "Tiago Cogumbreiro <cogumbreiro@users.sf.net>"
 
-import gtk
 import gtksourceview
-import gobject
-import keyword
 
 from events import EventsDispatcher
-import keyword
-import os
 
-from gtkutil import *
-from common import *
+from gtkutil import search_iterator, get_buffer_selection
+from common import ChildObject
 
 #####################
 import tempfile

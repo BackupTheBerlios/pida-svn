@@ -4,9 +4,10 @@ __copyright__ = "2005, Tiago Cogumbreiro"
 __author__ = "Tiago Cogumbreiro <cogumbreiro@users.sf.net>"
 
 import gtk
-from common import *
-from gtkutil import *
 
+from common import ACTION_FIND_FORWARD, ACTION_FIND_BACKWARD, ACTION_FIND_TOGGLE
+from common import escape_text, unescape_text
+from gtkutil import get_buffer_selection
 from bar import Bar
 
 class SearchBar(Bar):
