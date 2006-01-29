@@ -78,7 +78,7 @@ class document_type_handler(service.service):
             """Paste the clipboard"""
             self.service.boss.call_command('editormanager', 'paste')
 
-        @actions.action(stock_id=gtk.STOCK_SAVE, label=None, is_important=True)
+        @actions.action(stock_id=gtk.STOCK_SAVE, label=None, is_important=True, name="DocumentSave")
         def act_save(self, action):
             """Save the document"""
             self.service.boss.call_command('editormanager', 'save')
@@ -89,7 +89,7 @@ class document_type_handler(service.service):
                 <menu name="base_file" action="base_file_menu">
                 <placeholder name="OpenFileMenu" />
                 <placeholder name="SaveFileMenu">
-                <menuitem name="Save" action="documenttypes+document+save" />
+                <menuitem name="Save" action="DocumentSave" />
                 </placeholder>
                 <placeholder name="ExtrasFileMenu" />
                 <placeholder name="GlobalFileMenu" />
@@ -116,7 +116,7 @@ class document_type_handler(service.service):
                 <placeholder name="SaveFileToolbar">
                 </placeholder>
                 <placeholder name="EditToolbar">
-                <toolitem name="Save" action="documenttypes+document+save" />
+                <toolitem name="Save" action="DocumentSave" />
                 <separator />
                 <toolitem name="Undo" action="documenttypes+document+undo" />
                 <toolitem name="Redo" action="documenttypes+document+redo" />

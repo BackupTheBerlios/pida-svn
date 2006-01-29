@@ -28,6 +28,7 @@ from pida.pidagtk import contentview
 from pida.core import actions
 from pida.core import service
 from pida.utils.culebra import edit
+from pida.utils.culebra import sensitive
 
 from rat import hig
 
@@ -111,15 +112,36 @@ class culebra_editor(service.service):
     def __view_file(self, filename):
         self.current_view = self.__files[filename]
         self.__files[filename].raise_page()
+    
+    ####################
+    # get_action
+    _save_action = None
 
+    def _create_save_action(self):
+        actions = self.boss.call_command("documenttypes", "get_document_actions")
+        for action in actions:
+            if action.get_name() == "DocumentSave":
+                return action
+        assert False, "Document Save action not found"
+    
+    def get_save_action(self):
+        if self._save_action is None:
+            self._save_action = self._create_save_action()
+        return self._save_action
+    
     #############
     # Commands
     def cmd_edit(self, filename=None):
         if filename not in self.__files:
             self.__load_file(filename)
-
+        
         self.__view_file(filename)
-
+        save_action = self.get_save_action()
+        if save_action is not None:
+            buff = self.current_view.editor.get_buffer()
+            self.linker = sensitive.SaveLinker(buff, save_action)
+            
+            
     def cmd_revert(self):
         raise NotImplementedError
 
