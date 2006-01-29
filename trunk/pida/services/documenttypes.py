@@ -78,7 +78,11 @@ class document_type_handler(service.service):
             """Paste the clipboard"""
             self.service.boss.call_command('editormanager', 'paste')
 
-        @actions.action(stock_id=gtk.STOCK_SAVE, label=None, is_important=True, name="DocumentSave")
+        @actions.action(stock_id=gtk.STOCK_SAVE,
+                        label=None,
+                        is_important=True,
+                        name="DocumentSave",
+                        default_accel=(115, gtk.gdk.CONTROL_MASK))
         def act_save(self, action):
             """Save the document"""
             self.service.boss.call_command('editormanager', 'save')
@@ -159,6 +163,10 @@ class document_type_handler(service.service):
 
     def cmd_get_document_actions(self):
         return self.__file_fallback.action_group.list_actions()
+
+    def cmd_disable_document_accelerators(self):
+        for act in self.__file_fallback.action_group.list_actions():
+            gtk.accel_map_change_entry(act.accel_path, 0, 0, True)
 
     def __register_patterns(self, handlers, handler, attrname='globs'):
         patterns = getattr(handler, attrname, [])

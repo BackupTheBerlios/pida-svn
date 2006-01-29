@@ -69,6 +69,8 @@ class vim_editor(object):
 
     def cmd_edit(self, filename):
         """Open and edit."""
+        self.boss.call_command('documenttypes',
+                               'disable_document_accelerators')
         if filename != self.__currentfile:
             if filename in self.__files.setdefault(self.server, []):
                 self.__cw.change_buffer(self.server, filename)

@@ -28,17 +28,69 @@ import gtk
 import base
 import string
 
+
 (
 TYPE_RADIO,
 TYPE_TOGGLE,
 TYPE_NORMAL
 ) = range(3)
 
+class AccelMixin(object):
+
+    def __init__(self):
+        self.__keyval = None
+        self.__modmask = None
+
+    def set_accel_key(self, keyval, modmask):
+        self.__keyval = keyval
+        self.__modmask = modmask
+
+    def bind_accel(self, accelgroup):
+        self.set_accel_group(accelgroup)
+        self.set_accel_path(self.accel_path)
+        self.connect_accelerator()
+        if self.__keyval:
+            gtk.accel_map_change_entry(self.accel_path, self.__keyval,
+                                       self.__modmask, True)
+
+    def build_accel_path(self):
+        return '<Actions>/%s' % self.get_name()
+
+    accel_path = property(build_accel_path)
+
+    def get_keyval(self):
+        return self.__keyval
+
+    keyval = property(get_keyval)
+
+    def get_modmask(self):
+        return self.__keyval
+    
+    modmask = property(get_modmask)
+
+class PidaAction(gtk.Action, AccelMixin):
+    
+    def __init__(self, *args, **kw):
+        AccelMixin.__init__(self)
+        gtk.Action.__init__(self, *args, **kw)
+
+class PidaToggleAction(gtk.ToggleAction, AccelMixin):
+    def __init__(self, *args, **kw):
+        AccelMixin.__init__(self)
+        gtk.ToggleAction.__init__(self, *args, **kw)
+        
+class PidaRadioAction(gtk.RadioAction, AccelMixin):
+    def __init__(self, *args, **kw):
+        AccelMixin.__init__(self)
+        gtk.RadioAction.__init__(self, *args, **kw)
+
 _ACTIONS = {
-    TYPE_NORMAL: gtk.Action,
-    TYPE_TOGGLE: gtk.ToggleAction,
-    TYPE_RADIO: gtk.RadioAction
+    TYPE_NORMAL: PidaAction,
+    TYPE_TOGGLE: PidaToggleAction,
+    TYPE_RADIO: PidaRadioAction
 }
+
+
 
 def split_function_name(name):
     return name.split('_', 1)[-1]
@@ -86,6 +138,11 @@ def create_actions(meths, action_prefix):
             args = [getattr(meth, "value")]
         
         action = action_factory(actname, label, doc, stock_id, *args)
+
+        # set up the accel
+        key, mod = getattr(meth, 'default_accel', (None, None))
+        if key is not None:
+            action.set_accel_key(key, mod)
 
         # gtk.RadioAction has an important property that needs to be set
         if action_type == TYPE_RADIO:

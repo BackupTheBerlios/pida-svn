@@ -26,6 +26,7 @@ import pida.pidagtk.window as window
 import pida.pidagtk.contentbook as contentbook
 import os
 import gtk
+import pida.core.actions as actions
 
 types = service.types
 defs = service.definitions
@@ -72,8 +73,8 @@ class window_manager(service.service):
         self.__acels = gtk.AccelGroup()
         self.__window.add_accel_group(self.__acels)
         self._create_uim()
-        gtk.accel_map_change_entry('<Actions>/DocumentSave', 115,
-                             gtk.gdk.CONTROL_MASK, True)
+        #gtk.accel_map_change_entry('<Actions>/DocumentSave', 115,
+        #                     gtk.gdk.CONTROL_MASK, True)
 
     def reset(self):
         """Display the window."""
@@ -113,13 +114,9 @@ class window_manager(service.service):
         self.__uim.insert_action_group(actiongroup, 0)
         self.__uim.add_ui_from_string(uidefinition)
         for action in actiongroup.list_actions():
-            self._register_accel(action)
+            if hasattr(action, 'bind_accel'):
+                action.bind_accel(self.__acels)
         self.__uim.ensure_update()
-
-    def _register_accel(self, action):
-        action.set_accel_group(self.__acels)
-        action.set_accel_path('<Actions>/%s' % action.get_name())
-        action.connect_accelerator()
 
     def cmd_unregister_action_group(self, actiongroup):
         self.__uim.remove_action_group(actiongroup)
