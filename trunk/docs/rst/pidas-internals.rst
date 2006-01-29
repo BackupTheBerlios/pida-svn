@@ -10,11 +10,10 @@ Service life cycle: init, bind, reset, stop
 `init` you cannot rely on the presence of other services. Just your own config.
 At `init` you don't even have `action_group`s.
 
-The `bind` is called when you should implement bind um, for stuff that happens
-once all the services have been started.
+The `bind` is called once all the services have been started.
 
-The `reset` is called whenever the service must refresh its values. It's used
-to refresh the service options and whatnot.
+The `reset` method is called whenever the service must refresh its values. It's
+used to refresh the service options and whatnot.
 
 `stop` is called before a service is unloaded.
 
