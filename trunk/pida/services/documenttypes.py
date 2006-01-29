@@ -53,27 +53,33 @@ class document_type_handler(service.service):
             self.service.boss.call_command('editormanager', 'close',
                                             filename=document.filename)
 
-        @actions.action(stock_id=gtk.STOCK_REDO, label=None)
+        @actions.action(stock_id=gtk.STOCK_REDO, label=None,
+                        default_accel=(122, gtk.gdk.CONTROL_MASK &
+                                            gtk.gdk.SHIFT_MASK))
         def act_redo(self, action):
             """Redo the undone action"""
             self.service.boss.call_command('editormanager', 'redo')
 
-        @actions.action(stock_id=gtk.STOCK_UNDO, label=None, is_important=True)
+        @actions.action(stock_id=gtk.STOCK_UNDO, label=None, is_important=True,
+                        default_accel=(122, gtk.gdk.CONTROL_MASK))
         def act_undo(self, action):
             """Undo the last action"""
             self.service.boss.call_command('editormanager', 'undo')
 
-        @actions.action(stock_id=gtk.STOCK_CUT, label=None)
+        @actions.action(stock_id=gtk.STOCK_CUT, label=None,
+                        default_accel=(120, gtk.gdk.CONTROL_MASK))
         def act_cut(self, action):
             """Cut the selection"""
             self.service.boss.call_command('editormanager', 'cut')
 
-        @actions.action(stock_id=gtk.STOCK_COPY, label=None)
+        @actions.action(stock_id=gtk.STOCK_COPY, label=None,
+                        default_accel=(99, gtk.gdk.CONTROL_MASK))
         def act_copy(self, action):
             """Copy the selection"""
             self.service.boss.call_command('editormanager', 'copy')
 
-        @actions.action(stock_id=gtk.STOCK_PASTE, label=None)
+        @actions.action(stock_id=gtk.STOCK_PASTE, label=None,
+                        default_accel=(118, gtk.gdk.CONTROL_MASK))
         def act_paste(self, action):
             """Paste the clipboard"""
             self.service.boss.call_command('editormanager', 'paste')

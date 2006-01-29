@@ -49,6 +49,9 @@ class AccelMixin(object):
         self.set_accel_group(accelgroup)
         self.set_accel_path(self.accel_path)
         self.connect_accelerator()
+        self.set_accel_keymap()
+
+    def set_accel_keymap(self):
         if self.__keyval:
             gtk.accel_map_change_entry(self.accel_path, self.__keyval,
                                        self.__modmask, True)
