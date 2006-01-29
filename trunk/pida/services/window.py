@@ -69,7 +69,11 @@ class window_manager(service.service):
         self.__window = window.pidawindow(self)
         self.__window.connect('delete-event', self.cb_destroy)
         self._connect_drag_events()
+        self.__acels = gtk.AccelGroup()
+        self.__window.add_accel_group(self.__acels)
         self._create_uim()
+        gtk.accel_map_change_entry('<Actions>/DocumentSave', 115,
+                             gtk.gdk.CONTROL_MASK, True)
 
     def reset(self):
         """Display the window."""
@@ -108,7 +112,14 @@ class window_manager(service.service):
     def cmd_register_action_group(self, actiongroup, uidefinition):
         self.__uim.insert_action_group(actiongroup, 0)
         self.__uim.add_ui_from_string(uidefinition)
+        for action in actiongroup.list_actions():
+            self._register_accel(action)
         self.__uim.ensure_update()
+
+    def _register_accel(self, action):
+        action.set_accel_group(self.__acels)
+        action.set_accel_path('<Actions>/%s' % action.get_name())
+        action.connect_accelerator()
 
     def cmd_unregister_action_group(self, actiongroup):
         self.__uim.remove_action_group(actiongroup)
