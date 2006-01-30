@@ -289,7 +289,6 @@ class ProjectManager(service.service):
         directory = self.__current_project.source_directory
         self.boss.call_command('versioncontrol', 'commit',
                                directory=directory)
-        pass
 
     #def act_get_project_statuses(self, action):
     #    pass
