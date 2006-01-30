@@ -35,6 +35,18 @@ from pida.utils.culebra import edit, sensitive, common
 defs = service.definitions
 types = service.types
 
+#temporary
+C = gtk.gdk.CONTROL_MASK
+SC = gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK
+
+KEYMAP = {
+    'DocumentSave': (115, C),
+    'documenttypes+document+undo': (122, C),
+    'documenttypes+document+redo': (122, SC),
+    'documenttypes+document+cut': (120, C),
+    'documenttypes+document+copy': (99, C),
+    'documenttypes+document+paste': (118, C),
+}
 
 class culebra_view(contentview.content_view):
 
@@ -58,6 +70,15 @@ class culebra_view(contentview.content_view):
         return self.__editor.get_buffer()
         
     buffer = property(get_buffer)
+
+    def connect_keys(self):
+        self.__editor.add_events(gtk.gdk.KEY_PRESS_MASK)
+        self.__editor.connect('key-press-event', self.cb_keypress)
+
+    def cb_keypress(self, widg, event):
+        key, mod = event.keyval, event.state
+        return self.service.received_key(key, mod)
+        
 
 class culebra_editor(service.service):
 
@@ -83,8 +104,14 @@ class culebra_editor(service.service):
         
         self.__files = {}
         self.__views = {}
+        self.__keymods = {}
 
     def reset(self):
+        actions = self.boss.call_command("documenttypes", "get_document_actions")
+        for action in actions:
+            actname = action.get_name()
+            if actname in KEYMAP:
+                self.__keymods[KEYMAP[actname]] = action
         for view in self.__files.values():
             view.editor.set_background_color(self.get_background_color())
             view.editor.set_font_color(self.get_font_color())
@@ -108,6 +135,7 @@ class culebra_editor(service.service):
         )
         self.__files[filename] = view
         self.__views[view.unique_id] = filename
+        view.connect_keys()
 
     def __view_file(self, filename):
         self.current_view = self.__files[filename]
@@ -128,13 +156,21 @@ class culebra_editor(service.service):
         if self._save_action is None:
             self._save_action = self._create_save_action()
         return self._save_action
+
+    # keyboard bindings
+    
+    def received_key(self, key, mod):
+        if (key, mod) in self.__keymods:
+            self.__keymods[key, mod].emit('activate')
+            return True
+        else:
+            return False
     
     #############
     # Commands
     def cmd_edit(self, filename=None):
         if filename not in self.__files:
             self.__load_file(filename)
-        
         self.__view_file(filename)
         save_action = self.get_save_action()
         if save_action is not None:
