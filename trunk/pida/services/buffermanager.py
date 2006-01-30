@@ -97,7 +97,8 @@ class Buffermanager(service.service):
         self.__session_loaded = False
         self.__editor = None
 
-    @actions.action(stock_id=gtk.STOCK_OPEN, label=None, is_important=True)
+    @actions.action(stock_id=gtk.STOCK_OPEN, label=None, is_important=True,
+                    default_accel='<Shift><Control>o')
     def act_open_file(self, action):
         """Opens a document"""
         chooser = gtk.FileChooserDialog(
@@ -118,7 +119,8 @@ class Buffermanager(service.service):
         """Quits the application"""
         self.boss.stop()
 
-    @actions.action(stock_id=gtk.STOCK_NEW, label='New File')
+    @actions.action(stock_id=gtk.STOCK_NEW, label='New File',
+                    default_accel='<Shift><Control>n')
     def act_new_file(self, action):
         """Creates a document"""
         self.call('new_file')
