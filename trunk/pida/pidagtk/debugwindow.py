@@ -26,6 +26,7 @@ import urllib
 import urllib2
 import pango
 import gtk
+import sys
 
 _ = gettext.gettext
 
@@ -199,7 +200,6 @@ class DebugWindow(gtk.Dialog):
             reply = 'Posting a new bug report failed.'
         self._print(reply)
 
-import sys
     
 def show(exctype, value, tb):
     if exctype is not KeyboardInterrupt:

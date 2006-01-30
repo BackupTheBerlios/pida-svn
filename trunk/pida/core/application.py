@@ -39,7 +39,10 @@ gtk.threads_init()
 from pkg_resources import Requirement, resource_filename
 version_file = resource_filename(Requirement.parse('pida'),
                                  'version/version')
-pida_version = open(version_file).read().strip()
+try:
+    pida_version = open(version_file).read().strip()
+except:
+    pida_version = 'testing'
 
 def print_version_and_die():
     print 'PIDA, version %s' % pida_version
@@ -111,9 +114,9 @@ class environment(object):
 class application(object):
     """The pIDA Application."""
 
-    def __init__(self):
+    def __init__(self, bosstype):
         self.__env = environment()
-        self.__boss = boss.boss(application=self, env=self.__env)
+        self.__boss = bosstype(application=self, env=self.__env)
 
     def start(self):
         """Start PIDA."""
@@ -134,9 +137,9 @@ def pida_excepthook(exctype, value, tb):
 
 sys.excepthook = pida_excepthook
 
-def main():
+def main(bosstype=boss.boss):
     warnings.filterwarnings("ignore", category=DeprecationWarning)
-    app = application()
+    app = application(bosstype)
     app.start()
 
 

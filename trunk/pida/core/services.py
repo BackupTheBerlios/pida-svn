@@ -59,6 +59,8 @@ class service_manager(base.pidagroup):
             self.log.debug('found entry point %s.%s', group, ep.name)
             self.__load_entrypoint(group, ep)
 
+    load_entrypoints = __load_entrypoints
+
     def __load_entrypoint(self, group, entrypoint):
         try:
             cls = entrypoint.load()
@@ -76,8 +78,8 @@ class service_manager(base.pidagroup):
             traceback.print_exc(file=buff)
             self.log.warn('failed to import %s.%s \n%s',
                            group, entrypoint, buff.getvalue())
-        
             
+    load_entrypoint = __load_entrypoint
 
     def __load_service(self, group, name):
         self.log.debug('loading service %s.%s', group, name)
@@ -93,6 +95,8 @@ class service_manager(base.pidagroup):
                 inst = cls(self.boss)
             if inst is not None:
                 self.add(inst.NAME, inst)
+
+    load_service = __load_service
         
     def get_display_name(self, servicename):
         if servicename in self.__display_names:
