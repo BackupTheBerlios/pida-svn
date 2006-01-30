@@ -177,11 +177,16 @@ class book(object):
         self.key = path
         self.name = os.path.basename(path)
         self.bookmarks = None
-        self.short_load()
+        try:
+            self.short_load()
+        except (OSError, IOError):
+            pass
 
     def short_load(self):
         config_path = None
         path = self.directory
+        if not os.path.isdir(path):
+            return
         for name in os.listdir(path):
             if name.endswith('.devhelp'):
                 config_path = os.path.join(path, name)
