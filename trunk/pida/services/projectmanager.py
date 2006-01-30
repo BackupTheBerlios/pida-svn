@@ -257,6 +257,8 @@ class ProjectManager(service.service):
 
     # Actions
 
+    @actions.action(stock_id='gtk-new',
+        default_accel='<Shift><Control>p')
     def act_new_project(self, action):
         """Create a new project."""
         self.boss.call_command('projectcreator', 'create_interactive')
@@ -280,7 +282,8 @@ class ProjectManager(service.service):
         fdialog.connect('response', response)
         fdialog.run()
 
-    @actions.action(stock_id='vcs_commit')
+    @actions.action(stock_id='vcs_commit',
+        default_accel='<Shift><Control>c')
     def act_commit_project(self, action):
         """Commit the current project to version control"""
         directory = self.__current_project.source_directory
@@ -288,10 +291,11 @@ class ProjectManager(service.service):
                                directory=directory)
         pass
 
-    def act_get_project_statuses(self, action):
-        pass
+    #def act_get_project_statuses(self, action):
+    #    pass
 
-    @actions.action(stock_id='vcs_update')
+    @actions.action(stock_id='vcs_update',
+                    default_accel='<Shift><Control>u')
     def act_update_project(self, action):
         """Update the current project from version control"""
         directory = self.__current_project.source_directory
@@ -341,10 +345,6 @@ class ProjectManager(service.service):
                     action="projectmanager+remove_project_from_workbench" />
                 <separator />
                 <menuitem name="propproj" action="projectmanager+properties" />
-                <separator />
-                <separator />
-                <menuitem name="statproj"
-                    action="projectmanager+get_project_statuses" />
                 <menuitem name="upproj" action="projectmanager+update_project" />
                 <menuitem name="comproj" action="projectmanager+commit_project" />
                 <separator />
