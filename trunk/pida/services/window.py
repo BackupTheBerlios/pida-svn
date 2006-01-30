@@ -169,7 +169,7 @@ class WindowManager(service.service):
 
 
     @actions.action(
-        default_accel=(110, gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK)
+        default_accel='<Control><Shift>l'
         )
     def act_toggle_toolbar(self, action):
         self.__tb_visible = not self.__tb_visible
@@ -178,7 +178,7 @@ class WindowManager(service.service):
         self._show_toolbar()
 
     @actions.action(
-        default_accel=(109, gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK)
+        default_accel='<Control><Shift>m'
         )
     def act_toggle_menubar(self, action):
         self.__menu_visible = not self.__menu_visible

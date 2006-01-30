@@ -45,6 +45,9 @@ class AccelMixin(object):
         self.__keyval = keyval
         self.__modmask = modmask
 
+    def set_accel(self, accel_string):
+        self.set_accel_key(*gtk.accelerator_parse(accel_string))
+
     def bind_accel(self, accelgroup):
         self.set_accel_group(accelgroup)
         self.set_accel_path(self.accel_path)
@@ -143,9 +146,12 @@ def create_actions(meths, action_prefix):
         action = action_factory(actname, label, doc, stock_id, *args)
 
         # set up the accel
-        key, mod = getattr(meth, 'default_accel', (None, None))
-        if key is not None:
-            action.set_accel_key(key, mod)
+        key_mod = getattr(meth, 'default_accel', None)
+        if key_mod is not None:
+            if isinstance(key_mod, tuple):
+                action.set_accel_key(*key_mod)
+            else:
+                action.set_accel(key_mod)
 
         # gtk.RadioAction has an important property that needs to be set
         if action_type == TYPE_RADIO:
