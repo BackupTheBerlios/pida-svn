@@ -288,6 +288,7 @@ class culebra_editor(service.service):
         stock_id = gtk.STOCK_FIND,
         label = "_Find...",
         type = actions.TYPE_TOGGLE,
+        default_accel = '<Shift><Control>f'
     )
     def act_find_toggle(self, action):
         """Search for text"""
@@ -297,6 +298,7 @@ class culebra_editor(service.service):
         stock_id = gtk.STOCK_FIND_AND_REPLACE,
         label = "_Replace...",
         type = actions.TYPE_TOGGLE,
+        default_accel = '<Shift><Control>r'
     )
     def act_replace_toggle(self, action):
         """Search and replace text"""
@@ -304,6 +306,7 @@ class culebra_editor(service.service):
     @actions.action(
         name = common.ACTION_FIND_FORWARD,
         stock_id = gtk.STOCK_GO_FORWARD,
+        default_accel = '<Control>g'
     )
     def act_find_forward(self, action):
         """Find next matching word"""
@@ -311,6 +314,8 @@ class culebra_editor(service.service):
     @actions.action(
         name = common.ACTION_FIND_BACKWARD,
         stock_id = gtk.STOCK_GO_BACK,
+        default_accel = '<Control><Shift>g'
+        
     )
     def act_find_backward(self, action):
         """Find previous mathing word"""
