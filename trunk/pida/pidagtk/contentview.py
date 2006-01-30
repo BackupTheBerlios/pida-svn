@@ -280,16 +280,6 @@ class content_view(gtk.VBox):
         if self.HAS_CONTROL_BOX and (self.HAS_CLOSE_BUTTON or
                                     self.HAS_DETACH_BUTTON):
             menu = gtk.Menu()
-            if self.HAS_CLOSE_BUTTON:
-                act = gtk.Action(name='close',
-                                 label='Close',
-                                 tooltip='Close this view',
-                                 stock_id=gtk.STOCK_CLOSE)
-                def _close(_act):
-                    self.__controlbar_clicked('close')
-                act.connect('activate', _close)
-                mi = act.create_menu_item()
-                menu.add(mi)
             if self.HAS_DETACH_BUTTON:
                 act = gtk.Action(name='detach',
                                  label='Detach',
@@ -298,6 +288,16 @@ class content_view(gtk.VBox):
                 def _det(_act):
                     self.__controlbar_clicked('detach')
                 act.connect('activate', _det)
+                mi = act.create_menu_item()
+                menu.add(mi)
+            if self.HAS_CLOSE_BUTTON:
+                act = gtk.Action(name='close',
+                                 label='Close',
+                                 tooltip='Close this view',
+                                 stock_id=gtk.STOCK_CLOSE)
+                def _close(_act):
+                    self.__controlbar_clicked('close')
+                act.connect('activate', _close)
                 mi = act.create_menu_item()
                 menu.add(mi)
             menu.show_all()
