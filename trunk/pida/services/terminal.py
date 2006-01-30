@@ -118,7 +118,8 @@ class terminal_manager(service.service):
         self.call('execute', command_args=[shellcommand],
                   term_type=term_type, kwdict=kwdict)
 
-    @actions.action(stock_id='gtk-terminal')
+    @actions.action(stock_id='gtk-terminal',
+        default_accel=(116, gtk.gdk.SHIFT_MASK | gtk.gdk.CONTROL_MASK))
     def act_terminal(self, action):
         """Start a shell in a terminal emulator."""
         self.call('execute_shell')
