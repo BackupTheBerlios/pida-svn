@@ -23,6 +23,7 @@
 import os
 import pida.core.service as service
 import pida.pidagtk.filemanager as filemanager
+import pida.core.actions as actions
 
 class file_manager(service.service):
     NAME = 'filemanager'
@@ -33,14 +34,22 @@ class file_manager(service.service):
     def init(self):
         self.__content = None
 
-    def cmd_browse(self, directory=''):
+    @actions.action(
+    default_accel='<Control><Shift>f',
+    label='Focus the file manager'
+    )
+    def act_grab_focus(self, action):
+        self.call('browse', directory=self.cmd_get_current_directory())
+
+    def cmd_browse(self, directory=None):
         if self.single_view is None:
             self.create_single_view()
             self.single_view.connect('file-activated',
                                      self.cb_single_view_file_activated)
-        if directory == '':
+        if directory is None:
             directory = os.path.expanduser('~')
         self.single_view.display(directory)
+        #self.single_view.grab_focus()
 
     def cmd_get_current_directory(self):
         if self.single_view is not None:
@@ -50,5 +59,14 @@ class file_manager(service.service):
         
         self.boss.call_command('buffermanager', 'open_file',
                                 filename=filename)
+
+    def get_menu_definition(self):
+        return """
+            <menubar>
+            <menu name="base_view">
+            <menuitem name="focusfm" action="filemanager+grab_focus" />
+            </menu>
+            </menubar>
+        """
         
 Service = file_manager

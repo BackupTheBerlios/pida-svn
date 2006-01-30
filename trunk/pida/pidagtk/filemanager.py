@@ -153,6 +153,7 @@ class FileBrowser(contentview.content_view):
         for fsi in gen(directory, statuses):
             self.__add_item(fsi)
         self.__fileview.view.set_model(self.__fileview.model)
+        self.__fileview.view.grab_focus()
         gtk.threads_leave()
         self.__lock.release()
 
