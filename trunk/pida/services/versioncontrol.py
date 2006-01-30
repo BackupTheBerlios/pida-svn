@@ -145,18 +145,8 @@ class version_control(service.service):
             self.boss.call_command('window', 'input',
                                    callback_function=commit,
                                    prompt='%s commit message' % vcs.NAME)
-            #try:
-            #    commandargs = vcs.update_command()
-            #    self.boss.call_command('terminal', 'execute',
-            #                            command_args=commandargs,
-            #                            icon_name='vcs_update',
-            #                            kwdict = {'directory':
-            #                                       directory})
-            #except NotImplementedError:
-            #    self.log.info('"%s" is not version controlled', directory)
 
     def cmd_add_file(self, filename):
-        
         directory = os.path.dirname(filename)
         basename = os.path.basename(filename)
         vcs = self.call('get_vcs_for_directory', directory=directory)
@@ -173,11 +163,8 @@ class version_control(service.service):
                 self._update_filemanager(directory)
             except NotImplementedError:
                 self.log.info('Not implemented for %s' % vcs.NAME)
-        
-
 
     def cmd_remove_file(self, filename):
-        
         directory = os.path.dirname(filename)
         basename = os.path.basename(filename)
         vcs = self.call('get_vcs_for_directory', directory=directory)
@@ -196,7 +183,6 @@ class version_control(service.service):
                 self.log.info('Not implemented for %s' % vcs.NAME)
 
     def cmd_revert_file(self, filename):
-
         directory = os.path.dirname(filename)
         basename = os.path.basename(filename)
         vcs = self.call('get_vcs_for_directory', directory=directory)

@@ -49,7 +49,8 @@ class config_manager(service.service):
     def cb_view_data_changed(self, view):
         self.boss.reset()
 
-    @actions.action(stock_id=gtk.STOCK_PREFERENCES, label=None)
+    @actions.action(stock_id=gtk.STOCK_PREFERENCES, label=None,
+                    default_accel='<Shift><Control>k')
     def act_configuration(self, action):
         self.call('edit')
 
