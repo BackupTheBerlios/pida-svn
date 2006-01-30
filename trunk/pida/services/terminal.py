@@ -119,10 +119,16 @@ class terminal_manager(service.service):
                   term_type=term_type, kwdict=kwdict)
 
     @actions.action(stock_id='gtk-terminal',
-        default_accel=(116, gtk.gdk.SHIFT_MASK | gtk.gdk.CONTROL_MASK))
+        default_accel='<Shift><Control>t')
     def act_terminal(self, action):
         """Start a shell in a terminal emulator."""
-        self.call('execute_shell')
+        directory = os.getcwd()
+        proj = self.boss.call_command('projectmanager',
+                                      'get_current_project')
+        if proj is not None:
+            directory = proj.source_directory
+        self.call('execute_shell', kwdict={'directory': directory})
+        
 
     def get_menu_definition(self):
         return """
