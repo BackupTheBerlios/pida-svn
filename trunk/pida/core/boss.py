@@ -46,12 +46,12 @@ class boss(base.pidacomponent):
         self.__window = self.get_service('window')
         self.__services.bind()
         self.__services.reset()
+        self.__editor.call('start')
         try:
             self.call_command('terminal', 'execute_shell')
         except:
             self.log.warn('terminal emulator not configured correctly')
         self.__window.call('show_window')
-        self.__editor.call('start')
 
     def reset(self):
         """Reset live configuration options."""

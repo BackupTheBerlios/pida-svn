@@ -99,10 +99,10 @@ class WindowManager(service.service):
         self.__menu_visible = self.opt('toolbar_and_menubar', 'menubar_visible')
         self._show_menubar()
         self._show_toolbar()
+        self._create_window()
         self.toolbar.set_icon_size(size)
 
     def cmd_show_window(self):
-        self._create_window()
         self.__window.show_all()
         self._show_menubar()
         self._show_toolbar()
