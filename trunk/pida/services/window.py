@@ -21,23 +21,25 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import os
+
+import gtk
+
+import pida.core.actions as actions
 import pida.core.service as service
 import pida.pidagtk.window as window
+import pida.pidagtk.expander as expander
 import pida.pidagtk.contentbook as contentbook
-import os
-import gtk
-import pida.core.actions as actions
+
 
 types = service.types
 defs = service.definitions
 
-class PaneSize(types.integer):
-    adjustment = 200, 1800, 25    
 
-class window_manager(service.service):
+class WindowManager(service.service):
     """Class to control the main window."""
 
-    display_name = 'Window'
+    display_name = 'View'
 
     class layout(defs.optiongroup):
         """The layout options."""
@@ -66,49 +68,60 @@ class window_manager(service.service):
             rtype = types.boolean
             default = True
 
+    class toolbar_and_menubar(defs.optiongroup):
+        """Options relating to the toolbar and main menu bar."""
+        class toolbar_visible(defs.option):
+            """Whether the toolbar will start visible."""
+            rtype = types.boolean
+            default = True
+        class menubar_visible(defs.option):
+            """Whether the menubar will start visible."""
+            rtype = types.boolean
+            default = True
+
     def init(self):
-        self.__window = window.pidawindow(self)
-        self.__window.connect('delete-event', self.cb_destroy)
-        self._connect_drag_events()
         self.__acels = gtk.AccelGroup()
-        self.__window.add_accel_group(self.__acels)
         self._create_uim()
-        #gtk.accel_map_change_entry('<Actions>/DocumentSave', 115,
-        #                     gtk.gdk.CONTROL_MASK, True)
+
+    def bind(self):
+        self._bind_views()
+        self._bind_pluginviews()
+        self._pack()
+        self.__uim.ensure_update()
 
     def reset(self):
         """Display the window."""
-        if not self.__started:
-            self.__started = True
-            self._pack_window()
-            self.__window.show_all()
         if self.opt('layout', 'small_toolbar'):
             size = gtk.ICON_SIZE_SMALL_TOOLBAR
         else:
             size = gtk.ICON_SIZE_LARGE_TOOLBAR
+        self.__tb_visible = self.opt('toolbar_and_menubar', 'toolbar_visible')
+        self.__menu_visible = self.opt('toolbar_and_menubar', 'menubar_visible')
+        self._show_menubar()
+        self._show_toolbar()
         self.toolbar.set_icon_size(size)
+
+    def cmd_show_window(self):
+        self._create_window()
+        self.__window.show_all()
+        self._show_menubar()
+        self._show_toolbar()
 
     def cmd_update_action_groups(self):
         self.__uim.ensure_update()
-        
         ht = self.toolbar.get_parent()
         if ht:
             ht.remove(self.toolbar)
         self.toolbar = self.__uim.get_widget('/toolbar')
         ht.add(self.toolbar)
 
-    def cmd_shrink_content(self, bookname):
-        self.__window.shrinkbook(bookname)
-
-    def cmd_toggle_content(self, bookname):
-        self.__window.toggle_book(bookname)
-
     def cmd_append_page(self, bookname, view):
-        res = self.__window.append_page(bookname, view)
-        return res, bookname, view
+        self._append_page(bookname, view)
 
     def cmd_remove_pages(self, bookname):
-        self.__window.remove_pages(bookname)
+        if bookname in self.__viewbooks:
+            book = self.__viewbooks[bookname]
+            book.detach_pages()
 
     def cmd_register_action_group(self, actiongroup, uidefinition):
         self.__uim.insert_action_group(actiongroup, 0)
@@ -145,14 +158,138 @@ class window_manager(service.service):
         dialog.connect('response', response)
         dialog.run()
 
+    def cmd_set_title(self, title):
+        """Set the window title.
+        
+        title: a string representation of the new title."""
+        self.__window.set_title(title)
+
     def bnd_buffermanager_document_changed(self, document):
         self.call('set_title', title=document.filename)
 
-    def cb_destroy(self, window, *args):
-        can_close = self.boss.call_command("editormanager", "can_close")
-        if can_close:
-            self.boss.stop()
-        return not can_close
+
+    @actions.action(
+        default_accel=(110, gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK)
+        )
+    def act_toggle_toolbar(self, action):
+        self.__tb_visible = not self.__tb_visible
+        self.set_option('toolbar_and_menubar', 'toolbar_visible',
+                        self.__tb_visible)
+        self._show_toolbar()
+
+    @actions.action(
+        default_accel=(109, gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK)
+        )
+    def act_toggle_menubar(self, action):
+        self.__menu_visible = not self.__menu_visible
+        self.set_option('toolbar_and_menubar', 'menubar_visible',
+                        self.__menu_visible)
+        self._show_menubar()
+
+    def _show_menubar(self):
+        if self.__menu_visible:
+            self.menubar.show_all()
+        else:
+            self.menubar.hide_all()
+
+    def _show_toolbar(self):
+        if self.__tb_visible:
+            self.toolbar.show_all()
+        else:
+            self.toolbar.hide_all()
+
+    def _bind_views(self):
+        self.languageview = contentbook.contentbook('Current File')
+        self.contentview = contentbook.contentbook('Quick View')
+        self.editorview = contentbook.Contentholder(show_tabs=False)
+        self.bookview = contentbook.Contentholder()
+        self.externalview = window.external_book()
+        self.pluginview = contentbook.contentbook('Plugins')
+        self.__viewbooks = {'content': self.contentview,
+                            'view': self.bookview,
+                            'plugin': self.pluginview,
+                            'edit': self.editorview,
+                            'ext': self.externalview,
+                            'languages': self.languageview}
+        self.bufferview = self.get_service('buffermanager').create_single_view()
+        self.menubar = self.__uim.get_toplevels(gtk.UI_MANAGER_MENUBAR)[0]
+        self.toolbar = self.__uim.get_toplevels(gtk.UI_MANAGER_TOOLBAR)[0]
+
+    def _bind_pluginviews(self):
+        for service in self.boss.services:
+            if service.plugin_view_type is not None:
+                self.pluginview.append_page(service.plugin_view)
+
+    def _pack(self):
+        self.__mainbox = gtk.VBox()
+        self._pack_toolbox()
+        self._pack_panes()
+
+    def _pack_toolbox(self):
+        self.__toolbox = gtk.VBox()
+        self.__toolbox.pack_start(self.menubar, expand=False)
+        self.__toolbox.pack_start(self.toolbar, expand=False)
+        self.__mainbox.pack_start(self.__toolbox, expand=False)
+
+    def _pack_panes(self):
+        p0 = gtk.HPaned()
+        self.__mainbox.pack_start(p0)
+        sidebar_width = self.opt('layout', 'sidebar_width')
+        sidebar_on_right = self.opt('layout', 'sidebar_on_right')
+        sidebar = self._pack_sidebar()
+        sidebar.show()
+        if sidebar_on_right:
+            side_func = p0.pack2
+            main_func = p0.pack1
+            main_pos = 800 - sidebar_width
+        else:
+            side_func = p0.pack1
+            main_func = p0.pack2
+            main_pos = sidebar_width
+        p1 = gtk.VPaned()
+        p1.show()
+        side_func(sidebar, resize=False)
+        main_func(p1, resize=True)
+        p0.set_position(main_pos)
+        p1.pack1(self.editorview, resize=True)
+        p1.pack2(self.bookview, resize=False)
+        p1.set_position(430)
+
+    def _pack_sidebar(self):
+        sidebar_horiz = self.opt('layout', 'vertical_sidebar_split')
+        if sidebar_horiz:
+            box = gtk.HPaned()
+        else:
+            box = gtk.VPaned()
+        bar = gtk.VBox()
+        box.pack1(bar, resize=True)
+        bufs = expander.expander()
+        bufs.set_body_widget(self.bufferview)
+        l = gtk.Label('Buffer list')
+        l.set_alignment(0, 0.5)
+        bufs.set_label_widget(l)
+        bufs.expand()
+        bar.pack_start(bufs, expand=True)
+        bar.pack_start(self.pluginview)
+        bar2 = gtk.VBox()
+        box.pack2(bar2, resize=True)
+        bar2.pack_start(self.languageview, expand=False)
+        bar2.pack_start(self.contentview)
+        return box
+
+    def _create_window(self):
+        if not self.__started:
+            self.__started = True
+            self.__window = gtk.Window()
+            self.__window.connect('delete-event', self.cb_destroy)
+            self.__window.add_accel_group(self.__acels)
+            self._connect_drag_events()
+            self.__window.add(self.__mainbox)
+            self.__window.resize(800, 600)
+
+    def _append_page(self, bookname, page):
+        self.__viewbooks[bookname].append_page(page)
+        self.__viewbooks[bookname].show_all()
 
     def _create_uim(self):
         self.__uim = gtk.UIManager()
@@ -163,39 +300,36 @@ class window_manager(service.service):
             ('base_project_menu', None, '_Project'),
             ('base_python_menu', None, '_Python'),
             ('base_tools_menu', None, '_Tools'),
+            ('base_view_menu', None, '_View'),
             ('base_pida_menu', None, '_Debugging Pida'),
             ('base_help_menu', None, '_Help'),
             ('base_service_conf_menu', None, '_Service configuration')
             ])
         menudef = """
                 <menubar>
-                <menu name="base_file" action="base_file_menu">
-                <placeholder name="OpenFileMenu" />
-                <placeholder name="SaveFileMenu" />
-                <placeholder name="ExtrasFileMenu" />
-                <placeholder name="GlobalFileMenu" />
-                </menu>
-                <menu name="base_edit" action="base_edit_menu">
-                    <placeholder name="EditMenu" />
-                    <placeholder name="PreferencesMenu" />
-                </menu>
-                <menu name="base_project" action="base_project_menu">
-                </menu>
-                <menu name="base_python" action="base_python_menu">
-                </menu>
-                <menu name="base_tools" action="base_tools_menu">
-                <placeholder name="ToolsMenu">
-                </placeholder>
-                <separator />
-                <placeholder name="ExtraToolsMenu">
-                </placeholder>
-                <separator />
-                <menu name="service_conf" action="base_service_conf_menu" />
-                <separator />
-                <menu name="base_pida" action="base_pida_menu" />
-                </menu>
-                <menu name="base_help" action="base_help_menu">
-                </menu>
+                    <menu name="base_file" action="base_file_menu">
+                        <placeholder name="OpenFileMenu" />
+                        <placeholder name="SaveFileMenu" />
+                        <placeholder name="ExtrasFileMenu" />
+                        <placeholder name="GlobalFileMenu" />
+                    </menu>
+                    <menu name="base_edit" action="base_edit_menu">
+                        <placeholder name="EditMenu" />
+                        <placeholder name="PreferencesMenu" />
+                    </menu>
+                    <menu name="base_project" action="base_project_menu" />
+                    <menu name="base_python" action="base_python_menu" />
+                    <menu name="base_tools" action="base_tools_menu">
+                        <placeholder name="ToolsMenu" />
+                        <separator />
+                        <placeholder name="ExtraToolsMenu" />
+                        <separator />
+                        <menu name="service_conf" action="base_service_conf_menu" />
+                        <separator />
+                    </menu>
+                    <menu name="base_view" action="base_view_menu" />
+                    <menu name="base_pida" action="base_pida_menu" />
+                    <menu name="base_help" action="base_help_menu" />
                 </menubar>
                 <toolbar>
                 <placeholder name="OpenFileToolbar">
@@ -226,39 +360,6 @@ class window_manager(service.service):
             for act in acts:
                 print '\t', act, act.get_name(), act.get_visible()
 
-    def _pack_window(self):
-        """Populate the window."""
-        bufferview = self.get_service('buffermanager').single_view
-        bufferview.show()
-        
-        pluginview = contentbook.contentbook('Plugins')
-        pluginview.show()
-        languageview = contentbook.contentbook('Current File')
-        languageview.collapse()
-        
-        for service in self.boss.services:
-            if service.plugin_view_type is not None:
-                pluginview.append_page(service.plugin_view)
-                service.plugin_view.show()
-            if service.lang_view_type is not None:
-                pass
-                #languageview.append_page(service.lang_view)
-                #service.lang_view.show()
-                
-        
-        self.__uim.ensure_update()
-        menubar = self.__uim.get_toplevels(gtk.UI_MANAGER_MENUBAR)[0]
-        
-        self.toolbar = self.__uim.get_toplevels(gtk.UI_MANAGER_TOOLBAR)[0]
-        
-        self.__window.drag_dest_set(gtk.DEST_DEFAULT_ALL,
-                                    [('text/uri-list', 0, 0)],
-                                    gtk.gdk.ACTION_COPY)
-        
-        self.__window.pack(menubar, self.toolbar, bufferview, pluginview,
-                           languageview)
-        
-
     def _connect_drag_events(self):
         def drag_motion(win, drag, x, y, timestamp):
             self.buffermanager.drag_highlight()
@@ -281,25 +382,25 @@ class window_manager(service.service):
         self.__window.connect('drag-data-received', drag_drop)
 
     def get_view(self):
+        """Return the main window."""
         return self.__window
+
     view = property(get_view)
 
-    def cmd_set_title(self, title):
-        """Set the window title.
-        
-        title: a string representation of the new title."""
-        self.__window.set_title(title)
+    def cb_destroy(self, window, *args):
+        can_close = self.boss.call_command("editormanager", "can_close")
+        if can_close:
+            self.boss.stop()
+        return not can_close
 
-    def cmd_shrink_contentbook(self):
-        self.view.shrink_contentbook()
-        
-    def cmd_shrink_viewbook(self):
-        self.view.shrink_viewbook()
-        
-    def cmd_toggle_contentbook(self):
-        self.view.toggle_contentbook()
-        
-    def cmd_toggle_viewbook(self):
-        self.view.toggle_viewbook()
+    def get_menu_definition(self):
+        return """ 
+                <menubar>
+                <menu name="base_view" action="base_view_menu" >
+                <menuitem name="toggletoolbar" action="window+toggle_toolbar" />
+                <menuitem name="togglemenubar" action="window+toggle_menubar" />
+                </menu>
+                </menubar>
+               """
 
-Service = window_manager
+Service = WindowManager

@@ -97,9 +97,6 @@ class Buffermanager(service.service):
         self.__session_loaded = False
         self.__editor = None
 
-    def bind(self):
-        self.create_single_view()
-
     @actions.action(stock_id=gtk.STOCK_OPEN, label=None, is_important=True)
     def act_open_file(self, action):
         """Opens a document"""

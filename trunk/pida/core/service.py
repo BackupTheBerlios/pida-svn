@@ -72,6 +72,14 @@ class options_mixin(object):
             if option is not None:
                 return option.value
 
+    def set_option(self, groupname, optionname, value):
+        group = self.options.get(groupname)
+        if group is not None:
+            option = group.get(optionname)
+            if option is not None:
+                option.value = value
+        
+
     opt = get_option
 
 
@@ -397,7 +405,7 @@ class lang_view_mixin(object):
 class single_view_mixin(object):
 
     single_view_type = None
-    single_view_book = 'content'
+    single_view_book = None
 
     def init(self):
         self.__view = None
@@ -410,7 +418,8 @@ class single_view_mixin(object):
                 self.__view = self.single_view_type(self,
                     prefix='single_view', *args, **kwargs)
                 self.__view.connect('removed', self.cb_single_view_removed)
-                self.boss.call_command('window', 'append_page',
+                if self.single_view_book is not None:
+                    self.boss.call_command('window', 'append_page',
                                        bookname=self.single_view_book,
                                        view=self.__view)
             self.__view.raise_page()
