@@ -270,6 +270,17 @@ class culebra_editor(service.service):
     
     def get_menu_definition(self):
         return """
+        <menubar>
+            <menu name="base_edit">
+                <placeholder name="EditSearchMenu">
+                    <separator />
+                    <menuitem name="CulebraFindToggle"
+                        action="%s" />
+                    <menuitem name="CulebraReplaceToggle"
+                        action="%s" />
+                </placeholder>
+            </menu>
+        </menubar>
         <toolbar>
             <placeholder name="ProjectToolbar">
                 <separator />
@@ -279,7 +290,8 @@ class culebra_editor(service.service):
                 action="%s" />
             </placeholder>
         </toolbar>
-        """ % (common.ACTION_FIND_TOGGLE, common.ACTION_REPLACE_TOGGLE)
+        """ % (common.ACTION_FIND_TOGGLE, common.ACTION_REPLACE_TOGGLE,
+              common.ACTION_FIND_TOGGLE, common.ACTION_REPLACE_TOGGLE)
     
     ####################################
     # gtk.Action's definition

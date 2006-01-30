@@ -315,6 +315,7 @@ class WindowManager(service.service):
                     </menu>
                     <menu name="base_edit" action="base_edit_menu">
                         <placeholder name="EditMenu" />
+                        <placeholder name="EditSearchMenu" />
                         <placeholder name="PreferencesMenu" />
                     </menu>
                     <menu name="base_project" action="base_project_menu" />
