@@ -25,6 +25,8 @@
 import os
 import threading
 
+import pida.core.actions as actions
+
 # pida core import(s)
 from pida.core import service
 
@@ -213,6 +215,9 @@ class python(service.service):
                 rtype = types.boolean
                 default = True
 
+        @actions.action(
+            default_accel='<Shift><Control>x'
+        )
         def act_project_execute(self, action):
             """Execute the current project."""
             proj = self.boss.call_command('projectmanager',
