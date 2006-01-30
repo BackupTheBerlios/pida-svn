@@ -55,7 +55,6 @@ class WindowManager(service.service):
             """Whether the toolbar will be displayed with small buttons."""
             rtype = types.boolean
             default = False
-
         class sidebar_width(defs.option):
             """The width of the sidebar."""
             default = 200
@@ -136,6 +135,9 @@ class WindowManager(service.service):
         actiongroup.set_visible(False)
         self.__uim.ensure_update()
 
+    def cmd_get_action_groups(self):
+        return self.__uim.get_action_groups()
+
     def cmd_input(self, callback_function, prompt='?', prefill=''):
         dialog = gtk.Dialog(title=prompt,
             parent=self.boss.get_main_window(),
@@ -166,7 +168,6 @@ class WindowManager(service.service):
 
     def bnd_buffermanager_document_changed(self, document):
         self.call('set_title', title=document.filename)
-
 
     @actions.action(
         default_accel='<Control><Shift>l'
