@@ -22,7 +22,8 @@ import linecache
 import os
 import sys
 import traceback
-
+import urllib
+import urllib2
 import pango
 import gtk
 
@@ -171,21 +172,32 @@ class DebugWindow(gtk.Dialog):
 
     def _on_send__clicked(self, button):
         exception_text = self._buffer.get_text(*self._buffer.get_bounds())
-        if DebugWindow.application.send_bugreport(exception_text, self):
-            # the bug was sent and we don't want the user to send it again
-            self.send.set_sensitive(False)
+        reply = self.maketicket(exception_text)
+        
+        print reply
 
-    def _on_save__clicked(self, button):
-        DebugWindow.application._save_cb(None)
-
-    def _should_save_be_sensitive(self):
-        #if not DebugWindow.application._project:
-        #    return False
-
-        #if not DebugWindow.application._project._changed:
-        #    return False
-
-        return True
+    def maketicket(self, summary, name='Pida Bug report'):
+        base = 'http://pida.vm.bytemark.co.uk/projects/pida/'
+        url = '%s/newticket' % base.rstrip('/')
+        postdata={'reporter': name,
+                  'summary': summary,
+                  'action': 'create',
+                  'status': 'new',
+                  'milestone': '0.3',}
+        data = urllib.urlencode(postdata)
+        request = urllib2.Request(url, data=data)
+        try:
+            page = urllib2.urlopen(request).read()
+        except:
+            page = ''
+        if 'id="ticket"' in page:
+            number = page.split('<title>', 1)[-1].split(' ', 1)[0]
+            number = number.strip('#')
+            reply = ('New ticket at: %s/ticket/%s' %
+                     (base.rstrip('/'), number))
+        else:
+            reply = 'Posting a new bug report failed.'
+        self._print(reply)
 
 import sys
     
