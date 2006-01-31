@@ -49,7 +49,7 @@ class KeyboardConfigurator(contentview.content_view):
             '<b>%(label)s</b>\n%(tooltip)s')
         self.__list.connect('double-clicked', self.cb_activated)
         self.__list.long_title = 'Keyboard Shortcuts Configuration'
-        self.__list.sort_by('name')
+        self.__list.sort_by(['name'])
 
     def add_action(self, action):
         act = ActionWrapper(action)
