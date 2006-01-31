@@ -116,7 +116,6 @@ def main():
           packages=packages,
           package_dir = {'pida': 'pida'},
           scripts=['scripts/pida'],
-          install_requires = ["Rat==0.1.dev-r7"],
           data_files=[
                     ('glade', uis),
                     ('pixmaps', pixmaps),

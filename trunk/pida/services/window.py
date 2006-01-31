@@ -35,6 +35,28 @@ import pida.pidagtk.contentbook as contentbook
 types = service.types
 defs = service.definitions
 
+from pkg_resources import Requirement, resource_filename
+icon_file = resource_filename(Requirement.parse('pida'),
+                              'pida-icon.png')
+im = gtk.Image()
+im.set_from_file(icon_file)
+
+class SplashWindow(gtk.Window):
+
+    def __init__(self):
+        gtk.Window.__init__(self, gtk.WINDOW_POPUP)
+        self.set_position(gtk.WIN_POS_CENTER)
+        self.resize(160, 100)
+        vb = gtk.VBox()
+        self.add(vb)
+        self._msg = gtk.Label()
+        vb.pack_start(self._msg)
+        
+    def message(self, msg):
+        self._msg.set_markup(msg)
+
+splash = SplashWindow()
+splash.show_all()
 
 class WindowManager(service.service):
     """Class to control the main window."""
@@ -79,6 +101,8 @@ class WindowManager(service.service):
             default = True
 
     def init(self):
+        self.__splash = splash
+        self.__splash.message('<b>Starting PIDA</b>')
         self.__acels = gtk.AccelGroup()
         self._create_uim()
 
@@ -168,6 +192,10 @@ class WindowManager(service.service):
 
     def bnd_buffermanager_document_changed(self, document):
         self.call('set_title', title=document.filename)
+
+    def bnd_editormanager_started(self):
+        self.__splash.destroy()
+        self.call('show_window')
 
     @actions.action(
         default_accel='<Control><Shift>l'
@@ -287,6 +315,7 @@ class WindowManager(service.service):
             self._connect_drag_events()
             self.__window.add(self.__mainbox)
             self.__window.resize(800, 600)
+            self.__window.set_icon(im.get_pixbuf())
 
     def _append_page(self, bookname, page):
         self.__viewbooks[bookname].append_page(page)
