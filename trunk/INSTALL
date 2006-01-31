@@ -7,3 +7,5 @@ To install PIDA, run:
     python setup.py install
 
 You may require super user access depending on where you want to install it.
+
+(for further instructions look at the manuals in docs/)
