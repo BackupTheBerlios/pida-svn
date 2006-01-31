@@ -26,6 +26,8 @@ import pkg_resources
 import traceback
 from cStringIO import StringIO
 
+SERVICE_GROUPS = ['services', 'editors', 'languages', 'plugins']
+
 class service_manager(base.pidagroup):
     """Top level services component group."""
 
@@ -37,9 +39,9 @@ class service_manager(base.pidagroup):
                              'plugins': {},
                              'languages':{}}
 
-    def load_all(self):
+    def load_all(self, groups=SERVICE_GROUPS):
         self.log.debug('finding all services')
-        for group in ['services', 'editors', 'languages', 'plugins']:
+        for group in groups:
             self.__load_entrypoints(group)
         # load all the services, they are compulsory
         self.log.debug('loading core services')

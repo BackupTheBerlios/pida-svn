@@ -114,18 +114,20 @@ class environment(object):
 class application(object):
     """The pIDA Application."""
 
-    def __init__(self, bosstype):
+    def __init__(self, bosstype, mainloop, mainstop):
+        self.__mainloop = mainloop
+        self.__mainstop = mainstop
         self.__env = environment()
         self.__boss = bosstype(application=self, env=self.__env)
 
     def start(self):
         """Start PIDA."""
         self.__boss.start()
-        gtk.main()
+        self.__mainloop()
 
     def stop(self):
         """Stop PIDA."""
-        gtk.main_quit()
+        self.__mainstop()
 
 def pida_excepthook(exctype, value, tb):
     if exctype is not KeyboardInterrupt:
@@ -137,10 +139,11 @@ def pida_excepthook(exctype, value, tb):
 
 sys.excepthook = pida_excepthook
 
-def main(bosstype=boss.boss):
+def main(bosstype=boss.boss, mainloop=gtk.main, mainstop=gtk.main_quit):
     warnings.filterwarnings("ignore", category=DeprecationWarning)
-    app = application(bosstype)
+    app = application(bosstype, mainloop, mainstop)
     app.start()
+    return app
 
 
 if __name__ == '__main__':
