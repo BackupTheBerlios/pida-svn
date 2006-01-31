@@ -13,4 +13,4 @@ recursive-include scripts *
 recursive-include data *
 recursive-include extras *
 recursive-include docs *
-recursive-include tests *
+recursive-include tests *.py
