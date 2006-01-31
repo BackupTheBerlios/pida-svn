@@ -166,11 +166,16 @@ class Tree(gtk.VBox):
             sb.add(hb)
             self.__sortcombo = gtk.combo_box_new_text()
             hb.pack_start(self.__sortcombo)
-            self.__sortcombo.connect('changed', self.cb_sortcombo_changed)
             if self.SORT_AVAILABLE is not None:
                 self.sort_available = dict(self.SORT_AVAILABLE)
                 for attr, val in self.SORT_AVAILABLE:
                     self.__sortcombo.append_text(attr)
+            self.__sortdir = gtk.ToggleToolButton(
+                             stock_id=gtk.STOCK_SORT_DESCENDING)
+            hb.pack_start(self.__sortdir, expand=False)
+            self.__sortdir.set_active(True)
+            self.__sortdir.connect('toggled', self.cb_sortdir_toggled)
+            self.__sortcombo.connect('changed', self.cb_sortcombo_changed)
             self.__sortcombo.set_active(0)
         if self.EDIT_BOX == True:
             self.__editbox = QuestionBox()
@@ -183,6 +188,7 @@ class Tree(gtk.VBox):
             self.__toolbar.connect('clicked', self.cb_toolbar_clicked)
             self.pack_start(self.__toolbar, expand=False)
         self.__init_signals()
+        self.sort_by(['key'])
         if self.SORT_BY is not None:
             self.sort_by([self.SORT_BY])
         if self.SORT_LIST is not None:
@@ -295,7 +301,9 @@ class Tree(gtk.VBox):
     def question(self, callback, prompt):
         self.__editbox.question(callback, prompt)
 
-    def sort_by(self, attrnames, sortcolid=0, columnid=1):
+    def sort_by(self, attrnames,
+                sortcolid=0, columnid=1,
+                direction=gtk.SORT_DESCENDING):
         def comparemethod(model, iter1, iter2):
             v1 = model.get_value(iter1, columnid)
             v2 = model.get_value(iter2, columnid)
@@ -305,24 +313,22 @@ class Tree(gtk.VBox):
                     attr1 = getattr(v1.value, attrname, None)
                 if v2 is not None:
                     attr2 = getattr(v2.value, attrname, None)
-                if attr1 is None:
-                    return -1
+                if attr1 is None and attr2 is None:
+                    return 0
+                elif attr1 is None:
+                    return 0
                 elif attr2 is None:
-                    return 1
+                    return 0
                 else:
                     return cmp(attr2, attr1)
-            for attrname in attrnames:
+            for attrname in attrnames + ['key']:
                 compd = cmpvs(attrname, v1, v2)
                 if compd != 0:
                     return compd
             return 0
+        self.__model.set_sort_column_id(sortcolid, direction)
         self.__model.set_sort_func(sortcolid, comparemethod)
-        self.__model.set_sort_column_id(sortcolid, gtk.SORT_DESCENDING)
-
-    def sort_by_list(self, attrnames, columnid=1):
-        for i, attrname in enumerate(attrnames):
-            self.sort_by(attrname, i, columnid)
-        self.__model.set_sort_column_id(0, gtk.SORT_DESCENDING)
+        #self.__view.set_model(self.__model)
 
     def __get_model(self):
         """Return the Tree Model."""
@@ -384,8 +390,18 @@ class Tree(gtk.VBox):
         toolbar.emit_stop_by_name('clicked')
 
     def cb_sortcombo_changed(self, combo):
-        text = combo.get_active_text()
-        self.sort_by([self.sort_available[text]])
+        self.__user_initiated_sort()
+
+    def cb_sortdir_toggled(self, toggle):
+        self.__user_initiated_sort()
+
+    def __user_initiated_sort(self):
+        text = self.__sortcombo.get_active_text()
+        if self.__sortdir.get_active():
+            direction = gtk.SORT_DESCENDING
+        else:
+            direction = gtk.SORT_ASCENDING
+        self.sort_by([self.sort_available[text]], direction=direction)
 
 gobject.type_register(Tree)
 
