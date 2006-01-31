@@ -35,7 +35,12 @@ class BufferItem(tree.IconTreeItem):
 
 class BufferTree(tree.Tree):
     
-    SORT_BY = 'creation_time'
+    SORT_CONTROLS = True
+    SORT_AVAILABLE = [('Time Opened','creation_time'),
+                      ('File path','filename'),
+                      ('File name','basename'),
+                      ('Mime Type','mimetype'),
+                      ('File Length','length')]
 
     def __init__(self):
         tree.Tree.__init__(self)

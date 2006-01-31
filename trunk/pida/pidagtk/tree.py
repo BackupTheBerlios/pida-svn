@@ -134,6 +134,8 @@ class Tree(gtk.VBox):
 
     SORT_BY = None
     SORT_LIST = None
+    SORT_AVAILABLE = None
+    SORT_CONTROLS = False
 
     def __init__(self):
         self.__init_model()
@@ -155,6 +157,21 @@ class Tree(gtk.VBox):
         self.__view.set_headers_visible(False)
         for column in self.__init_renderers():
             self.__view.append_column(column)
+        if self.SORT_CONTROLS == True:
+            sb = gtk.Expander()
+            self.pack_start(sb, expand=False)
+            l = gtk.Label('Sort')
+            sb.set_label_widget(l)
+            hb = gtk.HBox()
+            sb.add(hb)
+            self.__sortcombo = gtk.combo_box_new_text()
+            hb.pack_start(self.__sortcombo)
+            self.__sortcombo.connect('changed', self.cb_sortcombo_changed)
+            if self.SORT_AVAILABLE is not None:
+                self.sort_available = dict(self.SORT_AVAILABLE)
+                for attr, val in self.SORT_AVAILABLE:
+                    self.__sortcombo.append_text(attr)
+            self.__sortcombo.set_active(0)
         if self.EDIT_BOX == True:
             self.__editbox = QuestionBox()
             self.pack_start(self.__editbox, expand=False)
@@ -365,6 +382,10 @@ class Tree(gtk.VBox):
         elif action == 'delete':
             self.emit('delete-item')
         toolbar.emit_stop_by_name('clicked')
+
+    def cb_sortcombo_changed(self, combo):
+        text = combo.get_active_text()
+        self.sort_by([self.sort_available[text]])
 
 gobject.type_register(Tree)
 
