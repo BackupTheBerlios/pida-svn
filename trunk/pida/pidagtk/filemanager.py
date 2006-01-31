@@ -42,7 +42,9 @@ DIR_ICON = icons.icons.get_image('gtk-directory')
 
 class FileTree(tree.IconTree):
 
-    SORT_LIST = ['isdir', 'name']
+    SORT_CONTROLS = True
+    SORT_AVAILABLE = [('Directories first', 'isdir'),
+                      ('Plain Alphabetical', 'name')]
 
     def clear(self):
         self.model.clear()

@@ -174,9 +174,10 @@ class Tree(gtk.VBox):
                              stock_id=gtk.STOCK_SORT_DESCENDING)
             hb.pack_start(self.__sortdir, expand=False)
             self.__sortdir.set_active(True)
+            self.__sortcombo.set_active(0)
             self.__sortdir.connect('toggled', self.cb_sortdir_toggled)
             self.__sortcombo.connect('changed', self.cb_sortcombo_changed)
-            self.__sortcombo.set_active(0)
+            self.__user_initiated_sort()
         if self.EDIT_BOX == True:
             self.__editbox = QuestionBox()
             self.pack_start(self.__editbox, expand=False)
@@ -188,7 +189,6 @@ class Tree(gtk.VBox):
             self.__toolbar.connect('clicked', self.cb_toolbar_clicked)
             self.pack_start(self.__toolbar, expand=False)
         self.__init_signals()
-        self.sort_by(['key'])
         if self.SORT_BY is not None:
             self.sort_by([self.SORT_BY])
         if self.SORT_LIST is not None:
@@ -303,7 +303,7 @@ class Tree(gtk.VBox):
 
     def sort_by(self, attrnames,
                 sortcolid=0, columnid=1,
-                direction=gtk.SORT_DESCENDING):
+                direction=1):
         def comparemethod(model, iter1, iter2):
             v1 = model.get_value(iter1, columnid)
             v2 = model.get_value(iter2, columnid)
@@ -324,9 +324,9 @@ class Tree(gtk.VBox):
             for attrname in attrnames + ['key']:
                 compd = cmpvs(attrname, v1, v2)
                 if compd != 0:
-                    return compd
+                    return direction * compd
             return 0
-        self.__model.set_sort_column_id(sortcolid, direction)
+        self.__model.set_sort_column_id(sortcolid, gtk.SORT_DESCENDING)
         self.__model.set_sort_func(sortcolid, comparemethod)
         #self.__view.set_model(self.__model)
 
@@ -398,9 +398,10 @@ class Tree(gtk.VBox):
     def __user_initiated_sort(self):
         text = self.__sortcombo.get_active_text()
         if self.__sortdir.get_active():
-            direction = gtk.SORT_DESCENDING
+            direction = 1#gtk.SORT_DESCENDING
         else:
-            direction = gtk.SORT_ASCENDING
+            direction = -1#gtk.SORT_ASCENDING
+        print text, direction
         self.sort_by([self.sort_available[text]], direction=direction)
 
 gobject.type_register(Tree)
