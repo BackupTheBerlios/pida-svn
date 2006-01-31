@@ -42,6 +42,13 @@ types = service.types
 
 import gobject
 
+class SourceTree(tree.Tree):
+
+    SORT_CONTROLS = True
+    SORT_AVAILABLE = [('Line Number', 'linenumber'),
+                      ('Name', 'name'),
+                      ('Type', 'node_type_short')]
+
 class python_source_view(contentview.content_view):
 
     ICON_NAME = 'gtk-sourcetree'
@@ -50,7 +57,7 @@ class python_source_view(contentview.content_view):
     LONG_TITLE = 'python source browser'
 
     def init(self):
-        self.__nodes = tree.Tree()
+        self.__nodes = SourceTree()
         self.__nodes.set_property('markup-format-string',
             '<tt><b><i><span color="%(node_colour)s">'
             '%(node_type_short)s </span></i></b>'
