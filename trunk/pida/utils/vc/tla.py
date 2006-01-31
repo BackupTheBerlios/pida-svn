@@ -55,6 +55,7 @@ STATES = {
     "D/": _vc.STATE_REMOVED,
     "/>": _vc.STATE_REMOVED,
     "-/": _vc.STATE_MODIFIED,
+    "lf": _vc.STATE_MODIFIED,
 }
 
 class Vc(_vc.Vc):

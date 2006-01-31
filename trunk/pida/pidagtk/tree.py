@@ -401,7 +401,6 @@ class Tree(gtk.VBox):
             direction = 1#gtk.SORT_DESCENDING
         else:
             direction = -1#gtk.SORT_ASCENDING
-        print text, direction
         self.sort_by([self.sort_available[text]], direction=direction)
 
 gobject.type_register(Tree)
