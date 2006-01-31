@@ -1,4 +1,4 @@
-import actions
+import pida.core.actions as actions
 import unittest
 import gtk
 
@@ -52,7 +52,8 @@ class TestHandler(unittest.TestCase):
     def get_action(self, name):
         return self.actions.get_action("foo+action-handler+%s" % name)
 
-    def checkAction(self, name="", tooltip=None, stock_id="", action_type=gtk.Action, action=None, is_important=False, label=""):
+    def checkAction(self, name="", tooltip=None, stock_id="",
+        action_type=actions.PidaAction, action=None, is_important=False, label=""):
         if action is None:
             action = self.get_action(name)
         assert action is not None
@@ -113,7 +114,7 @@ class TestHandler(unittest.TestCase):
             stock_id = "gtk-normal",
             label = "Label",
             is_important = True,
-            action_type = gtk.ToggleAction,
+            action_type = actions.PidaToggleAction,
         )
 
     def test_action7(self):
@@ -122,7 +123,7 @@ class TestHandler(unittest.TestCase):
             tooltip = None,
             stock_id = "gtk-radio1",
             label = "Radio1",
-            action_type = gtk.RadioAction
+            action_type = actions.PidaRadioAction
         )
         act = self.get_action("radio1")
         self.assertEquals(0, act.get_property("value"))
@@ -135,7 +136,7 @@ class TestHandler(unittest.TestCase):
             tooltip = None,
             stock_id = "gtk-radio2",
             label = "Radio2",
-            action_type = gtk.RadioAction
+            action_type = actions.PidaRadioAction
         )
         act = self.get_action("radio2")
         self.assertEquals(1, act.get_property("value"))
@@ -148,7 +149,7 @@ class TestHandler(unittest.TestCase):
             tooltip = None,
             stock_id = "gtk-something",
             label = "Something",
-            action_type = gtk.RadioAction
+            action_type = actions.PidaRadioAction
         )
         act = self.actions.get_action("Something")
         self.assertEquals(0, act.get_property("value"))
@@ -161,7 +162,7 @@ class TestHandler(unittest.TestCase):
             tooltip = None,
             stock_id = "gtk-radio4",
             label = "Radio4",
-            action_type = gtk.RadioAction
+            action_type = actions.PidaRadioAction
         )
         act = self.get_action("radio4")
         self.assertEquals(1, act.get_property("value"))

@@ -119,6 +119,7 @@ class application(object):
         self.__mainstop = mainstop
         self.__env = environment()
         self.__boss = bosstype(application=self, env=self.__env)
+        self.boss = self.__boss
 
     def start(self):
         """Start PIDA."""

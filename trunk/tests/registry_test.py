@@ -22,8 +22,8 @@
 #SOFTWARE.
 
 import unittest
-import registry
-import errors
+import pida.core.registry as registry
+import pida.core.errors as errors
 
 import os
 import tempfile

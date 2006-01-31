@@ -23,7 +23,7 @@
 
 import unittest
 
-import service
+import pida.core.service as service
 defs = service.definitions
 
 class test_a_service_preinit(unittest.TestCase):
