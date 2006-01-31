@@ -40,17 +40,21 @@ icon_file = resource_filename(Requirement.parse('pida'),
                               'pida-icon.png')
 im = gtk.Image()
 im.set_from_file(icon_file)
+im2 = gtk.Image()
+im2.set_from_file(icon_file)
 
 class SplashWindow(gtk.Window):
 
     def __init__(self):
         gtk.Window.__init__(self, gtk.WINDOW_POPUP)
         self.set_position(gtk.WIN_POS_CENTER)
-        self.resize(160, 100)
-        vb = gtk.VBox()
-        self.add(vb)
+        hb = gtk.HBox()
+        hb.set_property('border-width', 36)
+        self.add(hb)
+        hb.pack_start(im2, padding=12)
         self._msg = gtk.Label()
-        vb.pack_start(self._msg)
+        self._msg.set_alignment(0.8, 0.8)
+        hb.pack_start(self._msg)
         
     def message(self, msg):
         self._msg.set_markup(msg)
