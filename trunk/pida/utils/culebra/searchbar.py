@@ -7,7 +7,7 @@ import gtk
 
 from common import ACTION_FIND_FORWARD, ACTION_FIND_BACKWARD, ACTION_FIND_TOGGLE
 from common import escape_text, unescape_text
-from gtkutil import get_buffer_selection
+from rat.text import get_buffer_selection
 from bar import Bar
 
 class SearchBar(Bar):

@@ -6,8 +6,8 @@ __author__ = "Tiago Cogumbreiro <cogumbreiro@users.sf.net>"
 import gtksourceview
 
 from events import EventsDispatcher
+from rat.text import search_iterator, get_buffer_selection
 
-from gtkutil import search_iterator, get_buffer_selection
 from common import ChildObject
 
 #####################

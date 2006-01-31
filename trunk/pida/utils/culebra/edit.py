@@ -15,12 +15,12 @@ import gtk
 import sys
 import pango
 import gtksourceview
+from rat.text import make_source_view_indentable
 
 from replacebar import ReplaceBar
 from searchbar import SearchBar
 from buffers import CulebraBuffer
 from common import KEY_ESCAPE, ACTION_FIND_FORWARD, ACTION_FIND_BACKWARD
-from gtkutil import make_source_view_indentable
 
 
 class CulebraView(gtksourceview.SourceView):
