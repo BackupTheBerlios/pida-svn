@@ -225,7 +225,9 @@ class Buffermanager(service.service):
         f = open(session_filename, 'r')
         for line in f:
             filename = line.strip()
-            self.call('open_file', filename=filename)
+            def _o(filename):
+                self.call('open_file', filename=filename)
+            gtk.idle_add(_o, filename)
         lines = f.readlines()
         f.close()
         return lines
