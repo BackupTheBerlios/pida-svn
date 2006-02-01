@@ -76,12 +76,14 @@ class web_client(gtk.ScrolledWindow):
         self.__fetching_url = None
         self.__fetching_mark = None
         self.__manager = manager
+        self.__urlqueue = []
 
     def load_url(self, url):
         url, mark = get_url_mark(url)
         self.__fetching_mark = mark
         self.__fetching_url = url
         if url != self.__current_url:
+            self.__manager.stop_button.set_sensitive(True)
             self.__document.clear()
             self.__document.open_stream('text/html')
             fetch_url(url, self.cb_loader_data, self.cb_loader_finished)
@@ -94,6 +96,15 @@ class web_client(gtk.ScrolledWindow):
     def cb_loader_finished(self, url):
         self.__document.close_stream()
         self.finished(url)
+    
+    def stop(self):
+        self.cb_loader_finished(self.__fetching_url)
+
+    def back(self):
+        if len(self.__urlqueue) > 1:
+            self.__urlqueue.pop()
+            url = self.__urlqueue.pop()
+            self.load_url(url)
 
     def finished(self, url):
         self.__current_url = url
@@ -105,7 +116,11 @@ class web_client(gtk.ScrolledWindow):
         durl = url
         if self.__current_mark:
             durl = durl + '#' + self.__current_mark
+        self.__manager.stop_button.set_sensitive(False)
         self.__manager.location.set_text(url)
+        self.__urlqueue.append(url)
+        self.__manager.back_button.set_sensitive(len(self.__urlqueue) > 1)
+        
 
     def cb_request_url(self, doc, url, stream):
         def _data(data):
@@ -131,10 +146,10 @@ class BrowserView(contentview.content_view):
         controls = toolbar.Toolbar()
         controls.connect('clicked', self.cb_toolbar_clicked)
         self.back_button = controls.add_button('back',
-            'left', 'Go back to the previous URL')
-        #self.back_button.set_sensitive(False)
+            'go-back-ltr', 'Go back to the previous URL')
+        self.back_button.set_sensitive(False)
         self.stop_button = controls.add_button('close',
-            'close', 'Stop loading the current URL')
+            'gtk-stop', 'Stop loading the current URL')
         #self.stop_button.set_sensitive(False)
         bar = gtk.HBox()
         self.widget.pack_start(bar, expand=False)
@@ -142,23 +157,25 @@ class BrowserView(contentview.content_view):
         self.location = gtk.Entry()
         bar.pack_start(self.location)
         self.location.connect('activate', self.cb_url_entered)
-
         self.__browser = web_client(self)
         self.widget.pack_start(self.__browser)
         self.status_bar = gtk.Statusbar()
         self.status_context = self.status_bar.get_context_id('web')
         self.widget.pack_start(self.status_bar, expand=False)
-        self.urlqueue = []
-        self.urlqueueposition = 0
-        self.url = None
 
     def cb_url_entered(self, entry):
         url = self.location.get_text()
         self.fetch(url)
 
-
     def fetch(self, url):
         self.__browser.load_url(url)
+
+    def cb_toolbar_clicked(self, button, name):
+        if name == 'back':
+            self.__browser.back()
+        else:
+            self.__browser.stop()
+            
             
 
 
