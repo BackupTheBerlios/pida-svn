@@ -28,7 +28,6 @@ import gobject
 import registrywidgets
 import contentview
 
-from kiwi.utils import gsignal, gproperty
 
 class data_view(contentview.content_view):
 
