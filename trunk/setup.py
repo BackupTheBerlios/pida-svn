@@ -122,6 +122,9 @@ def main():
                     ('icons', icons),
                     ('version', ['data/version']),
                     ('', ['data/icons/pida-icon.png']),
+                    ('', ['AUTHORS']),
+                    ('', ['CONTRIBUTORS']),
+                    ('', ['COPYING']),
                     ],
           entry_points = {
             'console_scripts': [
