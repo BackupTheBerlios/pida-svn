@@ -68,6 +68,10 @@ class BufferView(contentview.content_view):
         ud = gtk.MOVEMENT_DISPLAY_LINES
         self.__buffertree.view.emit('move-cursor', ud, -1)
 
+    def search(self):
+        self.__buffertree.view.grab_focus()
+        self.__buffertree.view.emit('start-interactive-search')
+
 class Buffermanager(service.service):
     
     display_name = 'Buffer Management'
@@ -169,16 +173,25 @@ class Buffermanager(service.service):
         fdialog.run()
 
     @actions.action(stock_id=gtk.STOCK_GO_FORWARD, label='Next Buffer',
-                    default_accel='<Alt>Right')
+                    default_accel='<Alt>Left')
     def act_next_buffer(self, action):
         """Go to the next buffer in the buffer list"""
         self.single_view.select_next()
 
-    @actions.action(stock_id=gtk.STOCK_GO_FORWARD, label='Previous Buffer',
-                    default_accel='<Alt>Left')
+    @actions.action(stock_id=gtk.STOCK_GO_BACK, label='Previous Buffer',
+                    default_accel='<Alt>Right')
     def act_previous_buffer(self, action):
         """Go to the previous buffer in the buffer list."""
         self.single_view.select_previous()
+
+    @actions.action(stock_id=gtk.STOCK_FIND, label='Change Buffer',
+                    default_accel='<Shift><Control>b')
+    def act_interactive_buffer_change(self, action):
+        """Interactively search for a buffer name."""
+        self.single_view.search()
+
+    def act_buffers(self, action):
+        """The buffer part of the view menu."""
         
     def cmd_open_document(self, document):
         if document is not self.__currentdocument:
@@ -316,6 +329,17 @@ class Buffermanager(service.service):
                 <placeholder name="GlobalFileMenu">
                 <menuitem name="quit" action="buffermanager+quit_pida" />
                 </placeholder>
+                </menu>
+                <menu name="base_view" action="base_view_menu">
+                <menu name="Buffers" action="buffermanager+buffers">
+                <menuitem name="bufnext"
+                          action="buffermanager+next_buffer" />
+                <menuitem name="bufprev"
+                          action="buffermanager+previous_buffer" />
+                <separator />
+                <menuitem name="bufsrch"
+                          action="buffermanager+interactive_buffer_change" />
+                </menu>
                 </menu>
                 </menubar>
                 <toolbar>

@@ -46,6 +46,12 @@ class BufferTree(tree.Tree):
         tree.Tree.__init__(self)
         self.set_property('markup-format-string', '%(filename)s')
         self.__bufferdetails = BufferDetails()
+        self.view.set_enable_search(False)
+        def _se(model, column, key, iter):
+            val = model.get_value(iter, 1).value
+            isnt = not val.basename.startswith(key)
+            return isnt
+        self.view.set_search_equal_func(_se)
         #self.pack_start(self.__bufferdetails, expand=False)
         
     def set_bufferlist(self, bufferlist):
