@@ -49,7 +49,6 @@ class BufferView(contentview.content_view):
                                        '%(markup)s')
         self.__buffertree.connect('clicked',
                                   self.service.cb_single_view_clicked)
-        #self.widget.pack_start(self.__buffertree.details_box, expand=False)
         self.widget.pack_start(self.__buffertree)
 
     def get_bufferview(self):
@@ -58,6 +57,16 @@ class BufferView(contentview.content_view):
 
     def add_document(self, document):
         self.__buffertree.add_item(document, key=document.unique_id)
+
+    def select_next(self):
+        self.__buffertree.view.grab_focus()
+        ud = gtk.MOVEMENT_DISPLAY_LINES
+        self.__buffertree.view.emit('move-cursor', ud, 1)
+
+    def select_previous(self):
+        self.__buffertree.view.grab_focus()
+        ud = gtk.MOVEMENT_DISPLAY_LINES
+        self.__buffertree.view.emit('move-cursor', ud, -1)
 
 class Buffermanager(service.service):
     
@@ -158,6 +167,18 @@ class Buffermanager(service.service):
             dialog.destroy()
         fdialog.connect('response', response)
         fdialog.run()
+
+    @actions.action(stock_id=gtk.STOCK_GO_FORWARD, label='Next Buffer',
+                    default_accel='<Alt>Right')
+    def act_next_buffer(self, action):
+        """Go to the next buffer in the buffer list"""
+        self.single_view.select_next()
+
+    @actions.action(stock_id=gtk.STOCK_GO_FORWARD, label='Previous Buffer',
+                    default_accel='<Alt>Left')
+    def act_previous_buffer(self, action):
+        """Go to the previous buffer in the buffer list."""
+        self.single_view.select_previous()
         
     def cmd_open_document(self, document):
         if document is not self.__currentdocument:
