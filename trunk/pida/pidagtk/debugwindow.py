@@ -45,7 +45,8 @@ class DebugWindow(gtk.Dialog):
 
         
         quit = self._create_button(gtk.STOCK_OK, _('_Continue'))
-        self.add_action_widget(quit, gtk.RESPONSE_ACCEPT)
+        quit.connect('clicked', self._on_ok__clicked)
+        self.action_area.pack_end(quit)
         
         self._pwd = os.getcwd()
 
@@ -177,6 +178,9 @@ class DebugWindow(gtk.Dialog):
         
         print reply
 
+    def _on_ok__clicked(self, button):
+        self.destroy()
+
     def maketicket(self, summary, name='Pida Bug report'):
         base = 'http://pida.vm.bytemark.co.uk/projects/pida/'
         url = '%s/newticket' % base.rstrip('/')
@@ -205,8 +209,7 @@ def show(exctype, value, tb):
     if exctype is not KeyboardInterrupt:
         dw = DebugWindow()
         dw.show_exception(exctype, value, tb)
-        dw.run()
-        dw.destroy()
+        dw.show_all()
 
 sys.excepthook = show
 
