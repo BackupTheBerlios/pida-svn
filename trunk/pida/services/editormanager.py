@@ -21,6 +21,8 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import gtk
+
 from pida.core import service
 from pida.core.errors import *
 
@@ -47,7 +49,19 @@ class editor_manager(service.service):
 
     def reset(self):
         if self.__editorname is not None and self.get_editor_name() != self.__editorname:
-            raise RuntimeError('You must restart PIDA for the change in editor')
+            gtk.idle_add(self._editor_changed_message)
+
+    def _editor_changed_message(self):
+        msg = ('The editor type has changed. You must restart PIDA for the'
+               'new editor to be started.')
+        dlg = gtk.MessageDialog(parent=self.boss.get_main_window(),
+                                flags=0,
+                                buttons=gtk.BUTTONS_OK,
+                                message_format=msg)
+        def _response(dlg, response):
+            dlg.destroy()
+        dlg.connect('response', _response)
+        dlg.show_all()
 
     def cmd_close(self, filename):
         self.editor.call('close', filename=filename)
