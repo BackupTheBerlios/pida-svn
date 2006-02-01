@@ -76,6 +76,8 @@ try:
 except ImportError:
     fastparser = None
 
+def is_bike_installed():
+    return fastparser is not None
 
 def adapt_brm_node(node):
     firstline = node.getLine(0).strip()

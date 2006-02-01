@@ -23,73 +23,17 @@
 
 # system import(s)
 import os
-import threading
 
 import pida.core.actions as actions
 
 # pida core import(s)
 from pida.core import service
 
-# pida gtk import(s)
-import pida.pidagtk.contentview as contentview
-import pida.pidagtk.tree as tree
-
-# pida utils import(s)
-import pida.utils.pythonparser as pythonparser
-
 defs = service.definitions
 types = service.types
 
-import gobject
-
-class SourceTree(tree.Tree):
-
-    SORT_CONTROLS = True
-    SORT_AVAILABLE = [('Line Number', 'linenumber'),
-                      ('Name', 'name'),
-                      ('Type', 'node_type_short')]
-
-class python_source_view(contentview.content_view):
-
-    ICON_NAME = 'gtk-sourcetree'
-
-    HAS_CONTROL_BOX = False
-    LONG_TITLE = 'python source browser'
-
-    def init(self):
-        self.__nodes = SourceTree()
-        self.__nodes.set_property('markup-format-string',
-            '<tt><b><i><span color="%(node_colour)s">'
-            '%(node_type_short)s </span></i></b>'
-            '<b>%(name)s</b>\n%(additional_info)s</tt>')
-        self.widget.pack_start(self.__nodes)
-        self.__nodes.connect('double-clicked', self.cb_source_clicked)
-
-    def set_source_nodes(self, root_node):
-        exp_paths = []
-        e_paths = []
-        def f(row, path):
-            e_paths.append(path)
-        self.__nodes.view.map_expanded_rows(f)
-        self.__nodes.clear()
-        self.__set_nodes(root_node)
-        for path in e_paths:
-            self.__nodes.view.expand_row(path, False)
-        
-    def __set_nodes(self, root_node, piter=None):
-        if root_node.linenumber is not None:
-            piter = self.__nodes.add_item(root_node, parent=piter,
-                key=(root_node.filename, root_node.linenumber))
-        for node in root_node.children:
-            self.__set_nodes(node, piter)
-
-    def cb_source_clicked(self, treeview, item):
-        self.service.boss.call_command('editormanager', 'goto_line',
-                                        linenumber=item.value.linenumber)
 
 class python(service.service):
-
-    lang_view_type = python_source_view
 
     class python_execution(defs.optiongroup):
         """Options pertaining to python execution"""
@@ -116,9 +60,6 @@ class python(service.service):
                                command_args=command_args,
                                icon_name='execute')
 
-    def bnd_buffermanager_document_modified(self, document):
-        self.uncache(document)
-
     def act_python_shell(self, action):
         """Start an interactive python shell."""
         self.call('execute_shell')
@@ -131,72 +72,6 @@ class python(service.service):
                 </menu>
                 </menubar>
                """
-
-    class python_language(defs.language_handler):
-        file_name_globs = ['*.py']
-
-        first_line_globs = ['*/bin/python']
-
-        def init(self):
-            self.__document = None
-            self.__cached = self.cached = {}
-
-        def load_document(self, document):
-            self.__document = document
-            root_node = None
-            if document.unique_id in self.__cached:
-                root_node, mod = self.__cached[document.unique_id]
-                if mod != document.stat.st_mtime:
-                    root_node = None
-            def load():
-                root_node = pythonparser.\
-                    get_nodes_from_string(document.string)
-                self.service.lang_view.set_source_nodes(root_node)
-                self.__cached[document.unique_id] = (root_node,
-                               document.stat.st_mtime)
-            if not root_node:
-                load()
-                #t = threading.Thread(target=load)
-                #t.run()
-            else:
-                self.service.lang_view.set_source_nodes(root_node)
-
-        def act_execute_current_file(self, action):
-            """Runs the current python script"""
-            self.service.call('execute_file',
-                              filename=self.__document.filename)
-
-        def act_debug_current_file(self, action):
-            pass
-
-        def act_profile_current_file(self, action):
-            pass
-
-        def get_menu_definition(self):
-            return """
-                <menubar>
-                <menu name="base_python" action="base_python_menu">
-                <menuitem name="expyfile" action="python+language+execute_current_file" />
-                </menu>
-                </menubar>
-                <toolbar>
-                <placeholder name="OpenFileToolbar">
-                </placeholder>
-                <placeholder name="SaveFileToolbar">
-                </placeholder>
-                <placeholder name="EditToolbar">
-                </placeholder>
-                <placeholder name="ProjectToolbar">
-                <separator />
-                <toolitem name="runpy" action="python+language+execute_current_file"/>
-                <separator />
-                </placeholder>
-                <placeholder name="VcToolbar">
-                </placeholder>
-                <placeholder name="ToolsToolbar">
-                </placeholder>
-                </toolbar>
-                """
 
     class python(defs.project_type):
         project_type_name = 'python'
@@ -285,5 +160,49 @@ class python(service.service):
             </placeholder>
             </toolbar>
             """
+
+
+    class python_executor(defs.language_handler):
+        file_name_globs = ['*.py']
+
+        first_line_globs = ['*/bin/python']
+
+        def init(self):
+            self.__document = None
+            self.__cached = self.cached = {}
+
+        def load_document(self, document):
+            self.__document = document
+
+        def act_execute_current_file(self, action):
+            """Runs the current python script"""
+            self.service.call('python', 'execute_file',
+                              filename=self.__document.filename)
+
+        def get_menu_definition(self):
+            return """
+                <menubar>
+                <menu name="base_python" action="base_python_menu">
+                <menuitem name="expyfile" action="python+language+execute_current_file" />
+                </menu>
+                </menubar>
+                <toolbar>
+                <placeholder name="OpenFileToolbar">
+                </placeholder>
+                <placeholder name="SaveFileToolbar">
+                </placeholder>
+                <placeholder name="EditToolbar">
+                </placeholder>
+                <placeholder name="ProjectToolbar">
+                <separator />
+                <toolitem name="runpy" action="python+language+execute_current_file"/>
+                <separator />
+                </placeholder>
+                <placeholder name="VcToolbar">
+                </placeholder>
+                <placeholder name="ToolsToolbar">
+                </placeholder>
+                </toolbar>
+                """
 
 Service = python

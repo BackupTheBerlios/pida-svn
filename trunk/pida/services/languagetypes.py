@@ -48,12 +48,20 @@ class language_manager_view(contentview.content_view):
     def init(self):
         self.__list = language_tree()
         self.__list.connect('clicked', self.cb_list_activated)
+        self.__list.set_property('markup-format-string', '%(display_name)s')
         self.widget.pack_start(self.__list)
         
+    def get_key_name_from_class(self, handler):
+        key = handler.__class__.__name__
+        name = ' '.join(key.capitalize().split('_'))
+        return key, name
+
     def set_file_handlers(self, handlers):
         self.__list.clear()
         for handler in handlers:
-            self.__list.add_item(handler, key=handler.__class__.__name__)
+            key, name = self.get_key_name_from_class(handler)
+            handler.display_name = name
+            self.__list.add_item(handler, key=key)
         
     def cb_list_activated(self, tv, item):
         item.value.active = not item.value.active
@@ -116,15 +124,17 @@ class language_types(service.service):
                 handler.action_group.set_visible(False)
                 if hasattr(handler.service, 'lang_view_type'):
                     view = handler.service.lang_view
-                    view.set_sensitive(False)
+                    if view is not None:
+                        view.set_sensitive(False)
         self.boss.call_command('window', 'remove_pages', bookname='languages')
         handlers = self.call('get_language_handlers', document=document)
         for handler in handlers:
             handler.action_group.set_visible(True)
             if hasattr(handler.service, 'lang_view_type'):
                 view = handler.service.lang_view
-                view.set_sensitive(True)
-                self.boss.call_command('window', 'append_page',
+                if view is not None:
+                    view.set_sensitive(True)
+                    self.boss.call_command('window', 'append_page',
                                        bookname='languages',
                                        view=view)
             handler.load_document(document)
