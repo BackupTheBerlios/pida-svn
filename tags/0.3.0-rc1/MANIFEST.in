@@ -1,0 +1,16 @@
+
+include AUTHORS
+include CONTRIUTORS
+include CHANGELOG
+include RELNOTES
+include LICENSE
+include INSTALL
+include setup.py
+include develop.sh
+include setup.cfg
+recursive-include pida *.py
+recursive-include scripts *
+recursive-include data *
+recursive-include extras *
+recursive-include docs *
+recursive-include tests *.py
