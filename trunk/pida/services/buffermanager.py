@@ -398,7 +398,6 @@ class Buffermanager(service.service):
                 </placeholder>
                 </menu>
                 <menu name="base_view" action="base_view_menu">
-                <menu name="Buffers" action="buffermanager+buffers">
                 <menuitem name="bufnext"
                           action="buffermanager+next_buffer" />
                 <menuitem name="bufprev"
@@ -406,7 +405,10 @@ class Buffermanager(service.service):
                 <separator />
                 <menuitem name="bufsrch"
                           action="buffermanager+interactive_buffer_change" />
+                <menu name="Buffers" action="buffermanager+buffers">
+                    %s
                 </menu>
+                <separator />
                 </menu>
                 </menubar>
                 <toolbar>
@@ -424,7 +426,14 @@ class Buffermanager(service.service):
                 </placeholder>
                 </toolbar>
                 </ui>
-                """
+                """ % self.get_buffer_menu()
+
+    def get_buffer_menu(self):
+        s = []
+        for i in xrange(1, 11):
+            s.append('<menuitem action="buffermanager+%s_buffer" />' % i)
+        return '\n'.join(s)
+
 
     def stop(self):
         most_recent = os.path.join(self.boss.pida_home, 'most-recent.session')
