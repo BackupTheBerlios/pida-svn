@@ -21,6 +21,7 @@ from replacebar import ReplaceBar
 from searchbar import SearchBar
 from buffers import CulebraBuffer
 from common import KEY_ESCAPE, ACTION_FIND_FORWARD, ACTION_FIND_BACKWARD
+from gtkutil import SignalHolder
 
 
 class CulebraView(gtksourceview.SourceView):
@@ -42,9 +43,27 @@ class CulebraView(gtksourceview.SourceView):
         
         self.search_bar = SearchBar(self, action_group)
         self.replace_bar = ReplaceBar(self, self.search_bar, action_group)
-        action_group.get_action(ACTION_FIND_FORWARD).connect("activate", self.on_find_forward)
-        action_group.get_action(ACTION_FIND_BACKWARD).connect("activate", self.on_find_backwards)
+        self.set_action_group(action_group)
         make_source_view_indentable(self)
+    
+    def set_action_group(self, action_group):
+        self.search_bar.set_action_group(action_group)
+        self.replace_bar.set_action_group(action_group)
+
+        if action_group is None:
+            self.find_forward_source = None
+            self.find_backward_source = None
+            return
+            
+        find_forward = action_group.get_action(ACTION_FIND_FORWARD)
+        holder = SignalHolder(find_forward, "activate", self.on_find_forward)
+        self.find_forward_source = holder
+        
+        find_backward = action_group.get_action(ACTION_FIND_BACKWARD)
+        holder = SignalHolder(find_backward, "activate", self.on_find_backwards)
+        self.find_backward_source = holder
+        
+        
     
     def set_background_color(self, color):
         self.modify_base(gtk.STATE_NORMAL, color)
@@ -77,7 +96,7 @@ class CulebraView(gtksourceview.SourceView):
     def on_find_backwards(self, action):
         self.find(False)
 
-    def on_key_pressed(self, search_text, event):
+    def _on_key_pressed(self, search_text, event):
         global KEY_ESCAPE
         
         if event.keyval == KEY_ESCAPE:
@@ -86,7 +105,7 @@ class CulebraView(gtksourceview.SourceView):
     def get_widget(self):
         if self._widget is None:
             self._widget = self.create_widget()
-            self._widget.connect("key-release-event", self.on_key_pressed)
+            self._widget.connect("key-release-event", self._on_key_pressed)
 
         
         return self._widget

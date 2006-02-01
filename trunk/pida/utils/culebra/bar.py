@@ -4,22 +4,27 @@ __copyright__ = "2005, Tiago Cogumbreiro"
 __author__ = "Tiago Cogumbreiro <cogumbreiro@users.sf.net>"
 
 from common import *
+from gtkutil import SignalHolder
 
 class Bar(ChildObject):
     def __init__(self, parent, action_group):
         super(Bar, self).__init__(parent)
-        self.bind_action_group(action_group)
+        self.set_action_group(action_group)
     
     #############
     # buffer
     _buffer = None
     
     def set_buffer(self, buff):
-        if self._buffer is not None:
-            self.unbind(self.buffer)
-            
-        self._buffer = weakref.ref(buff)
-        self.bind(buff)
+        old_buffer = self.buffer
+        if old_buffer is not None:
+            self._unbind_buffer(old_buffer)
+        
+        if buff is None:
+            self._buffer = None
+        else:
+            self._buffer = weakref.ref(buff)
+            self._bind_buffer(buff)
     
     def get_buffer(self):
         if self._buffer is None:
@@ -36,28 +41,31 @@ class Bar(ChildObject):
     def get_widget(self):
         if self._widget is None:
             self._widget = self.create_widget()
-            self._widget.connect("key-release-event", self.on_key_pressed)
+            self._widget.connect("key-release-event", self._on_key_pressed)
         return self._widget
     
     widget = property(get_widget)
     
     ##########
     # Methods
-    def bind_action_group(self, action_group):
+    def set_action_group(self, action_group):
+        if action_group is None:
+            self.toggle_source = None
+            return
+        
         self.toggle_action = self._create_toggle_action(action_group)
-        src = self.toggle_action.connect("toggled", self.on_action_toggled)
+        self.toggle_action.set_active(self.widget.get_property("visible"))
+        
+        src = SignalHolder(self.toggle_action, "toggled", self._on_action_toggled)
         self.toggle_source = src
-        
-    def unbind_action_group(self):
-        self.toggle_action.disconnect("toggled", self.toggle_source)
-        
-    def on_action_toggled(self, action):
+    
+    def _on_action_toggled(self, action):
         if action.get_active():
             self.widget.show()
         else:
             self.widget.hide()
         
-    def on_key_pressed(self, search_text, event):
+    def _on_key_pressed(self, search_text, event):
         global KEY_ESCAPE
         
         if event.keyval == KEY_ESCAPE:

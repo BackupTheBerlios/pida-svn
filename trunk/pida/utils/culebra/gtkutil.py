@@ -20,3 +20,10 @@ def hide_on_delete(window):
     return window.connect("delete-event", on_delete)
 
 
+class SignalHolder:
+    def __init__(self, obj, signal, cb):
+        self.source = obj.connect(signal, cb)
+        self.obj = obj
+    
+    def __del__(self):
+        self.obj.disconnect(self.source)

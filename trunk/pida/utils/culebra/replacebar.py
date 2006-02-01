@@ -18,8 +18,8 @@ class ReplaceBar(Bar):
     synchronized with the selected text.
     """
     def __init__(self, parent, search_bar, action_group):
-        super(ReplaceBar, self).__init__(parent, action_group)
         self._search_bar = weakref.ref(search_bar)
+        super(ReplaceBar, self).__init__(parent, action_group)
     
     def _create_toggle_action(self, action_group):
         action = lambda name: get_action(action_group.get_action, name)
@@ -97,18 +97,18 @@ class ReplaceBar(Bar):
         self.replace_forward.connect("activate", self.on_replace_curr)
         self.replace_all.connect("activate", self.on_replace_all)
 
-        self.search_bar.widget.connect("key-release-event", self.on_key_pressed)
+        self.search_bar.widget.connect("key-release-event", self._on_key_pressed)
         
         return hbox
     
     ##################
-    # Methods
+    # Template methods
 
-    def bind(self, buff):
+    def _bind_buffer(self, buff):
         buff.replace_component.events.register("changed", self.on_replace_changed)
         buff.replace_text = self.replace_entry.get_text()
     
-    def unbind(self, buff):
+    def _unbind_buffer(self, buff):
         buff.replace_component.events.unregister("changed", self.on_replace_changed)
 
     def on_show(self, dialog):

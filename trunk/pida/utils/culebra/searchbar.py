@@ -12,10 +12,11 @@ from bar import Bar
 
 class SearchBar(Bar):
     def __init__(self, parent, action_group):
-        super(SearchBar, self).__init__(parent, action_group)
-        self._widget = None
         self.entry = gtk.Entry()
         self.search_model = gtk.ListStore(str)
+        self._widget = None
+
+        super(SearchBar, self).__init__(parent, action_group)
 
     def _create_toggle_action(self, action_group):
         self.find_forward = action_group.get_action(ACTION_FIND_FORWARD)
@@ -65,7 +66,7 @@ class SearchBar(Bar):
         
 
     
-    def bind(self, buff):
+    def _bind_buffer(self, buff):
         search = buff.search_component
         search.events.register("changed", self.on_search_changed)
         search.events.register("no-more-entries", self.on_no_entries)
@@ -74,7 +75,7 @@ class SearchBar(Bar):
         if not self.entry.get_text() in [x[0] for x in self.search_model]:
             self.search_model.append((self.entry.get_text(),))
     
-    def unbind(self, buff):
+    def _unbind_buffer(self, buff):
         buff.search.events.unregister("changed", self.on_search_changed)
         buff.search.events.unregister("no-more-entries", self.on_no_entries)
         buff.search_highlight = False

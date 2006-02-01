@@ -168,14 +168,19 @@ class culebra_editor(service.service):
     
     #############
     # Commands
+    current_view = None
     def cmd_edit(self, filename=None):
+        if self.current_view is not None:
+            self.current_view.editor.set_action_group(None)
+            
         if filename not in self.__files:
             self.__load_file(filename)
         self.__view_file(filename)
         save_action = self.get_save_action()
-        if save_action is not None:
-            buff = self.current_view.editor.get_buffer()
-            self.linker = sensitive.SaveLinker(buff, save_action)
+        assert save_action is not None
+        buff = self.current_view.editor.get_buffer()
+        self.current_view.editor.set_action_group(self.action_group)
+        self.linker = sensitive.SaveLinker(buff, save_action)
             
             
     def cmd_revert(self):
