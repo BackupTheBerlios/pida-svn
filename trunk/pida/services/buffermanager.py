@@ -109,7 +109,6 @@ class Buffermanager(service.service):
                 if os.path.exists(most_recent):
                     self.call('load_session', session_filename=most_recent)
             self.__session_loaded = True
-        
 
     def init(self):
         self.__currentdocument = None
@@ -181,13 +180,13 @@ class Buffermanager(service.service):
         fdialog.run()
 
     @actions.action(stock_id=gtk.STOCK_GO_FORWARD, label='Next Buffer',
-                    default_accel='<Alt>Left')
+                    default_accel='<Alt>Right')
     def act_next_buffer(self, action):
         """Go to the next buffer in the buffer list"""
         self.single_view.select_next()
 
     @actions.action(stock_id=gtk.STOCK_GO_BACK, label='Previous Buffer',
-                    default_accel='<Alt>Right')
+                    default_accel='<Alt>Left')
     def act_previous_buffer(self, action):
         """Go to the previous buffer in the buffer list."""
         self.single_view.select_previous()
@@ -211,36 +210,30 @@ class Buffermanager(service.service):
     def act_2_buffer(self, action):
         self._switch_index(2)
 
-
     @actions.action(label='Buffer 3',
                     default_accel='<Alt>3')
     def act_3_buffer(self, action):
         self._switch_index(3)
-
 
     @actions.action(label='Buffer 4',
                     default_accel='<Alt>4')
     def act_4_buffer(self, action):
         self._switch_index(4)
 
-
     @actions.action(label='Buffer 5',
                     default_accel='<Alt>5')
     def act_5_buffer(self, action):
         self._switch_index(5)
-
 
     @actions.action(label='Buffer 6',
                     default_accel='<Alt>6')
     def act_6_buffer(self, action):
         self._switch_index(6)
 
-
     @actions.action(label='Buffer 7',
                     default_accel='<Alt>7')
     def act_7_buffer(self, action):
         self._switch_index(7)
-
 
     @actions.action(label='Buffer 8',
                     default_accel='<Alt>8')
