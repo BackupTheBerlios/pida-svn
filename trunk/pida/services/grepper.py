@@ -91,6 +91,7 @@ class GrepView(contentview.content_view):
         self.widget.pack_start(hb, expand=False, padding=2)
         self.__pattern_entry = gtk.Entry()
         hb.pack_start(self.__pattern_entry)
+        self.__pattern_entry.connect('activate', self.cb_activated)
         l = gtk.Label()
         l.set_markup(SMALL_MU % 'in')
         hb.pack_start(l, expand=False)
@@ -203,6 +204,9 @@ class GrepView(contentview.content_view):
             self.service.grep_stop()
         else:
             self.service.grep_start()
+
+    def cb_activated(self, entry):
+        self.service.grep_start()
 
 class Grepper(service.service):
 
