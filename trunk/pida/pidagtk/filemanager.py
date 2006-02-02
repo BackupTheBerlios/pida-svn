@@ -110,7 +110,7 @@ class FileBrowser(contentview.content_view):
                         (gobject.TYPE_PYOBJECT, ))}
 
     ICON_NAME = 'filemanager'
-    ICON_TEXT = 'files'
+    LONG_TITLE = 'File manager'
 
     def init(self):
         self.__currentdirectory = None
