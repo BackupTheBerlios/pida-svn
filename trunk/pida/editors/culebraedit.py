@@ -166,6 +166,9 @@ class culebra_editor(service.service):
         else:
             return False
     
+    def get_window(self):
+        return self.boss.get_main_window()
+
     #############
     # Commands
     current_view = None
@@ -184,7 +187,25 @@ class culebra_editor(service.service):
             
             
     def cmd_revert(self):
-        raise NotImplementedError
+        if self.current_view is None:
+            return
+            
+        buff = self.current_view.editor.get_buffer()
+        if buff.is_new:
+            return
+        
+        # Ok the buffer is not new and exists
+        reply = hig.dialog_ok_cancel(
+            "Revert the document to saved contents",
+            ("Even if your document was just saved it could be altered by a "
+             "third party. By reverting to its real contents you will loose "
+             "all the changes you've made so far."),
+            parent = self.get_window(),
+            ok_button = gtk.STOCK_REVERT_TO_SAVED,
+        )
+        if reply == gtk.RESPONSE_OK:
+            buff.load_from_file()
+            self.boss.call_command('buffermanager', 'reset_current_document')
 
     def cmd_start(self):
         self.get_service('editormanager').events.emit('started')
@@ -226,7 +247,7 @@ class culebra_editor(service.service):
             return True
             
         filenames = dict(map(lambda buff: (buff.filename, buff), buffs))
-        parent = self.boss.get_main_window()
+        parent = self.get_window()
         files, response = hig.save_changes(filenames.keys(), parent=parent)
         # Save the files that need to be saved
         for filename in files:
@@ -258,7 +279,7 @@ class culebra_editor(service.service):
             # either
             return False
         
-        parent = self.boss.get_main_window()
+        parent = self.get_window()
         files, response = hig.save_changes(
             [buff.filename],
             parent=parent

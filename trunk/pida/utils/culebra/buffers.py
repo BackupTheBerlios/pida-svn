@@ -384,3 +384,27 @@ class CulebraBuffer(gtksourceview.SourceBuffer):
         fd.close()
         self.set_modified(False)
 
+    def load_from_file(self):
+        """
+        Loads the contents of a file to this buffer.
+        """
+        assert self.filename is not None
+        
+        fd = open(self.filename)
+        
+        try:
+            self.begin_not_undoable_action()
+            self.set_text("")
+            
+            data = fd.read()
+            data = unicode(data, self.encoding)
+            
+            self.set_text(data)
+            self.set_modified(False)
+            self.place_cursor(self.get_start_iter())
+            self.end_not_undoable_action()
+
+        finally:
+            fd.close()
+
+        

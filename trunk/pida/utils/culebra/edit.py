@@ -136,58 +136,13 @@ def create_widget(filename, action_group):
     return vbox, editor
 
 
-# XXX: move this to CulebraBuffer class?
-def load_buffer(filename, buff=None):
-    """
-    Creates a CulebraBuffer from a filename
-    """
-    new_entry = True
-    if buff is None:
-        buff = CulebraBuffer(filename=filename)
-    # We only update the contents of a new buffer
-    fd = open(filename)
-    try:
-        buff.begin_not_undoable_action()
-        buff.set_text("")
-        data = fd.read()
-        enc_data = None
-        for enc in(sys.getdefaultencoding(), "utf-8", "iso8859", "ascii"):
-            try:
-                enc_data = unicode(data, enc)
-                buff.encoding = enc
-                break
-            except UnicodeDecodeError:
-                pass
-        assert enc_data is not None, "There was a problem detecting the encoding"
-            
-        
-        buff.set_text(enc_data)
-        buff.set_modified(False)
-        buff.place_cursor(buff.get_start_iter())
-        buff.end_not_undoable_action()
-
-    finally:
-        fd.close()
-
-    return buff
-    
-            
 def create_editor(filename, action_group):
     view = CulebraView(action_group)
-    buff = load_buffer(filename)
+    # XXX: there's no way to select an encoding
+    buff = CulebraBuffer(filename)
+    buff.load_from_file()
     view.set_buffer(buff)
     
-    
-#    def on_foo(editor):
-#        buff.search_text = "a"
-#        buff.replace_text = "b"
-#        buff.search()
-#        buff.replace()
-#        buff.replace_all()
-#        editor.replace_toggle.activate()
-        
-#    gobject.timeout_add(100, on_foo, view)
-#    gobject.timeout_add(4000, on_foo, view)
     return view
 
 
