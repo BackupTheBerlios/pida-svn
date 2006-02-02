@@ -83,7 +83,7 @@ class terminal_manager(service.service):
         class terminal_type(defs.option):
             """The default terminal type used."""
             default = 'Vte'
-            rtype = types.stringlist('Vte', 'Moo')
+            rtype = types.stringlist('Vte')#, 'Moo')
         class terminal_location(defs.option):
             """Where newly started terminals will appear by default"""
             rtype = types.stringlist(*view_location_map.keys())
