@@ -1,0 +1,4 @@
+#! /usr/bin/python
+
+import pida.core.application as application
+application.main()

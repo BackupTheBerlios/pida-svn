@@ -1,0 +1,16 @@
+0.3.0 02-02-2006
+
+* Replaced the broken library icon
+* Culebra search bar fixes
+
+0.3.0-rc1 01-02-2006
+
+* Connected activate signal on grep handler.
+* Added keyboard shortcuts for switching and searching the buffer list.
+* Moved python source browser to be independent of python executor.
+* Added web browser stop and back buttons.
+* Fixed Bugs: #118 #151 #181 #186 #152 #160 #67 #136 #180 #119 #72 #168
+
+0.3.0-beta 31-01-2006
+
+
