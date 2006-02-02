@@ -94,7 +94,10 @@ class bookmark_view(contentview.content_view):
     def _add_item(self, item, parent=None):
         niter = self.__contents.add_item(item, parent=parent)
         for child in item.subs:
-            self._add_item(child, niter)
+            try:
+                self._add_item(child, niter)
+            except KeyError:
+                pass
         
     def cb_booklist_clicked(self, treeview, item):
         if item.value.bookmarks is None:
