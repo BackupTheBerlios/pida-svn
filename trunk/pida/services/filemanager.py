@@ -26,10 +26,8 @@ import pida.pidagtk.filemanager as filemanager
 import pida.core.actions as actions
 
 class file_manager(service.service):
-    NAME = 'filemanager'
 
-    single_view_type = filemanager.FileBrowser
-    single_view_book = 'content'
+    plugin_view_type = filemanager.FileBrowser
 
     def init(self):
         self.__content = None
@@ -42,13 +40,13 @@ class file_manager(service.service):
         self.call('browse', directory=self.cmd_get_current_directory())
 
     def cmd_browse(self, directory=None):
-        if self.single_view is None:
-            self.create_single_view()
-            self.single_view.connect('file-activated',
-                                     self.cb_single_view_file_activated)
+        #if self.plugin_view is None:
+        #    self.create_plugin_view()
+        self.plugin_view.connect('file-activated',
+                                  self.cb_single_view_file_activated)
         if directory is None:
             directory = os.path.expanduser('~')
-        self.single_view.display(directory)
+        self.plugin_view.display(directory)
         #self.single_view.grab_focus()
 
     def cmd_get_current_directory(self):

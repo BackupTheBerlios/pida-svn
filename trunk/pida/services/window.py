@@ -232,26 +232,31 @@ class WindowManager(service.service):
             self.toolbar.hide_all()
 
     def _bind_views(self):
-        self.languageview = contentbook.contentbook('Current File')
-        self.contentview = contentbook.contentbook('Quick View')
-        self.editorview = contentbook.Contentholder(show_tabs=False)
-        self.bookview = contentbook.Contentholder()
+        self.contentview = contentbook.ContentBook()
+        self.editorview = contentbook.ContentBook(show_tabs=False)
+        self.bookview = contentbook.ContentBook()
+        self.bookview.notebook.set_tab_pos(gtk.POS_TOP)
         self.externalview = window.external_book()
-        self.pluginview = contentbook.contentbook('Plugins')
+        self.pluginview = contentbook.ContentBook()
         self.__viewbooks = {'content': self.contentview,
                             'view': self.bookview,
                             'plugin': self.pluginview,
                             'edit': self.editorview,
-                            'ext': self.externalview,
-                            'languages': self.languageview}
-        self.bufferview = self.get_service('buffermanager').create_single_view()
+                            'ext': self.externalview}
         self.menubar = self.__uim.get_toplevels(gtk.UI_MANAGER_MENUBAR)[0]
         self.toolbar = self.__uim.get_toplevels(gtk.UI_MANAGER_TOOLBAR)[0]
 
     def _bind_pluginviews(self):
         for service in self.boss.services:
             if service.plugin_view_type is not None:
-                self.pluginview.append_page(service.plugin_view)
+                if service.NAME in ['buffermanager', 'projectmanager',
+                                    'filemanager']:
+                    self.contentview.append_page(service.plugin_view)
+                else:
+                    self.pluginview.append_page(service.plugin_view)
+        for service in self.boss.services:
+            if service.lang_view_type is not None:
+                self.pluginview.append_page(service.lang_view)
 
     def _pack(self):
         self.__mainbox = gtk.VBox()
@@ -275,10 +280,14 @@ class WindowManager(service.service):
             side_func = p0.pack2
             main_func = p0.pack1
             main_pos = 800 - sidebar_width
+            self.contentview.notebook.set_tab_pos(gtk.POS_LEFT)
+            self.pluginview.notebook.set_tab_pos(gtk.POS_LEFT)
         else:
             side_func = p0.pack1
             main_func = p0.pack2
             main_pos = sidebar_width
+            self.contentview.notebook.set_tab_pos(gtk.POS_RIGHT)
+            self.pluginview.notebook.set_tab_pos(gtk.POS_RIGHT)
         p1 = gtk.VPaned()
         p1.show()
         side_func(sidebar, resize=False)
@@ -294,20 +303,8 @@ class WindowManager(service.service):
             box = gtk.HPaned()
         else:
             box = gtk.VPaned()
-        bar = gtk.VBox()
-        box.pack1(bar, resize=True)
-        bufs = expander.expander()
-        bufs.set_body_widget(self.bufferview)
-        l = gtk.Label('Buffer list')
-        l.set_alignment(0, 0.5)
-        bufs.set_label_widget(l)
-        bufs.expand()
-        bar.pack_start(bufs, expand=True)
-        bar.pack_start(self.pluginview)
-        bar2 = gtk.VBox()
-        box.pack2(bar2, resize=True)
-        bar2.pack_start(self.languageview, expand=False)
-        bar2.pack_start(self.contentview)
+        box.pack1(self.contentview, resize=True)
+        box.pack2(self.pluginview, resize=True)
         return box
 
     def _create_window(self):

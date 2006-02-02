@@ -126,7 +126,7 @@ class language_types(service.service):
                     view = handler.service.lang_view
                     if view is not None:
                         view.set_sensitive(False)
-        self.boss.call_command('window', 'remove_pages', bookname='languages')
+        #self.boss.call_command('window', 'remove_pages', bookname='languages')
         handlers = self.call('get_language_handlers', document=document)
         for handler in handlers:
             handler.action_group.set_visible(True)
@@ -134,9 +134,9 @@ class language_types(service.service):
                 view = handler.service.lang_view
                 if view is not None:
                     view.set_sensitive(True)
-                    self.boss.call_command('window', 'append_page',
-                                       bookname='languages',
-                                       view=view)
+                    #self.boss.call_command('window', 'append_page',
+                    #                   bookname='languages',
+                    #                   view=view)
             handler.load_document(document)
 
     def __is_active(self, handler):

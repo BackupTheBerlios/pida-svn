@@ -192,7 +192,7 @@ class paste_tree(tree.Tree):
 
 
 class paste_history_view(contentview.content_view):
-    SHORT_TITLE = 'Paste History'
+    SHORT_TITLE = 'Paste'
     LONG_TITLE = 'Paste History'
     ICON_NAME = 'paste'
     HAS_CONTROL_BOX = False

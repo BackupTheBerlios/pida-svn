@@ -235,7 +235,7 @@ class external_window(gtk.Window):
 
     def __init__(self, *args):
         super(external_window, self).__init__()
-        self.__book = contentbook.Contentholder()
+        self.__book = contentbook.ContentBook()
         self.__book.notebook.set_show_tabs(False)
         self.add(self.__book)
         self.connect('destroy', self.on_window__destroy)

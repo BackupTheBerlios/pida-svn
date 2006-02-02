@@ -54,6 +54,7 @@ class python_source_view(contentview.content_view):
 
     HAS_CONTROL_BOX = False
     LONG_TITLE = 'python source browser'
+    SHORT_TITLE = 'Source'
 
     def init(self):
         self.__nodes = SourceTree()

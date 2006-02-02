@@ -42,6 +42,7 @@ class pyflake_view(contentview.content_view):
     HAS_CONTROL_BOX = False
 
     LONG_TITLE = 'Python errors'
+    SHORT_TITLE = 'Flakes'
 
     def init(self):
         self.__list = tree.Tree()

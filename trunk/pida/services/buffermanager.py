@@ -43,12 +43,14 @@ class BufferView(contentview.content_view):
     HAS_SEPARATOR = False
     HAS_TITLE = False
 
+    SHORT_TITLE = 'Buffers'
+
     def init(self):
         self.__buffertree = buffertree.BufferTree()
         self.__buffertree.set_property('markup-format-string',
                                        '%(markup)s')
         self.__buffertree.connect('clicked',
-                                  self.service.cb_single_view_clicked)
+                                  self.service.cb_plugin_view_clicked)
         self.widget.pack_start(self.__buffertree)
 
     def get_bufferview(self):
@@ -84,7 +86,7 @@ class Buffermanager(service.service):
     
     display_name = 'Buffer Management'
     
-    single_view_type = BufferView
+    plugin_view_type = BufferView
 
     class sessions(defs.optiongroup):
         """Session management."""
@@ -183,22 +185,22 @@ class Buffermanager(service.service):
                     default_accel='<Alt>Right')
     def act_next_buffer(self, action):
         """Go to the next buffer in the buffer list"""
-        self.single_view.select_next()
+        self.plugin_view.select_next()
 
     @actions.action(stock_id=gtk.STOCK_GO_BACK, label='Previous Buffer',
                     default_accel='<Alt>Left')
     def act_previous_buffer(self, action):
         """Go to the previous buffer in the buffer list."""
-        self.single_view.select_previous()
+        self.plugin_view.select_previous()
 
     @actions.action(stock_id=gtk.STOCK_FIND, label='Change Buffer',
                     default_accel='<Shift><Control>b')
     def act_interactive_buffer_change(self, action):
         """Interactively search for a buffer name."""
-        self.single_view.search()
+        self.plugin_view.search()
 
     def _switch_index(self, index):
-        self.single_view.goto_index(index - 1)
+        self.plugin_view.goto_index(index - 1)
 
     @actions.action(label='Buffer 1',
                     default_accel='<Alt>1')
@@ -318,7 +320,7 @@ class Buffermanager(service.service):
     def __remove_document(self, document):
         del self.__filenames[document.unique_id]
         del self.__documents[document.filename]
-        model = self.single_view.bufferview.model
+        model = self.plugin_view.bufferview.model
         for row in model:
             if row[0] == str(document.unique_id):
                 model.remove(row.iter)
@@ -337,7 +339,7 @@ class Buffermanager(service.service):
     def __add_document(self, document):
         self.__documents[document.filename] = document
         self.__filenames[document.unique_id] = document.filename
-        self.single_view.add_document(document)
+        self.plugin_view.add_document(document)
 
     def __view_document(self, document):
         self.__currentdocument = document
@@ -348,9 +350,9 @@ class Buffermanager(service.service):
         self.boss.call_command('languagetypes', 'show_handlers',
                                document=document)
         self.boss.call_command('window', 'update_action_groups')
-        if (self.single_view.bufferview.get_selected_key()
+        if (self.plugin_view.bufferview.get_selected_key()
                 != document.unique_id):
-            self.single_view.bufferview.set_selected(document.unique_id)
+            self.plugin_view.bufferview.set_selected(document.unique_id)
         self.events.emit('document_changed', document=document)
 
     def __disable_all_handlers(self):
@@ -364,7 +366,7 @@ class Buffermanager(service.service):
         return self.__editor
     editor = property(get_editor)
 
-    def cb_single_view_clicked(self, view, bufitem):
+    def cb_plugin_view_clicked(self, view, bufitem):
         doc = bufitem.value
         if doc != self.__currentdocument:
             self.__view_document(doc)

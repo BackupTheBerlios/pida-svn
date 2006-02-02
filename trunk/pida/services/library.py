@@ -51,6 +51,7 @@ class bookmark_view(contentview.content_view):
 
     ICON_NAME = 'library'
     LONG_TITLE = 'Documentation Library'
+    SHORT_TITLE = 'Docs'
 
     HAS_CONTROL_BOX = False
 

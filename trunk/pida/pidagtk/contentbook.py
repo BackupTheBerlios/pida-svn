@@ -27,7 +27,7 @@ import expander
 import widgets
 import icons
 
-class Contentholder(gtk.VBox):
+class ContentBook(gtk.VBox):
 
     __gsignals__ = {'empty' : (
                         gobject.SIGNAL_RUN_LAST,
@@ -47,22 +47,35 @@ class Contentholder(gtk.VBox):
         self.__notebook = gtk.Notebook()
         self.__notebook.show()
         self.pack_start(self.__notebook)
-        self.__notebook.set_tab_pos(gtk.POS_BOTTOM)
         self.__notebook.set_scrollable(True)
         self.__notebook.set_show_border(False)
         self.__notebook.set_show_tabs(show_tabs)
         self.__notebook.set_property('tab-border', 2)
-        self.__notebook.set_property('homogeneous', True)
+        self.__notebook.set_property('homogeneous', False)
         self.__notebook.set_property('enable-popup', True)
         self.__notebook.set_show_border(False)
+        self.set_tab_position(gtk.POS_RIGHT)
         self.__notebook.popup_disable()
+
+    def set_tab_position(self, position):
+        self.__notebook.set_tab_pos(position)
 
     def append_page(self, contentview):
         tab_label = gtk.EventBox()
         tab_label.show()
 
         contentview.icon.show()
-        tab_label.add(contentview.icon)
+        box = gtk.VBox()
+        tab_label.add(box)
+        box.pack_start(contentview.icon, expand=False)
+        pos = self.notebook.get_tab_pos()
+        if pos in [gtk.POS_LEFT, gtk.POS_RIGHT]:
+            l = gtk.Label(contentview.short_title)
+            box.pack_start(l, expand=False)
+            if pos == gtk.POS_LEFT:
+                l.set_angle(90)
+            else:
+                l.set_angle(270)
         # TODO: teach tiago how to user show_all
         tab_label.show_all()
         
@@ -133,110 +146,6 @@ class Contentholder(gtk.VBox):
         contentview = self.__views[unique_id]
         contentview.raise_page()
 
-gobject.type_register(Contentholder)
-
-class content_list(gtk.HBox):
-
-    __gsignals__ = {'clicked' : (
-                        gobject.SIGNAL_RUN_LAST,
-                        gobject.TYPE_NONE,
-                        (gobject.TYPE_PYOBJECT,))}
-
-    def __init__(self):
-        gtk.HBox.__init__(self)
-        self.init()
-
-    def init(self):
-        pass
-
-gobject.type_register(content_list)
-
-class ContentholderList(content_list):
-
-    def init(self):
-        self.__views = {}
-        self.__buttons = {}
-        self.__currentuid = None
-
-    def append_page(self, contentview):
-        #label = widgets.hyperlink('', icon=contentview.icon)
-        label = contentview.icon
-        group = None
-        if len(self.__buttons):
-            group = self.__buttons.values()[0]
-        button = gtk.RadioToolButton(group)
-        #button.set_icon_widget(label)
-        #button.set_mode(False)
-        button.set_active(True)
-        button.set_icon_widget(label)
-        button.connect('toggled', self.cb_button_clicked, contentview.unique_id)
-        self.__views[contentview.unique_id] = label
-        self.__buttons[contentview.unique_id] = button
-        self.pack_start(button, expand=False)
-        #self.set_title(contentview)
-
-    def remove_page(self, contentview):
-        button = self.__buttons[contentview.unique_id]
-        self.remove(button)
-        del self.__views[contentview.unique_id]
-        del self.__buttons[contentview.unique_id]
-
-    def set_page(self, contentview):
-        self.__set_selected_uid(contentview.unique_id)
-
-    def set_title(self, contentview):
-        label = self.__views[contentview.unique_id]
-        label.set_text(contentview.short_title)
-
-    def __set_selected_uid(self, uid):
-        for closeuid in self.__views:
-            if uid == closeuid:
-                self.__currentuid = closeuid
-                button = self.__buttons[closeuid]
-                #self.__views[closeuid].set_selected()
-                #button.set_active(True)
-            else:
-                pass
-                #self.__views[closeuid].set_unselected()
-            
-
-    def cb_button_clicked(self, button, unique_id):
-        if unique_id != self.__currentuid:
-            self.__set_selected_uid(unique_id)
-            self.emit('clicked', unique_id)
-            return True
-
-class contentbook(expander.expander):
-
-    def __init__(self, name):
-        self.__name = name
-        expander.expander.__init__(self)
-
-    def populate(self):
-        self.__contentholderlist = ContentholderList()
-        #self.set_label_widget(self.__contentholderlist)
-        lab = gtk.Label(self.__name)
-        lab.set_alignment(0, 0.5)
-        self.set_label_widget(lab)
-        self.__contentholder = Contentholder(self.__contentholderlist)
-        self.__contentholder.connect('empty', self.cb_empty)
-        self.set_body_widget(self.__contentholder)
-        self.set_sensitive(False)
-
-    def append_page(self, contentview):
-        self.expand()
-        self.set_sensitive(True)
-        return self.__contentholder.append_page(contentview)
-
-    def detach_pages(self):
-        self.__contentholder.detach_pages()
-        
-
-    def set_page(self, contentview):
-        return self.__contentholder.set_page(contentview)
-
-    def cb_empty(self, contentholder):
-        self.collapse()
-        self.set_sensitive(False)
+gobject.type_register(ContentBook)
 
 
