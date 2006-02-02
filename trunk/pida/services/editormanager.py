@@ -44,7 +44,7 @@ class editor_manager(service.service):
         """General editor options"""
         class editor_type(defs.option):
             """Which editor pIDA will use."""
-            rtype = types.stringlist('Vim', 'Moo', 'Vim external', 'Culebra')
+            rtype = types.stringlist('Vim', 'Vim external', 'Culebra')
             default = 'Vim'            
 
     def reset(self):
