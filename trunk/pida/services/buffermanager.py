@@ -280,7 +280,6 @@ class Buffermanager(service.service):
 
     def cmd_open_file_line(self, filename, linenumber):
         self.call('open_file', filename=filename)
-        self.editor.call('revert')
         self.editor.call('goto_line', linenumber=linenumber)
 
     def cmd_close_file(self, filename):
