@@ -235,12 +235,16 @@ class _ReplaceMethod(ChildObject):
         the given bounds for the replaced text, thus they are not verified if they
         have 0 length(no bounds problem).
         """
+
         buff = self.get_parent()
         if bounds is None:
             bounds = buff.get_selection_bounds()
-        
+            if len(bounds) == 0:
+                return False
+                
             # Check if there's selected text and if it matches the search text
-            if get_buffer_selection(buff) != self.search_text:
+            selected_text = bounds[0].get_text(bounds[1])
+            if selected_text != self.search_text:
                 return False
         
         # If it does get the selection bounds

@@ -119,16 +119,22 @@ class ReplaceBar(Bar):
         self.toggle_find.set_active(False)
         self.toggle_find.set_sensitive(True)
     
+    def can_update_history(self):
+        return self.replace_entry.get_text() in [x[0] for x in self.replace_model]
+    
+    def update_history(self):
+        self.replace_model.append((self.replace_entry.get_text(),))
+    
     def on_replace_curr(self, btn):
-        if not self.replace_entry.get_text() in [x[0] for x in self.replace_model]:
-            self.replace_model.append((self.replace_entry.get_text(),))
-        self.buffer.replace()
+        if self.buffer.replace() and self.can_update_history():
+            self.update_history()
+
         self.buffer.search()
+        
     
     def on_replace_all(self, btn):
-        if not self.replace_entry.get_text() in [x[0] for x in self.replace_model]:
-            self.replace_model.append((self.replace_entry.get_text(),))
-        self.buffer.replace_all()
+        if self.buffer.replace_all() and self.can_update_history():
+            self.update_history()
         
     def on_entry_changed(self, entry):
         self.buffer.replace_text = unescape_text(entry.get_text())
