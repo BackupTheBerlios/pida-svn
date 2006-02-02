@@ -1,3 +1,8 @@
+0.3.0 02-02-2006
+
+* Replaced the broken library icon
+* Culebra search bar fixes
+
 0.3.0-rc1 01-02-2006
 
 * Connected activate signal on grep handler.
