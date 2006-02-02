@@ -47,7 +47,7 @@ class file_manager(service.service):
         if directory is None:
             directory = os.path.expanduser('~')
         self.plugin_view.display(directory)
-        #self.single_view.grab_focus()
+        self.plugin_view.raise_page()
 
     def cmd_get_current_directory(self):
         if self.single_view is not None:
