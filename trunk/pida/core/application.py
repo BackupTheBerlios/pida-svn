@@ -59,7 +59,7 @@ class environment(object):
         op.add_option('-d', '--home-directory', type='string', nargs=1,
                       action='store',
                       help='The location of the pida home directory',
-                      default=os.path.expanduser('~/.pida2'))
+                      default=os.path.expanduser('~/.pida'))
         op.add_option('-o', '--option', type='string', nargs=1,
                       action='append', help='Set an option')
         op.add_option('-v', '--version', action='store_true',
