@@ -404,9 +404,6 @@ class Buffermanager(service.service):
                 <separator />
                 <menuitem name="bufsrch"
                           action="buffermanager+interactive_buffer_change" />
-                <menu name="Buffers" action="buffermanager+buffers">
-                    %s
-                </menu>
                 <separator />
                 </menu>
                 </menubar>
@@ -425,8 +422,7 @@ class Buffermanager(service.service):
                 </placeholder>
                 </toolbar>
                 </ui>
-                """ % self.get_buffer_menu()
-
+                """
     def get_buffer_menu(self):
         s = []
         for i in xrange(1, 11):
