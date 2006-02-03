@@ -227,8 +227,8 @@ class Tree(gtk.VBox):
                     path, col, cellx, celly = pathinf
                     ite = self.__model.get_iter(path)
                     item = self.__model.get_value(ite, 1)
-                    #self.__view.grab_focus()
-                    #self.__view.set_cursor(path, None, 0)
+                    self.__view.grab_focus()
+                    self.__view.set_cursor(path, None, 0)
                     self.emit('right-clicked', item, event)
                 else:
                     self.emit('right-clicked', None, event)
