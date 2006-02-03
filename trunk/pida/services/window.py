@@ -194,12 +194,34 @@ class WindowManager(service.service):
         title: a string representation of the new title."""
         self.__window.set_title(title)
 
+    def cmd_next_view(self):
+        """Jump to the next view in the viewbook."""
+        self.bookview.notebook.next_page()
+        self.bookview.set_page()
+
+    def cmd_previous_view(self):
+        """Jump to the previos view in the viewbook."""
+        self.bookview.notebook.prev_page()
+        self.bookview.set_page()
+
     def bnd_buffermanager_document_changed(self, document):
         self.call('set_title', title=document.filename)
 
     def bnd_editormanager_started(self):
         self.__splash.destroy()
         self.call('show_window')
+
+    @actions.action(label='Next View',
+                    default_accel='<Alt>Up')
+    def act_next_view(self, action):
+        """Jump to the next pane in the content book."""
+        self.call('next_view')
+
+    @actions.action(label='Previous View',
+                    default_accel='<Alt>Down')
+    def act_previous_view(self, action):
+        """Jump to the next pane in the content book."""
+        self.call('previous_view')
 
     @actions.action(
         default_accel='<Control><Shift>l',
@@ -368,7 +390,10 @@ class WindowManager(service.service):
                         <menu name="service_conf" action="base_service_conf_menu" />
                         <separator />
                     </menu>
-                    <menu name="base_view" action="base_view_menu" />
+                    <menu name="base_view" action="base_view_menu">
+                        <menuitem action="window+next_view" />
+                        <menuitem action="window+previous_view" />
+                    </menu>
                     <menu name="base_pida" action="base_pida_menu" />
                     <menu name="base_help" action="base_help_menu" />
                 </menubar>

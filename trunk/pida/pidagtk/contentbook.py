@@ -100,11 +100,16 @@ class ContentBook(gtk.VBox):
 
         self.set_page(contentview)
 
-    def set_page(self, contentview):
-        pagenum = self.__notebook.page_num(contentview)
-        self.__notebook.set_current_page(pagenum)
+    def set_page(self, contentview=None):
+        if contentview is not None:
+            pagenum = self.__notebook.page_num(contentview)
+            self.__notebook.set_current_page(pagenum)
+        else:
+            pagenum = self.__notebook.get_current_page()
+            contentview = self.__notebook.get_nth_page(pagenum)
         if self.__list_widget is not None:
             self.__list_widget.set_page(contentview)
+        contentview.grab_focus()
         contentview.emit('raised')
 
     def remove_page(self, contentview):

@@ -52,6 +52,7 @@ class terminal_view(contentview.content_view):
         terminal.connect_child_exit(self.cb_exited)
         terminal.connect_title(self.set_long_title)
         terminal.execute(command_args, **kw)
+        self.grab_focus = terminal.widget.grab_focus
 
     def cb_exited(self):
         self.close()
