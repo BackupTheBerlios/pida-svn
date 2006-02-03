@@ -141,7 +141,7 @@ class Buffermanager(service.service):
         """Quits the application"""
         self.boss.stop()
 
-    @actions.action(stock_id=gtk.STOCK_NEW, label='New File',
+    @actions.action(stock_id=gtk.STOCK_NEW, label=None,
                     default_accel='<Shift><Control>n')
     def act_new_file(self, action):
         """Creates a document"""
