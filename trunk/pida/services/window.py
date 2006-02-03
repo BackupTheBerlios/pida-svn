@@ -86,13 +86,6 @@ class WindowManager(service.service):
             default = 200
             rtype = types.intrange(75, 1800, 25)
 
-    class panes(defs.optiongroup):
-        """Options for panes."""
-        class automatically_expand_language_bar(defs.option):
-            """Whether the language bar will automatically expand when there are language plugins available"""
-            rtype = types.boolean
-            default = True
-
     class toolbar_and_menubar(defs.optiongroup):
         """Options relating to the toolbar and main menu bar."""
         class toolbar_hidden(defs.option):
