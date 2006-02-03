@@ -107,9 +107,12 @@ class KeyboardShortcuts(service.service):
         return """
                 <menubar>
                 <menu name="base_edit" action="base_edit_menu">
+                    <placeholder name="SubPreferencesMenu">
+                    <separator />
                     <menuitem
                      name="editkeys"
                      action="keyboardshortcuts+keyboard_shortcuts" />
+                    </placeholder>    
                 </menu>
                 </menubar>
               """
