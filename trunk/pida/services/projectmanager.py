@@ -175,8 +175,11 @@ class ProjectManager(service.service):
     def __init_project_toolbar(self):
         tb = self.boss.call_command('window', 'get_ui_widget',
                                path='/toolbar')
+        ph = self.boss.call_command('window', 'get_ui_widget',
+                               path='/toolbar/VcToolbar')
+        i = tb.get_item_index(ph)
         ti = gtk.ToolItem()
-        tb.insert(ti, -1)
+        tb.insert(ti, i)
         ti.set_expand(True)
         self.__projects_combo = gtk.ComboBox()
         ti.add(self.__projects_combo)
