@@ -399,6 +399,8 @@ class paste_manager(service.service):
 
     # ui actions
 
+    @actions.action(label='Make a paste',
+                    stock_id=gtk.STOCK_PASTE)
     def act_new_paste(self, action):
         self.call('create_paste')
 
