@@ -126,8 +126,8 @@ class Buffermanager(service.service):
         chooser = gtk.FileChooserDialog(
                     title='Open a file',
                     parent=self.boss.get_main_window(),
-                    buttons=(gtk.STOCK_OK, gtk.RESPONSE_ACCEPT,
-                             gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT))
+                    buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
         def _cb(dlg, response):
             if response == gtk.RESPONSE_ACCEPT:
                 filename = chooser.get_filename()
