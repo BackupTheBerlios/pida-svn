@@ -328,7 +328,8 @@ class Buffermanager(service.service):
         self.__currentdocument = None
         def refresh():
             if self.__currentdocument is None:
-                self.__view_document(model[0][1].value)
+                if len(model):
+                    self.__view_document(model[0][1].value)
         gtk.timeout_add(200, refresh)
 
     def __open_file(self, filename):
