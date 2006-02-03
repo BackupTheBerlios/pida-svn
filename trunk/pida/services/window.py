@@ -166,6 +166,9 @@ class WindowManager(service.service):
     def cmd_get_action_groups(self):
         return self.__uim.get_action_groups()
 
+    def cmd_get_ui_widget(self, path):
+        return self.__uim.get_widget(path)
+
     def cmd_input(self, callback_function, prompt='?', prefill=''):
         dialog = gtk.Dialog(title=prompt,
             parent=self.boss.get_main_window(),

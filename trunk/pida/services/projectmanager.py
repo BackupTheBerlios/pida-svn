@@ -133,6 +133,15 @@ class project_view(contentview.content_view):
         menu.show_all()
         menu.popup(None, None, None, event.button, event.time)
 
+    def get_model(self):
+        return self.__projectlist.model
+
+    def set_selected(self, key):
+        self.__projectlist.set_selected(key)
+    
+    def get_selected_iter(self):
+        return self.__projectlist.selected_iter
+
 class ProjectManager(service.service):
     """Project Management"""
 
@@ -161,14 +170,30 @@ class ProjectManager(service.service):
             'projects', 'projectlist.conf')
         if not os.path.exists(self.__history_file):
             self.__write_history()
+        self.__init_project_toolbar()
 
-    def reset(self):
-        pass
+    def __init_project_toolbar(self):
+        tb = self.boss.call_command('window', 'get_ui_widget',
+                               path='/toolbar')
+        ti = gtk.ToolItem()
+        tb.insert(ti, -1)
+        ti.set_expand(True)
+        self.__projects_combo = gtk.ComboBox()
+        ti.add(self.__projects_combo)
+        cell = gtk.CellRendererText()
+        self.__projects_combo.pack_start(cell, True)
+        self.__projects_combo.set_attributes(cell, text=0)
+        self.__cmb_con = self.__projects_combo.connect_after('changed',
+                         self.cb_combo_changed)
+
 
     def stop(self):
         pass
 
     # private interface
+
+    def __set_toolbar(self):
+        self.__projects_combo.set_model(self.plugin_view.get_model())
 
     def __read_history(self):
         self.__history = []
@@ -187,6 +212,7 @@ class ProjectManager(service.service):
         self.__read_history()
         self.__load_projects()
         self.plugin_view.set_projects()
+        self.__set_toolbar()
 
     def __load_projects(self):
         self.__projects = []
@@ -214,6 +240,11 @@ class ProjectManager(service.service):
             self.__current_project = project
             self.__current_project.project_type.action_group.set_visible(True)
             self.boss.call_command('window', 'update_action_groups')
+            ite = self.plugin_view.get_selected_iter()
+            self.__projects_combo.disconnect(self.__cmb_con)
+            self.__projects_combo.set_active_iter(ite)
+            self.__cmb_con = self.__projects_combo.connect_after('changed',
+                         self.cb_combo_changed)
 
     def __current_project_activated(self):
         directory = self.__current_project.source_directory
@@ -310,6 +341,12 @@ class ProjectManager(service.service):
     # view callbacks
     def cb_plugin_view_project_clicked(self, tree, item):
         self.__current_project_changed(item.value)
+
+    def cb_combo_changed(self, cmb):
+        ite = cmb.get_active_iter()
+        project = cmb.get_model().get_value(ite, 1).value
+        self.plugin_view.set_selected(project.name)
+        self.__current_project_activated()
 
     def cb_plugin_view_project_double_clicked(self, tree, item):
         self.__current_project_activated()
