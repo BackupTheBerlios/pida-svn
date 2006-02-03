@@ -192,6 +192,7 @@ class ProjectManager(service.service):
         self.__projects_combo.set_attributes(cell, text=0)
         self.__cmb_con = self.__projects_combo.connect_after('changed',
                          self.cb_combo_changed)
+        tb.insert(gtk.SeparatorToolItem(), i)
 
 
     def stop(self):
