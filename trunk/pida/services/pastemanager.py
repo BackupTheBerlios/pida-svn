@@ -36,6 +36,7 @@ import pida.utils.pastebin as pastebin
 # pida core import(s)
 import pida.core.registry as registry
 import pida.core.service as service
+import pida.core.actions as actions
 
 types = service.types
 defs = service.definitions
@@ -148,7 +149,6 @@ class paste_editor_view(gladeview.glade_view):
             self.__pastebin.set_inputs(inputs)
         self.__pastebin.set_editor(self)
         but.set_sensitive(False)
-        self.service.plugin_view.raise_page()
         self.service.call('post_paste', paste=self.__pastebin)
 
     def on_clear_button__clicked(self,but):
@@ -195,9 +195,9 @@ class paste_history_view(contentview.content_view):
     SHORT_TITLE = 'Paste'
     LONG_TITLE = 'Paste History'
     ICON_NAME = 'paste'
-    HAS_CONTROL_BOX = False
+    HAS_CONTROL_BOX = True
     HAS_DETACH_BUTTON = True
-    HAS_CLOSE_BUTTON = False
+    HAS_CLOSE_BUTTON = True
     HAS_SEPARATOR = False
     HAS_TITLE = True
 
@@ -310,7 +310,8 @@ class paste_history_view(contentview.content_view):
 class paste_manager(service.service):
     """Service that manages the pastes and the pastebins"""
 
-    plugin_view_type = paste_history_view
+    single_view_type = paste_history_view
+    single_view_book = 'plugin'
 
     multi_view_type = paste_editor_view
     multi_view_book = 'ext'
@@ -349,7 +350,8 @@ class paste_manager(service.service):
                 return paste
 
     def __refresh(self):
-        self.plugin_view.set(self.pastes)
+        self.single_view.set(self.pastes)
+        
 
     # external interface
 
@@ -375,6 +377,9 @@ class paste_manager(service.service):
 
     def cmd_post_paste(self, paste):
         '''Post the paste paste'''
+        self.create_single_view()
+        self.single_view.set(self.pastes)
+        self.history_action.set_active(True)
         paste.set_mgr(self)
         paste.paste()
 
@@ -398,19 +403,45 @@ class paste_manager(service.service):
         self.call('create_paste')
 
     def act_remove_paste(self, action):
-        self.plugin_view.remove_current_paste()
+        self.single_view.remove_current_paste()
 
     def act_copy_url_to_clipboard(self, action):
-        self.plugin_view.copy_current_paste()
+        self.single_view.copy_current_paste()
 
     def act_view_paste(self, action):
-        self.plugin_view.view_current_paste()
+        self.single_view.view_current_paste()
+
+    @actions.action(label='Show Paste History',
+                    type=actions.TYPE_TOGGLE)
+    def act_view_history(self, action):
+        """Show the paste history."""
+        if action.get_active():
+            self.create_single_view()
+            self.single_view.set(self.pastes)
+        else:
+            if self.single_view is not None:
+                self.single_view.remove()
+        
+
+    def act_paste_bin(self, action):
+        """Base pastebin menu."""
+
+    def cb_single_view_closed(self, view):
+        self.history_action.set_active(False)
+
+    def get_history_action(self):
+        return self.action_group.get_action('pastemanager+view_history')
+
+    history_action = property(get_history_action)
 
     def get_menu_definition(self):
         return """<menubar>
                   <menu name="base_tools" action="base_tools_menu">
                     <placeholder name="ToolsMenu">
-                  <menuitem name="newpaste" action="pastemanager+new_paste" />
+                    <menu action="pastemanager+paste_bin">
+                    <menuitem name="newpaste" action="pastemanager+new_paste" />
+                    <menuitem name="viewpaste" action="pastemanager+view_history" />
+                    </menu>
                     </placeholder>
                   </menu>
                   </menubar>
