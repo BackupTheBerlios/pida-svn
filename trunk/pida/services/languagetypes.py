@@ -59,14 +59,25 @@ class language_manager_view(contentview.content_view):
     def set_file_handlers(self, handlers):
         self.__list.clear()
         for handler in handlers:
-            key, name = self.get_key_name_from_class(handler)
-            handler.display_name = name
-            self.__list.add_item(handler, key=key)
+            if handler.service.lang_view_type is not None:
+                key, name = self.get_key_name_from_class(handler)
+                handler.display_name = name
+                self.__list.add_item(handler, key=key)
         
     def cb_list_activated(self, tv, item):
         item.value.active = not item.value.active
         item.reset_markup()
-        self.service.call('show_handlers')
+        handler = item.value
+        if item.value.active:
+            view = handler.service.lang_view
+            self.service.boss.call_command('window', 'append_page',
+                                   view=view,
+                                   bookname='plugin')
+        else:
+            view = handler.service.lang_view
+            if view:
+                view.detach()
+        #self.service.call('show_handlers')
         self.service.call('save_state')
 
 
@@ -81,6 +92,20 @@ class language_types(service.service):
         self.__action_groups = {}
         self.__current_document = None
         self.__state = os.path.join(self.boss.pida_home, 'data', 'filetypes')
+        self.__started = False
+
+    def reset(self):
+        if self.__started:
+            return
+        self.__started = True
+        for handler in self.__get_active_handlers():
+            if handler.active and hasattr(handler.service, 'lang_view_type'):
+                view = handler.service.lang_view
+                if view is not None:
+                    view.set_sensitive(True)
+                    self.boss.call_command('window', 'append_page',
+                                            bookname='plugin',
+                                           view=view)
 
     def stop(self):
         self.call('save_state')
@@ -126,7 +151,6 @@ class language_types(service.service):
                     view = handler.service.lang_view
                     if view is not None:
                         view.set_sensitive(False)
-        #self.boss.call_command('window', 'remove_pages', bookname='languages')
         handlers = self.call('get_language_handlers', document=document)
         for handler in handlers:
             handler.action_group.set_visible(True)
@@ -134,9 +158,6 @@ class language_types(service.service):
                 view = handler.service.lang_view
                 if view is not None:
                     view.set_sensitive(True)
-                    #self.boss.call_command('window', 'append_page',
-                    #                   bookname='languages',
-                    #                   view=view)
             handler.load_document(document)
 
     def __is_active(self, handler):
