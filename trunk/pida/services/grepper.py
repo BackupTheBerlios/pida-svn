@@ -298,7 +298,7 @@ class Grepper(service.service):
 
     @actions.action(stock_id='gtk-searchtool',
                     label='Find in directory',
-                    is_important=True)
+                    default_accel='<Control>slash')
     def act_find(self, action):
         """Find text on a document or in a directory"""
         self.call('find_interactive')
@@ -307,8 +307,7 @@ class Grepper(service.service):
         return """
             <menubar>
             <menu name="base_edit" action="base_edit_menu">
-                <placeholder name="EditSearchMenu">
-                    <separator />
+                <placeholder name="SubEditSearchMenu">
                     <menuitem name="grepper" action="grepper+find" />
                 </placeholder>
             </menu>
