@@ -73,7 +73,7 @@ class vim_multi_editor(vimeditor.vim_editor, service.service):
         self.__cw = vimcom.communication_window(self)
         self.view.show_all()
         self.get_service('buffermanager').\
-            single_view.widget.pack_start(self.view, expand=False)
+            plugin_view.widget.pack_start(self.view, expand=False)
         self.get_service('editormanager').events.emit('started')
 
     def vim_new_serverlist(self, serverlist):
