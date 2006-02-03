@@ -348,9 +348,14 @@ class WindowManager(service.service):
         menudef = """
                 <menubar>
                     <menu name="base_file" action="base_file_menu">
+                        <separator />
                         <placeholder name="OpenFileMenu" />
+                        <separator />
                         <placeholder name="SaveFileMenu" />
+                        <placeholder name="SubSaveFileMenu" />
+                        <separator />
                         <placeholder name="ExtrasFileMenu" />
+                        <separator />
                         <placeholder name="GlobalFileMenu" />
                     </menu>
                     <menu name="base_edit" action="base_edit_menu">

@@ -212,42 +212,22 @@ class version_control(service.service):
 
     @actions.action(label='Differences',
                     stock_id='vcs_diff',
-                    default_accel='<Shift><Control>d')
+                    default_accel='<Shift><Control>d',
+                    is_important=False)
     def act_diff_file(self, action):
         self.call('diff_file', filename=self.__currentfile)
 
     def get_menu_definition(self):
         return """
             <toolbar>
-            <separator>
-            </separator>
             </toolbar>
             <menubar>
             <menu name="base_file" action="base_file_menu">
-            <separator />
-            <placeholder name="OpenFileMenu" />
-            <placeholder name="SaveFileMenu" />
-            <placeholder name="ExtrasFileMenu">
-            <separator />
+            <placeholder name="SubSaveFileMenu" >
             <menuitem name="diff_file" action="versioncontrol+diff_file" />
-            <separator />
             </placeholder>
-            <placeholder name="GlobalFileMenu" />
-            <separator />
             </menu>
             </menubar>
-            <toolbar>
-            <placeholder name="OpenFileToolbar">
-            </placeholder>
-            <placeholder name="SaveFileToolbar">
-            </placeholder>
-            <placeholder name="EditToolbar">
-            </placeholder>
-            <placeholder name="ProjectToolbar">
-            </placeholder>
-            <placeholder name="VcToolbar">
-            </placeholder>
-            </toolbar>
             """
         
         
