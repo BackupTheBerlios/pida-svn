@@ -354,6 +354,7 @@ class ProjectManager(service.service):
         ite = cmb.get_active_iter()
         project = cmb.get_model().get_value(ite, 1).value
         self.plugin_view.set_selected(project.name)
+        self.__current_project_activated()
 
     def cb_plugin_view_project_double_clicked(self, tree, item):
         self.__current_project_activated()
