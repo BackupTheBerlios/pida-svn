@@ -168,8 +168,11 @@ class ProjectManager(service.service):
         self.__history = []
         self.__history_file = os.path.join(self.boss.pida_home,
             'projects', 'projectlist.conf')
+        self.__last_file = os.path.join(self.boss.pida_home,
+            'projects', 'projectlast.conf')
         if not os.path.exists(self.__history_file):
             self.__write_history()
+        self.__started = False
         self.__init_project_toolbar()
 
     def __init_project_toolbar(self):
@@ -195,8 +198,21 @@ class ProjectManager(service.service):
         tb.insert(gtk.SeparatorToolItem(), i)
 
 
+    def reset(self):
+        if not self.__started:
+            self.__started = True
+            if os.path.exists(self.__last_file):
+                f = open(self.__last_file, 'r')
+                name = f.read()
+                f.close()
+                self.plugin_view.set_selected(name)
+                self.__current_project_activated()
+
     def stop(self):
-        pass
+        if self.__current_project is not None:
+            f = open(self.__last_file, 'w')
+            f.write(self.__current_project.name)
+            f.close()
 
     # private interface
 
