@@ -206,6 +206,7 @@ class DebugWindow(gtk.Dialog):
 
     
 def show(exctype, value, tb):
+    sys.stdout.write('%s' % window.splash)
     if exctype is not KeyboardInterrupt:
         dw = DebugWindow()
         dw.show_exception(exctype, value, tb)

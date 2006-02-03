@@ -60,7 +60,7 @@ class SplashWindow(gtk.Window):
         self._msg.set_markup(msg)
 
 splash = SplashWindow()
-splash.show_all()
+#splash.show_all()
 
 class WindowManager(service.service):
     """Class to control the main window."""
