@@ -58,13 +58,5 @@ class file_manager(service.service):
         self.boss.call_command('buffermanager', 'open_file',
                                 filename=filename)
 
-    def get_menu_definition(self):
-        return """
-            <menubar>
-            <menu name="base_view">
-            <menuitem name="focusfm" action="filemanager+grab_focus" />
-            </menu>
-            </menubar>
-        """
         
 Service = file_manager
