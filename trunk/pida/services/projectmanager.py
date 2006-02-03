@@ -93,6 +93,8 @@ class project_view(contentview.content_view):
             self.__projectlist.markup_format_string)
         self.__projectlist.connect('clicked',
             self.service.cb_plugin_view_project_clicked)
+        self.__projectlist.connect('double-clicked',
+            self.service.cb_plugin_view_project_double_clicked)
         self.__projectlist.connect('right-clicked',
             self.cb_list_right_clicked)
 
@@ -212,12 +214,12 @@ class ProjectManager(service.service):
             self.__current_project = project
             self.__current_project.project_type.action_group.set_visible(True)
             self.boss.call_command('window', 'update_action_groups')
-        directory = project.source_directory
-        def browse():
-            if directory is not None:
-                self.boss.call_command('filemanager', 'browse',
+
+    def __current_project_activated(self):
+        directory = self.__current_project.source_directory
+        if directory is not None:
+            self.boss.call_command('filemanager', 'browse',
                                     directory=directory)
-        gobject.timeout_add(100, browse)
 
     # external interface
    
@@ -306,9 +308,11 @@ class ProjectManager(service.service):
         self.call('remove_project', project=self.__current_project)
 
     # view callbacks
-
     def cb_plugin_view_project_clicked(self, tree, item):
         self.__current_project_changed(item.value)
+
+    def cb_plugin_view_project_double_clicked(self, tree, item):
+        self.__current_project_activated()
 
     def cb_plugin_view_new_clicked(self, treeview):
         self.create_data_view('project_data')
