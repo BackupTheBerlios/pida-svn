@@ -176,7 +176,7 @@ class python(service.service):
 
         def act_execute_current_file(self, action):
             """Runs the current python script"""
-            self.service.call('python', 'execute_file',
+            self.service.call('execute_file',
                               filename=self.__document.filename)
 
         def get_menu_definition(self):
