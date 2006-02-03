@@ -95,14 +95,14 @@ class WindowManager(service.service):
 
     class toolbar_and_menubar(defs.optiongroup):
         """Options relating to the toolbar and main menu bar."""
-        class toolbar_visible(defs.option):
+        class toolbar_hidden(defs.option):
             """Whether the toolbar will start visible."""
             rtype = types.boolean
-            default = True
-        class menubar_visible(defs.option):
+            default = False
+        class menubar_hidden(defs.option):
             """Whether the menubar will start visible."""
             rtype = types.boolean
-            default = True
+            default = False
 
     def init(self):
         self.__splash = splash
@@ -122,8 +122,12 @@ class WindowManager(service.service):
             size = gtk.ICON_SIZE_SMALL_TOOLBAR
         else:
             size = gtk.ICON_SIZE_LARGE_TOOLBAR
-        self.__tb_visible = self.opt('toolbar_and_menubar', 'toolbar_visible')
-        self.__menu_visible = self.opt('toolbar_and_menubar', 'menubar_visible')
+        tbact = self.action_group.get_action('window+toggle_toolbar')
+        tbact.set_active(self.opt('toolbar_and_menubar',
+                                      'toolbar_hidden'))
+        menact = self.action_group.get_action('window+toggle_menubar')
+        menact.set_active(self.opt('toolbar_and_menubar',
+                                       'menubar_hidden'))
         self._show_menubar()
         self._show_toolbar()
         self._create_window()
@@ -205,34 +209,36 @@ class WindowManager(service.service):
         self.call('show_window')
 
     @actions.action(
-        default_accel='<Control><Shift>l'
+        default_accel='<Control><Shift>l',
+        type=actions.TYPE_TOGGLE,
+        label='Hide toolbar'
         )
     def act_toggle_toolbar(self, action):
-        self.__tb_visible = not self.__tb_visible
-        self.set_option('toolbar_and_menubar', 'toolbar_visible',
-                        self.__tb_visible)
+        self.set_option('toolbar_and_menubar', 'toolbar_hidden',
+                        action.get_active())
         self._show_toolbar()
 
     @actions.action(
-        default_accel='<Control><Shift>m'
+        type=actions.TYPE_TOGGLE,
+        default_accel='<Control><Shift>m',
+        label='Hide menu bar'
         )
     def act_toggle_menubar(self, action):
-        self.__menu_visible = not self.__menu_visible
-        self.set_option('toolbar_and_menubar', 'menubar_visible',
-                        self.__menu_visible)
+        self.set_option('toolbar_and_menubar', 'menubar_hidden',
+                        action.get_active())
         self._show_menubar()
 
     def _show_menubar(self):
-        if self.__menu_visible:
-            self.menubar.show_all()
-        else:
+        if self.opt('toolbar_and_menubar', 'menubar_hidden'):
             self.menubar.hide_all()
+        else:
+            self.menubar.show_all()
 
     def _show_toolbar(self):
-        if self.__tb_visible:
-            self.toolbar.show_all()
-        else:
+        if self.opt('toolbar_and_menubar', 'toolbar_hidden'):
             self.toolbar.hide_all()
+        else:
+            self.toolbar.show_all()
 
     def _bind_views(self):
         self.contentview = contentbook.ContentBook()
