@@ -230,11 +230,19 @@ class pidawindow(gtk.Window):
         if name in self.__viewbooks:
             self.__viewbooks[name].shrink()
 
+from pkg_resources import Requirement, resource_filename
+icon_file = resource_filename(Requirement.parse('pida'),
+                              'pida-icon.png')
+im = gtk.Image()
+im.set_from_file(icon_file)
+pb = im.get_pixbuf()
+
 
 class external_window(gtk.Window):
 
     def __init__(self, *args):
         super(external_window, self).__init__()
+        self.set_icon(pb)
         self.__book = contentbook.ContentBook()
         self.__book.notebook.set_show_tabs(False)
         self.add(self.__book)
@@ -246,9 +254,12 @@ class external_window(gtk.Window):
     def cb_empty(self, holder):
         self.destroy()
 
-    def append_page(self, *args):
-        self.__book.append_page(*args)
+    def append_page(self, page):
+        self.__book.append_page(page)
+        self.set_title(page.long_title)
         self.show_all()
+        page.hide_title()
+        page.hide_controlbox()
         self.present()
 
     def on_window__destroy(self, window):
@@ -256,11 +267,6 @@ class external_window(gtk.Window):
         self.remove(self.__book)
         self.__book.remove_pages()
         return True
-
-    def get_window(self):
-        return self.__window
-    window = property(get_window)
-
 
 class external_book(object):
 

@@ -165,6 +165,7 @@ class content_view(gtk.VBox):
                 self.__toolbar_area.pack_start(closebut, expand=False)
                 closebut.connect('clicked',
                             self.cb_controlbar_close_clicked)
+                self.__close_button = closebut
 
     def init(self):
         pass
@@ -193,6 +194,13 @@ class content_view(gtk.VBox):
     def raise_page(self):
         if self.__holder is not None:
             self.__holder.set_page(self)
+
+    def hide_title(self):
+        self.__long_title_label.hide()
+
+    def hide_controlbox(self):
+        if self.HAS_CLOSE_BUTTON:
+            self.__close_button.hide()
 
     def cb_toolbar_clicked(self, toolbar, name):
         func = 'cb_%s_toolbar_clicked_%s' % (self.__prefix, name)
