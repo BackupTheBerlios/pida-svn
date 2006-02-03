@@ -225,9 +225,11 @@ class Tree(gtk.VBox):
                 self.__view.emit_stop_by_name('button-press-event')
                 if pathinf is not None:
                     path, col, cellx, celly = pathinf
-                    self.__view.grab_focus()
-                    self.__view.set_cursor(path, None, 0)
-                    self.emit('right-clicked', self.selected, event)
+                    ite = self.__model.get_iter(path)
+                    item = self.__model.get_value(ite, 1)
+                    #self.__view.grab_focus()
+                    #self.__view.set_cursor(path, None, 0)
+                    self.emit('right-clicked', item, event)
                 else:
                     self.emit('right-clicked', None, event)
                 return True
