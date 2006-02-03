@@ -120,6 +120,7 @@ class config_view(contentview.content_view):
     gsignal('data-changed')
 
     has_apply_button = False
+    HAS_DETACH_BUTTON = False
 
     def init(self):
         self.__registries = {}

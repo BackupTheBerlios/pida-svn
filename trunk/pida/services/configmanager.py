@@ -33,7 +33,7 @@ class config_view(configview.config_view):
 
     SHORT_TITLE = 'Configuration'
 
-    LONG_TITLE = 'pIDA configuration manager'
+    LONG_TITLE = 'PIDA configuration manager'
 
 class config_manager(service.service):
     
