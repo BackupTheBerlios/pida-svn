@@ -296,7 +296,9 @@ class Grepper(service.service):
         if name == 'stop':
             self.__grep.stop()
 
-    @actions.action(stock_id='gtk-searchtool')
+    @actions.action(stock_id='gtk-searchtool',
+                    label='Find in directory',
+                    is_important=True)
     def act_find(self, action):
         """Find text on a document or in a directory"""
         self.call('find_interactive')
@@ -304,8 +306,9 @@ class Grepper(service.service):
     def get_menu_definition(self):
         return """
             <menubar>
-            <menu name="base_tools" action="base_tools_menu">
-                <placeholder name="ToolsMenu">
+            <menu name="base_edit" action="base_edit_menu">
+                <placeholder name="EditSearchMenu">
+                    <separator />
                     <menuitem name="grepper" action="grepper+find" />
                 </placeholder>
             </menu>
