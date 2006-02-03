@@ -112,6 +112,8 @@ class FileBrowser(contentview.content_view):
     ICON_NAME = 'filemanager'
     LONG_TITLE = 'File manager'
     SHORT_TITLE = 'Files'
+    HAS_CLOSE_BUTTON = False
+    HAS_DETACH_BUTTON = False
 
     def init(self):
         self.__currentdirectory = None
