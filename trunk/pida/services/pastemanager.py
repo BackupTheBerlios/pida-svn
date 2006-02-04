@@ -70,6 +70,7 @@ class paste_editor_view(gladeview.glade_view):
         self.__title_entry.set_text('') # TODO: Use options
         self.__nickname_entry.set_text('') # TODO: Use options
         self.__text_entry = self.get_widget('post_text_entry')
+        self.grab_focus = self.__text_entry.grab_focus
 
     def set_paste_bin(self, pbin):
         '''Sets a pastebin to the view in order to get informations'''
