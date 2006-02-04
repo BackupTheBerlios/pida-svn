@@ -6,6 +6,8 @@ set -e
 me=$(readlink -f $0)
 pidadir=${me%/*}
 distdir=$pidadir/build/egg
+tmpdir=$pidadir/build/tmp
+mkdir -p $pidadir/build/{egg,tmp}
 
 DEBUG= REMOTE= GDB= PROFILE= PDB= UPDATE=
 while [ $# -gt 0 ]; do
@@ -64,7 +66,7 @@ if [ "$DEBUG" ]; then
     export PIDA_LOG_STDERR=1
 fi
 
-pidacmd=$distdir/pida
+pidacmd=$tmpdir/pida
 tmpfile=$pidacmd.$$
 if [ "$REMOTE" ]; then
     if [ $# -gt 0 ]; then
