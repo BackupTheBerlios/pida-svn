@@ -229,10 +229,6 @@ class Grepper(service.service):
             """Whether version control directories will be ignored by default."""
             rtype = types.boolean
             default = True
-        class start_directory(defs.option):
-            """The default starting search directory"""
-            rtype = types.directory
-            default = os.path.expanduser('~')
     class results(defs.optiongroup):
         """Options relating to search results."""
         class maximum_results(defs.option):
@@ -267,8 +263,12 @@ class Grepper(service.service):
         self.create_single_view()
         options = GrepOptions()
         if directories is None:
-            options.directories = [self.opt(
-                'default_options', 'start_directory')]
+            proj = self.boss.call_command('projectmanager',
+                                          'get_current_project')
+            if proj is not None:
+                options.directories = [proj.source_directory]
+            else:
+                options.directories = [os.getcwd()]
         else:
             options.directories = directories
         if ignorevcs is None:
