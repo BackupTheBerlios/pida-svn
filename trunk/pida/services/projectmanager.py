@@ -214,6 +214,10 @@ class ProjectManager(service.service):
             f.write(self.__current_project.name)
             f.close()
 
+    def bnd_filemanager_directory_changed(self, directory):
+        if self.__current_project is not None:
+            self.__current_project.browse_directory = directory
+
     # private interface
 
     def __set_toolbar(self):
@@ -271,7 +275,7 @@ class ProjectManager(service.service):
                          self.cb_combo_changed)
 
     def __current_project_activated(self):
-        directory = self.__current_project.source_directory
+        directory = self.__current_project.browse_directory
         if directory is not None:
             self.boss.call_command('filemanager', 'browse',
                                     directory=directory)

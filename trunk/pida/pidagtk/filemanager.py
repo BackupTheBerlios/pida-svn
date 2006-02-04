@@ -122,6 +122,7 @@ class FileBrowser(contentview.content_view):
 
     def display(self, directory):
         if os.path.isdir(directory):
+            self.service.events.emit('directory_changed', directory=directory)
             t = threading.Thread(target=self.__display, args=[directory])
             t.start()
 
@@ -250,7 +251,6 @@ class FileBrowser(contentview.content_view):
 
     def cb_file_rightclicked(self, view, fileitem, event):
         fsi = fileitem.value
-        print fsi.isdir
         if os.path.isdir(fsi.path):
             self.__popup_dir(fsi.path, event)
         else:

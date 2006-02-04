@@ -25,9 +25,14 @@ import pida.core.service as service
 import pida.pidagtk.filemanager as filemanager
 import pida.core.actions as actions
 
+defs = service.definitions
+
 class file_manager(service.service):
 
     plugin_view_type = filemanager.FileBrowser
+
+    class directory_changed(defs.event):
+        """Called when the current directory is changed."""
 
     def init(self):
         self.__content = None

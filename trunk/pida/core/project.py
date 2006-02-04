@@ -48,6 +48,7 @@ class project(base.pidacomponent):
         self.__registry = project_type.build_raw_registry()
         self.__registry.load(file_name)
         self.__registry.file_intro = '#%s' % project_type.name
+        self.__browse_directory = None
 
     def get_project_type(self):
         return self.__project_type
@@ -77,6 +78,16 @@ class project(base.pidacomponent):
     def get_source_directory(self):
         return self.get_option_value('general', 'source_directory')
     source_directory = property(get_source_directory)
+
+    def get_browse_directory(self):
+        if self.__browse_directory is None:
+            self.__browse_directory = self.source_directory
+        return self.__browse_directory
+
+    def set_browse_directory(self, directory):
+        self.__browse_directory = directory
+
+    browse_directory = property(get_browse_directory, set_browse_directory)
 
     def get_vcs_name(self):
         if self.vcs is None or self.vcs.NAME == 'Null':
