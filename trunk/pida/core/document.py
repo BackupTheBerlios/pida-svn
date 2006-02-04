@@ -77,6 +77,7 @@ def relpath(target, base=os.curdir):
 
     rel_list = [os.pardir] * (len(base_list)-i) + target_list[i:-1]
     if rel_list:
+        rel_list = rel_list + ['']
         return os.path.join(*rel_list)
     else:
         return ''
@@ -182,7 +183,7 @@ class realfile_document(document):
     markup_string = ('<span color="#600060">'
                      '%(project_name)s</span><tt>:</tt>'
                      '<span color="%(directory_colour)s">'
-                     '%(project_relative_path)s</span>/'
+                     '%(project_relative_path)s</span>'
                      '<b>%(basename)s</b>')
 
     is_new = False
