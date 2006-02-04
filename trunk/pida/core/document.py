@@ -66,6 +66,7 @@ class document(base.pidacomponent):
         self.__handler = handler
         self.__filename = filename
         self.__unique_id = time.time()
+        self.__project = None
         if markup_attributes is not None:
             self.markup_attributes = markup_attributes
         if markup_string is not None:
@@ -96,6 +97,18 @@ class document(base.pidacomponent):
         return self.__handler
     handler = property(get_handler)
 
+    def get_project_name(self):
+        if self.__project:
+            return self.__project.name
+        else:
+            return ''
+    project_name = property(get_project_name)
+    
+    def set_project(self, project):
+        self.__project = project
+
+        
+
 
 class filesystem_document(document):
     """Any file system object"""
@@ -123,8 +136,9 @@ class realfile_document(document):
 
     markup_prefix = ''
     markup_directory_color = '#0000c0'
-    markup_attributes = ['directory_basename', 'basename', 'directory_colour']
-    markup_string = ('<span color="%(directory_colour)s">%(directory_basename)s</span>/'
+    markup_attributes = ['project_name', 'directory_basename', 'basename', 'directory_colour']
+    markup_string = ('<span color="#600060">%(project_name)s</span> '
+                     '<span color="%(directory_colour)s">%(directory_basename)s</span>/'
                      '<b>%(basename)s</b>')
 
     is_new = False

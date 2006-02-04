@@ -316,6 +316,13 @@ class ProjectManager(service.service):
     def cmd_get_projects(self):
         return self.projects
 
+    def cmd_get_project_for_file(self, filename):
+        for project in self.projects:
+            if project.source_directory in filename:
+                return project
+        return None
+        
+
     # Actions
 
     @actions.action(stock_id='gtk-new',

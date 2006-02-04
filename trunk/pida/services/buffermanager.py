@@ -58,6 +58,7 @@ class BufferView(contentview.content_view):
     bufferview = property(get_bufferview)
 
     def add_document(self, document):
+        print document.markup
         self.__buffertree.add_item(document, key=document.unique_id)
 
     def select_next(self):
@@ -357,6 +358,10 @@ class Buffermanager(service.service):
     def __add_document(self, document):
         self.__documents[document.filename] = document
         self.__filenames[document.unique_id] = document.filename
+        proj = self.boss.call_command('projectmanager',
+                                      'get_project_for_file',
+                                      filename=document.filename)
+        document.set_project(proj)
         self.plugin_view.add_document(document)
 
     def __view_document(self, document):
