@@ -51,7 +51,8 @@ class python(service.service):
         command_args=[py]
         self.boss.call_command('terminal', 'execute',
                                command_args=command_args,
-                               icon_name='execute')
+                               icon_name='execute',
+                               short_title='Python Shell')
 
     def cmd_execute_file(self, filename):
         py = self.opt('python_execution', 'python_executable')

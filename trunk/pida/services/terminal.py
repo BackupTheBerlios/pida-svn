@@ -106,12 +106,14 @@ class terminal_manager(service.service):
             rtype = types.font
 
     def cmd_execute(self, command_args=[], command_line='',
-                    term_type=None, icon_name='terminal', kwdict={}):
+                    term_type=None, icon_name='terminal',
+                    short_title='Terminal', kwdict={}):
         if term_type == None:
             term_type = self.opt('general', 'terminal_type').lower()
         self.create_multi_view(term_type=term_type,
                                command_args=command_args,
                                icon_name=icon_name,
+                               short_title=short_title,
                                **kwdict)
 
     def cmd_execute_shell(self, term_type=None, kwdict={}):
