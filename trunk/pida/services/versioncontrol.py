@@ -108,7 +108,8 @@ class version_control(service.service):
                                         icon_name='vcs_diff',
                                         term_type='dumb',
                                         kwdict = {'directory':
-                                                   directory})
+                                                   directory},
+                                        short_title='Differences')
                 except NotImplementedError:
                     self.log.info('Not implemented for %s' % vcs.NAME)
 
@@ -123,7 +124,8 @@ class version_control(service.service):
                                         command_args=commandargs,
                                         icon_name='vcs_update',
                                         kwdict = {'directory':
-                                                   directory})
+                                                   directory},
+                                        short_title='Update')
                 self._update_filemanager(directory)
             except NotImplementedError:
                 self.log.info('"%s" is not version controlled', directory)
@@ -140,7 +142,8 @@ class version_control(service.service):
                                         command_args=commandargs,
                                         icon_name='vcs_commit',
                                         kwdict = {'directory':
-                                                   directory})
+                                                   directory},
+                                        short_title='Commit')
                 self._update_filemanager(directory)
             self.boss.call_command('window', 'input',
                                    callback_function=commit,
@@ -159,7 +162,8 @@ class version_control(service.service):
                                     command_args=commandargs,
                                     icon_name='vcs_add',
                                     kwdict = {'directory':
-                                               directory})
+                                               directory},
+                                    short_title='Add')
                 self._update_filemanager(directory)
             except NotImplementedError:
                 self.log.info('Not implemented for %s' % vcs.NAME)
@@ -177,7 +181,8 @@ class version_control(service.service):
                                     command_args=commandargs,
                                     icon_name='vcs_add',
                                     kwdict = {'directory':
-                                               directory})
+                                               directory},
+                                    short_title='Remove')
                 self._update_filemanager(directory)
             except NotImplementedError:
                 self.log.info('Not implemented for %s' % vcs.NAME)
@@ -195,7 +200,8 @@ class version_control(service.service):
                                     command_args=commandargs,
                                     icon_name='undo',
                                     kwdict = {'directory':
-                                               directory})
+                                               directory},
+                                    short_title='Revert')
                 self._update_filemanager(directory)
             except NotImplementedError:
                 self.log.info('Not implemented for %s' % vcs.NAME)
