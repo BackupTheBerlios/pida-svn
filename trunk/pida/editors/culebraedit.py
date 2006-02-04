@@ -58,6 +58,8 @@ class culebra_view(contentview.content_view):
         editor.set_background_color(background_color)
         editor.set_font_color(font_color)
         self.__editor = editor
+        self.buffer.connect('can-undo', self.cb_can_undo)
+        self.buffer.connect('can-redo', self.cb_can_redo)
         widget.show()
         self.widget.add(widget)
 
@@ -70,6 +72,18 @@ class culebra_view(contentview.content_view):
         return self.__editor.get_buffer()
         
     buffer = property(get_buffer)
+
+    def can_undo(self):
+        return self.buffer.can_undo()
+
+    def can_redo(self):
+        return self.buffer.can_redo()
+    
+    def cb_can_undo(self, buffer, can):
+        self.service.cb_can_undo(self, can)
+    
+    def cb_can_redo(self, buffer, can):
+        self.service.cb_can_redo(self, can)
 
     def connect_keys(self):
         self.__editor.add_events(gtk.gdk.KEY_PRESS_MASK)
@@ -105,6 +119,7 @@ class culebra_editor(service.service):
         self.__files = {}
         self.__views = {}
         self.__keymods = {}
+        self.__undoacts = {}
 
     def reset(self):
         actions = self.boss.call_command("documenttypes", "get_document_actions")
@@ -112,6 +127,10 @@ class culebra_editor(service.service):
             actname = action.get_name()
             if actname in KEYMAP:
                 self.__keymods[KEYMAP[actname]] = action
+            if actname == 'documenttypes+document+undo':
+                self.__undoacts['undo'] = action
+            elif actname == 'documenttypes+document+redo':
+                self.__undoacts['redo'] = action
         for view in self.__files.values():
             view.editor.set_background_color(self.get_background_color())
             view.editor.set_font_color(self.get_font_color())
@@ -169,13 +188,22 @@ class culebra_editor(service.service):
     def get_window(self):
         return self.boss.get_main_window()
 
+    # Undo/redo
+
+    def cb_can_undo(self, view, can):
+        if view is self.current_view:
+            self.__undoacts['undo'].set_sensitive(can)
+
+    def cb_can_redo(self, view, can):
+        if view is self.current_view:
+            self.__undoacts['redo'].set_sensitive(can)
+
     #############
     # Commands
     current_view = None
     def cmd_edit(self, filename=None):
         if self.current_view is not None:
             self.current_view.editor.set_action_group(None)
-            
         if filename not in self.__files:
             self.__load_file(filename)
         self.__view_file(filename)
@@ -184,7 +212,9 @@ class culebra_editor(service.service):
         buff = self.current_view.editor.get_buffer()
         self.current_view.editor.set_action_group(self.action_group)
         self.linker = sensitive.SaveLinker(buff, save_action)
-            
+        # undo redo
+        self.cb_can_undo(self.current_view, self.current_view.can_undo())
+        self.cb_can_redo(self.current_view, self.current_view.can_redo())
             
     def cmd_revert(self):
         if self.current_view is None:
