@@ -347,9 +347,10 @@ class ProjectManager(service.service):
         default_accel='<Shift><Control>c')
     def act_commit_project(self, action):
         """Commit the current project to version control"""
-        directory = self.__current_project.source_directory
-        self.boss.call_command('versioncontrol', 'commit',
-                               directory=directory)
+        if self.__current_project is not None:
+            directory = self.__current_project.source_directory
+            self.boss.call_command('versioncontrol', 'commit',
+                                   directory=directory)
 
     #def act_get_project_statuses(self, action):
     #    pass
@@ -358,9 +359,10 @@ class ProjectManager(service.service):
                     default_accel='<Shift><Control>u')
     def act_update_project(self, action):
         """Update the current project from version control"""
-        directory = self.__current_project.source_directory
-        self.boss.call_command('versioncontrol', 'update',
-                               directory=directory)
+        if self.__current_project is not None:
+            directory = self.__current_project.source_directory
+            self.boss.call_command('versioncontrol', 'update',
+                                directory=directory)
 
     @actions.action(stock_id='gtk-remove')
     def act_remove_project_from_workbench(self, action):
