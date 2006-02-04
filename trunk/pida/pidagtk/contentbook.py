@@ -63,20 +63,19 @@ class ContentBook(gtk.VBox):
     def append_page(self, contentview):
         tab_label = gtk.EventBox()
         tab_label.show()
-
-        contentview.icon.show()
-        box = gtk.VBox()
-        tab_label.add(box)
-        box.pack_start(contentview.icon, expand=False)
+        l = gtk.Label(contentview.short_title)
         pos = self.notebook.get_tab_pos()
         if pos in [gtk.POS_LEFT, gtk.POS_RIGHT]:
-            l = gtk.Label(contentview.short_title)
-            box.pack_start(l, expand=False)
+            box = gtk.VBox()
             if pos == gtk.POS_LEFT:
                 l.set_angle(90)
             else:
                 l.set_angle(270)
-        # TODO: teach tiago how to user show_all
+        else:
+            box = gtk.HBox()
+        box.pack_start(contentview.icon, expand=False)
+        box.pack_start(l, expand=False)
+        tab_label.add(box)
         tab_label.show_all()
         
         # Set the tooltip text
