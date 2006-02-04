@@ -326,8 +326,7 @@ class ProjectManager(service.service):
 
     # Actions
 
-    @actions.action(stock_id='gtk-new',
-        default_accel='<Shift><Control>p')
+    @actions.action(stock_id='gtk-new')
     def act_new_project(self, action):
         """Create a new project."""
         self.boss.call_command('projectcreator', 'create_interactive')
