@@ -241,9 +241,12 @@ class Grepper(service.service):
             default = 500
 
     def grep_start(self):
+        opts = self.single_view.get_options()
+        if not opts.pattern:
+            return
         self.single_view.clear_results()
         self.single_view.start()
-        self.__grep = PidaGrep(self.single_view.get_options())
+        self.__grep = PidaGrep(opts)
         self.__grep.connect('found', self.cb_results_found)
         self.__grep.connect('status', self.cb_results_status)
         self.__grep.run()
