@@ -85,6 +85,8 @@ import gtk
 class MeldView(contentview.content_view):
 
     HAS_DETACH_BUTTON = False
+    LONG_TITLE = 'Difference Viewer'
+    ICON_NAME = 'vcs_diff'
     
     def __bar_from_dock(self, dock):
         return dock.get_children()[0].get_children()[-1].get_children()
@@ -129,6 +131,7 @@ class MeldView(contentview.content_view):
     app = property(get_app)
 
     def view(self, path):
+        self.long_title = 'Differences: %s' % path
         if os.path.isdir(path):
             self.view_dir(path)
             return True
@@ -155,77 +158,33 @@ class MeldView(contentview.content_view):
         app.append_vcview( [directory] )
 
 
-
 import os
-        
-F = ("/home/ali/working/pida/pida/branches/pida-ali/pida/core/application.py")
 
-import pida.core.document as document
 
-class MeldBuffer(document.dummyfile_document):
-
-    PREFIX = 'file-diff'
-
-    ICON_NAME = 'meld'
-
-    markup_prefix = 'dv'
-    markup_directory_colour = '#00c000'
-    markup_attributes = ['actual_filename', 'markup_directory_colour']
-    markup_string = ('<span color="%(markup_directory_colour)s">diff</span>/'
-                     '<b>%(actual_filename)s</b>')
-
-    def get_actual_filename(self):
-        return os.path.normpath(self.filename.rsplit(':', 1)[0])
-    actual_filename = property(get_actual_filename)
-
-class MeldDiffBuffer(MeldBuffer):
-
-    PREFIX = 'file-diff'
-    contexts = ['file']
-
-class MeldDirBuffer(MeldBuffer):
-
-    PREFIX = 'dir-diff'
 
 class Meld(service.service):
 
     multi_view_type = MeldView
-    multi_view_book = 'edit'
+    multi_view_book = 'view'
     
-    class meld_handler(document.document_handler):
-
-        globs = ['*:meld']
-
-        def create_document(self, filename, document_type):
-            document = MeldBuffer(filename, handler=self)
-            return document
-
-        def view_document(self, document):
-            view = self.service.create_meld_view(document)
-            if view is not None:
-                success = view.view(document.actual_filename)
-                if not success:
-                    view.remove()
     def init(self):
         self.__views = {}
 
     def cmd_diff(self, filename):
-        mangled = self.__manglepath(filename)
-        self.boss.call_command('buffermanager', 'open_file',
-                                filename=mangled)
-
+        view = self.create_meld_view(filename)
+        
     cmd_diff_file = cmd_diff
 
     def cmd_browse(self, directory):
         self.cmd_diff_file(directory)
 
-    def create_meld_view(self, document):
-        filename = document.actual_filename
+    def create_meld_view(self, filename):
         if filename in self.__views:
             uid = self.__views[filename]
             self.raise_multi_view(uid)
         else:
             view = self.create_multi_view()
+            view.view(filename)
             self.__views[filename] = view.unique_id
             return view
 
@@ -237,10 +196,5 @@ class Meld(service.service):
                 break
         if delete_file:
             del self.__views[filename]
-            self.boss.call_command('buffermanager', 'file_closed',
-                              filename=self.__manglepath(filename))
-
-    def __manglepath(self, filename):
-        return '%s:meld' % filename
 
 Service = Meld
