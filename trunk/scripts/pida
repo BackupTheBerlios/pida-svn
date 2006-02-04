@@ -1,4 +1,44 @@
-#! /usr/bin/python
+#!/bin/sh
+# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 
-import pida.core.application as application
-application.main()
+set -ex
+DEBUG= REMOTE= GDB=
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -remote) REMOTE=1 ;;
+        -debug)  DEBUG=1 ;;
+        -gdb)    GDB=1 ;;
+        *)       break ;;
+    esac
+    shift
+done
+
+if [ "$DEBUG" ]; then 
+    export PIDA_DEBUG=1
+    export PIDA_LOG_STDERR=1
+fi
+
+args= module= background=
+if [ "$REMOTE" ]; then
+    if [ $# -gt 0 ]; then
+        file="$1"; shift
+        [ "${file:0:1}" == "/" ] || file="$PWD/$file"
+    else
+        file=
+    fi
+    module='pida.utils.pidaremote'
+    args="$file $*"
+    background='&'
+else
+    module='pida.core.application'
+    args="$*"
+fi
+
+pidacmd="-c 'from $module import main; main()' $args"
+
+if [ "$GDB" ]; then
+    echo "run $pidacmd" | gdb python -q -x /dev/stdin
+else
+    eval exec "python $pidacmd" $background
+fi
