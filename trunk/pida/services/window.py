@@ -25,6 +25,9 @@ import os
 
 import gtk
 
+# XXX: should be importing from rat
+from pida.utils import shiftpaned
+
 import pida.core.actions as actions
 import pida.core.service as service
 import pida.pidagtk.window as window
@@ -96,6 +99,11 @@ class WindowManager(service.service):
             """Whether the menubar will start visible."""
             rtype = types.boolean
             default = True
+        class sidebar_visible(defs.option):
+            """Whether the sidebar will start visible."""
+            rtype = types.boolean
+            default = True
+    
 
     def init(self):
         self.__splash = splash
@@ -121,6 +129,9 @@ class WindowManager(service.service):
         menact = self.action_group.get_action('window+toggle_menubar')
         menact.set_active(self.opt('toolbar_and_menubar',
                                        'menubar_visible'))
+        sidact = self.action_group.get_action('window+toggle_sidebar')
+        sidact.set_active(self.opt('toolbar_and_menubar',
+                                       'sidebar_visible'))
         self._show_menubar()
         self._show_toolbar()
         self._create_window()
@@ -243,17 +254,31 @@ class WindowManager(service.service):
                         action.get_active())
         self._show_menubar()
 
-    def _show_menubar(self):
-        if self.opt('toolbar_and_menubar', 'menubar_visible'):
-            self.menubar.show_all()
+    @actions.action(
+        type=actions.TYPE_TOGGLE,
+        default_accel='<Control><Shift>b',
+        label='Sidebar'
+    )
+    def act_toggle_sidebar(self, action):
+        if action.get_active():
+            self.show_sidebar()
         else:
-            self.menubar.hide_all()
+            self.hide_sidebar()
+        self.set_option('toolbar_and_menubar', 'sidebar_visible',
+                        action.get_active())
 
     def _show_toolbar(self):
         if self.opt('toolbar_and_menubar', 'toolbar_visible'):
             self.toolbar.show_all()
         else:
             self.toolbar.hide_all()
+
+    def _show_menubar(self):
+        if self.opt('toolbar_and_menubar', 'menubar_visible'):
+            self.menubar.show_all()
+        else:
+            self.menubar.hide_all()
+    
 
     def _bind_views(self):
         self.contentview = contentbook.ContentBook()
@@ -294,7 +319,8 @@ class WindowManager(service.service):
         self.__mainbox.pack_start(self.__toolbox, expand=False)
 
     def _pack_panes(self):
-        p0 = gtk.HPaned()
+        self.__sidebar = p0 = shiftpaned.ShiftPaned(gtk.HPaned)
+        
         self.__mainbox.pack_start(p0)
         sidebar_width = self.opt('layout', 'sidebar_width')
         sidebar_on_right = self.opt('layout', 'sidebar_on_right')
@@ -327,6 +353,7 @@ class WindowManager(service.service):
             box = gtk.HPaned()
         else:
             box = gtk.VPaned()
+            
         box.pack1(self.contentview, resize=True)
         box.pack2(self.pluginview, resize=True)
         return box
@@ -467,10 +494,26 @@ class WindowManager(service.service):
                             <separator />
                             <menuitem name="toggletoolbar" action="window+toggle_toolbar" />
                             <menuitem name="togglemenubar" action="window+toggle_menubar" />
+                            <menuitem name="togglesidebar" action="window+toggle_sidebar" />
                             <separator />
                         </placeholder>
                     </menu>
                 </menubar>
                """
+
+
+    def get_sidebar_on_right(self):
+        return self.opt('layout', 'sidebar_on_right')
+    
+    def show_sidebar(self):
+        self.__sidebar.set_state(shiftpaned.SHOW_BOTH)
+    
+    def hide_sidebar(self):
+        if self.get_sidebar_on_right():
+            state = shiftpaned.SHOW_LEFT
+        else:
+            state = shiftpaned.SHOW_RIGHT
+
+        self.__sidebar.set_state(state)
 
 Service = WindowManager
