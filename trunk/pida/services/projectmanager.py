@@ -73,6 +73,7 @@ class ProjectTree(tree.Tree):
             # remove
             project.key = project.name
             self.add_item(project, key=project.name)
+        self.view.set_expander_column(self.view.get_column(1))
 
 
 class project_view(contentview.content_view):

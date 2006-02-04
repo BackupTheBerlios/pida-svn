@@ -46,6 +46,40 @@ class document_handler(actions.action_handler):
     def view_document(self, document):
         pass
 
+def relpath(target, base=os.curdir):
+    """
+    Return a relative path to the target from either the current dir or an optional base dir.
+    Base can be a directory specified either as absolute or relative to current dir.
+    """
+
+    if not os.path.exists(target):
+        raise OSError, 'Target does not exist: '+target
+
+    if not os.path.isdir(base):
+        raise OSError, 'Base is not a directory or does not exist: '+base
+
+    base_list = (os.path.abspath(base)).split(os.sep)
+    target_list = (os.path.abspath(target)).split(os.sep)
+
+    # On the windows platform the target may be on a completely different drive from the base.
+    if os.name in ['nt','dos','os2'] and base_list[0] <> target_list[0]:
+        raise OSError, 'Target is on a different drive to base. Target: '+target_list[0].upper()+', base: '+base_list[0].upper()
+
+    # Starting from the filepath root, work out how much of the filepath is
+    # shared by base and target.
+    for i in range(min(len(base_list), len(target_list))):
+        if base_list[i] <> target_list[i]: break
+    else:
+        # If we broke out of the loop, i is pointing to the first differing path elements.
+        # If we didn't break out of the loop, i is pointing to identical path elements.
+        # Increment i so that in all cases it points to the first differing path elements.
+        i+=1
+
+    rel_list = [os.pardir] * (len(base_list)-i) + target_list[i:-1]
+    if rel_list:
+        return os.path.join(*rel_list)
+    else:
+        return ''
 
 class document(base.pidacomponent):
     """Base document class."""
@@ -103,6 +137,14 @@ class document(base.pidacomponent):
         else:
             return ''
     project_name = property(get_project_name)
+
+    def get_project_relative_path(self):
+        if self.__project:
+            return relpath(self.filename, self.__project.source_directory)
+        else:
+            return self.directory_basename
+
+    project_relative_path = property(get_project_relative_path)
     
     def set_project(self, project):
         self.__project = project
@@ -136,9 +178,11 @@ class realfile_document(document):
 
     markup_prefix = ''
     markup_directory_color = '#0000c0'
-    markup_attributes = ['project_name', 'directory_basename', 'basename', 'directory_colour']
-    markup_string = ('<span color="#600060">%(project_name)s</span> '
-                     '<span color="%(directory_colour)s">%(directory_basename)s</span>/'
+    markup_attributes = ['project_name', 'project_relative_path', 'basename', 'directory_colour']
+    markup_string = ('<span color="#600060">'
+                     '%(project_name)s</span><tt>:</tt>'
+                     '<span color="%(directory_colour)s">'
+                     '%(project_relative_path)s</span>/'
                      '<b>%(basename)s</b>')
 
     is_new = False

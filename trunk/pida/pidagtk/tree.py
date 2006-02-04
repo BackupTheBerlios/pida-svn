@@ -84,7 +84,8 @@ class Tree(gtk.VBox):
               gobject.TYPE_STRING)
 
     #The columns for the view.
-    COLUMNS = [[gtk.CellRendererText, 'markup', 2]]
+    COLUMNS = [[gtk.CellRendererText, 'markup', 2],
+               [gtk.CellRendererText, '', '']]
 
     #The signals for the widget.
     __gsignals__ = {'clicked' : (
@@ -250,8 +251,11 @@ class Tree(gtk.VBox):
         for renderer_type, attribute, field in self.COLUMNS:
             renderer = renderer_type()
             renderer.set_property('ypad', 1)
-            column = gtk.TreeViewColumn(attribute, renderer,
-                                        **{attribute:field})
+            if attribute:
+                kw = {attribute:field}
+            else:
+                kw = {}
+            column = gtk.TreeViewColumn(attribute, renderer, **kw)
             column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
             yield column
 

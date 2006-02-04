@@ -44,6 +44,7 @@ class BufferTree(tree.Tree):
 
     def __init__(self):
         tree.Tree.__init__(self)
+        self.view.set_expander_column(self.view.get_column(1))
         self.set_property('markup-format-string', '%(filename)s')
         self.__bufferdetails = BufferDetails()
         self.view.set_enable_search(False)
