@@ -391,8 +391,6 @@ class WindowManager(service.service):
                         <separator />
                     </menu>
                     <menu name="base_view" action="base_view_menu">
-                        <menuitem action="window+next_view" />
-                        <menuitem action="window+previous_view" />
                     </menu>
                     <menu name="base_pida" action="base_pida_menu" />
                     <menu name="base_help" action="base_help_menu" />
@@ -463,6 +461,8 @@ class WindowManager(service.service):
         return """ 
                 <menubar>
                 <menu name="base_view" action="base_view_menu" >
+                        <menuitem action="window+next_view" />
+                        <menuitem action="window+previous_view" />
                 <menuitem name="toggletoolbar" action="window+toggle_toolbar" />
                 <menuitem name="togglemenubar" action="window+toggle_menubar" />
                 </menu>

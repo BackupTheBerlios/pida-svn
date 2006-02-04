@@ -35,6 +35,7 @@ import gobject
 
 import pida.utils.gforklet as gforklet
 import pida.core.service as service
+import pida.core.actions as actions
 import pida.pidagtk.contentview as contentview
 import pida.pidagtk.tree as tree
 
@@ -53,7 +54,8 @@ class bookmark_view(contentview.content_view):
     LONG_TITLE = 'Documentation Library'
     SHORT_TITLE = 'Docs'
 
-    HAS_CONTROL_BOX = False
+    HAS_CONTROL_BOX = True
+    HAS_CLOSE_BUTTON = True
 
     def init(self):
         pane = gtk.Notebook()
@@ -119,7 +121,8 @@ class document_library(service.service):
 
     display_name = 'Documentation Library'
 
-    plugin_view_type = bookmark_view
+    single_view_type = bookmark_view
+    single_view_book = 'plugin'
 
     class book_locations(defs.optiongroup):
         """Locations of books in the file system."""
@@ -129,6 +132,8 @@ class document_library(service.service):
             default = True
 
     def init(self):
+        self.get_action().set_active(False)
+        self.books = []
         self.fetch()
 
     def fetch_thread(self):
@@ -137,7 +142,7 @@ class document_library(service.service):
 
     def fetch_forklet(self):
         gforklet.fork_generator(self.fetch_books(), [],
-                                self.plugin_view.book_found)
+                                self.single_view.book_found)
 
     def fetch(self):
         self.fetch_thread()
@@ -148,7 +153,6 @@ class document_library(service.service):
                                 '/usr/share/devhelp/books',
                                 os.path.expanduser('~/.devhelp/books')]
         use_gzip = self.opt('book_locations', 'use_gzipped_book_files')
-
         def _fetch(directory):
             if os.path.exists(directory):
                 for name in os.listdir(directory):
@@ -156,11 +160,40 @@ class document_library(service.service):
                     if os.path.exists(path):
                         load_book = book(path, use_gzip)
                         #if hasattr(load_book, 'bookmarks'):
-                        self.plugin_view.book_found(load_book)
-
+                        self.books.append(load_book)
         for directory in dirs:
             _fetch(directory)
-        self.plugin_view.books_done()
+
+    @actions.action(type=actions.TYPE_TOGGLE,
+                    stock_id='gtk-library',
+                    label='Documentation library')
+    def act_documentation_library(self, action):
+        """View the documentation library."""
+        if action.get_active():
+            self.create_single_view()
+            for book in self.books:
+                self.single_view.book_found(book)
+            self.single_view.books_done()
+        else:
+            if self.single_view is not None:
+                self.single_view.close()
+
+    def get_action(self):
+        return self.action_group.get_action('library+documentation_library')
+
+    def cb_single_view_closed(self, view):
+        self.get_action().set_active(False)
+
+    def get_menu_definition(self):
+        return """
+                <menubar>
+                <menu name="base_tools" action="base_tools_menu">
+                <placeholder name="ToolsMenu">
+                <menuitem action="library+documentation_library" />
+                </placeholder>
+                </menu>
+                </menubar>
+               """
 
 
 class title_handler(xml.sax.handler.ContentHandler):
