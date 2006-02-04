@@ -49,6 +49,8 @@ class paste_editor_view(gladeview.glade_view):
     LONG_TITLE = 'Create a paste so you can post it'
     ICON = 'paste'
 
+    HAS_DETACH_BUTTON = False
+
     # UI loading
 
     glade_file_name = 'paste-editor.glade'
