@@ -404,22 +404,9 @@ class gazpacho_service(service.service):
     current_document = property(get_current_document, set_current_document)
             
 
-class gazpacho_document(document.dummyfile_document):
+class gazpacho_document(document.realfile_document):
 
     ICON_NAME = 'gazpacho'
-
-    def get_markup(self):
-        """Return the markup for the item."""
-        MU = ('<span><tt><b>ui </b></tt>'
-              '<span foreground="#c00000">%s/</span>'
-              '<b>%s</b>'
-              '</span>')
-        fp = self.filename
-        fd, fn = os.path.split(fp)
-        dp, dn = os.path.split(fd)
-        return MU % (dn, fn)
-    markup = property(get_markup)
-
 
 class widget_editor(Editor):
 

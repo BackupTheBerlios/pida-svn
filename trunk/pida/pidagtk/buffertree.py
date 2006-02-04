@@ -40,7 +40,8 @@ class BufferTree(tree.Tree):
                       ('File path','filename'),
                       ('File name','basename'),
                       ('Mime Type','mimetype'),
-                      ('File Length','length')]
+                      ('File Length','length'),
+                      ('Project', 'project_name')]
 
     def __init__(self):
         tree.Tree.__init__(self)
