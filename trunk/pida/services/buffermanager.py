@@ -58,7 +58,6 @@ class BufferView(contentview.content_view):
     bufferview = property(get_bufferview)
 
     def add_document(self, document):
-        print document.markup
         self.__buffertree.add_item(document, key=document.unique_id)
 
     def select_next(self):
