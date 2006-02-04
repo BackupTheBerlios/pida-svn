@@ -136,6 +136,15 @@ class Buffermanager(service.service):
         chooser.connect('response', _cb)
         chooser.run()
 
+
+    @actions.action(stock_id=gtk.STOCK_CLOSE,
+                    label='Close current buffer',
+                    default_accel='<Control>w')
+    def act_close_buffer(self, action):
+        filename = self.__currentdocument.filename
+        self.call('close_file', filename=filename)
+        
+
     @actions.action(stock_id=gtk.STOCK_QUIT, label=None)
     def act_quit_pida(self, action):
         """Quits the application"""

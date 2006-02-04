@@ -239,6 +239,13 @@ class culebra_editor(service.service):
 
     def cmd_paste(self):
         self.current_view.editor.emit('paste-clipboard')
+    
+    def cmd_close(self, filename):
+        # example implementation
+        view = self.__files[filename]
+        if self.confirm_multi_view_controlbar_clicked_close(view):
+            view.remove()
+            self.cb_multi_view_closed(view)
 
     def cmd_can_close(self):
         buffs = [view.buffer for view in self.__files.values() if view.buffer.get_modified()]
