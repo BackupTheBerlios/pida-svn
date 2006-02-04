@@ -66,22 +66,22 @@ class ContentBook(gtk.VBox):
         l = gtk.Label(contentview.short_title)
         pos = self.notebook.get_tab_pos()
         if pos in [gtk.POS_LEFT, gtk.POS_RIGHT]:
-            box = gtk.VBox()
+            box = gtk.VBox(spacing=4)
             if pos == gtk.POS_LEFT:
                 l.set_angle(90)
             else:
                 l.set_angle(270)
         else:
-            box = gtk.HBox()
+            box = gtk.HBox(spacing=4)
         box.pack_start(contentview.icon, expand=False)
         box.pack_start(l, expand=False)
         tab_label.add(box)
         tab_label.show_all()
         
         # Set the tooltip text
-        tooltiptext = contentview.LONG_TITLE
+        tooltiptext = contentview.long_title
         if not tooltiptext:
-            tooltiptext = contentview.SHORT_TITLE
+            tooltiptext = contentview.short_title
         if not tooltiptext:
             tooltiptext = 'No tooltip set for %s' % contentview
         icons.tips.set_tip(tab_label, tooltiptext)
