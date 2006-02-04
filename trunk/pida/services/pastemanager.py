@@ -432,7 +432,8 @@ class paste_manager(service.service):
     # ui actions
 
     @actions.action(label='Upload Text Snippet...',
-                    stock_id=gtk.STOCK_PASTE)
+                    stock_id=gtk.STOCK_PASTE,
+                    default_accel='<Control><Shift>j')
     def act_new_paste(self, action):
         """Upload snippets of text, usually samples of source code, for public viewing."""
         self.call('create_paste')
