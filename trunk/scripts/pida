@@ -1,7 +1,7 @@
 #!/bin/sh
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 
-set -ex
+set -e
 DEBUG= REMOTE= GDB=
 
 while [ $# -gt 0 ]; do
