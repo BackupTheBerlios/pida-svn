@@ -119,6 +119,9 @@ class Buffermanager(service.service):
         self.__session_loaded = False
         self.__editor = None
 
+    def bind(self):
+        self.action_group.get_action('buffermanager+close_buffer').set_sensitive(False)
+
     @actions.action(stock_id=gtk.STOCK_OPEN, label=None, is_important=True,
                     default_accel='<Shift><Control>o')
     def act_open_file(self, action):
@@ -335,6 +338,7 @@ class Buffermanager(service.service):
                 model.remove(row.iter)
         document.handler.action_group.set_visible(False)
         self.__currentdocument = None
+        self.action_group.get_action('buffermanager+close_buffer').set_sensitive(False)
         def refresh():
             if self.__currentdocument is None:
                 if len(model):
@@ -367,6 +371,7 @@ class Buffermanager(service.service):
         if (self.plugin_view.bufferview.get_selected_key()
                 != document.unique_id):
             self.plugin_view.bufferview.set_selected(document.unique_id)
+        self.action_group.get_action('buffermanager+close_buffer').set_sensitive(True)
         self.events.emit('document_changed', document=document)
 
     def __disable_all_handlers(self):
@@ -402,6 +407,8 @@ class Buffermanager(service.service):
                 <separator />
                 </placeholder>
                 <placeholder name="GlobalFileMenu">
+                <menuitem action="buffermanager+close_buffer" />
+                <separator />
                 <menuitem name="quit" action="buffermanager+quit_pida" />
                 </placeholder>
                 </menu>
@@ -424,6 +431,7 @@ class Buffermanager(service.service):
                 <placeholder name="SaveFileToolbar">
                 </placeholder>
                 <placeholder name="EditToolbar">
+                <toolitem action="buffermanager+close_buffer" />
                 </placeholder>
                 <placeholder name="ProjectToolbar">
                 </placeholder>
