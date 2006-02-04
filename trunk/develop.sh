@@ -10,7 +10,7 @@ distdir=$pidadir/build/egg
 DEBUG= REMOTE= GDB= PROFILE= PDB= UPDATE=
 while [ $# -gt 0 ]; do
     case "$1" in
-	-update) UPDATE=1 ;;
+        -update) UPDATE=1 ;;
         -remote) REMOTE=1 ;;
         -debug)  DEBUG=1 ;;
         -gdb)    GDB=1 ;;
@@ -73,7 +73,7 @@ if [ "$REMOTE" ]; then
     else
         file=
     fi
-    pidacmd="$pidadir/pida/utils/pida-remote.py $file $* &"
+    pidacmd="$pidadir/pida/utils/pidaremote.py $file $* &"
 elif [ "$PDB" ]; then
     cat<<EOT > $tmpfile
 import pdb
