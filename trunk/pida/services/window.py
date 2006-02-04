@@ -88,14 +88,14 @@ class WindowManager(service.service):
 
     class toolbar_and_menubar(defs.optiongroup):
         """Options relating to the toolbar and main menu bar."""
-        class toolbar_hidden(defs.option):
+        class toolbar_visible(defs.option):
             """Whether the toolbar will start visible."""
             rtype = types.boolean
-            default = False
-        class menubar_hidden(defs.option):
+            default = True
+        class menubar_visible(defs.option):
             """Whether the menubar will start visible."""
             rtype = types.boolean
-            default = False
+            default = True
 
     def init(self):
         self.__splash = splash
@@ -117,10 +117,10 @@ class WindowManager(service.service):
             size = gtk.ICON_SIZE_LARGE_TOOLBAR
         tbact = self.action_group.get_action('window+toggle_toolbar')
         tbact.set_active(self.opt('toolbar_and_menubar',
-                                      'toolbar_hidden'))
+                                      'toolbar_visible'))
         menact = self.action_group.get_action('window+toggle_menubar')
         menact.set_active(self.opt('toolbar_and_menubar',
-                                       'menubar_hidden'))
+                                       'menubar_visible'))
         self._show_menubar()
         self._show_toolbar()
         self._create_window()
@@ -229,7 +229,7 @@ class WindowManager(service.service):
         label='Too_lbar'
         )
     def act_toggle_toolbar(self, action):
-        self.set_option('toolbar_and_menubar', 'toolbar_hidden',
+        self.set_option('toolbar_and_menubar', 'toolbar_visible',
                         action.get_active())
         self._show_toolbar()
 
@@ -239,21 +239,21 @@ class WindowManager(service.service):
         label='Menubar'
         )
     def act_toggle_menubar(self, action):
-        self.set_option('toolbar_and_menubar', 'menubar_hidden',
+        self.set_option('toolbar_and_menubar', 'menubar_visible',
                         action.get_active())
         self._show_menubar()
 
     def _show_menubar(self):
-        if self.opt('toolbar_and_menubar', 'menubar_hidden'):
-            self.menubar.hide_all()
-        else:
+        if self.opt('toolbar_and_menubar', 'menubar_visible'):
             self.menubar.show_all()
+        else:
+            self.menubar.hide_all()
 
     def _show_toolbar(self):
-        if self.opt('toolbar_and_menubar', 'toolbar_hidden'):
-            self.toolbar.hide_all()
-        else:
+        if self.opt('toolbar_and_menubar', 'toolbar_visible'):
             self.toolbar.show_all()
+        else:
+            self.toolbar.hide_all()
 
     def _bind_views(self):
         self.contentview = contentbook.ContentBook()
