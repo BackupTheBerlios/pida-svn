@@ -149,6 +149,9 @@ class config_view(contentview.content_view):
         self.widget.pack_start(holder, expand=False, padding=5)
         box = gtk.HButtonBox()
         holder.add(box)
+        but = gtk.Button(stock=gtk.STOCK_CANCEL)
+        box.pack_start(but)
+        but.connect('clicked', self.cb_cancel_clicked)
         but = gtk.Button(stock=gtk.STOCK_UNDO)
         box.pack_start(but)
         but.connect('clicked', self.cb_undo_clicked)
@@ -159,9 +162,6 @@ class config_view(contentview.content_view):
         but = gtk.Button(stock=gtk.STOCK_SAVE)
         box.pack_start(but)
         but.connect('clicked', self.cb_save_clicked)
-        but = gtk.Button(stock=gtk.STOCK_CANCEL)
-        box.pack_start(but)
-        but.connect('clicked', self.cb_cancel_clicked)
 
     def __build_list(self):
         for name in self.__registries:
