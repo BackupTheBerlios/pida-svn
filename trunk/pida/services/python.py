@@ -117,7 +117,11 @@ class python(service.service):
                     command_args=[shell_cmd, projfile], icon_name='run')
             else:
                 self.service.log.info('project has not set an executable')
-
+        
+        # XXX: this should be on gazpach service
+        @actions.action(
+            label="Add UI Form...",
+        )
         def act_add_ui_form(self, action):
             """Add a user interface form to the current project."""
             def callback(name):

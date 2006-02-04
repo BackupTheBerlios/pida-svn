@@ -82,22 +82,45 @@ class paste_editor_view(gladeview.glade_view):
 
     def __pack_combos(self):
         '''Populate all comboboxes'''
-        hb = self.__options_bar
-        [hb.remove(child) for child in
-            hb.get_children()]
+        table = self.__options_bar
+        
+        remove_child = lambda w: table.remove(w)
+        map(remove_child, table.get_children())
+        
+        row = 0
         if self.__pastebin.OPTIONS != None:
+
+
             for option in self.__pastebin.OPTIONS.keys():
-                label = gtk.Label(option)
+                # XXX: this is bad for translators
+                label = gtk.Label(option + ":")
+                label.set_alignment(0.0, 0.5)
                 label.show()
-                hb.add(label)
-                self.__options[option] = gtk.combo_box_new_text()
+                table.attach(label, 0, 1, row, row + 1, gtk.FILL, gtk.FILL)
+                
+                opt = self.__options[option] = gtk.combo_box_new_text()
                 for value in self.__pastebin.OPTIONS[option]:
                     if len(value):
-                        self.__options[option].append_text(value)
-                self.__options[option].set_active(0)
-                self.__options[option].show()
-                hb.add(self.__options[option])
-            hb.show_all()
+                        opt.append_text(value)
+                opt.set_active(0)
+                opt.show()
+                
+                # Trick to right align widgets
+                span = gtk.HBox()
+                span.show()
+                span.pack_start(opt, False, False)
+                table.attach(span, 1, 2, row, row + 1, gtk.FILL, 0)
+                row += 1
+            
+        if row == 0:
+            lbl = gtk.Label()
+            lbl.set_markup("<i><small>No location details needed</small></i>")
+            lbl.set_alignment(0.0, 0.5)
+            lbl.show()
+            
+            table.attach(lbl, 0, 2, 0, 1, gtk.FILL, gtk.FILL)
+            
+        table.show_all()
     
     def __pack_inputs(self):
         '''Populates all inputs'''
@@ -107,12 +130,13 @@ class paste_editor_view(gladeview.glade_view):
                 hb = gtk.HBox
                 name = gtk.Label(name)
                 name.show()
-                hb.add(name)
+                hb.pack_start(name, False, False)
                 self.__inputs[name] = gtk.Entry()
+                self.__inputs[name].set_alignment(0.0, 0.5)
                 self.__inputs[name].set_text(self.__pastebin.INPUTS[name])
                 self.__inputs[name].show()
-                hb.add(self.__inputs[name])
-                vb.add(hb)
+                hb.pack_start(self.__inputs[name], False, False)
+                vb.pack_start(hb, False, False)
 
     def __clear(self):
         '''Clears the interface'''
@@ -399,7 +423,7 @@ class paste_manager(service.service):
 
     # ui actions
 
-    @actions.action(label='Upload Text Snippet',
+    @actions.action(label='Upload Text Snippet...',
                     stock_id=gtk.STOCK_PASTE)
     def act_new_paste(self, action):
         """Upload snippets of text, usually samples of source code, for public viewing."""
