@@ -77,6 +77,9 @@ class paste_editor_view(gladeview.glade_view):
         self.__pack_combos()
         self.__pack_inputs()
 
+    def set_name(self, name):
+        self.__nickname_entry.set_text(name)
+
     def create_list_box(self, str1, str2, int1, int2):
         '''Returns a ComboBox object'''
         return gtk.combo_box_new_text()
@@ -400,6 +403,9 @@ class paste_manager(service.service):
            Opens a new editor
         '''
         view = self.create_multi_view()
+        if len(self.__pastes):
+            paste = self.__pastes[-1]
+            view.set_name(paste.name)
 
     def cmd_post_paste(self, paste):
         '''Post the paste paste'''
