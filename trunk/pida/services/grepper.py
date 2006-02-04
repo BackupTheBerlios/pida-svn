@@ -92,6 +92,7 @@ class GrepView(contentview.content_view):
         self.__pattern_entry = gtk.Entry()
         hb.pack_start(self.__pattern_entry)
         self.__pattern_entry.connect('activate', self.cb_activated)
+        self.__pattern_entry.connect('changed', self.cb_pattern_changed)
         l = gtk.Label()
         l.set_markup(SMALL_MU % 'in')
         hb.pack_start(l, expand=False)
@@ -107,6 +108,7 @@ class GrepView(contentview.content_view):
         self.__start_but.set_use_stock(True)
         hb.pack_start(self.__start_but, expand=False)
         self.__start_but.connect('clicked', self.cb_start_clicked)
+        self.__start_but.set_sensitive(False)
         #self.add_button('apply', 'apply', 'Start the search')
         #self.add_button('stop', 'stop', 'Stop the search')
         hb = gtk.HBox()
@@ -165,6 +167,9 @@ class GrepView(contentview.content_view):
         self.service.boss.call_command('buffermanager', 'open_file_line',
                 filename=result.value.value.filename,
                 linenumber=result.value.value.linenumber + 1)
+
+    def cb_pattern_changed(self, entry):
+        self.__start_but.set_sensitive(len(entry.get_text()) > 0)
 
     def get_options(self):
         options = GrepOptions()
