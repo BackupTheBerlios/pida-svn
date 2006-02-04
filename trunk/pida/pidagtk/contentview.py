@@ -146,7 +146,7 @@ class content_view(gtk.VBox):
         if self.HAS_CONTROL_BOX:
             if self.HAS_DETACH_BUTTON:
                 detbut = paned.sizer('menu', tooltip='Detach this view')
-                self.__toolbar_area.pack_start(detbut, expand=False)
+                #self.__toolbar_area.pack_start(detbut, expand=False)
                 detbut.connect('clicked',
                             self.cb_controlbar_detach_clicked)
         self.__long_title_label = gtk.Label(self.__long_title)
