@@ -143,7 +143,7 @@ class document(base.pidacomponent):
         if self.__project:
             return relpath(self.filename, self.__project.source_directory)
         else:
-            return self.directory_basename
+            return os.path.join(self.directory_basename, '')
 
     project_relative_path = property(get_project_relative_path)
     
