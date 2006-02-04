@@ -399,9 +399,10 @@ class paste_manager(service.service):
 
     # ui actions
 
-    @actions.action(label='Make a paste',
+    @actions.action(label='Upload Text Snippet',
                     stock_id=gtk.STOCK_PASTE)
     def act_new_paste(self, action):
+        """Upload snippets of text, usually samples of source code, for public viewing."""
         self.call('create_paste')
 
     def act_remove_paste(self, action):
@@ -413,7 +414,7 @@ class paste_manager(service.service):
     def act_view_paste(self, action):
         self.single_view.view_current_paste()
 
-    @actions.action(label='Show Paste History',
+    @actions.action(label='Paste History',
                     type=actions.TYPE_TOGGLE)
     def act_view_history(self, action):
         """Show the paste history."""
@@ -440,12 +441,16 @@ class paste_manager(service.service):
         return """<menubar>
                   <menu name="base_tools" action="base_tools_menu">
                     <placeholder name="ToolsMenu">
-                    <menu action="pastemanager+paste_bin">
                     <menuitem name="newpaste" action="pastemanager+new_paste" />
-                    <menuitem name="viewpaste" action="pastemanager+view_history" />
-                    </menu>
                     </placeholder>
                   </menu>
+                  
+                    <menu name="base_view" action="base_view_menu" >
+                        <placeholder name="ViewMenu">
+                            <menuitem name="viewpaste" action="pastemanager+view_history" />
+                        </placeholder>
+                    </menu>
+
                   </menubar>
                """
 

@@ -166,7 +166,7 @@ class document_library(service.service):
 
     @actions.action(type=actions.TYPE_TOGGLE,
                     stock_id='gtk-library',
-                    label='Documentation library')
+                    label='Documentation Library')
     def act_documentation_library(self, action):
         """View the documentation library."""
         if action.get_active():
@@ -187,11 +187,12 @@ class document_library(service.service):
     def get_menu_definition(self):
         return """
                 <menubar>
-                <menu name="base_tools" action="base_tools_menu">
-                <placeholder name="ToolsMenu">
-                <menuitem action="library+documentation_library" />
-                </placeholder>
+                <menu name="base_view" action="base_view_menu" >
+                    <placeholder name="ViewMenu">
+                        <menuitem action="library+documentation_library" />
+                    </placeholder>
                 </menu>
+
                 </menubar>
                """
 

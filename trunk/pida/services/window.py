@@ -226,7 +226,7 @@ class WindowManager(service.service):
     @actions.action(
         default_accel='<Control><Shift>l',
         type=actions.TYPE_TOGGLE,
-        label='Hide toolbar'
+        label='Too_lbar'
         )
     def act_toggle_toolbar(self, action):
         self.set_option('toolbar_and_menubar', 'toolbar_hidden',
@@ -236,7 +236,7 @@ class WindowManager(service.service):
     @actions.action(
         type=actions.TYPE_TOGGLE,
         default_accel='<Control><Shift>m',
-        label='Hide menu bar'
+        label='Menubar'
         )
     def act_toggle_menubar(self, action):
         self.set_option('toolbar_and_menubar', 'menubar_hidden',
@@ -391,6 +391,8 @@ class WindowManager(service.service):
                         <separator />
                     </menu>
                     <menu name="base_view" action="base_view_menu">
+                        <placeholder name="ViewMenu" />
+                        <separator />
                     </menu>
                     <menu name="base_pida" action="base_pida_menu" />
                     <menu name="base_help" action="base_help_menu" />
@@ -460,12 +462,12 @@ class WindowManager(service.service):
     def get_menu_definition(self):
         return """ 
                 <menubar>
-                <menu name="base_view" action="base_view_menu" >
-                        <menuitem action="window+next_view" />
-                        <menuitem action="window+previous_view" />
-                <menuitem name="toggletoolbar" action="window+toggle_toolbar" />
-                <menuitem name="togglemenubar" action="window+toggle_menubar" />
-                </menu>
+                    <menu name="base_view" action="base_view_menu" >
+                        <placeholder name="ViewMenu">
+                            <menuitem name="toggletoolbar" action="window+toggle_toolbar" />
+                            <menuitem name="togglemenubar" action="window+toggle_menubar" />
+                        </placeholder>
+                    </menu>
                 </menubar>
                """
 
