@@ -91,20 +91,65 @@ class ShiftPaned(gtk.VBox):
         return self.paned.get_position()
 
 
+class ShiftPaned(gtk.VBox):
+
+    _state = SHOW_BOTH
+
+    def __init__(self, paned_factory=gtk.HPaned, main_first=True):
+        self.paned = paned_factory()
+        self.paned.show()
+        self.main_first = main_first
+        super(ShiftPaned, self).__init__()
+        self.add(self.paned)
+        self.__nonmain = None
+        self.__nonmain_args = None
+        self.__nonmain_kw = None
+
+    def pack_main(self, widget, *args, **kw):
+        if self.main_first:
+            packer = self.paned.pack1
+        else:
+            packer = self.paned.pack2
+        packer(widget, *args, **kw)
+
+    def pack_sub(self, widget, *args, **kw):
+        self.__nonmain = widget
+        self.__nonmain_args = args
+        self.__nonmain_kw = kw
+        self.update_children()
+
+    def update_children(self):
+        if self._state == SHOW_BOTH:
+            if self.__nonmain:
+                if self.main_first:
+                    self.paned.pack2(self.__nonmain)
+                else:
+                    self.paned.pack1(self.__nonmain)
+        else:
+            self.paned.remove(self.__nonmain)
+
+    def set_state(self, state):
+        if state == self._state:
+            return
+        self._state = state
+        self.update_children()
+
+    def set_position(self, position):
+        self.paned.set_position(position)
 
 if __name__ == '__main__':
     #p = ShiftPaned(gtk.VPaned)
     p = ShiftPaned(gtk.HPaned)
-    btn1 = gtk.Button("Show right only")
-    btn2 = gtk.Button("Show left only")
-    p.pack1(btn1)
-    p.pack2(btn2)
+    btn1 = gtk.Label("Show right only")
+    btn2 = gtk.ToggleButton("Show left only")
+    p.pack_sub(btn1)
+    p.pack_main(btn2)
     def on_click(btn):
-        p.set_state(SHOW_RIGHT)
-    btn1.connect("clicked", on_click)
-    def on_click(btn):
-        p.set_state(SHOW_LEFT)
-    btn2.connect("clicked", on_click)
+        if btn.get_active():
+            p.set_state(SHOW_BOTH)
+        else:
+            p.set_state(SHOW_LEFT)
+    btn2.connect("toggled", on_click)
     btn1.show()
     btn2.show()
     w = gtk.Window()
