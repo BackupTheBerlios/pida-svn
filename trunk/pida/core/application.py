@@ -69,6 +69,8 @@ class environment(object):
                       help='Run PIDA in debug mode')
         op.add_option('-r', '--remote', action='store_true',
                       help='Run PIDA remote')
+        op.add_option('-p', '--profile', action='store_true',
+                      help='Run PIDA in the python profiler')
         opts, args = op.parse_args()
         envhome = self.__parseenv()
         if envhome is not None:
@@ -149,8 +151,9 @@ def run_pida(bosstype, mainloop, mainstop, env):
     app.start()
     return app
 
-def run_remote(self, env):
-    pass
+def run_remote(env):
+    import pida.utils.pidaremote as pidaremote
+    pidaremote.main(env.home_dir, env.positional_args)
 
 def main(bosstype=boss.boss, mainloop=gtk.main, mainstop=gtk.main_quit):
     warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -161,9 +164,16 @@ def main(bosstype=boss.boss, mainloop=gtk.main, mainstop=gtk.main_quit):
         os.environ['PIDA_DEBUG'] = '1'
         os.environ['PIDA_LOG_STDERR'] = '1'
     if env.opts.remote:
-        run_remote()
+        run_remote(env)
+        return
+    if env.opts.profile:
+        import profile
+        def _a():
+            run_pida(bosstype, mainloop, mainstop, env)
+        profile.runctx('_a()', locals(), globals())
         return
     run_pida(bosstype, mainloop, mainstop, env)
+    
 
 
 if __name__ == '__main__':

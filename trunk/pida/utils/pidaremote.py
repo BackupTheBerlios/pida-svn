@@ -50,8 +50,8 @@ class client_reactor(rpc.reactor):
         
 import gtk
 
-def main():
-    socdir = os.path.join(os.path.expanduser('~'), '.pida', 'sockets')
+def main(pida_home, argv=sys.argv[1:]):
+    socdir = os.path.join(pida_home, 'sockets')
     def reply(reactor, (address, command, args)):
         if command != 'OK':
             print command
@@ -61,7 +61,10 @@ def main():
         c = client_reactor(path)
         cid = c.connect('received', reply)
         try:
-            c.do_single_command(' '.join(sys.argv[1:]))
+            filename = ' '.join(argv)
+            if filename != os.path.abspath(filename):
+                filename = os.path.join(os.getcwd(), filename)
+            c.do_single_command(filename)
             gtk.main()
         except Exception, e:
             print path, e
@@ -70,4 +73,4 @@ def main():
             continue
 
 if __name__ == '__main__':
-    main()
+    main(os.path.join(os.path.expanduser('~'), '.pida'))
