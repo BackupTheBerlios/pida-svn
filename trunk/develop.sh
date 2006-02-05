@@ -9,12 +9,11 @@ distdir=$pidadir/build/egg
 tmpdir=$pidadir/build/tmp
 mkdir -p $pidadir/build/{egg,tmp}
 
-DEBUG= REMOTE= GDB= PROFILE= PDB= UPDATE=
+REMOTE= GDB= PROFILE= PDB= UPDATE=
 while [ $# -gt 0 ]; do
     case "$1" in
         -update) UPDATE=1 ;;
         -remote) REMOTE=1 ;;
-        -debug)  DEBUG=1 ;;
         -gdb)    GDB=1 ;;
         -pdb)    PDB=1 ;;
         -profile) PROFILE=1 ;;
@@ -60,11 +59,6 @@ egg="$distdir/pida-${version//-/_}-py$pyver.egg"
 
 echo "Adding ${egg#$pidadir/} to '\$PYTHONPATH' ..."
 export PYTHONPATH=$egg:$PYTHONPATH
-
-if [ "$DEBUG" ]; then 
-    export PIDA_DEBUG=1
-    export PIDA_LOG_STDERR=1
-fi
 
 pidacmd=$tmpdir/pida
 tmpfile=$pidacmd.$$
