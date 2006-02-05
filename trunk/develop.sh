@@ -68,26 +68,29 @@ elif [ "$PDB" ]; then
     cat<<EOT > $tmpfile
 import pdb
 pdb.set_trace()
-import pida.core.application as application
-application.main()
+import sys
+from pkg_resources import load_entry_point
+sys.exit( load_entry_point('pida', 'console_scripts', 'pida')() )
 EOT
     mv $tmpfile $pidacmd
     pidacmd="$pidacmd $*"
 else
     cat<<EOT > $tmpfile
-import pida.core.application as application
+from pkg_resources import load_entry_point
 import pida.utils.debug as debug
 
+entry_point=load_entry_point('pida', 'console_scripts', 'pida')
 debug.configure_tracer( eggpath="$eggpath", pidadir = "$pidadir/" )
 EOT
     if [ "$PROFILE" ]; then
         cat<<EOT
 import profile
-profile.run('application.main()')
+profile.run('entry_point()')
 EOT
     else
         cat<<EOT
-application.main()
+import sys
+sys.exit( entry_point() )
 EOT
     fi >> $tmpfile
     mv $tmpfile $pidacmd
