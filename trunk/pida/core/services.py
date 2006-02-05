@@ -47,13 +47,15 @@ class service_manager(base.pidagroup):
         self.log.debug('loading core services')
         for svc in self.__available['services']:
             self.__load_service('services', svc)
-        # load one editor
-        editor_type = self.get('editormanager').get_editor_name()
-        self.__load_service('editors', editor_type)
         # load the required plugins
         self.log.debug('loading required plugins')
         for plugin in self.__available['plugins']:
             self.__load_service('plugins', plugin)
+
+    def load_editor(self):
+        # load one editor
+        editor_type = self.get('editormanager').get_editor_name()
+        self.__load_service('editors', editor_type)
 
     def __load_entrypoints(self, group):
         self.log.debug('finding services in %s', group)

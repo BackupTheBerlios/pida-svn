@@ -44,6 +44,8 @@ class boss(base.pidacomponent):
         self.__services.load_all()
         self.__editor = self.get_service('editormanager')
         self.__window = self.get_service('window')
+        self.__env.override_configuration_system(self.__services)
+        self.__services.load_editor()
         self.__services.bind()
         self.__services.reset()
         self.__editor.call('start')
