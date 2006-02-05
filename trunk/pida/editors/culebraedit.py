@@ -50,6 +50,7 @@ KEYMAP = {
 
 class culebra_view(contentview.content_view):
 
+    HAS_CONTROL_BOX = False
     HAS_TITLE = False
 
     def init(self, filename=None, action_group=None, background_color=None, font_color=None):
