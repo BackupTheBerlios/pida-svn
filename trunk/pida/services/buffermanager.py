@@ -273,21 +273,21 @@ class Buffermanager(service.service):
                 self.__add_document(document)
             self.__view_document(document)
 
-    def cmd_open_file(self, filename):
+    def cmd_open_file(self, filename, quiet=False):
         if (len(filename) and (self.__currentdocument is None or
                 filename != self.__currentdocument.filename)):
             filename = os.path.abspath(filename)
             if filename in self.__documents:
                 document = self.__documents[filename]
                 self.__view_document(document)
-                return 'switching'
             else:
-                document = self.__open_file(filename)
-                self.__add_document(document)
-                self.__view_document(document)
-                return 'creating'
-        else:
-            return 'current'
+                try:
+                    document = self.__open_file(filename)
+                    self.__add_document(document)
+                    self.__view_document(document)
+                except:
+                    if not quiet:
+                        raise
 
     def cmd_new_file(self):
         self.__new_file()
@@ -312,7 +312,7 @@ class Buffermanager(service.service):
         for line in f:
             filename = line.strip()
             def _o(filename):
-                self.call('open_file', filename=filename)
+                self.call('open_file', filename=filename, quiet=True)
             gtk.idle_add(_o, filename)
         lines = f.readlines()
         f.close()
