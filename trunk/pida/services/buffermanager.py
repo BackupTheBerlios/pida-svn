@@ -21,10 +21,8 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 #import pida.core.buffer as buffer
-import glob
 import os
 import gtk
-import gobject
 
 import pida.core.service as service
 import pida.pidagtk.buffertree as buffertree
@@ -141,7 +139,7 @@ class Buffermanager(service.service):
 
 
     @actions.action(stock_id=gtk.STOCK_CLOSE,
-                    label='Close current buffer',
+                    label='Close Document',
                     default_accel='<Control>w')
     def act_close_buffer(self, action):
         filename = self.__currentdocument.filename

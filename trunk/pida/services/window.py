@@ -257,7 +257,7 @@ class WindowManager(service.service):
 
     @actions.action(
         type=actions.TYPE_TOGGLE,
-        default_accel='<Control><Shift>b',
+        default_accel='<Control><Shift>s',
         label='Sidebar'
     )
     def act_toggle_sidebar(self, action):

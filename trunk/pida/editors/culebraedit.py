@@ -364,7 +364,7 @@ class culebra_editor(service.service):
         stock_id = gtk.STOCK_FIND,
         label = "_Find...",
         type = actions.TYPE_TOGGLE,
-        default_accel = '<Shift><Control>f'
+        default_accel = '<Control>f'
     )
     def act_find_toggle(self, action):
         """Search for text"""
@@ -374,7 +374,7 @@ class culebra_editor(service.service):
         stock_id = gtk.STOCK_FIND_AND_REPLACE,
         label = "_Replace...",
         type = actions.TYPE_TOGGLE,
-        default_accel = '<Shift><Control>r'
+        default_accel = '<Control>r'
     )
     def act_replace_toggle(self, action):
         """Search and replace text"""
