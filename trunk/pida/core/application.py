@@ -28,6 +28,7 @@ import base
 # system import(s)
 import os
 import sys
+import subprocess
 import warnings
 import optparse
 
@@ -64,9 +65,11 @@ class environment(object):
                       action='append', help='Set an option')
         op.add_option('-v', '--version', action='store_true',
                       help='Print version information and exit.')
+        op.add_option('-D', '--debug', action='store_true',
+                      help='Run PIDA in debug mode')
+        op.add_option('-r', '--remote', action='store_true',
+                      help='Run PIDA remote')
         opts, args = op.parse_args()
-        if opts.version is not None:
-            print_version_and_die()
         envhome = self.__parseenv()
         if envhome is not None:
             home_dir_option = envhome
@@ -75,6 +78,7 @@ class environment(object):
         self.__home_dir = home_dir_option
         self.__create_home_tree(self.__home_dir)
         self.__args = args
+        self.opts = opts
 
     def __parseenv(self):
         if 'PIDA_HOME' in os.environ:
@@ -114,10 +118,10 @@ class environment(object):
 class application(object):
     """The pIDA Application."""
 
-    def __init__(self, bosstype, mainloop, mainstop):
+    def __init__(self, bosstype, mainloop, mainstop, environment):
         self.__mainloop = mainloop
         self.__mainstop = mainstop
-        self.__env = environment()
+        self.__env = environment
         self.__boss = bosstype(application=self, env=self.__env)
         self.boss = self.__boss
 
@@ -140,11 +144,26 @@ def pida_excepthook(exctype, value, tb):
 
 sys.excepthook = pida_excepthook
 
-def main(bosstype=boss.boss, mainloop=gtk.main, mainstop=gtk.main_quit):
-    warnings.filterwarnings("ignore", category=DeprecationWarning)
-    app = application(bosstype, mainloop, mainstop)
+def run_pida(bosstype, mainloop, mainstop, env):
+    app = application(bosstype, mainloop, mainstop, env)
     app.start()
     return app
+
+def run_remote(self, env):
+    pass
+
+def main(bosstype=boss.boss, mainloop=gtk.main, mainstop=gtk.main_quit):
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    env = environment()
+    if env.opts.version is not None:
+        print_version_and_die()
+    if env.opts.debug:
+        os.environ['PIDA_DEBUG'] = '1'
+        os.environ['PIDA_LOG_STDERR'] = '1'
+    if env.opts.remote:
+        run_remote()
+        return
+    run_pida(bosstype, mainloop, mainstop, env)
 
 
 if __name__ == '__main__':
