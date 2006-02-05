@@ -283,11 +283,14 @@ class Buffermanager(service.service):
             else:
                 try:
                     document = self.__open_file(filename)
-                    self.__add_document(document)
-                    self.__view_document(document)
                 except:
                     if not quiet:
                         raise
+                    else:
+                        document = None
+                if document is not None:
+                    self.__add_document(document)
+                    self.__view_document(document)
 
     def cmd_new_file(self):
         self.__new_file()
