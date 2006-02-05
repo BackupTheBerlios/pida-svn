@@ -122,15 +122,7 @@ class culebra_editor(service.service):
         self.__undoacts = {}
 
     def reset(self):
-        actions = self.boss.call_command("documenttypes", "get_document_actions")
-        for action in actions:
-            actname = action.get_name()
-            if actname in KEYMAP:
-                self.__keymods[KEYMAP[actname]] = action
-            if actname == 'documenttypes+document+undo':
-                self.__undoacts['undo'] = action
-            elif actname == 'documenttypes+document+redo':
-                self.__undoacts['redo'] = action
+        self._get_actions()
         for view in self.__files.values():
             view.editor.set_background_color(self.get_background_color())
             view.editor.set_font_color(self.get_font_color())
@@ -164,16 +156,24 @@ class culebra_editor(service.service):
     # get_action
     _save_action = None
 
-    def _create_save_action(self):
+    def _get_actions(self):
         actions = self.boss.call_command("documenttypes", "get_document_actions")
         for action in actions:
-            if action.get_name() == "DocumentSave":
-                return action
-        assert False, "Document Save action not found"
+            actname = action.get_name()
+            if actname in KEYMAP:
+                self.__keymods[KEYMAP[actname]] = action
+            if actname == 'documenttypes+document+undo':
+                self.__undoacts['undo'] = action
+            elif actname == 'documenttypes+document+redo':
+                self.__undoacts['redo'] = action
+            elif actname == 'documenttypes+document+revert':
+                self.__revertact = action
+            elif actname == 'DocumentSave':
+                self._save_action = action
     
     def get_save_action(self):
         if self._save_action is None:
-            self._save_action = self._create_save_action()
+            self._get_actions()
         return self._save_action
 
     # keyboard bindings
@@ -212,6 +212,7 @@ class culebra_editor(service.service):
         buff = self.current_view.editor.get_buffer()
         self.current_view.editor.set_action_group(self.action_group)
         self.linker = sensitive.SaveLinker(buff, save_action)
+        self.linker2 = sensitive.SaveLinker(buff, self.__revertact)
         # undo redo
         self.cb_can_undo(self.current_view, self.current_view.can_undo())
         self.cb_can_redo(self.current_view, self.current_view.can_redo())

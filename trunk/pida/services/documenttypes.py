@@ -86,6 +86,11 @@ class document_type_handler(service.service):
             """Save the document"""
             self.service.boss.call_command('editormanager', 'save')
 
+        @actions.action(stock_id=gtk.STOCK_REVERT_TO_SAVED, label=None)
+        def act_revert(self, action):
+            """Reverts a document"""
+            self.service.boss.call_command('editormanager', 'revert')
+
         def get_menu_definition(self):
             return """
                 <menubar>
@@ -93,6 +98,7 @@ class document_type_handler(service.service):
                 <placeholder name="OpenFileMenu" />
                 <placeholder name="SaveFileMenu">
                 <menuitem name="Save" action="DocumentSave" />
+                <menuitem name="Revert" action="documenttypes+document+revert" />
                 </placeholder>
                 <placeholder name="ExtrasFileMenu" />
                 <placeholder name="GlobalFileMenu" />
