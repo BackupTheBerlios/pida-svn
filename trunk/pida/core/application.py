@@ -22,28 +22,50 @@
 #SOFTWARE.
 
 # pida import(s)
-import boss
-import base
 
 # system import(s)
 import os
 import sys
-import subprocess
 import warnings
 import optparse
 
-# gtk import(s)
-import gtk
+# First gtk import, let's check it
+try:
+    import gtk
+except ImportError:
+    print 'PIDA requires Python GTK bindings. They were not found.'
+    print 'Exiting. (this is fatal)'
+    sys.exit(1)
+
+# now gtk is definitely installed, we can use a flashy exception hook
+def pida_excepthook(exctype, value, tb):
+    if exctype is not KeyboardInterrupt:
+        import pida.pidagtk.debugwindow as debugwindow
+        dw = debugwindow.DebugWindow()
+        dw.show_exception(exctype, value, tb)
+        dw.run()
+        dw.destroy()
+
+sys.excepthook = pida_excepthook
+
+# the threads evilness
 gtk.threads_init()
 
+# for the default bosstype
+import boss
 
-from pkg_resources import Requirement, resource_filename
-version_file = resource_filename(Requirement.parse('pida'),
-                                 'version/version')
-try:
-    pida_version = open(version_file).read().strip()
-except:
-    pida_version = 'testing'
+
+def get_version():
+    from pkg_resources import Requirement, resource_filename
+    version_file = resource_filename(Requirement.parse('pida'),
+                                     'version/version')
+    try:
+        return open(version_file).read().strip()
+    except:
+        return 'unversioned'
+
+pida_version = get_version()
+
 
 class environment(object):
     """Handle environment variable and command line arguments"""
@@ -147,6 +169,7 @@ class environment(object):
     def override_editor_option(self, editorname):
         self.__editorname = editorname
 
+
 class application(object):
     """The pIDA Application."""
 
@@ -166,15 +189,6 @@ class application(object):
         """Stop PIDA."""
         self.__mainstop()
 
-def pida_excepthook(exctype, value, tb):
-    if exctype is not KeyboardInterrupt:
-        import pida.pidagtk.debugwindow as debugwindow
-        dw = debugwindow.DebugWindow()
-        dw.show_exception(exctype, value, tb)
-        dw.run()
-        dw.destroy()
-
-sys.excepthook = pida_excepthook
 
 def run_pida(env, bosstype, mainloop, mainstop):
     if run_firstrun(env):
@@ -184,14 +198,17 @@ def run_pida(env, bosstype, mainloop, mainstop):
     else:
         return 1
 
+
 def run_version(env, *args):
     print 'PIDA, version %s' % pida_version
     return 0
+
 
 def run_remote(env, *args):
     import pida.utils.pidaremote as pidaremote
     pidaremote.main(env.home_dir, env.positional_args)
     return 0
+
 
 def run_firstrun(env, *args):
     first_filaname = os.path.join(env.home_dir, '.firstrun')
@@ -210,12 +227,6 @@ def run_firstrun(env, *args):
     else:
         return True
 
-def run_profile(env, *args):
-    import profile
-    def _a():
-        run_pida(bosstype, mainloop, mainstop, env)
-    profile.runctx('_a()', locals(), globals())
-    return 0
 
 def main(bosstype=boss.boss, mainloop=gtk.main, mainstop=gtk.main_quit):
     warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -230,8 +241,6 @@ def main(bosstype=boss.boss, mainloop=gtk.main, mainstop=gtk.main_quit):
     else:
         run_func = run_pida
     sys.exit(run_func(env, bosstype, mainloop, mainstop))
-    
-
 
 if __name__ == '__main__':
     main()
