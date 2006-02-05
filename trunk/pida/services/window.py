@@ -304,9 +304,9 @@ class WindowManager(service.service):
                     self.contentview.append_page(service.plugin_view)
                 else:
                     self.pluginview.append_page(service.plugin_view)
-        #for service in self.boss.services:
-        #    if service.lang_view_type is not None:
-        #        self.pluginview.append_page(service.lang_view)
+        def _s():
+            self.contentview.notebook.set_current_page(0)
+        gtk.idle_add(_s)
 
     def _pack(self):
         self.__mainbox = gtk.VBox()
