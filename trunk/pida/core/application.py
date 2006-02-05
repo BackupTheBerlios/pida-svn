@@ -53,19 +53,31 @@ class environment(object):
 
     def __parseargs(self):
         home_dir_option = None
+        default_home = os.path.expanduser('~/.pida')
         op = optparse.OptionParser()
         op.add_option('-d', '--home-directory', type='string', nargs=1,
-                      action='store',
-                      help='The location of the pida home directory',
-                      default=os.path.expanduser('~/.pida'))
+            action='store',
+            help=('The location of the pida home directory. '
+                  'If this directory does not exist, it will be created. '
+                  'Default: %s' % default_home),
+            default=default_home)
         op.add_option('-o', '--option', type='string', nargs=1,
-                      action='append', help='Set an option')
+            action='append',
+            help=('Set an option. Options should be in the form: '
+                  'servicename/group/name=value. '
+                  'For example (without quotes): '
+                  '"pida -o editormanager/general/editor_type=Vim". '
+                  'More than one option can be set by repeated use of -o.'))
         op.add_option('-v', '--version', action='store_true',
                       help='Print version information and exit.')
         op.add_option('-D', '--debug', action='store_true',
-                      help='Run PIDA in debug mode')
+            help=('Run PIDA with added debug information. '
+                  'This merely sets the environment variables: '
+                  'PIDA_DEBUG=1 and PIDA_LOG_STDERR=1, '
+                  'and so the same effect may be achieved by setting them.'))
         op.add_option('-r', '--remote', action='store_true',
-                      help='Run PIDA remote')
+            help=('Run PIDA remotely to open a file in an existing instance '
+                  'of PIDA. Usage pida -r <filename>.'))
         op.add_option('-F', '--first-run-wizard', action='store_true',
                       help='Run the PIDA first time wizard')
         opts, args = op.parse_args()
@@ -96,10 +108,6 @@ class environment(object):
     def __mkdir(self, path):
         if not os.path.exists(path):
             os.mkdir(path)
-
-    def get_config_file(self):
-        if self.__opts.registry_file:
-            return self.__opts.registry_file
 
     def get_positional_args(self):
         return self.__args
