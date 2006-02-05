@@ -157,7 +157,7 @@ class environment(object):
                         service, group, option = parts
                         try:
                             svc = services.get(service)
-                            svc.get(group).get(option).load(value)
+                            svc.options.get(group).get(option).load(value)
                         except:
                             pass
 
