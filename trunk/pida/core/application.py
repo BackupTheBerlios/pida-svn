@@ -156,13 +156,9 @@ class environment(object):
                     if len(parts) == 3:
                         service, group, option = parts
                         svc = services.get(service)
-                        svc.set_option(group, option, value)
-                    else:
-                        raise KeyError('service/group/option ' + opt)
-                else:
-                    raise KeyError('service/group/option ' + opt )
-            else:
-                raise ValueError('Need key=value ' + opt)
+                        if svc is not None:
+                            svc.set_option(group, option, value)
+                            goodopt = True
 
     def override_editor_option(self, editorname):
         self.__editorname = editorname
