@@ -37,22 +37,20 @@ except ImportError:
     print 'Exiting. (this is fatal)'
     sys.exit(1)
 
-# now gtk is definitely installed, we can use a flashy exception hook
-def pida_excepthook(exctype, value, tb):
-    if exctype is not KeyboardInterrupt:
-        import pida.pidagtk.debugwindow as debugwindow
-        dw = debugwindow.DebugWindow()
-        dw.show_exception(exctype, value, tb)
-        dw.run()
-        dw.destroy()
+# This can test if PIDA is installed
+try:
+    import pida.core.boss as boss
+    import pida.pidagtk.debugwindow as debugwindow
+except ImportError:
+    print 'PIDA could not import itself.'
+    print 'Exiting. (this is fatal)'
+    sys.exit(1)
 
-sys.excepthook = pida_excepthook
+# now gtk is definitely installed, we can use a flashy exception hook
+sys.excepthook = debugwindow.show
 
 # the threads evilness
 gtk.threads_init()
-
-# for the default bosstype
-import boss
 
 
 def get_version():

@@ -206,15 +206,18 @@ class DebugWindow(gtk.Dialog):
 
     
 def show(exctype, value, tb):
-    sys.stdout.write('%s' % window.splash)
     if exctype is not KeyboardInterrupt:
         dw = DebugWindow()
         dw.show_exception(exctype, value, tb)
         dw.show_all()
-
-sys.excepthook = show
+        if not gtk.main_level():
+            def q(window):
+                gtk.main_quit()
+            dw.connect('destroy', q)
+            gtk.main()
 
 if __name__ == '__main__':
+    sys.excepthook = show
     print 123
     def a():
         raise Exception('ladidadi')
