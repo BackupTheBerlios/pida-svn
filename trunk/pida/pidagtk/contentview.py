@@ -275,6 +275,13 @@ class content_view(gtk.VBox):
     prefix = property(get_prefix)
 
     def create_icon(self):
+        import icons
+        icon = icons.icons.get_image(self.icon_name)
+        eb = self.create_tooltip_box()
+        eb.add(icon)
+        return eb
+
+    def create_tooltip_box(self):
         eb = gtk.EventBox()
         eb.add_events(gtk.gdk.BUTTON_PRESS_MASK)
         def _click(_eb, event):
@@ -282,9 +289,6 @@ class content_view(gtk.VBox):
                 self.create_detach_popup(event)
                 return True
         eb.connect('button-press-event', _click)
-        import icons
-        icon = icons.icons.get_image(self.icon_name)
-        eb.add(icon)
         return eb
 
     def create_detach_popup(self, event):

@@ -74,7 +74,9 @@ class ContentBook(gtk.VBox):
         else:
             box = gtk.HBox(spacing=4)
         box.pack_start(contentview.icon, expand=False)
-        box.pack_start(l, expand=False)
+        eb = contentview.create_tooltip_box()
+        eb.add(l)
+        box.pack_start(eb, expand=False)
         tab_label.add(box)
         tab_label.show_all()
         
