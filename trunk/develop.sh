@@ -62,39 +62,31 @@ export PYTHONPATH=$egg:$PYTHONPATH
 
 pidacmd=$tmpdir/pida
 tmpfile=$pidacmd.$$
-if [ "$REMOTE" ]; then
-    cat<<EOT > $tmpfile
-from pida.utils import pidaremote
-pidaremote.main()
-EOT
-elif [ "$PDB" ]; then
-    cat<<EOT > $tmpfile
-import pdb
-pdb.set_trace()
-import sys
-from pkg_resources import load_entry_point
-sys.exit( load_entry_point('pida', 'console_scripts', 'pida')() )
-EOT
-else
-    cat<<EOT > $tmpfile
-from pkg_resources import load_entry_point
-import pida.utils.debug as debug
 
-entry_point=load_entry_point('pida', 'console_scripts', 'pida')
-debug.configure_tracer( eggpath="$eggpath", pidadir = "$pidadir/" )
-EOT
-    if [ "$PROFILE" ]; then
-        cat<<EOT
-import profile
-profile.run('entry_point()')
-EOT
+if [ "$REMOTE" ]; then
+    echo "import pida.utils.pidaremote as pidaremote"
+    echo "pidaremote.main()"
+else
+    echo "from pkg_resources import load_entry_point"
+
+    if [ "$PDB" ]; then
+        echo "import pdb"
+        echo "pdb.set_trace()"
     else
-        cat<<EOT
-import sys
-sys.exit( entry_point() )
-EOT
-    fi >> $tmpfile
-fi
+        echo "import pida.utils.debug as debug"
+        echo "debug.configure_tracer( eggpath='$eggpath', pidadir='$pidadir/' )"
+    fi
+
+    echo "entry_point=load_entry_point('pida', 'console_scripts', 'pida')"
+
+    if [ "$PROFILE" ]; then
+        echo "import profile"
+        echo "profile.run('entry_point()')"
+    else
+        echo "import sys"
+        echo "sys.exit( entry_point() )"
+    fi
+fi > $tmpfile
 mv $tmpfile $pidacmd
 pidacmd="$pidacmd $*"
 
