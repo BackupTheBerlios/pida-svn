@@ -45,13 +45,10 @@ try:
 except:
     pida_version = 'testing'
 
-def print_version_and_die():
-    print 'PIDA, version %s' % pida_version
-    sys.exit(0)
-
 class environment(object):
     """Handle environment variable and command line arguments"""
     def __init__(self):
+        self.__editorname = None
         self.__parseargs()
 
     def __parseargs(self):
@@ -69,8 +66,8 @@ class environment(object):
                       help='Run PIDA in debug mode')
         op.add_option('-r', '--remote', action='store_true',
                       help='Run PIDA remote')
-        op.add_option('-p', '--profile', action='store_true',
-                      help='Run PIDA in the python profiler')
+        op.add_option('-F', '--first-run-wizard', action='store_true',
+                      help='Run the PIDA first time wizard')
         opts, args = op.parse_args()
         envhome = self.__parseenv()
         if envhome is not None:
@@ -116,6 +113,31 @@ class environment(object):
         return pida_version
     version = property(get_version)
 
+    def override_configuration_system(self, services):
+        if self.__editorname:
+            svc = services.get('editormanager')
+            svc.set_option('general', 'editor_type', self.__editorname)
+            svc.options.save()
+        if not self.opts.option:
+            return
+        for opt in self.opts.option:
+            if '=' in opt:
+                name, value = opt.split('=', 1)
+                if '/' in name:
+                    parts = name.split('/', 3)
+                    if len(parts) == 3:
+                        service, group, option = parts
+                        svc = services.get(service)
+                        svc.set_option(group, option, value)
+                    else:
+                        raise KeyError('service/group/option ' + opt)
+                else:
+                    raise KeyError('service/group/option ' + opt )
+            else:
+                raise ValueError('Need key=value ' + opt)
+
+    def override_editor_option(self, editorname):
+        self.__editorname = editorname
 
 class application(object):
     """The pIDA Application."""
@@ -146,33 +168,60 @@ def pida_excepthook(exctype, value, tb):
 
 sys.excepthook = pida_excepthook
 
-def run_pida(bosstype, mainloop, mainstop, env):
-    app = application(bosstype, mainloop, mainstop, env)
-    app.start()
-    return app
+def run_pida(env, bosstype, mainloop, mainstop):
+    if run_firstrun(env):
+        app = application(bosstype, mainloop, mainstop, env)
+        app.start()
+        return 0
+    else:
+        return 1
 
-def run_remote(env):
+def run_version(env, *args):
+    print 'PIDA, version %s' % pida_version
+    return 0
+
+def run_remote(env, *args):
     import pida.utils.pidaremote as pidaremote
     pidaremote.main(env.home_dir, env.positional_args)
+    return 0
+
+def run_firstrun(env, *args):
+    first_filaname = os.path.join(env.home_dir, '.firstrun')
+    if not os.path.exists(first_filaname) or env.opts.first_run_wizard:
+        import pida.utils.firstrun as firstrun
+        ftw = firstrun.FirstTimeWindow()
+        response, editor = ftw.run(first_filaname)
+        if response == gtk.RESPONSE_ACCEPT:
+            if editor is None:
+                raise RuntimeError('No Working Editors')
+            else:
+                env.override_editor_option(editor)
+                return True
+        else:
+            return False
+    else:
+        return True
+
+def run_profile(env, *args):
+    import profile
+    def _a():
+        run_pida(bosstype, mainloop, mainstop, env)
+    profile.runctx('_a()', locals(), globals())
+    return 0
 
 def main(bosstype=boss.boss, mainloop=gtk.main, mainstop=gtk.main_quit):
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     env = environment()
-    if env.opts.version is not None:
-        print_version_and_die()
     if env.opts.debug:
         os.environ['PIDA_DEBUG'] = '1'
         os.environ['PIDA_LOG_STDERR'] = '1'
-    if env.opts.remote:
-        run_remote(env)
-        return
-    if env.opts.profile:
-        import profile
-        def _a():
-            run_pida(bosstype, mainloop, mainstop, env)
-        profile.runctx('_a()', locals(), globals())
-        return
-    run_pida(bosstype, mainloop, mainstop, env)
+    if env.opts.version is not None:
+        run_func = run_version
+    elif env.opts.remote:
+        run_func = run_remote
+    else:
+        run_func = run_pida
+    sys.exit(run_func(env, bosstype, mainloop, mainstop))
     
 
 
