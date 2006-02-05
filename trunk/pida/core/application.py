@@ -155,10 +155,11 @@ class environment(object):
                     parts = name.split('/', 3)
                     if len(parts) == 3:
                         service, group, option = parts
-                        svc = services.get(service)
-                        if svc is not None:
-                            svc.set_option(group, option, value)
-                            goodopt = True
+                        try:
+                            svc = services.get(service)
+                            svc.get(group).get(option).load(value)
+                        except:
+                            pass
 
     def override_editor_option(self, editorname):
         self.__editorname = editorname

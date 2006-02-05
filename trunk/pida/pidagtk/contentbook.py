@@ -67,10 +67,7 @@ class ContentBook(gtk.VBox):
         pos = self.notebook.get_tab_pos()
         if pos in [gtk.POS_LEFT, gtk.POS_RIGHT]:
             box = gtk.VBox(spacing=4)
-            if pos == gtk.POS_LEFT:
-                l.set_angle(90)
-            else:
-                l.set_angle(270)
+            l.set_angle(270)
         else:
             box = gtk.HBox(spacing=4)
         box.pack_start(contentview.icon, expand=False)
