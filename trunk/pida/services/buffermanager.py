@@ -142,6 +142,7 @@ class Buffermanager(service.service):
                     label='Close Document',
                     default_accel='<Control>w')
     def act_close_buffer(self, action):
+        """Close the current buffer."""
         filename = self.__currentdocument.filename
         self.call('close_file', filename=filename)
         
