@@ -51,7 +51,7 @@ class client_reactor(rpc.reactor):
 import gtk
 
 def main():
-    socdir = os.path.join(os.path.expanduser('~'), '.pida2', 'sockets')
+    socdir = os.path.join(os.path.expanduser('~'), '.pida', 'sockets')
     def reply(reactor, (address, command, args)):
         if command != 'OK':
             print command
