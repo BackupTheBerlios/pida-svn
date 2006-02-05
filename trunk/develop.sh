@@ -67,8 +67,6 @@ if [ "$REMOTE" ]; then
 from pida.utils import pidaremote
 pidaremote.main()
 EOT
-    mv $tmpfile $pidacmd
-    pidacmd="$pidacmd $*"
 elif [ "$PDB" ]; then
     cat<<EOT > $tmpfile
 import pdb
@@ -77,8 +75,6 @@ import sys
 from pkg_resources import load_entry_point
 sys.exit( load_entry_point('pida', 'console_scripts', 'pida')() )
 EOT
-    mv $tmpfile $pidacmd
-    pidacmd="$pidacmd $*"
 else
     cat<<EOT > $tmpfile
 from pkg_resources import load_entry_point
@@ -98,9 +94,9 @@ import sys
 sys.exit( entry_point() )
 EOT
     fi >> $tmpfile
-    mv $tmpfile $pidacmd
-    pidacmd="$pidacmd $*"
 fi
+mv $tmpfile $pidacmd
+pidacmd="$pidacmd $*"
 
 echo "Running $pidacmd ..."
 if [ "$GDB" ]; then
