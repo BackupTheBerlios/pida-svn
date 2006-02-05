@@ -359,6 +359,7 @@ class WindowManager(service.service):
         if not self.__started:
             self.__started = True
             self.__window = gtk.Window()
+            self.__window.set_title('PIDA Loves You')
             self.__window.connect('delete-event', self.cb_destroy)
             self.__window.add_accel_group(self.__acels)
             self._connect_drag_events()
