@@ -26,7 +26,8 @@ import os
 import gtk
 
 # XXX: should be importing from rat
-from pida.utils import shiftpaned
+#from pida.utils import shiftpaned
+from pida.pidagtk import shiftpaned
 
 import pida.core.actions as actions
 import pida.core.service as service
@@ -319,29 +320,25 @@ class WindowManager(service.service):
         self.__mainbox.pack_start(self.__toolbox, expand=False)
 
     def _pack_panes(self):
-        self.__sidebar = p0 = shiftpaned.ShiftPaned(gtk.HPaned)
-        
+        sidebar_on_right = self.opt('layout', 'sidebar_on_right')
+        self.__sidebar = p0 = shiftpaned.ShiftPaned(gtk.HPaned,
+                                                    sidebar_on_right)
         self.__mainbox.pack_start(p0)
         sidebar_width = self.opt('layout', 'sidebar_width')
-        sidebar_on_right = self.opt('layout', 'sidebar_on_right')
         sidebar = self._pack_sidebar()
         sidebar.show()
         if sidebar_on_right:
-            side_func = p0.pack2
-            main_func = p0.pack1
             main_pos = 800 - sidebar_width
             self.contentview.notebook.set_tab_pos(gtk.POS_LEFT)
             self.pluginview.notebook.set_tab_pos(gtk.POS_LEFT)
         else:
-            side_func = p0.pack1
-            main_func = p0.pack2
             main_pos = sidebar_width
             self.contentview.notebook.set_tab_pos(gtk.POS_RIGHT)
             self.pluginview.notebook.set_tab_pos(gtk.POS_RIGHT)
         p1 = gtk.VPaned()
         p1.show()
-        side_func(sidebar, resize=False)
-        main_func(p1, resize=True)
+        p0.pack_sub(sidebar, resize=False)
+        p0.pack_main(p1, resize=True)
         p0.set_position(main_pos)
         p1.pack1(self.editorview, resize=True)
         p1.pack2(self.bookview, resize=False)
@@ -501,19 +498,13 @@ class WindowManager(service.service):
                 </menubar>
                """
 
-
     def get_sidebar_on_right(self):
         return self.opt('layout', 'sidebar_on_right')
     
     def show_sidebar(self):
-        self.__sidebar.set_state(shiftpaned.SHOW_BOTH)
+        self.__sidebar.show_sub()
     
     def hide_sidebar(self):
-        if self.get_sidebar_on_right():
-            state = shiftpaned.SHOW_LEFT
-        else:
-            state = shiftpaned.SHOW_RIGHT
-
-        self.__sidebar.set_state(state)
+        self.__sidebar.hide_sub()
 
 Service = WindowManager
