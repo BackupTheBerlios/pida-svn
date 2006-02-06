@@ -11,6 +11,8 @@ from rat.text import get_buffer_selection
 from bar import Bar
 
 class SearchBar(Bar):
+    _cycle = True
+    
     def __init__(self, parent, action_group):
         self.entry = gtk.Entry()
         self.search_model = gtk.ListStore(str)
@@ -81,12 +83,28 @@ class SearchBar(Bar):
         buff.search_highlight = False
     
     def on_no_entries(self, find_forward):
-        return
-        #XXX: fix this, it should go to top
+        buff = self.buffer
+        mark = buff.get_insert()
+        start_iter = buff.get_iter_at_mark(mark)
+
+        if not self._cycle:
+            return
+
         if find_forward:
-            self.btn_backward.grab_focus()
+            next_iter = self.buffer.get_start_iter()
         else:
-            self.btn_forward.grab_focus()
+            next_iter = self.buffer.get_end_iter()
+            
+        self.buffer.place_cursor(next_iter)
+        
+        if self.buffer.search(find_forward):
+            # If we find an entry now
+            next_iter = buff.get_selection_bounds()[0]
+            # And the iterator is not the same
+            if not next_iter.equal(start_iter):
+                # Focus the carret
+                self.get_parent().focus_carret()
+        
 
     def on_clicked(self, btn):
         buff = self.buffer
