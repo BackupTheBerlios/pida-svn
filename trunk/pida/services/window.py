@@ -494,6 +494,8 @@ class WindowManager(service.service):
                             <menuitem name="togglemenubar" action="window+toggle_menubar" />
                             <menuitem name="togglesidebar" action="window+toggle_sidebar" />
                             <separator />
+                            <menuitem action="window+next_view" />
+                            <menuitem action="window+previous_view" />
                         </placeholder>
                     </menu>
                 </menubar>
