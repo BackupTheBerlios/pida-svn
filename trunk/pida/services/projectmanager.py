@@ -78,6 +78,7 @@ class ProjectTree(tree.Tree):
 
 class project_view(contentview.content_view):
     SHORT_TITLE = 'Projects'
+    LONG_TITLE = 'List of projects'
     ICON_NAME = 'project'
     HAS_CONTROL_BOX = False
     HAS_DETACH_BUTTON = False
