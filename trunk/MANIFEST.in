@@ -9,6 +9,7 @@ include setup.py
 include develop.sh
 include setup.cfg
 recursive-include pida *.py
+recursive-include rat *.py
 recursive-include scripts *
 recursive-include data *
 recursive-include extras *
