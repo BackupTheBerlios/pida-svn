@@ -208,13 +208,11 @@ class WindowManager(service.service):
 
     def cmd_next_view(self):
         """Jump to the next view in the viewbook."""
-        self.bookview.notebook.next_page()
-        self.bookview.set_page()
+        self.bookview.next_page()
 
     def cmd_previous_view(self):
         """Jump to the previos view in the viewbook."""
-        self.bookview.notebook.prev_page()
-        self.bookview.set_page()
+        self.bookview.previous_page()
 
     def bnd_buffermanager_document_changed(self, document):
         self.call('set_title', title=document.filename)

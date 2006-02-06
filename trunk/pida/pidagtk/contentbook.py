@@ -138,6 +138,21 @@ class ContentBook(gtk.VBox):
         if self.__saved is not None:
             self.__notebook.set_current_page(self.__saved)
 
+    def next_page(self):
+        if (self.notebook.get_current_page() ==
+                self.notebook.get_n_pages() - 1):
+            self.notebook.set_current_page(0)
+        else:
+            self.notebook.next_page()
+        self.set_page()
+
+    def previous_page(self):
+        if self.notebook.get_current_page() == 0:
+            self.notebook.set_current_page(-1)
+        else:
+            self.notebook.prev_page()
+        self.set_page()
+
     def __get_notebook(self):
         return self.__notebook
     notebook = property(__get_notebook)
