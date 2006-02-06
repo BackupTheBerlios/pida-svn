@@ -271,15 +271,89 @@ class ActionContext(actions.action_handler):
         return "<popup />"
 
 class FileContext(ActionContext):
-    
+   
+    @actions.action(
+        name='vcs_diff',
+        stock_id='vcs_diff',
+        label='Differences'
+        )
     def act_vcs_diff(self, action, filename):
         print filename
+
+    @actions.action(
+        name='vcs_add',
+        stock_id='vcs_add',
+        label='Add'
+        )
+    def act_vcs_add(self, action, filename):
+        print filename
+
+    @actions.action(
+        name='vcs_revert',
+        stock_id=gtk.STOCK_REVERT_TO_SAVED,
+        label='Revert'
+        )
+    def act_vcs_revert(self, action, filename):
+        print filename
+
+    @actions.action(
+        name='vcs_revert',
+        stock_id=gtk.STOCK_REVERT_TO_SAVED,
+        label='Revert'
+        )
+    def act_vcs_revert(self, action, filename):
+        print filename
+
+    @actions.action(
+        name='filemanager',
+        stock_id='gtk-filemanager',
+        label='Browse'
+        )
+    def act_filemanager(self, action, filename):
+        print filename
+
+    @actions.action(
+        name='terminal',
+        stock_id='gtk-terminal',
+        label='Terminal'
+        )
+    def act_terminal(self, action, filename):
+        print filename
+
+    @actions.action(
+        name='more_vc',
+        label='More version control'
+        )
+    def act_more_vc(self, action, *args):
+        pass
+
+    def get_menu_definition(self):
+        return """
+               <popup>
+                <menuitem action="vcs_diff" />
+                <menuitem action="vcs_add" />
+                <menuitem action="vcs_revert" />
+                <menu action="more_vc">
+                <menuitem action="vcs_remove" />
+                </menu>
+                <separator />
+                <menuitem action="filemanager" />
+                <menuitem action="terminal" />
+               </popup>
+               """
     
 if __name__ == '__main__':
     class ms:
         NAME = 'ms'
-    ac = FileContext(ms(), filename)
-    print ac.create_menu()
+    w = gtk.Window()
+    w.add_events(gtk.gdk.BUTTON_PRESS_MASK)
+    ac = FileContext(ms(), 'foo')
+    m = ac.create_menu()
+    w.show_all()
+    def c(win, evt):
+        m.popup(None, None, None, evt.button, evt.time)
+    w.connect('button-press-event', c) 
+    gtk.main()
     
 
 CONTEXTS = [('file_vc', 'When an action is in the context of a single file'),
