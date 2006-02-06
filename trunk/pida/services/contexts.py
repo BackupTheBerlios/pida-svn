@@ -128,13 +128,13 @@ class file_parent_context(default_context):
 
 class file_versioncontrol_context(default_context):
     COMMANDS = [('vcs_diff', 'vcs_diff', 'VCS Statuses',
-                 'Diff file'),
+                 'Differences'),
                  ('vcs_add', 'vcs_add', 'VCS Add',
-                 'Add file'),
+                 'Add'),
                  ('vcs_remove', 'vcs_remove', 'VCS Remove',
-                 'Remove file'),
+                 'Remove'),
                  ('vcs_revert', 'stock_undo', 'VCS revert',
-                 'Revert file')]
+                 'Revert')]
 
     def command_vcs_diff(self, filename):
         self.boss.call_command('versioncontrol', 'diff_file',
