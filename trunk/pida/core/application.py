@@ -21,19 +21,19 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-# pida import(s)
-
 # system import(s)
 import os
 import sys
-import warnings
 import optparse
+import warnings
 
 
 def die(message):
+    """Die in a command line way."""
     print message
     print 'Exiting. (this is fatal)'
     sys.exit(1)
+
 
 # First gtk import, let's check it
 try:
@@ -48,7 +48,9 @@ except ImportError:
 # the threads evilness
 gtk.threads_init()
 
+
 def die_gui(message):
+    """Die in a GUI way."""
     mu = ('<b>There was an error starting PIDA</b>\n\n'
           '%s\n\n<i>This is fatal</i>' % message)
     dlg = gtk.MessageDialog(parent=None,
@@ -59,11 +61,13 @@ def die_gui(message):
     dlg.run()
     die(message)
 
+
 # Python 2.4
 major, minor = sys.version_info[:2]
 if major < 2 or minor < 4:
     die_gui('Python 2.4 is required to run PIDA. Only %s.%s was found' %
             (major, minor))
+
 
 # Setuptools is needed to run PIDA
 try:
@@ -72,6 +76,7 @@ except ImportError:
     raise
     die_gui('PIDA requires setuptools to be installed.')
 
+
 # This can test if PIDA is installed
 try:
     import pida.core.boss as boss
@@ -79,8 +84,10 @@ try:
 except ImportError:
     die_gui('PIDA could not import itself.')
 
-# Now we can use a gui error dialog, and exception hook
+
+# Now we can use a gui exception hook
 sys.excepthook = debugwindow.show
+
 
 def get_version():
     from pkg_resources import Requirement, resource_filename
@@ -90,6 +97,7 @@ def get_version():
         return open(version_file).read().strip()
     except:
         return 'unversioned'
+
 
 pida_version = get_version()
 
@@ -266,5 +274,7 @@ def main(bosstype=boss.boss, mainloop=gtk.main, mainstop=gtk.main_quit):
         run_func = run_pida
     sys.exit(run_func(env, bosstype, mainloop, mainstop))
 
+
 if __name__ == '__main__':
     main()
+
