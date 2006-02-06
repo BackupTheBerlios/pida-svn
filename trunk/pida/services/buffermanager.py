@@ -94,22 +94,22 @@ class BufferView(contentview.content_view):
 
     def __popup_buffer(self, document, event):
         menu = gtk.Menu()
-        if document is not None:
+        if document is None:
+            oact = self.service.action_group.get_action(
+                'buffermanager+open_file')
+            mi = oact.create_menu_item()
+            menu.add(mi)
+            nact = self.service.action_group.get_action(
+                'buffermanager+new_file')
+            mi = nact.create_menu_item()
+            menu.add(mi)
+        else:
             docacts = self.service.boss.call_command('documenttypes',
                                                      'get_document_actions')
             for act in docacts:
                 if act.get_name() == 'DocumentSave':
                     mi = act.create_menu_item()
                     menu.add(mi)
-        oact = self.service.action_group.get_action(
-                'buffermanager+open_file')
-        mi = oact.create_menu_item()
-        menu.add(mi)
-        nact = self.service.action_group.get_action(
-                'buffermanager+new_file')
-        mi = nact.create_menu_item()
-        menu.add(mi)
-        if document is not None:
             globaldict = {'filename': document.filename}
             menu.add(gtk.SeparatorMenuItem())
             for title, context in [('Version control', 'file_vc'),
