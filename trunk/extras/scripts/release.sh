@@ -30,4 +30,7 @@ BERLIOS_URL="ftp.berlios.de"
 BERLIOS_DIR="incoming"
 ncftpput $BERLIOS_URL $BERLIOS_DIR $SDIST_TARBALL
 
+#upload to pypy
+python setup.py bdist_egg sdist upload
+
 
