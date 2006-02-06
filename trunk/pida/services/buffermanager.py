@@ -43,6 +43,8 @@ class BufferView(contentview.content_view):
 
     SHORT_TITLE = 'Buffers'
 
+    LONG_TITLE = 'List of open buffers'
+
     def init(self):
         self.__buffertree = buffertree.BufferTree()
         self.__buffertree.set_property('markup-format-string',
