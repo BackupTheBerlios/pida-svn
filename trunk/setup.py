@@ -25,7 +25,7 @@
 import os
 import sys
 
-VERSION_STRING = '0.3.0'
+VERSION_STRING = '0.3.1'
 
 def ensure_version_file_exists():
     """Check for existence of version file and create if unavailable."""
