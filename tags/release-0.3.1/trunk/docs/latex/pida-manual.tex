@@ -1,0 +1,699 @@
+\documentclass[10pt,a4paper,english]{article}
+\usepackage{babel}
+\usepackage{ae}
+\usepackage{aeguill}
+\usepackage{shortvrb}
+\usepackage[latin1]{inputenc}
+\usepackage{tabularx}
+\usepackage{longtable}
+\setlength{\extrarowheight}{2pt}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{multirow}
+\usepackage{ifthen}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\usepackage[DIV12]{typearea}
+%% generator Docutils: http://docutils.sourceforge.net/
+\newlength{\admonitionwidth}
+\setlength{\admonitionwidth}{0.9\textwidth}
+\newlength{\docinfowidth}
+\setlength{\docinfowidth}{0.9\textwidth}
+\newlength{\locallinewidth}
+\newcommand{\optionlistlabel}[1]{\bf #1 \hfill}
+\newenvironment{optionlist}[1]
+{\begin{list}{}
+  {\setlength{\labelwidth}{#1}
+   \setlength{\rightmargin}{1cm}
+   \setlength{\leftmargin}{\rightmargin}
+   \addtolength{\leftmargin}{\labelwidth}
+   \addtolength{\leftmargin}{\labelsep}
+   \renewcommand{\makelabel}{\optionlistlabel}}
+}{\end{list}}
+\newlength{\lineblockindentation}
+\setlength{\lineblockindentation}{2.5em}
+\newenvironment{lineblock}[1]
+{\begin{list}{}
+  {\setlength{\partopsep}{\parskip}
+   \addtolength{\partopsep}{\baselineskip}
+   \topsep0pt\itemsep0.15\baselineskip\parsep0pt
+   \leftmargin#1}
+ \raggedright}
+{\end{list}}
+% begin: floats for footnotes tweaking.
+\setlength{\floatsep}{0.5em}
+\setlength{\textfloatsep}{\fill}
+\addtolength{\textfloatsep}{3em}
+\renewcommand{\textfraction}{0.5}
+\renewcommand{\topfraction}{0.5}
+\renewcommand{\bottomfraction}{0.5}
+\setcounter{totalnumber}{50}
+\setcounter{topnumber}{50}
+\setcounter{bottomnumber}{50}
+% end floats for footnotes
+% some commands, that could be overwritten in the style file.
+\newcommand{\rubric}[1]{\subsection*{~\hfill {\it #1} \hfill ~}}
+\newcommand{\titlereference}[1]{\textsl{#1}}
+% end of "some commands"
+\title{The PIDA Manual}
+\author{}
+\date{}
+\hypersetup{
+pdftitle={The PIDA Manual},
+pdfauthor={Ali Afshar}
+}
+\raggedbottom
+\begin{document}
+\maketitle
+
+%___________________________________________________________________________
+\begin{center}
+\begin{tabularx}{\docinfowidth}{lX}
+\textbf{Author}: &
+	Ali Afshar \\
+\textbf{Contact}: &
+	\href{mailto:aafshar@gmail.com}{aafshar@gmail.com} \\
+\end{tabularx}
+\end{center}
+
+\setlength{\locallinewidth}{\linewidth}
+\hypertarget{table-of-contents}{}
+\pdfbookmark[0]{Table Of Contents}{table-of-contents}
+\subsubsection*{~\hfill Table Of Contents\hfill ~}
+\begin{list}{}{}
+\item {} \href{\#front-matter}{Front Matter}
+\begin{list}{}{}
+\item {} \href{\#introduction}{Introduction}
+
+\item {} \href{\#copyright}{Copyright}
+
+\item {} \href{\#authors}{Authors}
+
+\item {} \href{\#contributors}{Contributors}
+
+\end{list}
+
+\item {} \href{\#getting-started}{Getting Started}
+\begin{list}{}{}
+\item {} \href{\#requirements-to-run-pida}{Requirements to run PIDA}
+\begin{list}{}{}
+\item {} \href{\#minimum-requirements}{Minimum Requirements}
+
+\item {} \href{\#optional-requirements}{Optional Requirements}
+
+\end{list}
+
+\item {} \href{\#installing-pida}{Installing PIDA}
+
+\item {} \href{\#running-pida}{Running PIDA}
+\begin{list}{}{}
+\item {} \href{\#running-pida-after-installation}{Running pida after installation}
+
+\item {} \href{\#running-pida-without-installing}{Running pida without installing}
+
+\end{list}
+
+\end{list}
+
+\item {} \href{\#using-pida}{Using PIDA}
+\begin{list}{}{}
+\item {} \href{\#projects}{Projects}
+\begin{list}{}{}
+\item {} \href{\#adding-a-project-to-the-workbench}{Adding a project to the workbench}
+
+\item {} \href{\#using-a-project}{Using a project}
+
+\item {} \href{\#configuring-a-project}{Configuring a project}
+
+\end{list}
+
+\item {} \href{\#version-control}{Version Control}
+\begin{list}{}{}
+\item {} \href{\#project-management-version-control}{Project Management Version Control}
+
+\item {} \href{\#file-browsing-version-control}{File Browsing Version Control}
+
+\end{list}
+
+\item {} \href{\#editing-code}{Editing code}
+\begin{list}{}{}
+\item {} \href{\#keeping-track-of-unfinished-tasks}{Keeping track of unfinished tasks}
+
+\end{list}
+
+\end{list}
+
+\item {} \href{\#appendix-a}{Appendix A}
+
+\item {} \href{\#appendix-b-extra-tools-for-vim}{Appendix B: Extra tools for Vim}
+
+\end{list}
+
+
+
+%___________________________________________________________________________
+
+\hypertarget{front-matter}{}
+\pdfbookmark[0]{Front Matter}{front-matter}
+\section*{Front Matter}
+
+
+%___________________________________________________________________________
+
+\hypertarget{introduction}{}
+\pdfbookmark[1]{Introduction}{introduction}
+\subsection*{Introduction}
+
+PIDA is an integrated development environment for all types of development. It
+is written in Python using the PyGTK Toolkit.
+
+PIDA is different from other IDEs. Rather than attempting to write a set of
+development tools of its own, PIDA uses tools that the developer has available.
+In this regards PIDA is a framework for assembling a bespoke IDE. PIDA allows
+you to choose the editor you wish to use (yes, Vim out of the box works).
+
+Although still a young application, pIDA can already boast a huge number of
+features because of the power of some of the tools it integrates. For example
+features such as code completion and syntax highlighting are well implemented in
+PIDA's integrated editors far better than any editor built for a commercial
+IDE.
+
+Additionally PIDA insists on stealing excellent ideas from applications it
+cannot embed. For example the Rapid Application Development in the style of
+Microsoft's development products is achieved by the combination of \href{http://gazpacho.sicem.biz/}{Gazpacho} (a
+user interface designer) and {\color{red}\bfseries{}Tepache{\_}} (a code sketcher), via the text editor.
+
+
+%___________________________________________________________________________
+
+\hypertarget{copyright}{}
+\pdfbookmark[1]{Copyright}{copyright}
+\subsection*{Copyright}
+
+PIDA is released under the {\color{red}\bfseries{}MIT{\_}} license. This is not a particularly philosophical
+decision, except that the PIDA developers consider it a good thing that PIDA is
+not \href{http://www.opensource.org/licenses/gpl-license.php}{GPL}, or even closed source.
+
+The PIDA Project is owned by Ali Afshar (this author).
+
+
+%___________________________________________________________________________
+
+\hypertarget{authors}{}
+\pdfbookmark[1]{Authors}{authors}
+\subsection*{Authors}
+\begin{itemize}
+\item {} 
+Ali Afshar
+
+\item {} 
+Bernard Pratz
+
+\item {} 
+Alejandro Mery
+
+\end{itemize}
+
+
+%___________________________________________________________________________
+
+\hypertarget{contributors}{}
+\pdfbookmark[1]{Contributors}{contributors}
+\subsection*{Contributors}
+
+Stephen Holmes - A consistent and competent source of pain and suffering.
+
+
+%___________________________________________________________________________
+
+\hypertarget{getting-started}{}
+\pdfbookmark[0]{Getting Started}{getting-started}
+\section*{Getting Started}
+
+
+%___________________________________________________________________________
+
+\hypertarget{requirements-to-run-pida}{}
+\pdfbookmark[1]{Requirements to run PIDA}{requirements-to-run-pida}
+\subsection*{Requirements to run PIDA}
+
+Your requirements will largely depend on what you want to do with PIDA.
+
+
+%___________________________________________________________________________
+
+\hypertarget{minimum-requirements}{}
+\pdfbookmark[2]{Minimum Requirements}{minimum-requirements}
+\subsubsection*{Minimum Requirements}
+\begin{description}
+%[visit_definition_list_item]
+\item[Python] (\textbf{2.4})
+%[visit_definition]
+
+Python is most likely installed on UNIX systems. PIDA requires version 2.4,
+which is available to download at {\color{red}\bfseries{}py24download{\_}}.
+
+%[depart_definition]
+%[depart_definition_list_item]
+%[visit_definition_list_item]
+\item[PyGTK] (\textbf{2.6})
+%[visit_definition]
+
+GTK is the graphical toolkit used in PIDA, and PyGTK is the set of bindings
+for the Python programing language. You should use the latest version
+available at {\color{red}\bfseries{}pygtkdownload{\_}}
+
+%[depart_definition]
+%[depart_definition_list_item]
+\end{description}
+
+
+%___________________________________________________________________________
+
+\hypertarget{optional-requirements}{}
+\pdfbookmark[2]{Optional Requirements}{optional-requirements}
+\subsubsection*{Optional Requirements}
+\begin{description}
+%[visit_definition_list_item]
+\item[Gazpacho User Interface Designer] (\textbf{0.6.4})
+%[visit_definition]
+
+Gazpacho is a GTK (Glade cmpatible) user interface designer. The latest
+version is available at the \href{http://gazpacho.sicem.biz/}{Gazpacho} web site.
+
+%[depart_definition]
+%[depart_definition_list_item]
+\end{description}
+
+
+%___________________________________________________________________________
+
+\hypertarget{installing-pida}{}
+\pdfbookmark[1]{Installing PIDA}{installing-pida}
+\subsection*{Installing PIDA}
+
+If you can get PIDA from your distribution, this is best. Otherwise you will
+need to download the source tarball. Unpack the tarball, and in the top-level
+directory, issue the command (you may require super user access on your computer for a system install):
+\begin{quote}{\ttfamily \raggedright \noindent
+python~setup.py~install
+}\end{quote}
+
+PIDA will now be installed in your default python location, and be available
+to all users of the system.
+\begin{center}\begin{sffamily}
+\fbox{\parbox{\admonitionwidth}{
+\textbf{\large Note}
+\vspace{2mm}
+
+If you do not wish to install PIDA, it can be run from the local directory.
+(See \href{\#running-pida-without-installing}{Running pida without installing})
+}}
+\end{sffamily}
+\end{center}
+
+
+%___________________________________________________________________________
+
+\hypertarget{running-pida}{}
+\pdfbookmark[1]{Running PIDA}{running-pida}
+\subsection*{Running PIDA}
+
+
+%___________________________________________________________________________
+
+\hypertarget{running-pida-after-installation}{}
+\pdfbookmark[2]{Running pida after installation}{running-pida-after-installation}
+\subsubsection*{Running pida after installation}
+
+If PIDA has been installed, simply issue the command:
+\begin{quote}{\ttfamily \raggedright \noindent
+pida
+}\end{quote}
+
+If correctly installed, PIDA will start.
+
+
+%___________________________________________________________________________
+
+\hypertarget{running-pida-without-installing}{}
+\pdfbookmark[2]{Running pida without installing}{running-pida-without-installing}
+\subsubsection*{Running pida without installing}
+
+The \texttt{develop.sh} script in the top-level source directory can be used to run
+PIDA without installing system-wide. To execute it, issue the command:
+\begin{quote}{\ttfamily \raggedright \noindent
+./develop.sh
+}\end{quote}
+
+The script generates a PIDA egg in a temporary directory for the duration of
+the session.
+
+
+%___________________________________________________________________________
+
+\hypertarget{using-pida}{}
+\pdfbookmark[0]{Using PIDA}{using-pida}
+\section*{Using PIDA}
+
+PIDA is very varied in its features and what you may want to do with it might
+not be what someone else might want to do with it (this is fine). In order to
+familiarise yourself with PIDA, the following chapters are designed to take
+you through the basic common functionality that we think you would all like to
+use.
+
+
+%___________________________________________________________________________
+
+\hypertarget{projects}{}
+\pdfbookmark[1]{Projects}{projects}
+\subsection*{Projects}
+
+PIDA projects are the way in which PIDA organises a set of files. The default
+project type maps to a single source directory, which is then used for quick
+navigation and version control functions.
+
+
+%___________________________________________________________________________
+
+\hypertarget{adding-a-project-to-the-workbench}{}
+\pdfbookmark[2]{Adding a project to the workbench}{adding-a-project-to-the-workbench}
+\subsubsection*{Adding a project to the workbench}
+
+Firstly, from the \emph{Project} menu select \emph{New Project}, and Enter the
+information into the newly displayed form.
+\begin{description}
+%[visit_definition_list_item]
+\item[Name] %[visit_definition]
+
+The name you would like to use for the project
+
+%[depart_definition]
+%[depart_definition_list_item]
+%[visit_definition_list_item]
+\item[Save In] %[visit_definition]
+
+The directory you would like to save the project file in (or the default
+pida projects directory by default).
+
+%[depart_definition]
+%[depart_definition_list_item]
+%[visit_definition_list_item]
+\item[Type] %[visit_definition]
+
+The type of project this project is
+
+%[depart_definition]
+%[depart_definition_list_item]
+\end{description}
+
+Once you have entered this information click \emph{ok}.
+
+You will be presented with the initial project configuration dialog for the
+project.
+
+Depending on the type of project, you will have different options. The most
+common option is \emph{Source Directory}. This is the directory that will be
+navigated to when clicking on a project, and the directory that is used for
+project functions, including version control. When you are happy with the
+configuration, press the \emph{save} button.
+
+Your new project will have appeared on the project list, and is available to
+browse and use.
+\begin{center}\begin{sffamily}
+\fbox{\parbox{\admonitionwidth}{
+\textbf{\large Note}
+\vspace{2mm}
+
+The project file may be stored in the project source directory if
+required. The initial value of the project source directory actually
+defaults to the location of the project source file. This allows you to add
+the project file to a version control system and monitor the changes.
+}}
+\end{sffamily}
+\end{center}
+
+
+%___________________________________________________________________________
+
+\hypertarget{using-a-project}{}
+\pdfbookmark[2]{Using a project}{using-a-project}
+\subsubsection*{Using a project}
+
+First, Locate the project list. It is in the pane marked \emph{plugins} and
+has an icon signifying a project. This pane will be used to access projects.
+
+Selecting a project from this project list will open a file manager in the
+source directory of the project, whatever that is configured to be.
+
+Right-clicking on a project gives the context menu. This context menu is
+divided into three sections of contexts.
+\begin{description}
+%[visit_definition_list_item]
+\item[Directory ] %[visit_definition]
+
+These are file system actions to be performed on the source directory.
+
+%[depart_definition]
+%[depart_definition_list_item]
+%[visit_definition_list_item]
+\item[Source Code] %[visit_definition]
+
+These are version control commands to be performed in the context of the
+project.
+
+%[depart_definition]
+%[depart_definition_list_item]
+%[visit_definition_list_item]
+\item[Project] %[visit_definition]
+
+These are actions to be performed on the actual project object, e.g.
+project configuration.
+
+%[depart_definition]
+%[depart_definition_list_item]
+\end{description}
+
+
+%___________________________________________________________________________
+
+\hypertarget{configuring-a-project}{}
+\pdfbookmark[2]{Configuring a project}{configuring-a-project}
+\subsubsection*{Configuring a project}
+
+Projects are configured using the project configuration dialog. To open the
+project configuration dialog, either:
+\newcounter{listcnt1}
+\begin{list}{\arabic{listcnt1}.}
+{
+\usecounter{listcnt1}
+\setlength{\rightmargin}{\leftmargin}
+}
+\item {} 
+Select \emph{Properties} from the \emph{Project} menu.
+
+\item {} 
+Right click on a project, and in the context menu, select \emph{Configure this
+project} from the \emph{Project} submenu.
+
+\end{list}
+
+You should click the \emph{Save} button when you have finished and are happy.
+
+The \emph{Undo} button allows you to revert changes to the configuration back to
+the last saved state.
+
+The \emph{Cancel} button closes the dialog without saving any changes. Closing the
+dialog manually will have the same effect as pressing \emph{Cancel}.
+
+
+%___________________________________________________________________________
+
+\hypertarget{version-control}{}
+\pdfbookmark[1]{Version Control}{version-control}
+\subsection*{Version Control}
+
+PIDA automatically detects which version control system you are using for a
+particular source directory. This allows you to choose the version control
+system you wish to use.
+
+PIDA currently supports:
+\begin{itemize}
+\item {} 
+CVS
+
+\item {} 
+Subversion
+
+\item {} 
+Darcs
+
+\item {} 
+Mercurial
+
+\item {} 
+Monotone
+
+\item {} 
+Bzr
+
+\item {} 
+Arch
+
+\end{itemize}
+
+Version control is used throughout PIDA in 3 ways which are outlined below.
+
+
+%___________________________________________________________________________
+
+\hypertarget{project-management-version-control}{}
+\pdfbookmark[2]{Project Management Version Control}{project-management-version-control}
+\subsubsection*{Project Management Version Control}
+
+The project list states the version control system for a project. When a
+project is selected, main version control commands (from the main menu and
+main toolbar) will be executed in the source directory of the project,
+automatically using the correct version control system.
+
+The version control commands may also be accessed using the context menu
+made available by right-clicking on a project.
+
+
+%___________________________________________________________________________
+
+\hypertarget{file-browsing-version-control}{}
+\pdfbookmark[2]{File Browsing Version Control}{file-browsing-version-control}
+\subsubsection*{File Browsing Version Control}
+
+The built-in file browser autoimatically lists version control information
+for listed files. This information appears as a standard set of letters
+(e.g. \emph{M} for a locally modified file) adjacent to filenames in the browser.
+
+To use this, click on any project, in order to open the browser at the
+project's source directory.
+
+When right clicking on a file or directory, you are given a list of version
+control commands which can be carried out n the file or directory.
+
+
+%___________________________________________________________________________
+
+\hypertarget{editing-code}{}
+\pdfbookmark[1]{Editing code}{editing-code}
+\subsection*{Editing code}
+
+
+%___________________________________________________________________________
+
+\hypertarget{keeping-track-of-unfinished-tasks}{}
+\pdfbookmark[2]{Keeping track of unfinished tasks}{keeping-track-of-unfinished-tasks}
+\subsubsection*{Keeping track of unfinished tasks}
+
+Pida now has supports a TODO list, featured in some other python IDEs. As 
+you write code, you can include comment tags with the word ``TODO:'' in. In
+the side panel for browsing source code (the source browser {\&} error buttons),
+click on the small icon at the bottom, and you'll see a list of your tasks 
+still undone. Clicking on one of these will take you to the appropriate place 
+in your document, and you can do whatever small task it was that required the
+note in the first place.
+
+
+%___________________________________________________________________________
+
+\hypertarget{appendix-a}{}
+\pdfbookmark[0]{Appendix A}{appendix-a}
+\section*{Appendix A}
+
+The MIT License:
+\begin{quote}{\ttfamily \raggedright \noindent
+Copyright~(c)~2005-2006~The~PIDA~Project~\\
+~\\
+Permission~is~hereby~granted,~free~of~charge,~to~any~person~obtaining~a~copy~of~\\
+this~software~and~associated~documentation~files~(the~"Software"),~to~deal~in~\\
+the~Software~without~restriction,~including~without~limitation~the~rights~to~\\
+use,~copy,~modify,~merge,~publish,~distribute,~sublicense,~and/or~sell~copies~of~\\
+the~Software,~and~to~permit~persons~to~whom~the~Software~is~furnished~to~do~so,~\\
+subject~to~the~following~conditions:~\\
+~\\
+The~above~copyright~notice~and~this~permission~notice~shall~be~included~in~all~\\
+copies~or~substantial~portions~of~the~Software.~\\
+~\\
+THE~SOFTWARE~IS~PROVIDED~"AS~IS",~WITHOUT~WARRANTY~OF~ANY~KIND,~EXPRESS~OR~\\
+IMPLIED,~INCLUDING~BUT~NOT~LIMITED~TO~THE~WARRANTIES~OF~MERCHANTABILITY,~FITNESS~\\
+FOR~A~PARTICULAR~PURPOSE~AND~NONINFRINGEMENT.~IN~NO~EVENT~SHALL~THE~AUTHORS~OR~\\
+COPYRIGHT~HOLDERS~BE~LIABLE~FOR~ANY~CLAIM,~DAMAGES~OR~OTHER~LIABILITY,~WHETHER~\\
+IN~AN~ACTION~OF~CONTRACT,~TORT,~TURTLE,~OR~OTHERWISE,~ARISING~FROM,~OUT~OF~OR~IN~\\
+CONNECTION~WITH~THE~SOFTWARE~OR~THE~USE~OR~OTHER~DEALINGS~IN~THE~SOFTWARE.
+}\end{quote}
+
+
+%___________________________________________________________________________
+
+\hypertarget{appendix-b-extra-tools-for-vim}{}
+\pdfbookmark[0]{Appendix B: Extra tools for Vim}{appendix-b-extra-tools-for-vim}
+\section*{Appendix B: Extra tools for Vim}
+
+For others using Vim, there's a few bits and pieces you might find useful, including:
+
+\href{http://www.vim.org/scripts/script.php?script_id=850}{Pydiction}, which lets you add python modules, including classes and methods, to vim's 
+autocomplete functionality. You can also add your own project(s) to the autocompleting.
+Download from the site, extract it, and put these lines in your .vimrc:
+\begin{quote}{\ttfamily \raggedright \noindent
+if~has("autocmd")~\\
+~~autocmd~FileType~python~set~complete+=k/path/to/pydiction~isk+=.,(~\\
+endif~"~has("autocmd")~
+}\end{quote}
+
+Now when you press Ctrl+n (next), or Ctrl+p (previous), vim should autocomplete to 
+the appropriate python code.
+
+\href{http://www.vim.org/scripts/script.php?script_id=30}{Python.vim}, which has some extra functions for handling python code, including:
+\begin{itemize}
+\item {} 
+Select a block of lines with the same indentation
+
+\item {} 
+Select a function
+
+\item {} 
+Select a class
+
+\item {} 
+Go to previous/next class/function
+
+\item {} 
+Go to the beginning/end of a block
+
+\item {} 
+Comment the selection
+
+\item {} 
+Uncomment the selection
+
+\item {} 
+Jump to the last/next line with the same indent
+
+\item {} 
+Shift a block (left/right)
+
+\end{itemize}
+
+
+%___________________________________________________________________________
+
+\section*{Docutils System Messages}
+
+Unknown target name: ``tepache''.
+
+
+Unknown target name: ``mit''.
+
+
+Unknown target name: ``py24download''.
+
+
+Unknown target name: ``pygtkdownload''.
+
+
+\end{document}
