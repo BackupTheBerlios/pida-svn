@@ -29,29 +29,58 @@ import sys
 import warnings
 import optparse
 
+
+def die(message):
+    print message
+    print 'Exiting. (this is fatal)'
+    sys.exit(1)
+
 # First gtk import, let's check it
 try:
     import gtk
+    major, minor, rev = gtk.pygtk_version
+    if major < 2 or minor < 6:
+        die('PIDA requires PyGTK >= 2.6. It only found %s.%s'
+            % (major, minor))
 except ImportError:
-    print 'PIDA requires Python GTK bindings. They were not found.'
-    print 'Exiting. (this is fatal)'
-    sys.exit(1)
+    die('PIDA requires Python GTK bindings. They were not found.')
+
+# the threads evilness
+gtk.threads_init()
+
+def die_gui(message):
+    mu = ('<b>There was an error starting PIDA</b>\n\n'
+          '%s\n\n<i>This is fatal</i>' % message)
+    dlg = gtk.MessageDialog(parent=None,
+                            flags=0,
+                            type=gtk.MESSAGE_ERROR,
+                            buttons=gtk.BUTTONS_CLOSE)
+    dlg.set_markup(mu)
+    dlg.run()
+    die(message)
+
+# Python 2.4
+major, minor = sys.version_info[:2]
+if major < 2 or minor < 4:
+    die_gui('Python 2.4 is required to run PIDA. Only %s.%s was found' %
+            (major, minor))
+
+# Setuptools is needed to run PIDA
+try:
+    import setuptools
+except ImportError:
+    raise
+    die_gui('PIDA requires setuptools to be installed.')
 
 # This can test if PIDA is installed
 try:
     import pida.core.boss as boss
     import pida.pidagtk.debugwindow as debugwindow
 except ImportError:
-    print 'PIDA could not import itself.'
-    print 'Exiting. (this is fatal)'
-    sys.exit(1)
+    die_gui('PIDA could not import itself.')
 
-# now gtk is definitely installed, we can use a flashy exception hook
+# Now we can use a gui error dialog, and exception hook
 sys.excepthook = debugwindow.show
-
-# the threads evilness
-gtk.threads_init()
-
 
 def get_version():
     from pkg_resources import Requirement, resource_filename
