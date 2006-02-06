@@ -27,6 +27,7 @@ import gtk
 import pida.core.service as service
 import pida.pidagtk.buffertree as buffertree
 import pida.pidagtk.contentview as contentview
+import pida.pidagtk.contextwidgets as contextwidgets
 
 from pida.core import actions
 
@@ -51,6 +52,8 @@ class BufferView(contentview.content_view):
                                        '%(markup)s')
         self.__buffertree.connect('clicked',
                                   self.service.cb_plugin_view_clicked)
+        self.__buffertree.connect('right-clicked',
+                                  self.cb_buffertree_right_clicked)
         self.widget.pack_start(self.__buffertree)
 
     def get_bufferview(self):
@@ -81,6 +84,57 @@ class BufferView(contentview.content_view):
             self.__buffertree.set_selected(key)
         except IndexError:
             pass
+
+    def cb_buffertree_right_clicked(self, tv, item, event):
+        if item is not None:
+            document = item.value
+        else:
+            document = None
+        self.__popup_buffer(document, event)
+
+    def __popup_buffer(self, document, event):
+        menu = gtk.Menu()
+        if document is not None:
+            docacts = self.service.boss.call_command('documenttypes',
+                                                     'get_document_actions')
+            for act in docacts:
+                if act.get_name() == 'DocumentSave':
+                    mi = act.create_menu_item()
+                    menu.add(mi)
+        oact = self.service.action_group.get_action(
+                'buffermanager+open_file')
+        mi = oact.create_menu_item()
+        menu.add(mi)
+        nact = self.service.action_group.get_action(
+                'buffermanager+new_file')
+        mi = nact.create_menu_item()
+        menu.add(mi)
+        if document is not None:
+            globaldict = {'filename': document.filename}
+            menu.add(gtk.SeparatorMenuItem())
+            for title, context in [('Version control', 'file_vc'),
+                                   ('Parent directory', 'file_parent')]:
+                mroot = gtk.MenuItem(label=title)
+                menu.add(mroot)
+                contexts = self.service.boss.call_command('contexts',
+                                     'get_contexts',
+                                     contextname=context,
+                                     globaldict=globaldict
+                                     )
+                cmenu = contextwidgets.get_menu(contexts)
+                mroot.set_submenu(cmenu)
+            open_with_menu = self.service.boss.call_command('openwith',
+                    'get_openers_menu', filename=document.filename)
+            mroot = gtk.MenuItem(label='Open with')
+            mroot.set_submenu(open_with_menu)
+            menu.add(mroot)
+            menu.add(gtk.SeparatorMenuItem())
+            clact = self.service.action_group.get_action(
+                    'buffermanager+close_buffer')
+            mi = clact.create_menu_item()
+            menu.add(mi)
+        menu.show_all()
+        menu.popup(None, None, None, event.button, event.time)
 
 class Buffermanager(service.service):
     
@@ -147,7 +201,6 @@ class Buffermanager(service.service):
         """Close the current buffer."""
         filename = self.__currentdocument.filename
         self.call('close_file', filename=filename)
-        
 
     @actions.action(stock_id=gtk.STOCK_QUIT, label=None)
     def act_quit_pida(self, action):
