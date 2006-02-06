@@ -85,10 +85,8 @@ class CulebraView(gtksourceview.SourceView):
 
         if not found:
             return
-            
-        mark = buff.get_insert()
-        line_iter = buff.get_iter_at_mark(mark)
-        self.scroll_to_iter(line_iter, 0.25)
+        
+        self.focus_carret()
 
     def on_find_forward(self, action):
         self.find(True)
@@ -113,6 +111,11 @@ class CulebraView(gtksourceview.SourceView):
     widget = property(get_widget)
 
 
+    def focus_carret(self):
+        buff = self.get_buffer()
+        mark = buff.get_insert()
+        line_iter = buff.get_iter_at_mark(mark)
+        self.scroll_to_iter(line_iter, 0.25)
 
 def create_widget(filename, action_group):
 

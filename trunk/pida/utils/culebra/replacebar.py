@@ -130,11 +130,12 @@ class ReplaceBar(Bar):
             self.update_history()
 
         self.buffer.search()
-        
+        self.get_parent().focus_carret()
     
     def on_replace_all(self, btn):
         if self.buffer.replace_all() and self.can_update_history():
             self.update_history()
+            self.get_parent().focus_carret()
         
     def on_entry_changed(self, entry):
         self.buffer.replace_text = unescape_text(entry.get_text())
