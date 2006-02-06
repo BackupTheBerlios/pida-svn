@@ -133,7 +133,7 @@ class file_versioncontrol_context(default_context):
                  'Add file'),
                  ('vcs_remove', 'vcs_remove', 'VCS Remove',
                  'Remove file'),
-                 ('vcs_revert', 'undo', 'VCS revert',
+                 ('vcs_revert', 'stock_undo', 'VCS revert',
                  'Revert file')]
 
     def command_vcs_diff(self, filename):
