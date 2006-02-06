@@ -101,7 +101,7 @@ _ACTIONS = {
 def split_function_name(name):
     return name.split('_', 1)[-1]
 
-def create_actions(meths, action_prefix):
+def create_actions(meths, action_prefix, *action_args):
     '''This function grabs a list of methods and an 'action_prefix' and
     returns a list of actions.
     
@@ -159,7 +159,7 @@ def create_actions(meths, action_prefix):
         
         action.set_property("is-important", getattr(meth, "is_important", False))
             
-        action.connect("activate", meth)
+        action.connect("activate", meth, *action_args)
         actions.append(action)
     
     # Now we create the radio groups
@@ -244,15 +244,15 @@ class action_handler(base.pidacomponent):
 
     type_name = 'action-handler'
 
-    def __init__(self, service):
+    def __init__(self, service, *action_args):
         self.__service = service
-        self.__init_actiongroup()
+        self.__init_actiongroup(*action_args)
         self.init()
 
     def init(self):
         pass
 
-    def __init_actiongroup(self):
+    def __init_actiongroup(self, *action_args):
         agname = "%s+%s" % (self.__service.NAME, self.type_name)
         self.__action_group = gtk.ActionGroup(agname)
         
@@ -261,7 +261,7 @@ class action_handler(base.pidacomponent):
                    if attr.startswith("act_")]
 
         add_action = self.__action_group.add_action
-        map(add_action, create_actions(methods, agname))
+        map(add_action, create_actions(methods, agname, *action_args))
         
 
     def get_action_group(self):

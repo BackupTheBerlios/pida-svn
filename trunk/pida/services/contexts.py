@@ -33,6 +33,7 @@ defs = service.definitions
 types = service.types
 
 import pida.pidagtk.gladeview as gladeview
+import pida.core.actions as actions
 
 class Contexts(service.service):
 
@@ -254,7 +255,32 @@ class project_context(default_context):
         self.boss.call_command('projectmanager', 'remove_project',
                                project=project)
 
-        
+class ActionContext(actions.action_handler):
+    
+    type_name = 'context-actions'
+
+    def init(self):
+        self.__uim = gtk.UIManager()
+        self.__uim.insert_action_group(self.action_group, 0)
+        self.__uim.add_ui_from_string(self.get_menu_definition())
+
+    def create_menu(self):
+        return self.__uim.get_widget('/popup')
+
+    def get_menu_definition(self):
+        return "<popup />"
+
+class FileContext(ActionContext):
+    
+    def act_vcs_diff(self, action, filename):
+        print filename
+    
+if __name__ == '__main__':
+    class ms:
+        NAME = 'ms'
+    ac = FileContext(ms(), filename)
+    print ac.create_menu()
+    
 
 CONTEXTS = [('file_vc', 'When an action is in the context of a single file'),
             ('directory', 'When an action is in the context of a directory'),

@@ -63,7 +63,8 @@ base_packages = ['pida',
                  'pida.pidagtk',
                  'pida.services',
                  'pida.editors',
-                 'pida.utils']
+                 'pida.utils',
+                 'rat']
 
 # extra utility packages
 util_packages = ['pida.utils.vim',
