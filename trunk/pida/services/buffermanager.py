@@ -149,8 +149,10 @@ class Buffermanager(service.service):
                                        'most-recent.session')
                 if os.path.exists(most_recent):
                     self.call('load_session', session_filename=most_recent)
-            if len(self.__documents) == 0:
-                self.call('new_file')
+            def _n():
+                if len(self.__documents) == 0:
+                    self.call('new_file')
+            gtk.idle_add(_n)
 
     def init(self):
         self.__currentdocument = None
@@ -379,7 +381,8 @@ class Buffermanager(service.service):
     def cmd_save_session(self, session_filename):
         f = open(session_filename, 'w')
         for doc in self.__documents.values():
-            f.write('%s\n' % doc.filename)
+            if not doc.is_new:
+                f.write('%s\n' % doc.filename)
         f.close()
 
     def cmd_load_session(self, session_filename):
