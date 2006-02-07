@@ -20,7 +20,7 @@
 #LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
-#import pida.core.buffer as buffer
+
 import os
 import gtk
 
@@ -148,7 +148,6 @@ class Buffermanager(service.service):
     def init(self):
         self.__currentdocument = None
         self.__documents = {}
-        self.__filenames = {}
         self.__session_loaded = False
         self.__editor = None
 
@@ -302,18 +301,15 @@ class Buffermanager(service.service):
         
     def cmd_open_document(self, document):
         if document is not self.__currentdocument:
-            if document.unique_id not in self.__filenames:
+            if document.unique_id not in self.__documents:
                 self.__add_document(document)
             self.__view_document(document)
 
     def cmd_open_file(self, filename, quiet=False):
         if (len(filename) and (self.__currentdocument is None or
                 filename != self.__currentdocument.filename)):
-            filename = os.path.abspath(filename)
-            if filename in self.__documents:
-                document = self.__documents[filename]
-                self.__view_document(document)
-            else:
+            document = self.__get_filename_document(filename)
+            if document is None:
                 try:
                     document = self.__open_file(filename)
                 except:
@@ -323,7 +319,7 @@ class Buffermanager(service.service):
                         document = None
                 if document is not None:
                     self.__add_document(document)
-                    self.__view_document(document)
+            self.__view_document(document)
 
     def cmd_new_file(self):
         self.__new_file()
@@ -333,14 +329,14 @@ class Buffermanager(service.service):
         self.editor.call('goto_line', linenumber=linenumber)
 
     def cmd_close_file(self, filename):
-        if filename in self.__documents:
-            doc = self.__documents[filename]
+        doc = self.__get_filename_document(filename)
+        if doc is not None:
             doc.handler.close_document(doc)
 
     def cmd_save_session(self, session_filename):
         f = open(session_filename, 'w')
-        for filename in self.__documents:
-            f.write('%s\n' % filename)
+        for doc in self.__documents.values():
+            f.write('%s\n' % doc.filename)
         f.close()
 
     def cmd_load_session(self, session_filename):
@@ -355,19 +351,23 @@ class Buffermanager(service.service):
         return lines
 
     def cmd_file_closed(self, filename):
-        if filename in self.__documents:
-            document = self.__documents[filename]
-            self.__remove_document(document)
+        doc = self.__get_filename_document(filename)
+        if doc is not None:
+            self.__remove_document(doc)
         else:
             self.log.warn('attempt to close file not opened %s', filename)
 
     def cmd_reset_current_document(self):
         self.__currentdocument.reset()
         self.events.emit('document_modified', document=self.__currentdocument)
+
+    def __get_filename_document(self, filename):
+        for uid, doc in self.__documents.iteritems():
+            if doc.filename == filename:
+                return doc
         
     def __remove_document(self, document):
-        del self.__filenames[document.unique_id]
-        del self.__documents[document.filename]
+        del self.__documents[document.unique_id]
         model = self.plugin_view.bufferview.model
         for row in model:
             if row[0] == str(document.unique_id):
@@ -391,8 +391,7 @@ class Buffermanager(service.service):
         self.boss.call_command('newfile', 'create_interactive')
          
     def __add_document(self, document):
-        self.__documents[document.filename] = document
-        self.__filenames[document.unique_id] = document.filename
+        self.__documents[document.unique_id] = document
         proj = self.boss.call_command('projectmanager',
                                       'get_project_for_file',
                                       filename=document.filename)
@@ -415,7 +414,7 @@ class Buffermanager(service.service):
         self.events.emit('document_changed', document=document)
 
     def __disable_all_handlers(self):
-        for filename, document in self.__documents.iteritems():
+        for uid, document in self.__documents.iteritems():
             document.handler.action_group.set_sensitive(False)
             document.handler.action_group.set_visible(False)
 
