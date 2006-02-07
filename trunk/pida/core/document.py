@@ -291,6 +291,11 @@ class document(base.pidacomponent):
         return self.filename is None
 
     is_new = property(get_is_new)
+
+    def get_newfile_index(self):
+        return self.__newfile_index
+    
+    newfile_index = property(get_newfile_index)
         
 
         

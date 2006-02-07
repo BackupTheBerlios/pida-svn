@@ -327,7 +327,8 @@ class culebra_editor(service.service):
         if buff.is_new:
             # XXX: this is utterly broken but there's no support for new files
             # either
-            return False
+            # well, there is now
+            return True
         
         parent = self.get_window()
         files, response = hig.save_changes(

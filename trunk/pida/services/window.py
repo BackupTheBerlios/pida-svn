@@ -215,8 +215,8 @@ class WindowManager(service.service):
         self.bookview.previous_page()
 
     def bnd_buffermanager_document_changed(self, document):
-        if document.filename is None:
-            title = 'New File'
+        if document.is_new:
+            title = 'New File %s' % document.newfile_index
         else:
             title = document.filename
         self.call('set_title', title=title)
