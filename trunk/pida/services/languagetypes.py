@@ -144,13 +144,7 @@ class language_types(service.service):
             self.__current_document = document
         if document is None:
             return
-        for handlerlist in self.__langs.values():
-            for handler in handlerlist:
-                handler.action_group.set_visible(False)
-                if hasattr(handler.service, 'lang_view_type'):
-                    view = handler.service.lang_view
-                    if view is not None:
-                        view.set_sensitive(False)
+        self.__disable_all_handlers()
         handlers = self.call('get_language_handlers', document=document)
         for handler in handlers:
             handler.action_group.set_visible(True)
@@ -159,6 +153,18 @@ class language_types(service.service):
                 if view is not None:
                     view.set_sensitive(True)
             handler.load_document(document)
+
+    def cmd_hide_all_handlers(self):
+        self.__disable_all_handlers()
+
+    def __disable_all_handlers(self):
+        for handlerlist in self.__langs.values():
+            for handler in handlerlist:
+                handler.action_group.set_visible(False)
+                if hasattr(handler.service, 'lang_view_type'):
+                    view = handler.service.lang_view
+                    if view is not None:
+                        view.set_sensitive(False)
 
     def __is_active(self, handler):
         if os.path.exists(self.__state):

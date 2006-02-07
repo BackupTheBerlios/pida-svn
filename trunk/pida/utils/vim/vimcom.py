@@ -97,6 +97,7 @@ import os
 import pty
 import sys
 import time
+import tempfile
 
 class poller(object):
     """
@@ -517,6 +518,9 @@ class communication_window(gtk.Window):
     def change_buffer(self, server, filename):
         self.send_ex(server, "exe 'b!'.bufnr('%s')" % filename)
 
+    def change_buffer_number(self, server, number):
+        self.send_ex(server, "b!%s" % number)
+
     def close_buffer(self, server, buffername):
         self.send_ex(server, "exe 'confirm bw'.bufnr('%s')" % buffername)
 
@@ -537,6 +541,11 @@ class communication_window(gtk.Window):
 
     def open_file(self, server, name):
         self.send_ex(server, 'confirm e %s' % self.escape_filename(name))
+
+    def new_file(self, server):
+        f, path = tempfile.mkstemp()
+        self.open_file(server, path)
+        return path
 
     def goto_line(self, server, linenumber):
         self.send_ex(server, '%s' % linenumber)
@@ -574,6 +583,10 @@ class communication_window(gtk.Window):
 
     def save(self, server):
         self.send_ex(server, 'w')
+
+    def save_as(self, server, filename):
+        print filename
+        self.send_ex(server, 'saveas %s' % filename)
 
     def undo(self, server):
         self.send_esc(server)
@@ -673,7 +686,7 @@ endfunction
 :set guioptions-=T
 :set guioptions-=m
 :silent au! pida
-:silent au pida BufEnter * call Async_event(v:servername.":bufferchange,".getcwd().",".bufname('%'))
+:silent au pida BufEnter * call Async_event(v:servername.":bufferchange,".getcwd().",".bufname('%').",".bufnr('%'))
 :silent au pida BufWipeout * call Async_event(v:servername.":bufferunload,".expand('<amatch>'))
 :silent au pida VimLeave * call Async_event(v:servername.":shutdown,")
 :silent au pida VimEnter * call Async_event(v:servername.":started,")

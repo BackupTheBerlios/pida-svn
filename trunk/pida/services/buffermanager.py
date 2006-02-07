@@ -104,6 +104,11 @@ class BufferView(contentview.content_view):
             mi = nact.create_menu_item()
             menu.add(mi)
             menu.show_all()
+        elif document.is_new:
+            menu = gtk.Menu()
+            sact = document.handler.action_group.get_action('DocumentSaveAs')
+            mi = sact.create_menu_item()
+            menu.add(mi)
         else:
             menu = self.service.boss.call_command('contexts',
                 'get_context_menu', ctxname='file', ctxargs=[document.filename])
@@ -135,15 +140,17 @@ class Buffermanager(service.service):
         pass
 
     def bnd_editormanager_started(self):
-        for filename in self.boss.positional_args:
-            self.call('open_file', filename=filename)
         if not self.__session_loaded:
+            self.__session_loaded = True
+            for filename in self.boss.positional_args:
+                self.call('open_file', filename=filename)
             if self.opt('sessions', 'automatically_load_last_session'):
                 most_recent = os.path.join(self.boss.pida_home,
                                        'most-recent.session')
                 if os.path.exists(most_recent):
                     self.call('load_session', session_filename=most_recent)
-            self.__session_loaded = True
+            if len(self.__documents) == 0:
+                self.call('new_file')
 
     def init(self):
         self.__currentdocument = None
@@ -190,6 +197,13 @@ class Buffermanager(service.service):
     def act_new_file(self, action):
         """Creates a document"""
         self.call('new_file')
+
+    @actions.action(stock_id=gtk.STOCK_ADD,
+                    label=None,
+                    default_accel='<Shift><Control><Alt>n')
+    def act_new_file_wizard(self, action):
+        """Creates a document from the wizard"""
+        self.call('new_file_wizard')
 
     def act_save_session(self, action):
         """Saves the current session"""
@@ -322,7 +336,36 @@ class Buffermanager(service.service):
             self.__view_document(document)
 
     def cmd_new_file(self):
-        self.__new_file()
+        document = self.__new_file()
+        self.__add_document(document)
+        self.__view_document(document)
+
+    def cmd_save_as(self):
+        document = self.__currentdocument
+        chooser = gtk.FileChooserDialog(
+                    title='Save as file',
+                    parent=self.boss.get_main_window(),
+                    action=gtk.FILE_CHOOSER_ACTION_SAVE,
+                    buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        chooser.set_do_overwrite_confirmation(True)
+        def _cb(dlg, response):
+            if response == gtk.RESPONSE_ACCEPT:
+                filename = chooser.get_filename()
+                document.filename = filename
+                self.boss.call_command('editormanager', 'save_as',
+                                        filename=filename)
+                def v():
+                    self.__set_document_project(document)
+                    document.reset_markup()
+                    self.__view_document(document)
+                gtk.timeout_add(200, v)
+            chooser.destroy()
+        chooser.connect('response', _cb)
+        chooser.run()
+
+    def cmd_new_file_wizard(self):
+        self.__new_file_wizard()
 
     def cmd_open_file_line(self, filename, linenumber):
         self.call('open_file', filename=filename)
@@ -391,14 +434,14 @@ class Buffermanager(service.service):
         return document
 
     def __new_file(self):
+        return self.__open_file(None)
+
+    def __new_file_wizard(self):
         self.boss.call_command('newfile', 'create_interactive')
          
     def __add_document(self, document):
         self.__documents[document.unique_id] = document
-        proj = self.boss.call_command('projectmanager',
-                                      'get_project_for_file',
-                                      filename=document.filename)
-        document.set_project(proj)
+        self.__set_document_project(document)
         self.plugin_view.add_document(document)
 
     def __view_document(self, document):
@@ -407,14 +450,24 @@ class Buffermanager(service.service):
         self.__disable_all_handlers()
         document.handler.action_group.set_sensitive(True)
         document.handler.action_group.set_visible(True)
-        self.boss.call_command('languagetypes', 'show_handlers',
-                               document=document)
-        self.boss.call_command('window', 'update_action_groups')
+        if document.is_new:
+            self.boss.call_command('languagetypes', 'hide_all_handlers')
+        else:
+            self.boss.call_command('languagetypes', 'show_handlers',
+                                   document=document)
+            self.boss.call_command('window', 'update_action_groups')
         if (self.plugin_view.bufferview.get_selected_key()
                 != document.unique_id):
             self.plugin_view.bufferview.set_selected(document.unique_id)
         self.action_group.get_action('buffermanager+close_buffer').set_sensitive(True)
         self.events.emit('document_changed', document=document)
+
+    def __set_document_project(self, document):
+        proj = self.boss.call_command('projectmanager',
+                                      'get_project_for_file',
+                                      filename=document.filename)
+        document.set_project(proj)
+
 
     def __disable_all_handlers(self):
         for uid, document in self.__documents.iteritems():
@@ -440,6 +493,8 @@ class Buffermanager(service.service):
                 <placeholder name="OpenFileMenu">
                 <menuitem name="new" action="buffermanager+new_file" />
                 <menuitem name="open" action="buffermanager+open_file" />
+                <menuitem action="buffermanager+new_file_wizard" />
+                <separator />
                 </placeholder>
                 <placeholder name="SaveFileMenu" />
                 <placeholder name="ExtrasFileMenu">
@@ -469,6 +524,8 @@ class Buffermanager(service.service):
                 <placeholder name="OpenFileToolbar">
                 <toolitem name="New" action="buffermanager+new_file" />
                 <toolitem name="Open" action="buffermanager+open_file" />
+                <toolitem action="buffermanager+new_file_wizard" />
+                <separator />
                 </placeholder>
                 <placeholder name="SaveFileToolbar">
                 </placeholder>

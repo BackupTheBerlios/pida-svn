@@ -314,6 +314,8 @@ class ProjectManager(service.service):
         return self.projects
 
     def cmd_get_project_for_file(self, filename):
+        if filename is None:
+            return None
         for project in self.projects:
             if project.source_directory in filename:
                 return project

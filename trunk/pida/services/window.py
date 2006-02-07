@@ -215,7 +215,11 @@ class WindowManager(service.service):
         self.bookview.previous_page()
 
     def bnd_buffermanager_document_changed(self, document):
-        self.call('set_title', title=document.filename)
+        if document.filename is None:
+            title = 'New File'
+        else:
+            title = document.filename
+        self.call('set_title', title=title)
 
     def bnd_editormanager_started(self):
         self.__splash.destroy()

@@ -82,6 +82,9 @@ class editor_manager(service.service):
     def cmd_save(self):
         self.editor.call('save')
 
+    def cmd_save_as(self, filename):
+        self.editor.call('save_as', filename=filename)
+
     def cmd_undo(self):
         self.editor.call('undo')
 

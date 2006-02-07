@@ -160,15 +160,18 @@ class culebra_editor(service.service):
         view = self.__views[document.unique_id]
         view.raise_page()
         self.current_view = view
-        self.__set_action_sensitivities()
+        self.__set_action_sensitivities(document)
 
-    def __set_action_sensitivities(self):
+    def __set_action_sensitivities(self, document):
         save_action = self.get_save_action()
-        assert save_action is not None
-        buff = self.current_view.editor.get_buffer()
-        self.current_view.editor.set_action_group(self.action_group)
-        self.linker = sensitive.SaveLinker(buff, save_action)
-        self.linker2 = sensitive.SaveLinker(buff, self.__revertact)
+        if document.is_new:
+            save_action.set_sensitive(False)
+            self.__revertact.set_sensitive(False)
+        else:
+            buff = self.current_view.editor.get_buffer()
+            self.current_view.editor.set_action_group(self.action_group)
+            self.linker = sensitive.SaveLinker(buff, save_action)
+            self.linker2 = sensitive.SaveLinker(buff, self.__revertact)
         # undo redo
         self.cb_can_undo(self.current_view, self.current_view.can_undo())
         self.cb_can_redo(self.current_view, self.current_view.can_redo())
@@ -259,6 +262,11 @@ class culebra_editor(service.service):
         self.current_view.buffer.save()
         self.boss.call_command('buffermanager', 'reset_current_document')
 
+    def cmd_save_as(self, filename):
+        buf = self.current_view.buffer
+        buf.filename = filename
+        buf.save()
+
     def cmd_undo(self):
         self.current_view.editor.emit('undo')
 
@@ -275,8 +283,9 @@ class culebra_editor(service.service):
         self.current_view.editor.emit('paste-clipboard')
     
     def cmd_close(self, document):
-        # example implementation
-        view = self.__views[document.unique_id]
+        #view = self.__views[document.unique_id]
+        view = self.current_view
+        
         if self.confirm_multi_view_controlbar_clicked_close(view):
             view.remove()
             self.cb_multi_view_closed(view)

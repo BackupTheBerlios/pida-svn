@@ -82,6 +82,8 @@ def relpath(target, base=os.curdir):
     else:
         return ''
 
+new_file_index = 1
+
 class document(base.pidacomponent):
     """Base document class."""
     """A real file on disk."""
@@ -108,6 +110,11 @@ class document(base.pidacomponent):
         self.__filename = filename
         self.__unique_id = time.time()
         self.__project = None
+        self.__newfile_index = None
+        if filename is None:
+            global new_file_index
+            self.__newfile_index = new_file_index
+            new_file_index =  new_file_index + 1
         if markup_attributes is not None:
             self.markup_attributes = markup_attributes
         if markup_string is not None:
@@ -230,9 +237,14 @@ class document(base.pidacomponent):
             else:
                 return True
         gobject.timeout_add(delay, do_poll)
+
     def get_filename(self):
         return self.__filename
-    filename = property(get_filename)
+
+    def set_filename(self, filename):
+        self.__filename = filename
+
+    filename = property(get_filename, set_filename)
 
     def get_unique_id(self):
         return self.__unique_id
@@ -240,7 +252,10 @@ class document(base.pidacomponent):
 
     def get_markup(self):
         prefix = '<b><tt>%s </tt></b>' % self.markup_prefix
-        s = self.markup_string % self.__build_markup_dict()
+        if self.filename is not None:
+            s = self.markup_string % self.__build_markup_dict()
+        else:
+            s = '<b>New File %s</b>' % self.__newfile_index
         return '%s%s' % (prefix, s)
     markup = property(get_markup)
 
@@ -271,6 +286,12 @@ class document(base.pidacomponent):
     
     def set_project(self, project):
         self.__project = project
+
+    def get_is_new(self):
+        return self.filename is None
+
+    is_new = property(get_is_new)
+        
 
         
 class realfile_document(document):
