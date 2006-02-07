@@ -26,6 +26,10 @@
 import gtk
 import sys
 import os
+import unittest
+import gtk.gdk
+from guitest.gtktest import GtkTestCase, guistate
+from guitest.utils import mainloop_handler
 
 os.environ['PIDA_HOME'] = '/tmp/pida-tests/'
 
@@ -125,6 +129,7 @@ import pida.core.application as application
 def _setup(mod):
     mainloop = mainstop = lambda *a: None
     app = application.application()
+    app.env.override_editor_option('Culebra')
     boss = MockBoss(app, app.env)
     base.set_boss(boss)
 
