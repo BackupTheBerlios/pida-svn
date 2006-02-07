@@ -261,7 +261,6 @@ class Grepper(service.service):
 
     def cb_results_status(self, grep, status):
         self.single_view.show_status(status)
-            
 
     def cmd_find_interactive(self, directories=None, ignorevcs=None,
                              recursive=None):
@@ -293,7 +292,6 @@ class Grepper(service.service):
 
     def cmd_find(self, path, pattern):
         pass
-
 
     def cb_search_clicked(self, button):
         self.cmd_find_interactive()
