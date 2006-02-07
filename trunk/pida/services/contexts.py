@@ -88,6 +88,11 @@ class Contexts(service.service):
     def cmd_edit(self):
         self.create_data_view('contexts')
 
+    def cmd_get_context_menu(self, ctxname, ctxargs):
+        contexts = dict(file=FileContext, directory=DirectoryContext)
+        ctx = contexts[ctxname](self, *ctxargs)
+        return ctx.create_menu()
+
 
 class default_context(base.pidacomponent):
     
@@ -264,21 +269,28 @@ class ActionContext(actions.action_handler):
         self.__uim.insert_action_group(self.action_group, 0)
         self.__uim.add_ui_from_string(self.get_menu_definition())
 
+    def get_widget(self, path):
+        return self.__uim.get_widget(path)
+
     def create_menu(self):
-        return self.__uim.get_widget('/popup')
+        menu = self.get_widget('/popup')
+        menu.set_title(self.action_args[0])
+        return menu
 
     def get_menu_definition(self):
         return "<popup />"
 
-class FileContext(ActionContext):
-   
+class VersionControlContextMixin(object):
+
+
     @actions.action(
         name='vcs_diff',
         stock_id='vcs_diff',
         label='Differences'
         )
     def act_vcs_diff(self, action, filename):
-        print filename
+        self.boss.call_command('versioncontrol', 'diff_file',
+                                filename=filename)
 
     @actions.action(
         name='vcs_add',
@@ -286,7 +298,8 @@ class FileContext(ActionContext):
         label='Add'
         )
     def act_vcs_add(self, action, filename):
-        print filename
+        self.boss.call_command('versioncontrol', 'add_file',
+                                filename=filename)
 
     @actions.action(
         name='vcs_revert',
@@ -294,15 +307,46 @@ class FileContext(ActionContext):
         label='Revert'
         )
     def act_vcs_revert(self, action, filename):
-        print filename
+        self.boss.call_command('versioncontrol', 'revert_file',
+                                filename=filename)
 
     @actions.action(
-        name='vcs_revert',
-        stock_id=gtk.STOCK_REVERT_TO_SAVED,
-        label='Revert'
+        name='vcs_update',
+        stock_id='vcs_update',
+        label='Update'
         )
-    def act_vcs_revert(self, action, filename):
-        print filename
+    def act_vcs_update(self, action, filename):
+
+        self.boss.call_command('versioncontrol', 'update',
+                                directory=filename)
+
+
+    @actions.action(
+        name='vcs_commit',
+        stock_id='vcs_commit',
+        label='Commit'
+        )
+    def act_vcs_commit(self, action, filename):
+        self.boss.call_command('versioncontrol', 'commit',
+                                directory=filename)
+
+    @actions.action(
+        name='vcs_remove',
+        stock_id='vcs_remove',
+        label='Remove'
+        )
+    def act_vcs_remove(self, action, filename):
+        self.boss.call_command('versioncontrol', 'remove_file',
+                                filename=filename)
+
+    @actions.action(
+        name='more_vc',
+        label='More version control',
+        )
+    def act_more_vc(self, action, *args):
+        pass
+
+class FilesystemContextMixin(object):
 
     @actions.action(
         name='filemanager',
@@ -310,7 +354,10 @@ class FileContext(ActionContext):
         label='Browse'
         )
     def act_filemanager(self, action, filename):
-        print filename
+        directory = self.get_directory(filename)
+        self.boss.call_command('filemanager',
+                               'browse',
+                               directory=filename)
 
     @actions.action(
         name='terminal',
@@ -318,29 +365,88 @@ class FileContext(ActionContext):
         label='Terminal'
         )
     def act_terminal(self, action, filename):
-        print filename
+        directory = self.get_directory(filename)
+        self.boss.call_command('terminal',
+                               'execute_shell',
+                               kwdict={'directory': directory})
 
     @actions.action(
-        name='more_vc',
-        label='More version control'
+        name='grepper',
+        stock_id='gtk-searchtool',
+        label='Search for text',
         )
-    def act_more_vc(self, action, *args):
-        pass
+    def act_search(self, action, filename):
+        directory = self.get_directory(filename)
+        self.boss.call_command('grepper', 'find_interactive',
+                               directories=[directory])
+
+
+    def get_directory(self, filename):
+        if not os.path.isdir(filename):
+            filename = os.path.dirname(filename)
+        return filename
+
+class DirectoryContext(FilesystemContextMixin,
+                  VersionControlContextMixin,
+                  ActionContext,
+                  ):
 
     def get_menu_definition(self):
         return """
-               <popup>
-                <menuitem action="vcs_diff" />
-                <menuitem action="vcs_add" />
-                <menuitem action="vcs_revert" />
-                <menu action="more_vc">
-                <menuitem action="vcs_remove" />
-                </menu>
-                <separator />
-                <menuitem action="filemanager" />
-                <menuitem action="terminal" />
+                <popup>
+                    <menuitem action="filemanager" />
+                    <menuitem action="terminal" />
+                    <menuitem action="grepper" />
+                    <separator />
+                    <menuitem action="vcs_update" />
+                    <menuitem action="vcs_commit" />
+                    <menu action="more_vc">
+                        <menuitem action="vcs_revert" />
+                        <menuitem action="vcs_remove" />
+                        <menuitem action="vcs_diff" />
+                        <menuitem action="vcs_add" />
+                    </menu>
                </popup>
                """
+
+
+
+class FileContext(DirectoryContext):
+
+    def create_menu(self):
+        menu = ActionContext.create_menu(self)
+        ow = self.get_widget('/popup/open_with')
+        open_with_menu = self.boss.call_command('openwith',
+            'get_openers_menu', filename=self.action_args[0])
+        ow.set_submenu(open_with_menu)
+        return menu
+
+    @actions.action(
+        name='open_with',
+        label='Open With',
+        )
+    def act_open_with(self, action, *args):
+        """Base open with menu"""
+
+    def get_menu_definition(self):
+        return """
+                <popup>
+                    <menuitem action="filemanager" />
+                    <menuitem action="terminal" />
+                    <separator />
+                    <menuitem action="vcs_diff" />
+                    <menuitem action="vcs_commit" />
+                    <menuitem action="vcs_revert" />
+                    <menu action="more_vc">
+                        <menuitem action="vcs_update" />
+                        <menuitem action="vcs_add" />
+                        <menuitem action="vcs_remove" />
+                    </menu>
+                    <separator />
+                    <menuitem action="open_with" />
+               </popup>
+               """
+
     
 if __name__ == '__main__':
     class ms:

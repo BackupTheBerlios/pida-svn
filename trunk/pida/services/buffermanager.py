@@ -93,8 +93,8 @@ class BufferView(contentview.content_view):
         self.__popup_buffer(document, event)
 
     def __popup_buffer(self, document, event):
-        menu = gtk.Menu()
         if document is None:
+            menu = gtk.Menu()
             oact = self.service.action_group.get_action(
                 'buffermanager+open_file')
             mi = oact.create_menu_item()
@@ -103,31 +103,10 @@ class BufferView(contentview.content_view):
                 'buffermanager+new_file')
             mi = nact.create_menu_item()
             menu.add(mi)
+            menu.show_all()
         else:
-            docacts = self.service.boss.call_command('documenttypes',
-                                                     'get_document_actions')
-            for act in docacts:
-                if act.get_name() == 'DocumentSave':
-                    mi = act.create_menu_item()
-                    menu.add(mi)
-            globaldict = {'filename': document.filename}
-            menu.add(gtk.SeparatorMenuItem())
-            for title, context in [('Version control', 'file_vc'),
-                                   ('Parent directory', 'file_parent')]:
-                mroot = gtk.MenuItem(label=title)
-                menu.add(mroot)
-                contexts = self.service.boss.call_command('contexts',
-                                     'get_contexts',
-                                     contextname=context,
-                                     globaldict=globaldict
-                                     )
-                cmenu = contextwidgets.get_menu(contexts)
-                mroot.set_submenu(cmenu)
-            open_with_menu = self.service.boss.call_command('openwith',
-                    'get_openers_menu', filename=document.filename)
-            mroot = gtk.MenuItem(label='Open with')
-            mroot.set_submenu(open_with_menu)
-            menu.add(mroot)
+            menu = self.service.boss.call_command('contexts',
+                'get_context_menu', ctxname='file', ctxargs=[document.filename])
             menu.add(gtk.SeparatorMenuItem())
             clact = self.service.action_group.get_action(
                     'buffermanager+close_buffer')

@@ -198,42 +198,15 @@ class FileBrowser(contentview.content_view):
             yield fsi
 
     def __popup_file(self, path, event):
-        globaldict = {'filename': path}
-        menu = gtk.Menu()
-        for title, context in [('Version control', 'file_vc'),
-                        ('Parent directory', 'file_parent')]:
-            mroot = gtk.MenuItem(label=title)
-            menu.add(mroot)
-            contexts = self.service.boss.call_command('contexts',
-                                     'get_contexts',
-                                     contextname=context,
-                                     globaldict=globaldict
-                                     )
-            cmenu = contextwidgets.get_menu(contexts)
-            mroot.set_submenu(cmenu)
-        open_with_menu = self.service.boss.call_command('openwith',
-            'get_openers_menu', filename = path)
-        mroot = gtk.MenuItem(label='Open with')
-        mroot.set_submenu(open_with_menu)
-        menu.add(mroot)
-        menu.show_all()
+        menu = self.service.boss.call_command('contexts',
+                'get_context_menu', ctxname='file',
+                ctxargs=[path])
         menu.popup(None, None, None, event.button, event.time)
 
     def __popup_dir(self, path, event):
-        globaldict = {'directory': path}
-        menu = gtk.Menu()
-        for title, context in [('Directory', 'directory'),
-                        ('Source code', 'project_directory')]:
-            mroot = gtk.MenuItem(label=title)
-            menu.add(mroot)
-            contexts = self.service.boss.call_command('contexts',
-                                     'get_contexts',
-                                     contextname=context,
-                                     globaldict=globaldict
-                                     )
-            cmenu = contextwidgets.get_menu(contexts)
-            mroot.set_submenu(cmenu)
-        menu.show_all()
+        menu = self.service.boss.call_command('contexts',
+                'get_context_menu', ctxname='directory',
+                ctxargs=[path])
         menu.popup(None, None, None, event.button, event.time)
 
     def cb_file_activated(self, view, path):
@@ -250,6 +223,8 @@ class FileBrowser(contentview.content_view):
                 self.emit('file-activated', filepath)
 
     def cb_file_rightclicked(self, view, fileitem, event):
+        if fileitem is None:
+            return
         fsi = fileitem.value
         if os.path.isdir(fsi.path):
             self.__popup_dir(fsi.path, event)

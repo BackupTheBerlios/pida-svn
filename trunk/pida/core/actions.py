@@ -247,6 +247,7 @@ class action_handler(base.pidacomponent):
     def __init__(self, service, *action_args):
         self.__service = service
         self.__init_actiongroup(*action_args)
+        self.action_args = action_args
         self.init()
 
     def init(self):
