@@ -44,9 +44,10 @@ class vim_editor(object):
             default = False
 
     def init(self):
-        self.__files = {}
+        self.__servers = {}
+        self.__documents = {}
         self.__old_shortcuts = {'n':{}, 'v':{}}
-        self.__currentfile = None
+        self.__currentdocument = None
         self.__cw = vimcom.communication_window(self)
 
     def get_server(self):
@@ -64,34 +65,33 @@ class vim_editor(object):
     def cmd_revert(self):
         self.__cw.revert(self.server)
 
-    def cmd_close(self, filename):
-        self.__cw.close_buffer(self.server, filename)
+    def cmd_close(self, document):
+        self.__cw.close_buffer(self.server, document.filename)
 
     def cmd_edit(self, document):
         """Open and edit."""
-        filename = document.filename
-        self.boss.call_command('documenttypes',
-                               'disable_document_accelerators')
-        if filename != self.__currentfile:
-            if filename in self.__files.setdefault(self.server, []):
-                self.__cw.change_buffer(self.server, filename)
+        if document is not self.__currentdocument:
+            if (document.unique_id in
+                self.__servers.setdefault(self.server, [])):
+                self.__cw.change_buffer(self.server, document.filename)
                 self.__cw.foreground(self.server)
             else:
                 found = False
-                for server in self.__files:
-                    serverfiles = self.__files[server]
-                    if filename in serverfiles:
-                        self.__cw.change_buffer(server, filename)
+                for server in self.__servers:
+                    serverdocs = self.__servers[server]
+                    if document.unique_id in serverdocs:
+                        self.__cw.change_buffer(server, document.filename)
                         self.__cw.foreground(server)
                         found = True
                         break
                 if not found:
-                    self.__cw.open_file(self.server, filename)
-                    self.__files[self.server].append(filename)
-            self.__currentfile = filename
+                    self.__cw.open_file(self.server, document.filename)
+                    self.__servers[self.server].append(document.unique_id)
+                    self.__documents[document.unique_id] = document
+            self.__currentdocument = document
         if self.single_view is not None:
             self.single_view.raise_page()
-            self.single_view.long_title = filename
+            self.single_view.long_title = document.filename
 
     def cmd_undo(self):
         self.__cw.undo(self.server)
@@ -165,24 +165,27 @@ class vim_editor(object):
         if os.path.abspath(filename) != filename:
             filename = os.path.join(cwd, filename)
         self.log.debug('vim buffer change "%s"', filename)
-        if filename != self.__currentfile:
-            self.__currentfile = filename
-            if filename not in self.__files.setdefault(server, []):
-                self.__files[server].append(filename)
-            self.boss.call_command('buffermanager', 'open_file',
-                                    filename=filename)
+        if filename != self.__currentdocument.filename:
+            for doc in self.__documents.values():
+                if doc.filename == filename:
+                    self.__currentdocument = doc
+                    self.boss.call_command('buffermanager', 'open_file',
+                                            filename=filename)
 
     def vim_bufferunload(self, server, filename, *args):
         self.log.debug('vim unloaded "%s"', filename)
         if filename != '':
-            # unloaded an empty new file
-            if filename in self.__files.setdefault(server, []):
-                self.__files[server].remove(filename)
-                self.boss.call_command('buffermanager', 'file_closed',
-                                        filename=filename)
+            found = False
+            for uid, doc in self.__documents.iteritems():
+                if doc.filename == filename:
+                    self.__servers[server].remove(doc.unique_id)
+                    found = True
+                    break
+            if found:
+                del self.__documents[uid]
                 self.__currentfile = None
-            else:
-                self.log.info('vim unloaded an unknown file %s', filename)
+                self.boss.call_command('buffermanager', 'document_closed',
+                                            document=doc)
 
     def vim_filesave(self, server, *args):
         self.boss.call_command('buffermanager', 'reset_current_document')
@@ -196,11 +199,13 @@ class vim_editor(object):
         self.after_shutdown(server)
 
     def clean_after_shutdown(self, server):
-        for filename in self.__files.setdefault(server, []):
-            self.boss.call_command('buffermanager', 'file_closed',
-                                    filename=filename)
-        self.__files = {}
-        self.__currentfile = None
+        for docid in self.__servers.setdefault(server, []):
+            doc = self.__documents[docid]
+            del self.__documents[docid]
+            self.boss.call_command('buffermanager', 'document_closed',
+                                    document=doc)
+        self.__servers[server] = []
+        self.__currentdocument = None
 
     def after_shutdown(self, server):
         pass

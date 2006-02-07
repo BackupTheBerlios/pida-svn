@@ -51,7 +51,7 @@ class document_type_handler(service.service):
 
         def close_document(self, document):
             self.service.boss.call_command('editormanager', 'close',
-                                            filename=document.filename)
+                                            document=document)
 
         @actions.action(stock_id=gtk.STOCK_REDO, label=None)
         def act_redo(self, action):

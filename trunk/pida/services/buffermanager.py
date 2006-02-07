@@ -357,6 +357,9 @@ class Buffermanager(service.service):
         else:
             self.log.warn('attempt to close file not opened %s', filename)
 
+    def cmd_document_closed(self, document):
+        self.__remove_document(document)
+
     def cmd_reset_current_document(self):
         self.__currentdocument.reset()
         self.events.emit('document_modified', document=self.__currentdocument)

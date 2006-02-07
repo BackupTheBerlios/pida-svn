@@ -64,8 +64,8 @@ class editor_manager(service.service):
         dlg.connect('response', _response)
         dlg.show_all()
 
-    def cmd_close(self, filename):
-        self.editor.call('close', filename=filename)
+    def cmd_close(self, document):
+        self.editor.call('close', document=document)
 
     def cmd_revert(self):
         self.editor.call('revert')

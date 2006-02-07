@@ -116,48 +116,21 @@ class culebra_editor(service.service):
     ############
     # Service related methods
     def init(self):
-        
-        self.__files = {}
+        self.__documents = {}
         self.__views = {}
         self.__keymods = {}
         self.__undoacts = {}
+        self._save_action = None
 
     def reset(self):
-        self._get_actions()
-        for view in self.__files.values():
+        self.__bind_document_actions()
+        for view in self.__views.values():
             view.editor.set_background_color(self.get_background_color())
             view.editor.set_font_color(self.get_font_color())
-    
-    #############
-    # Methods
-    def get_background_color(self):
-        color = self.opt("general", "background_color")
-        return gdk.color_parse(color)
-    
-    def get_font_color(self):
-        color = self.opt("general", "font_color")
-        return gdk.color_parse(color)
-        
-    def __load_file(self, filename):
-        view = self.create_multi_view(
-            filename=filename,
-            action_group=self.action_group,
-            background_color = self.get_background_color(),
-            font_color = self.get_font_color(),
-        )
-        self.__files[filename] = view
-        self.__views[view.unique_id] = filename
-        view.connect_keys()
 
-    def __view_file(self, filename):
-        self.current_view = self.__files[filename]
-        self.__files[filename].raise_page()
-    
-    ####################
-    # get_action
-    _save_action = None
+    # private interface
 
-    def _get_actions(self):
+    def __bind_document_actions(self):
         actions = self.boss.call_command("documenttypes", "get_document_actions")
         for action in actions:
             actname = action.get_name()
@@ -171,11 +144,50 @@ class culebra_editor(service.service):
                 self.__revertact = action
             elif actname == 'DocumentSave':
                 self._save_action = action
+
+    def __load_document(self, document):
+        view = self.create_multi_view(
+            filename=document.filename,
+            action_group=self.action_group,
+            background_color = self.get_background_color(),
+            font_color = self.get_font_color(),
+        )
+        self.__views[document.unique_id] = view
+        self.__documents[view.unique_id] = document
+        view.connect_keys()
+
+    def __view_document(self, document):
+        view = self.__views[document.unique_id]
+        view.raise_page()
+        self.current_view = view
+        self.__set_action_sensitivities()
+
+    def __set_action_sensitivities(self):
+        save_action = self.get_save_action()
+        assert save_action is not None
+        buff = self.current_view.editor.get_buffer()
+        self.current_view.editor.set_action_group(self.action_group)
+        self.linker = sensitive.SaveLinker(buff, save_action)
+        self.linker2 = sensitive.SaveLinker(buff, self.__revertact)
+        # undo redo
+        self.cb_can_undo(self.current_view, self.current_view.can_undo())
+        self.cb_can_redo(self.current_view, self.current_view.can_redo())
+
+    def get_background_color(self):
+        color = self.opt("general", "background_color")
+        return gdk.color_parse(color)
+    
+    def get_font_color(self):
+        color = self.opt("general", "font_color")
+        return gdk.color_parse(color)
     
     def get_save_action(self):
-        if self._save_action is None:
-            self._get_actions()
+        #if self._save_action is None:
+        #    self._get_actions()
         return self._save_action
+
+    def get_window(self):
+        return self.boss.get_main_window()
 
     # keyboard bindings
     
@@ -185,9 +197,6 @@ class culebra_editor(service.service):
             return True
         else:
             return False
-    
-    def get_window(self):
-        return self.boss.get_main_window()
 
     # Undo/redo
 
@@ -205,20 +214,11 @@ class culebra_editor(service.service):
     def cmd_edit(self, document=None):
         # temporary to preserve old filename behaviour
         filename = document.filename
-        if self.current_view is not None:
-            self.current_view.editor.set_action_group(None)
-        if filename not in self.__files:
-            self.__load_file(filename)
-        self.__view_file(filename)
-        save_action = self.get_save_action()
-        assert save_action is not None
-        buff = self.current_view.editor.get_buffer()
-        self.current_view.editor.set_action_group(self.action_group)
-        self.linker = sensitive.SaveLinker(buff, save_action)
-        self.linker2 = sensitive.SaveLinker(buff, self.__revertact)
-        # undo redo
-        self.cb_can_undo(self.current_view, self.current_view.can_undo())
-        self.cb_can_redo(self.current_view, self.current_view.can_redo())
+        #if self.current_view is not None:
+        #    self.current_view.editor.set_action_group(None)
+        if document.unique_id not in self.__views:
+            self.__load_document(document)
+        self.__view_document(document)
             
     def cmd_revert(self):
         if self.current_view is None:
@@ -274,15 +274,15 @@ class culebra_editor(service.service):
     def cmd_paste(self):
         self.current_view.editor.emit('paste-clipboard')
     
-    def cmd_close(self, filename):
+    def cmd_close(self, document):
         # example implementation
-        view = self.__files[filename]
+        view = self.__views[document.unique_id]
         if self.confirm_multi_view_controlbar_clicked_close(view):
             view.remove()
             self.cb_multi_view_closed(view)
 
     def cmd_can_close(self):
-        buffs = [view.buffer for view in self.__files.values() if view.buffer.get_modified()]
+        buffs = [view.buffer for view in self.__views.values() if view.buffer.get_modified()]
         # If we have no buffers to save, go on
         if len(buffs) == 0:
             return True
@@ -299,12 +299,12 @@ class culebra_editor(service.service):
     ###############
     # Callbacks
     def cb_multi_view_closed(self, view):
-        if view.unique_id in self.__views:
-            filename = self.__views[view.unique_id]
-            del self.__views[view.unique_id]
-            del self.__files[filename]
-            self.boss.call_command('buffermanager', 'file_closed',
-                                   filename=filename)
+        if view.unique_id in self.__documents:
+            doc = self.__documents[view.unique_id]
+            del self.__documents[view.unique_id]
+            del self.__views[doc.unique_id]
+            self.boss.call_command('buffermanager', 'document_closed',
+                                   document=doc)
 
     def confirm_multi_view_controlbar_clicked_close(self, view):
         buff = view.buffer
