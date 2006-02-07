@@ -435,7 +435,7 @@ class Buffermanager(service.service):
             if self.__currentdocument is None:
                 if len(model):
                     self.__view_document(model[0][1].value)
-        gtk.timeout_add(200, refresh)
+        gtk.idle_add(refresh)
 
     def __open_file(self, filename):
         document = self.boss.call_command('documenttypes',
@@ -457,7 +457,7 @@ class Buffermanager(service.service):
     def __view_document(self, document):
         self.__currentdocument = document
         document.handler.view_document(document)
-        self.__disable_all_handlers()
+        self.__disable_all_handlers([document.handler])
         document.handler.action_group.set_sensitive(True)
         document.handler.action_group.set_visible(True)
         if document.is_new:
@@ -465,7 +465,7 @@ class Buffermanager(service.service):
         else:
             self.boss.call_command('languagetypes', 'show_handlers',
                                    document=document)
-            self.boss.call_command('window', 'update_action_groups')
+        self.boss.call_command('window', 'update_action_groups')
         if (self.plugin_view.bufferview.get_selected_key()
                 != document.unique_id):
             self.plugin_view.bufferview.set_selected(document.unique_id)
@@ -479,10 +479,11 @@ class Buffermanager(service.service):
         document.set_project(proj)
 
 
-    def __disable_all_handlers(self):
+    def __disable_all_handlers(self, handlers=[]):
         for uid, document in self.__documents.iteritems():
-            document.handler.action_group.set_sensitive(False)
-            document.handler.action_group.set_visible(False)
+            if document.handler not in handlers:
+                document.handler.action_group.set_sensitive(False)
+                document.handler.action_group.set_visible(False)
 
     def get_editor(self):
         if self.__editor is None:
