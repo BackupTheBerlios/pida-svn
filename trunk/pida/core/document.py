@@ -84,13 +84,19 @@ def relpath(target, base=os.curdir):
 
 class document(base.pidacomponent):
     """Base document class."""
-    contexts = []
-
-    icon_name = None
+    """A real file on disk."""
+    icon_name = 'new'
 
     markup_prefix = ''
-    markup_attributes = ['filename']
-    markup_string = '%(filename)s'
+    markup_directory_color = '#0000c0'
+    markup_attributes = ['project_name', 'project_relative_path', 'basename', 'directory_colour']
+    markup_string = ('<span color="#600060">'
+                     '%(project_name)s</span><tt>:</tt>'
+                     '<span color="%(directory_colour)s">'
+                     '%(project_relative_path)s</span>'
+                     '<b>%(basename)s</b>')
+    contexts = []
+    is_new = False
 
     def __init__(self, filename=None,
                        markup_attributes=None,
@@ -107,86 +113,6 @@ class document(base.pidacomponent):
         if markup_string is not None:
             self.markup_string = markup_string
         base.pidacomponent.__init__(self)
-
-    def get_filename(self):
-        return self.__filename
-    filename = property(get_filename)
-
-    def get_unique_id(self):
-        return self.__unique_id
-    unique_id = property(get_unique_id)
-
-    def get_markup(self):
-        prefix = '<b><tt>%s </tt></b>' % self.markup_prefix
-        s = self.markup_string % self.__build_markup_dict()
-        return '%s%s' % (prefix, s)
-    markup = property(get_markup)
-
-    def __build_markup_dict(self):
-        markup_dict = {}
-        for attr in self.markup_attributes:
-            markup_dict[attr] = getattr(self, attr)
-        return markup_dict
-
-    def get_handler(self):
-        return self.__handler
-    handler = property(get_handler)
-
-    def get_project_name(self):
-        if self.__project:
-            return self.__project.name
-        else:
-            return ''
-    project_name = property(get_project_name)
-
-    def get_project_relative_path(self):
-        if self.__project:
-            return relpath(self.filename, self.__project.source_directory)
-        else:
-            return os.path.join(self.directory_basename, '')
-
-    project_relative_path = property(get_project_relative_path)
-    
-    def set_project(self, project):
-        self.__project = project
-
-        
-
-
-class filesystem_document(document):
-    """Any file system object"""
-    def get_parent_directory(self):
-        directory = os.path.split(self.filename)[0]
-        return directory
-    directory = property(get_parent_directory)
-
-
-class directory_document(filesystem_document):
-    """A directory on disk"""
-    contexts = ['directory']
-
-
-class dummyfile_document(document):
-    """A totally fake document."""
-    contexts = []
-    lines = []
-
-    
-
-class realfile_document(document):
-    """A real file on disk."""
-    icon_name = 'new'
-
-    markup_prefix = ''
-    markup_directory_color = '#0000c0'
-    markup_attributes = ['project_name', 'project_relative_path', 'basename', 'directory_colour']
-    markup_string = ('<span color="#600060">'
-                     '%(project_name)s</span><tt>:</tt>'
-                     '<span color="%(directory_colour)s">'
-                     '%(project_relative_path)s</span>'
-                     '<b>%(basename)s</b>')
-
-    is_new = False
                      
     def init(self):
         self.__reset()
@@ -304,33 +230,51 @@ class realfile_document(document):
             else:
                 return True
         gobject.timeout_add(delay, do_poll)
+    def get_filename(self):
+        return self.__filename
+    filename = property(get_filename)
 
+    def get_unique_id(self):
+        return self.__unique_id
+    unique_id = property(get_unique_id)
 
-class temporary_document(realfile_document):
-    """A temporary file on disk"""
-    contexts = ['temporary']
+    def get_markup(self):
+        prefix = '<b><tt>%s </tt></b>' % self.markup_prefix
+        s = self.markup_string % self.__build_markup_dict()
+        return '%s%s' % (prefix, s)
+    markup = property(get_markup)
 
+    def __build_markup_dict(self):
+        markup_dict = {}
+        for attr in self.markup_attributes:
+            markup_dict[attr] = getattr(self, attr)
+        return markup_dict
 
-    markup_prefix = 'tp'
-    markup_directory_color = '#600060'
-    markup_attributes = ['title', 'prefix', 'directory_colour']
-    markup_string = ('<span color="%(directory_colour)s">%(title)s</span> '
-                     '<b>%(prefix)s</b>')
+    def get_handler(self):
+        return self.__handler
+    handler = property(get_handler)
+
+    def get_project_name(self):
+        if self.__project:
+            return self.__project.name
+        else:
+            return ''
+    project_name = property(get_project_name)
+
+    def get_project_relative_path(self):
+        if self.__project:
+            return relpath(self.filename, self.__project.source_directory)
+        else:
+            return os.path.join(self.directory_basename, '')
+
+    project_relative_path = property(get_project_relative_path)
     
+    def set_project(self, project):
+        self.__project = project
 
-    def __init__(self, filename, handler, prefix, title):
-        self.__prefix = prefix
-        self.__title = title
-        f, filename = tempfile.mkstemp(prefix=prefix)
-        os.close(f)
-        realfile_document.__init__(self, filename=filename, handler=handler)
-
-    def get_title(self):
-        return self.__title
-    title = property(get_title)
         
-    def get_prefix(self):
-        return self.__prefix
-    prefix = property(get_prefix)
+class realfile_document(document):
+    """Real file"""
+
 
 
