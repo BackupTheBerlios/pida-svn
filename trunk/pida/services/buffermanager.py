@@ -132,6 +132,12 @@ class Buffermanager(service.service):
             """Whether the session will be reloaded from closing PIDA."""
             rtype = types.boolean
             default = True
+        class start_with_new_file(defs.option):
+            """Whether a new file will be opened on startup if none other is
+               specified on the command-line on by a session."""
+            rtype = types.boolean
+            default = True
+
     
     class document_changed(defs.event):
         pass
@@ -150,7 +156,8 @@ class Buffermanager(service.service):
                 if os.path.exists(most_recent):
                     self.call('load_session', session_filename=most_recent)
             def _n():
-                if len(self.__documents) == 0:
+                if len(self.__documents) == 0 and self.opt('sessions',
+                                                  'start_with_new_file'):
                     self.call('new_file')
             gtk.idle_add(_n)
 
