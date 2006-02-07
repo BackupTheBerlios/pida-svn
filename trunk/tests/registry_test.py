@@ -31,13 +31,7 @@ import pida.core.application as application
 import os
 import tempfile
 
-
-def setup(mod):
-    mainloop = mainstop = lambda *a: None
-    app = application.application()
-    boss = testing.MockBoss(app, app.env)
-    base.set_boss(boss)
-
+setup = testing._setup
 
 class test_a_registry_item(unittest.TestCase):
 
@@ -81,7 +75,7 @@ class test_a_registry_item(unittest.TestCase):
 class test_b_integer(unittest.TestCase):
     
     def setUp(self):
-        self.r = registry.types.integer('foo', 1, 'foodoc')
+        self.r = registry.types.integer('foo', 'foodoc', 1)
 
     def test_a_unserialize_good(self):
         self.assertEquals(self.r.unserialize('1'), 1)

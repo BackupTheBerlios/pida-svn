@@ -121,19 +121,21 @@ class MockBoss(base.pidacomponent):
     ServiceNotFoundError = ServiceNotFoundError
 import pida.core.application as application
 
-class FailedTest(Exception):
-    pass
 
-class ErrorTest(Exception):
-    pass
+def _setup(mod):
+    mainloop = mainstop = lambda *a: None
+    app = application.application()
+    boss = MockBoss(app, app.env)
+    base.set_boss(boss)
 
 import nose
 
-class ServiceTest(nose.TestCase):
+class _ServiceTest(nose.TestCase):
     
     tested_service = 'terminal'
 
     def setUp(self):
+        die
         mainloop = mainstop = lambda *a: None
         self.app = application.main(MockBoss, mainloop, mainstop)
         self.boss = self.app.boss

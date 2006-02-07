@@ -21,13 +21,14 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import command
-import unittest
+import nose
 
+import pida.core.command as command
+import pida.utils.testing as testing
 
-class test_a_argument(unittest.TestCase):
+setup = testing._setup
 
-
+class test_a_argument(nose.TestCase):
     def setUp(self):
         self.a1 = command.argument('banana', False)
         self.a2 = command.argument('melon', True)
@@ -44,8 +45,7 @@ class test_a_argument(unittest.TestCase):
         self.assertFalse(self.a1.required)
         self.assertTrue(self.a2.required)
 
-class test_b_command(unittest.TestCase):
-
+class test_b_command(nose.TestCase):
     def setUp(self):
         self.__dummycount = 0
         self.__dummyargs = []

@@ -21,11 +21,14 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import unittest
-import event
+import nose
 
-class test_a_event(unittest.TestCase):
+import pida.core.event as event
+import pida.utils.testing as testing
 
+setup = testing._setup
+
+class test_a_event(nose.TestCase):
     def setUp(self):
         self.e = event.event()
         self.__dummycount = 0
