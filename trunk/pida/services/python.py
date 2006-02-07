@@ -157,7 +157,6 @@ class python(service.service):
             <placeholder name="ProjectToolbar">
             <separator />
             <toolitem name="runproj" action="python+project+project_execute" />
-            <separator />
             </placeholder>
             <placeholder name="VcToolbar">
             </placeholder>

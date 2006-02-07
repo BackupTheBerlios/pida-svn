@@ -535,7 +535,6 @@ class Buffermanager(service.service):
                 <placeholder name="OpenFileToolbar">
                 <toolitem name="New" action="buffermanager+new_file" />
                 <toolitem name="Open" action="buffermanager+open_file" />
-                <toolitem action="buffermanager+new_file_wizard" />
                 <separator />
                 </placeholder>
                 <placeholder name="SaveFileToolbar">

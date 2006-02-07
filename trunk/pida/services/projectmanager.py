@@ -183,16 +183,16 @@ class ProjectManager(service.service):
         #ti.set_expand(True)
         tbox = gtk.HBox(spacing=6)
         ti.add(tbox)
-        l = gtk.Label('Project')
-        tbox.pack_start(l, expand=False)
+        #l = gtk.Label('Project')
+        #tbox.pack_start(l, expand=False)
         self.__projects_combo = gtk.ComboBox()
+        self.__projects_combo.set_property('add-tearoffs', True)
         tbox.pack_start(self.__projects_combo)
         cell = gtk.CellRendererText()
         self.__projects_combo.pack_start(cell, True)
         self.__projects_combo.set_attributes(cell, text=0)
         self.__cmb_con = self.__projects_combo.connect_after('changed',
                          self.cb_combo_changed)
-        tb.insert(gtk.SeparatorToolItem(), i)
 
 
     def reset(self):
@@ -437,7 +437,6 @@ class ProjectManager(service.service):
             <placeholder name="ProjectToolbar">
             </placeholder>
             <placeholder name="VcToolbar">
-                <separator />
                 <toolitem name="upproj" action="projectmanager+update_project" />
                 <toolitem name="comproj" action="projectmanager+commit_project" />
                 <separator />
