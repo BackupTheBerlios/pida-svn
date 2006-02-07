@@ -202,7 +202,9 @@ class culebra_editor(service.service):
     #############
     # Commands
     current_view = None
-    def cmd_edit(self, filename=None):
+    def cmd_edit(self, document=None):
+        # temporary to preserve old filename behaviour
+        filename = document.filename
         if self.current_view is not None:
             self.current_view.editor.set_action_group(None)
         if filename not in self.__files:

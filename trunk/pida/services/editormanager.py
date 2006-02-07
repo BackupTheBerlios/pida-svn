@@ -73,8 +73,8 @@ class editor_manager(service.service):
     def cmd_start(self):
         self.editor.call('start')
 
-    def cmd_edit(self, filename):
-        self.editor.call('edit', filename=filename)
+    def cmd_edit(self, document):
+        self.editor.call('edit', document=document)
 
     def cmd_goto_line(self, linenumber):
         self.editor.call('goto_line', linenumber=linenumber)

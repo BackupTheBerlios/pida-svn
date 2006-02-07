@@ -47,7 +47,7 @@ class document_type_handler(service.service):
 
         def view_document(self, document):
             self.service.get_service('editormanager').call('edit',
-                                      filename=document.filename)
+                                      document=document)
 
         def close_document(self, document):
             self.service.boss.call_command('editormanager', 'close',

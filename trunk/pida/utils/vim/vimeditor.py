@@ -67,8 +67,9 @@ class vim_editor(object):
     def cmd_close(self, filename):
         self.__cw.close_buffer(self.server, filename)
 
-    def cmd_edit(self, filename):
+    def cmd_edit(self, document):
         """Open and edit."""
+        filename = document.filename
         self.boss.call_command('documenttypes',
                                'disable_document_accelerators')
         if filename != self.__currentfile:
