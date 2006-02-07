@@ -205,12 +205,17 @@ class environment(object):
 class application(object):
     """The pIDA Application."""
 
-    def __init__(self, bosstype, mainloop, mainstop, environment):
+    def __init__(self,
+                 bosstype=boss.boss,
+                 mainloop=gtk.main,
+                 mainstop=gtk.main_quit,
+                 environment=environment()):
         self.__mainloop = mainloop
         self.__mainstop = mainstop
         self.__env = environment
         self.__boss = bosstype(application=self, env=self.__env)
         self.boss = self.__boss
+        self.env = self.__env
 
     def start(self):
         """Start PIDA."""

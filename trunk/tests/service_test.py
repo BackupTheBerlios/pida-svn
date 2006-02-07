@@ -130,7 +130,7 @@ class test_b_service_database_preinit(unittest.TestCase):
 class test_c_file_handler_preinit(unittest.TestCase):
 
     def setUp(self):
-        import document
+        import pida.core.document as document
         class svc(service.service_base):
             class file_handler(document.document_handler):
                 globs = ['foo*']

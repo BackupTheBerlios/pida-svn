@@ -134,7 +134,6 @@ class ServiceTest(nose.TestCase):
     tested_service = 'terminal'
 
     def setUp(self):
-        print 'setup'
         mainloop = mainstop = lambda *a: None
         self.app = application.main(MockBoss, mainloop, mainstop)
         self.boss = self.app.boss
@@ -150,10 +149,10 @@ class ServiceTest(nose.TestCase):
         self.assert_((sname, name) in self.boss.commands)
         self.assert_(len(self.boss.commands[(sname, name)]) == times)
 
-    def test_execute(self):
-        ts = self.get_test_service()
-        ts.call('execute_shell')
-        self.assert_called('window', 'append_page')
+    #def test_execute(self):
+    #    ts = self.get_test_service()
+    #    ts.call('execute_shell')
+    #    self.assert_called('window', 'append_page')
 
         
 

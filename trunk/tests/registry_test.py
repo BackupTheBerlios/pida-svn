@@ -22,15 +22,21 @@
 #SOFTWARE.
 
 import unittest
+import pida.core.base as base
 import pida.core.registry as registry
 import pida.core.errors as errors
+import pida.utils.testing as testing
+import pida.core.application as application
 
 import os
 import tempfile
 
 
-def setup():
-    pass
+def setup(mod):
+    mainloop = mainstop = lambda *a: None
+    app = application.application()
+    boss = testing.MockBoss(app, app.env)
+    base.set_boss(boss)
 
 
 class test_a_registry_item(unittest.TestCase):
@@ -96,7 +102,7 @@ class test_b_integer(unittest.TestCase):
 class test_c_boolean(unittest.TestCase):
 
     def setUp(self):
-        self.r = registry.types.boolean('foo', True, 'foodoc')
+        self.r = registry.types.boolean('foo', 'foodoc', True)
 
     def test_a_unserialize_good(self):
         self.assertEquals(self.r.unserialize('1'), True)
