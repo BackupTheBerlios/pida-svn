@@ -44,6 +44,11 @@ class file_manager(service.service):
     def act_grab_focus(self, action):
         self.call('browse', directory=self.cmd_get_current_directory())
 
+    def act_open(self, action):
+        """Open the current file in the editor."""
+        self.boss.call_command('buffermanager', 'open_file',
+                               filename=self.plugin_view.selected)
+
     def cmd_browse(self, directory=None):
         #if self.plugin_view is None:
         #    self.create_plugin_view()
@@ -55,8 +60,7 @@ class file_manager(service.service):
         self.plugin_view.raise_page()
 
     def cmd_get_current_directory(self):
-        if self.single_view is not None:
-            return self.single_view.directory
+        return self.plugin_view.directory
 
     def cb_single_view_file_activated(self, view, filename):
         

@@ -201,6 +201,10 @@ class FileBrowser(contentview.content_view):
         menu = self.service.boss.call_command('contexts',
                 'get_context_menu', ctxname='file',
                 ctxargs=[path])
+        menu.get_children()[0].hide()
+        action = self.service.action_group.get_action('filemanager+open')
+        mi = action.create_menu_item()
+        menu.insert(mi, 0)
         menu.popup(None, None, None, event.button, event.time)
 
     def __popup_dir(self, path, event):
@@ -257,6 +261,11 @@ class FileBrowser(contentview.content_view):
     def get_directory(self):
         return self.__currentdirectory
     directory = property(get_directory)
+
+    def get_selected(self):
+        return self.__fileview.get_selected_key()
+    
+    selected = property(get_selected)
         
 
 gobject.type_register(FileBrowser)
