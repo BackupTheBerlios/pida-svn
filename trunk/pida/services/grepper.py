@@ -334,7 +334,6 @@ class Grepper(service.service):
                 <placeholder name="ToolsToolbar">
             <separator />
             <toolitem  name="grepper" action="grepper+find" />
-            <separator />
                 </placeholder>
                 </toolbar>
             """

@@ -154,9 +154,7 @@ class terminal_manager(service.service):
                 <placeholder name="VcToolbar">
                 </placeholder>
                 <placeholder name="ToolsToolbar">
-            <separator />
             <toolitem  name="terminal" action="terminal+terminal" />
-            <separator />
                 </placeholder>
                 </toolbar>
             """
