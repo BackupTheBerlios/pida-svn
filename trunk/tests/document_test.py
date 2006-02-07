@@ -1,3 +1,4 @@
+import os
 
 import nose
 
@@ -30,3 +31,37 @@ class TestDocument1_Unnamed(nose.TestCase):
     def test_5_handler(self):
         self.assertEqual(self.doc.handler, None)
 
+class TestDocument2_Named(nose.TestCase):
+
+    def setUp(self):
+        self.tmp = os.popen('tempfile').read().strip()
+        f = open(self.tmp, 'w')
+        self.txt ="""Hello I am a document
+                   vlah blah"""
+        f.write(self.txt)
+        f.close()
+        self.doc = document.realfile_document(filename=self.tmp)
+       
+    def test_1_filename(self):
+        self.assertEqual(self.doc.filename, self.tmp)
+
+    def test_2_string(self):
+        self.assertEqual(self.doc.string, self.txt)
+
+    def test_3_lines(self):
+        self.assertEqual(len(self.doc.lines), 2)
+
+    def test_3_len(self):
+        self.assertEqual(len(self.doc), len(self.txt))
+
+    def test_4_length(self):
+        self.assertEqual(len(self.doc), self.doc.length)
+
+    def test_5_directory(self):
+        self.assertEqual(self.doc.directory, '/tmp')
+
+    def test_6_directorybasename(self):
+        self.assertEqual(self.doc.directory_basename, 'tmp')
+
+    def tearDown(self):
+        os.system('rm %s' % self.tmp)
