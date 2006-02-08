@@ -27,11 +27,17 @@ import os
 # gtk import(s)
 import gtk
 
+from gazpacho import main
+main.setup_app()
+import gazpacho.app.app as app
+Application = app.Application
 # gazpacho imports
-from gazpacho import palette
+from gazpacho.clipboard import clipboard
+from gazpacho.palette import palette
+from gazpacho.app.bars import bar_manager
 from gazpacho import signaleditor
 from gazpacho.editor import Editor
-import gazpacho.app.app as application
+from gazpacho.workspace import WorkSpace
 from gazpacho.actioneditor import GActionsView
 from gazpacho.widgetview import WidgetTreeView
 from gazpacho.sizegroupeditor import SizeGroupView
@@ -46,15 +52,21 @@ import pida.core.document as document
 import pida.pidagtk.contentview as contentview
 
 
-class gazpacho_application(application.Application):
+class gazpacho_application(Application):
     
     def __init__(self, app_window, view):
         self.__app_window = app_window
         self.__view = view
-        application.Application.__init__(self)
+        self.__disconnect_clipboard()
+        Application.__init__(self)
 
-    def _change_action_state(self, sensitive=[], unsensitive=[]):
-        return
+    def __disconnect_clipboard(self):
+        i = 0 
+        while True:
+            if clipboard.handler_is_connected(i):
+                clipboard.disconnect(i)
+                break
+            i = i + 1
 
     def set_title(self, title):
         pass
@@ -63,45 +75,152 @@ class gazpacho_application(application.Application):
         return self._window
 
     def get_window(self):
-        return self.__app_window
+        return self.__view.service.boss.get_main_window()
     window = property(get_window)
   
     def _application_window_create(self):
         application_window = gtk.VBox()
-        # Layout them on the window
+        # layout them on the window
         main_vbox = gtk.VBox()
         application_window.add(main_vbox)
         # Create actions that are always enabled
+        main_vbox.show()
+
+        # Create actions that are always enabled
+        bar_manager.add_actions(
+            'Normal',
+            # File menu
+            ('FileMenu', None, _('_File')),
+            ('New', gtk.STOCK_NEW, None, None,
+             _('New Project'), self._new_cb),
+            ('Open', gtk.STOCK_OPEN, None, None,
+             _('Open Project'), self._open_cb),
+            ('Quit', gtk.STOCK_QUIT, None, None,
+             _('Quit'), self._quit_cb),
+
+            # Edit menu
+            ('EditMenu', None, _('_Edit')),
+
+            # Object menu
+            ('ObjectMenu', None, _('_Objects')),
+
+            # Project menu
+            ('ProjectMenu', None, _('_Project')),
+            # (projects..)
+
+            # Debug menu
+            ('DebugMenu', None, _('_Debug')),
+            ('DumpData', None, _('Dump data'), '<control>M',
+              _('Dump debug data'), self._dump_data_cb),
+            ('Reload', None, _('Reload'), None,
+             _('Reload python code'), self._reload_cb),
+            ('Preview', None, _('Preview'), None,
+             _('Preview current window'), self._preview_cb),
+
+            # Help menu
+            ('HelpMenu', None, _('_Help')),
+            ('About', gtk.STOCK_ABOUT, None, None, _('About Gazpacho'),
+             self._about_cb),
+            )
+
+        # Toggle actions
+        bar_manager.add_toggle_actions(
+            'Normal',
+            ('ShowStructure', None, _('Show _structure'), '<control><shift>t',
+             _('Show container structure'), self._show_structure_cb, False),
+            ('ShowCommandStack', None, _('Show _command stack'), 'F3',
+             _('Show the command stack'), self._show_command_stack_cb, False),
+            ('ShowClipboard', None, _('Show _clipboard'), 'F4',
+             _('Show the clipboard'), self._show_clipboard_cb, False),
+            ('ShowWorkspace', None, _('Show _workspace'), '<control><shift>t',
+             _('Show container workspace'), self._show_workspace_cb, False),
+            )
+
+        # Create actions that reqiuire a project to be enabled
+        bar_manager.add_actions(
+            'ContextActions',
+            # File menu
+            ('Save', gtk.STOCK_SAVE, None, None,
+             _('Save Project'), self._save_cb),
+            ('SaveAs', gtk.STOCK_SAVE_AS, _('Save _As...'), '<shift><control>S',
+             _('Save project with different name'), self._save_as_cb),
+            ('Close', gtk.STOCK_CLOSE, None, None,
+             _('Close Project'), self._close_cb),
+            # Edit menu
+            ('Undo', gtk.STOCK_UNDO, None, '<control>Z',
+             _('Undo last action'), self._undo_cb),
+            ('Redo', gtk.STOCK_REDO, None, '<shift><control>Z',
+             _('Redo last action'), self._redo_cb)
+            )
+
+        bar_manager.add_actions(
+            'AlwaysDisabled',
+            # Edit menu
+            ('Cut', gtk.STOCK_CUT, None, None,
+             _('Cut'), None),
+            ('Copy', gtk.STOCK_COPY, None, None,
+             _('Copy'), None),
+            ('Paste', gtk.STOCK_PASTE, None, None,
+             _('Paste'), None),
+            ('Delete', gtk.STOCK_DELETE, None, '<control>D',
+             _('Delete'), None)
+            )
+
+        bar_manager.build_interfaces()
+        self._update_recent_project_items()
+        #application_window.add_accel_group(bar_manager.get_accel_group())
+        #main_vbox.pack_start(bar_manager.get_menubar(), False)
+        #main_vbox.pack_start(bar_manager.get_toolbar(), False)
 
         hbox = gtk.HBox(spacing=6)
         main_vbox.pack_start(hbox)
-        
-        pal = palette.Palette()
-        pal.connect('toggled', self._palette_button_clicked)
-        pal_parent = pal.get_parent()
+        hbox.show()
+
+        palette.connect('toggled', self._on_palette_toggled)
+        pal_parent = palette.get_parent()
         if pal_parent is not None:
-            pal_parent.remove(pal)
-        hbox.pack_start(pal, False, False)
+            pal_parent.remove(palette)
+        hbox.pack_end(palette, False, False)
+        palette.show_all()
+
+        sw = gtk.ScrolledWindow()
+        sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        sw.set_size_request(400, -1)
+        hbox.pack_start(sw, True, True)
+
+        self._workspace = WorkSpace()
+        sw.add_with_viewport(self._workspace)
+        self._workspace.show()
+        sw.set_no_show_all(True)
+        self._workspace_sw = sw
+        self._workspace_action = bar_manager.get_action(
+            'ui/MainMenu/EditMenu/ShowWorkspace')
+        self._workspace_action.set_active(False)
 
         vpaned = gtk.VPaned()
         vpaned.set_position(150)
         hbox.pack_start(vpaned, True, True)
+        vpaned.show()
 
         notebook = gtk.Notebook()
         vpaned.add1(notebook)
+        notebook.show()
 
         # Widget view
         widget_view = WidgetTreeView(self)
         self._add_view(widget_view)
-        page_num = notebook.append_page(widget_view, gtk.Label(('Widgets')))
+        page_num = notebook.append_page(widget_view, gtk.Label(_('Widgets')))
+        widget_view.show()
 
         state = WidgetUIMState()
         self._uim_states[page_num] = state
-        
+
         # Action view
         self.gactions_view = GActionsView(self)
         self._add_view(self.gactions_view)
-        page_num = notebook.append_page(self.gactions_view, gtk.Label(('Actions')))
+        page_num = notebook.append_page(self.gactions_view,
+                                        gtk.Label(_('Actions')))
+        self.gactions_view.show()
 
         state = ActionUIMState(self.gactions_view)
         self._uim_states[page_num] = state
@@ -109,25 +228,28 @@ class gazpacho_application(application.Application):
         # Sizegroup view
         self.sizegroup_view = SizeGroupView(self)
         self._add_view(self.sizegroup_view)
-        page_num = notebook.append_page(self.sizegroup_view, gtk.Label(('Size Groups')))
+        page_num = notebook.append_page(self.sizegroup_view,
+                                        gtk.Label(_('Size Groups')))
+        self.sizegroup_view.show()
 
         state = SizeGroupUIMState(self.sizegroup_view)
         self._uim_states[page_num] = state
 
         # Add property editor
-        self._editor = widget_editor(self)
-        self._editor.row_activated_cb = self.cb_signal_activated
+        self._editor = Editor(self)
         vpaned.add2(self._editor)
+        self._editor.show_all()
 
-        notebook.connect('switch-page', self._switch_page_cb)
+        notebook.connect('switch-page', self._on_notebook_switch_page)
 
         # Statusbar
         statusbar = gtk.Statusbar()
         self._statusbar_menu_context_id = statusbar.get_context_id("menu")
         self._statusbar_actions_context_id = statusbar.get_context_id("actions")
-        main_vbox.pack_end(statusbar, False)
+        #main_vbox.pack_end(statusbar, False)
         self._statusbar = statusbar
-        
+        #statusbar.show()
+
         # dnd doesn't seem to work with Konqueror, at least not when
         # gtk.DEST_DEFAULT_ALL or gtk.DEST_DEFAULT_MOTION is used. If
         # handling the drag-motion event it will work though, but it's
@@ -135,21 +257,19 @@ class gazpacho_application(application.Application):
         #application_window.drag_dest_set(gtk.DEST_DEFAULT_ALL,
         #                                 Application.targets,
         #                                 gtk.gdk.ACTION_COPY)
-        
-        #application_window.connect('drag_data_received',
+
+        #application_window.connect('drag-data-received',
         #                           self._dnd_data_received_cb)
 
         # Enable the current state
         self._active_uim_state = self._uim_states[0]
-        #self._active_uim_state.enable()
-        
+        self._active_uim_state.enable()
         return application_window
-       
+
     def cb_signal_activated(self, editor, widget, signal):
         callbackname = 'on_%s__%s' % (widget.name, signal.replace('-', '_'))
         self._save_cb(None)
         self.__view.cb_signal_activated(callbackname, self._project.path)
-
 
 class gazpacho_view(contentview.content_view):
 
@@ -164,7 +284,8 @@ class gazpacho_view(contentview.content_view):
     def open_file(self, filename):
         for project in self.__gazpacho._projects:
             if filename == project.path:
-                self.__gazpacho._set_project(project)
+                if project is not self.__gazpacho._project:
+                    self.__gazpacho._set_project(project)
                 return
         self.__gazpacho.open_project(filename)
 
@@ -175,22 +296,29 @@ class gazpacho_view(contentview.content_view):
         self.__gazpacho._save_as_cb(None)
 
     def cut(self):
-        self.__gazpacho._cut_cb(None)
+        """broken"""
+        self.uim_state._cut_cb(None)
 
     def copy(self):
-        self.__gazpacho._copy_cb(None)
+        """broken"""
+        self.uim_state._copy_cb(None)
 
     def paste(self):
-        self.__gazpacho._paste_cb(None)
+        """broken"""
+        self.uim_state._paste_cb(None)
 
     def delete(self):
-        self.__gazpacho._delete_cb(None)
+        """broken"""
+        self.uim_state._delete_cb(None)
 
     def undo(self):
         self.__gazpacho._undo_cb(None)
     
     def redo(self):
         self.__gazpacho._redo_cb(None)
+
+    def about(self):
+        self.__gazpacho._about_cb(None)
 
     def close_all(self):
         for project in self.gaz._projects:
@@ -225,6 +353,11 @@ class gazpacho_view(contentview.content_view):
         return self.__gazpacho
     gaz = property(get_gazpacho)
 
+    def get_uim_state(self):
+        return self.__gazpacho._active_uim_state
+
+    uim_state = property(get_uim_state)
+
     def cb_signal_activated(self, signalname, projectpath):
         callback_file_path = '%s.py' % projectpath.rsplit('.', 1)[0]
         if not os.path.exists(callback_file_path):
@@ -248,6 +381,27 @@ class gazpacho_view(contentview.content_view):
                               glade_filename=projectpath,
                               callback_filename=callback_file_path,
                               callback_name=signalname)
+
+class ExternalGazpacho(object):
+
+    def __init__(self, service):
+        self.service = service
+        self.boss = service.boss
+
+    def launch():
+        # Delay imports, so command line parsing is not slowed down
+        from gazpacho.app.app import gazpacho
+        from gazpacho.debugwindow import DebugWindow, show
+        gazpacho.window.show()
+        self.gazpacho = gazpacho
+
+        #open_project(gazpacho, filename, options.profile)
+    def open_project(app, filename, profile):
+        return self.gazpacho.open_project(filename)
+
+
+
+
 
 
 class gazpacho_service(service.service):
@@ -295,6 +449,9 @@ class gazpacho_service(service.service):
         def act_redo(self, action):
             self.service.single_view.redo()
 
+        def act_about_gazpacho(self, action):
+            self.service.single_view.about()
+
         def get_menu_definition(self):
             return """
               <menubar>
@@ -305,18 +462,14 @@ class gazpacho_service(service.service):
                   <separator />
                 </menu>
                 <menu name="base_edit" action="base_edit_menu">
+                <placeholder name="EditMenu">
                 <menuitem action="gazpach+document+undo"/>
                 <menuitem action="gazpach+document+redo"/>
+                </placeholder>
                 <separator />
-                <menuitem action="gazpach+document+cut"/>
-                <menuitem action="gazpach+document+copy"/>
-                <menuitem action="gazpach+document+paste"/>
-                <menuitem action="gazpach+document+delete"/>
-                </menu>
-                <menu action="base_project_menu">
                 </menu>
                 <menu action="base_help_menu">
-                <menuitem action="About"/>
+                <menuitem action="gazpach+document+about_gazpacho"/>
                 </menu>
               </menubar>
                 <toolbar>
@@ -350,8 +503,11 @@ class gazpacho_service(service.service):
                                 filename=filename)
 
     def cmd_start(self):
-        self.create_single_view()
-        self.single_view.raise_page()
+        if 1:
+            self.__view = self.create_single_view()
+            self.single_view.raise_page()
+        else:
+            self.__view = ExternalGazpacho(self)
 
     def cmd_create(self, filename):
         f = open(filename, 'w')
@@ -402,7 +558,10 @@ class gazpacho_service(service.service):
         self.__current_document = value
     
     current_document = property(get_current_document, set_current_document)
-            
+
+    def get_view(self):
+        return self.__view
+    view = property(get_view)
 
 class gazpacho_document(document.realfile_document):
 
