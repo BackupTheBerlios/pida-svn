@@ -277,11 +277,16 @@ class gazpacho_application(Application):
 class gazpacho_view(contentview.content_view):
 
     HAS_TITLE = False
+    HAS_CONTROL_BOX = False
+    HAS_CLOSE_BUTTON = False
+    HAS_DETACH_BUTTON = False
+
 
     def init(self):
         self.__main_window = self.service.boss.get_main_window()
         self.__gazpacho = gazpacho_application(self.__main_window, self)
         self.widget.pack_start(self.__gazpacho.get_container())
+        self.set_border_width(2)
         
 
     def open_file(self, filename):
