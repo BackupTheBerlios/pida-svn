@@ -494,7 +494,7 @@ class gazpacho_service(service.service):
                 </placeholder>
                 <separator />
                 </menu>
-                <menu action="base_help_menu">
+                <menu name="base_help" action="base_help_menu">
                 <menuitem action="gazpach+document+about_gazpacho"/>
                 </menu>
               </menubar>
