@@ -550,10 +550,10 @@ class gazpacho_service(service.service):
                            ('gazpach+document+save_as', 'SaveAs'),
                            ('gazpach+document+undo', 'Undo'),
                            ('gazpach+document+redo', 'Redo'),
-                           ('gazpach+document+redo', 'Cut'),
-                           ('gazpach+document+redo', 'Copy'),
-                           ('gazpach+document+redo', 'Paste'),
-                           ('gazpach+document+redo', 'Delete'),
+                           ('gazpach+document+cut', 'Cut'),
+                           ('gazpach+document+copy', 'Copy'),
+                           ('gazpach+document+paste', 'Paste'),
+                           ('gazpach+document+delete', 'Delete'),
                            ]:
             self.__connect_action(pact, gact)
 
