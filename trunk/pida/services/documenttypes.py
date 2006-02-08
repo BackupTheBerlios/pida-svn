@@ -132,10 +132,11 @@ class document_type_handler(service.service):
                 <placeholder name="OpenFileToolbar">
                 </placeholder>
                 <placeholder name="SaveFileToolbar">
-                </placeholder>
-                <placeholder name="EditToolbar">
                 <toolitem name="Save" action="DocumentSave" />
                 <toolitem name="SaveAs" action="DocumentSaveAs" />
+                <separator />
+                </placeholder>
+                <placeholder name="EditToolbar">
                 <separator />
                 <toolitem name="Undo" action="documenttypes+document+undo" />
                 <toolitem name="Redo" action="documenttypes+document+redo" />

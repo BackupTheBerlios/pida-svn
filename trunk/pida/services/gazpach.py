@@ -51,6 +51,7 @@ import pida.core.document as document
 # pidagtk import(s)
 import pida.pidagtk.contentview as contentview
 
+from gazpacho.constants import STOCK_SIZEGROUP
 
 class gazpacho_application(Application):
     
@@ -264,6 +265,8 @@ class gazpacho_application(Application):
         # Enable the current state
         self._active_uim_state = self._uim_states[0]
         self._active_uim_state.enable()
+        
+
         return application_window
 
     def cb_signal_activated(self, editor, widget, signal):
@@ -400,7 +403,7 @@ class ExternalGazpacho(object):
         return self.gazpacho.open_project(filename)
 
 
-
+import pida.core.actions as actions
 
 
 
@@ -416,31 +419,48 @@ class gazpacho_service(service.service):
 
         globs = ["*.glade"]
 
+        def init(self):
+            self.service.handler = self
+            document.document_handler.init(self)
+
         def create_document(self, filename, document_type):
             doc = gazpacho_document(filename=filename, handler=self)
             return doc
 
         def view_document(self, document):
-            self.service.call('start')
+            new = self.service.call('start')
             self.service.single_view.open_file(document.filename)
-            self.service.current_document = document
+            if new:
+                self.service.connect_actions()
+
+        def close_document(self, document):
+            self.service.single_view.gaz.close_current_project()
+            self.service.boss.call_command('buffermanager', 'document_closed',
+                                           document=document)
 
         def act_cut(self, action):
+            """Cut the selected item"""
             self.service.single_view.cut()
 
         def act_copy(self, action):
+            """Copy the selected item"""
             self.service.single_view.copy()
 
         def act_paste(self, action):
+            """Paste the selected item"""
             self.service.single_view.paste()
 
         def act_delete(self, action):
+            """Delete the selected item"""
             self.service.single_view.delete()
 
         def act_save(self, action):
+            """Save the user interface file"""
             self.service.single_view.save()
 
+        @actions.action(stock_id=gtk.STOCK_SAVE_AS, label=None)
         def act_save_as(self, action):
+            """Save the user interface file as"""
             self.service.single_view.save_as()
 
         def act_undo(self, action):
@@ -456,15 +476,21 @@ class gazpacho_service(service.service):
             return """
               <menubar>
                 <menu name="base_file" action="base_file_menu">
+                  <placeholder name="SaveFileMenu">
                   <separator />
                   <menuitem action="gazpach+document+save"/>
                   <menuitem action="gazpach+document+save_as"/>
                   <separator />
+                  </placeholder>
                 </menu>
                 <menu name="base_edit" action="base_edit_menu">
                 <placeholder name="EditMenu">
                 <menuitem action="gazpach+document+undo"/>
                 <menuitem action="gazpach+document+redo"/>
+                <menuitem action="gazpach+document+cut"/>
+                <menuitem action="gazpach+document+copy"/>
+                <menuitem action="gazpach+document+paste"/>
+                <menuitem action="gazpach+document+delete"/>
                 </placeholder>
                 <separator />
                 </menu>
@@ -478,6 +504,7 @@ class gazpacho_service(service.service):
             <placeholder name="SaveFileToolbar">
                 <separator />
                <toolitem action="gazpach+document+save"/>
+               <toolitem action="gazpach+document+save_as"/>
                 <separator />
             </placeholder>
             <placeholder name="EditToolbar">
@@ -504,10 +531,35 @@ class gazpacho_service(service.service):
 
     def cmd_start(self):
         if 1:
-            self.__view = self.create_single_view()
-            self.single_view.raise_page()
+            if self.single_view is None:
+                self.__view = self.create_single_view()
+                return True
+            else:
+                self.single_view.raise_page()
+                return False
         else:
             self.__view = ExternalGazpacho(self)
+
+    def connect_actions(self):
+        for pact, gact in [('gazpach+document+save', 'Save'),
+                           ('gazpach+document+save_as', 'SaveAs'),
+                           ('gazpach+document+undo', 'Undo'),
+                           ('gazpach+document+redo', 'Redo'),
+                           ('gazpach+document+redo', 'Cut'),
+                           ('gazpach+document+redo', 'Copy'),
+                           ('gazpach+document+redo', 'Paste'),
+                           ('gazpach+document+redo', 'Delete'),
+                           ]:
+            self.__connect_action(pact, gact)
+
+    def __connect_action(self, pidaname, gazname):
+        pact = self.handler.action_group.get_action(pidaname)
+        def _up(act, prop):
+            pact.set_sensitive(act.get_sensitive())
+        gact = bar_manager._get_action(gazname)
+        gact.connect('notify', _up)
+
+
 
     def cmd_create(self, filename):
         f = open(filename, 'w')
@@ -539,29 +591,6 @@ class gazpacho_service(service.service):
         self.boss.call_command('buffermanager', 'open_file_line',
                                filename=callback_filename,
                                linenumber=linenumber + 2)
-
-    def act_user_interface_designer(self, action):
-        """Start the user interface designer Gazpacho."""
-        self.call('start')
-        
-    def cb_single_view_closed(self, view):
-        self.boss.call_command('buffermanager', 'file_closed',
-                        filename=self.current_document.filename)
-
-    def confirm_single_view_controlbar_clicked_close(self, view):
-        return view.confirm_close()
-        
-    def get_current_document(self):
-        return self.__current_document
-
-    def set_current_document(self, value):
-        self.__current_document = value
-    
-    current_document = property(get_current_document, set_current_document)
-
-    def get_view(self):
-        return self.__view
-    view = property(get_view)
 
 class gazpacho_document(document.realfile_document):
 
