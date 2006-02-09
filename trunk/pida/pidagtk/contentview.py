@@ -135,14 +135,6 @@ class content_view(gtk.VBox):
         self.__toolbar_area.show()
         
         topbar.pack_start(self.__toolbar_area, expand=False)
-        # TODO: check if toolbar.Toolbar needs work too
-        self.__toolbar = toolbar.Toolbar()
-        self.__toolbar.show()
-        
-        self.__toolbar_area.pack_start(self.__toolbar, expand=False)
-        self.__toolbar.connect('clicked', self.cb_toolbar_clicked)
-        for name, icon, tooltip in self.BUTTONS:
-            self.__toolbar.add_button(name, icon, tooltip)
         if self.HAS_CONTROL_BOX:
             if self.HAS_DETACH_BUTTON:
                 detbut = paned.sizer('menu', tooltip='Detach this view')
