@@ -40,6 +40,7 @@ class Holder(object):
     def __repr__(self):
         return self.__name
 
+defs = service.definitions
 
 class PytermContent(contentview.content_view):
 
@@ -47,13 +48,13 @@ class PytermContent(contentview.content_view):
 
     SHORT_TITLE = 'manhole'
 
-    LONG_TITLE = 'pIDA internal shell'
+    LONG_TITLE = 'PIDA internal shell'
 
     BORDER = 4
 
     def init(self, localdict):
         console = pyconsole.Console(locals=localdict,
-                                    banner="pIDA Shell. Keep breathing.",
+                                    banner="PIDA Shell. Keep breathing.",
                                     use_rlcompleter=False)
         sw = gtk.ScrolledWindow()
         self.widget.pack_start(sw)
@@ -65,15 +66,16 @@ class Manhole(service.service):
     """Debugging Python shell."""
     NAME = 'manhole'
 
-    multi_view_type = PytermContent
-    multi_view_book = 'content'
+    
+    class Manhole(defs.View):
+        view_type = PytermContent
+        book_name = 'plugin'
 
     def cmd_run(self):
         localdict = {'pida':self.boss,
                      'cmd':self.get_commands()}
-        content = self.create_multi_view(localdict=localdict)
-        self.log.debug('%s  ,', content)
-        #content.start(localdict)
+        content = self.create_view('Manhole', localdict=localdict)
+        self.show_view(view=content)
 
     def act_run_manhole(self, action):
         """Run the internal manhole shell."""
