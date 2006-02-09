@@ -78,6 +78,7 @@ class content_view(gtk.VBox):
         self.__uid = time.time()
         self.__service = service
         self.__prefix = prefix
+        self.__init_actions()
         self.__init_icon(icon_name)
         self.__init_short_title(short_title)
         self.__init_long_title()
@@ -135,12 +136,6 @@ class content_view(gtk.VBox):
         self.__toolbar_area.show()
         
         topbar.pack_start(self.__toolbar_area, expand=False)
-        if self.HAS_CONTROL_BOX:
-            if self.HAS_DETACH_BUTTON:
-                detbut = paned.sizer('menu', tooltip='Detach this view')
-                #self.__toolbar_area.pack_start(detbut, expand=False)
-                detbut.connect('clicked',
-                            self.cb_controlbar_detach_clicked)
         self.__long_title_label = gtk.Label(self.__long_title)
         self.__long_title_label.show()
 
@@ -156,19 +151,30 @@ class content_view(gtk.VBox):
             self.__long_title_label.set_alignment(0.0, 0.5)
             self.__long_title_label.set_selectable(True)
         if self.HAS_CONTROL_BOX:
-            if self.HAS_CLOSE_BUTTON:
-                #align = gtk.Alignment()
-                #align.show()
-                #self.__toolbar_area.pack_start(align)
-                tb = self.__toolbar
-                tb.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
-                closebut = paned.sizer('close', tooltip='Close this view')
-                closebut = gtk.ToolButton(stock_id=gtk.STOCK_CLOSE)
-                closebut.show()
-                tb.add(closebut)
-                closebut.connect('clicked',
-                            self.cb_controlbar_close_clicked)
-                self.__close_button = closebut
+            tb = self.__toolbar
+            tb.set_icon_size(gtk.ICON_SIZE_MENU)
+            detbut = self.__det_act.create_tool_item()
+            tb.add(detbut)
+            closebut = self.__close_act.create_tool_item()
+            tb.add(closebut)
+            self.__close_button = closebut
+            if not self.HAS_CLOSE_BUTTON:
+                closebut.hide()
+            if not self.HAS_DETACH_BUTTON:
+                detbut.hide()
+
+
+    def __init_actions(self):
+        self.__det_act = gtk.ToggleAction(name='detach',
+                                      label='Detach',
+                                      tooltip='Detach this view',
+                                      stock_id='gtk-up')
+        self.__close_act = gtk.Action(name='close',
+                                    label='Close',
+                                    tooltip='Close this view',
+                                    stock_id=gtk.STOCK_CLOSE)
+        self.__close_act.connect('activate', self.cb_close_action_activated)
+        self.__det_act.connect('activate', self.cb_detach_action_activated)
 
     def init(self):
         pass
@@ -195,18 +201,18 @@ class content_view(gtk.VBox):
         if self.HAS_CLOSE_BUTTON:
             self.__close_button.hide()
 
+    def cb_close_action_activated(self, action):
+        self.__controlbar_clicked('close')
+        
+    def cb_detach_action_activated(self, action):
+        self.__controlbar_clicked('detach')
+
     def cb_toolbar_clicked(self, toolbar, name):
         func = 'cb_%s_toolbar_clicked_%s' % (self.__prefix, name)
         cb = getattr(self.service, func, None)
         if cb is not None:
             cb(self, toolbar, name)
         self.emit('action', name)
-
-    def cb_controlbar_close_clicked(self, controlbox):
-        self.__controlbar_clicked('close')
-
-    def cb_controlbar_detach_clicked(self, controlbox):
-        self.__controlbar_clicked('detach')
 
     def __controlbar_clicked(self, name):
         func = 'cb_%s_controlbar_clicked_%s' % (self.__prefix, name)

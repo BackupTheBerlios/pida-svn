@@ -51,3 +51,6 @@ class language_handler(languages.language_handler):
 
 class project_type(project.project_type):
     """"""
+
+class View(object):
+    """a view"""

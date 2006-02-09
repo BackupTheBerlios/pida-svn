@@ -530,6 +530,8 @@ class multi_view_mixin(object):
             yield view
     multi_views = property(get_multi_views)
 
+from views import view_mixin
+
 service_base_classes =  [options_mixin,
                          commands_mixin,
                          events_mixin,
@@ -542,7 +544,8 @@ service_base_classes =  [options_mixin,
                          single_view_mixin,
                          lang_view_mixin,
                          multi_view_mixin,
-                         project_type_mixin]
+                         project_type_mixin,
+                         view_mixin]
 
 
 binding_base_classes = [document_type_mixin,
@@ -567,7 +570,8 @@ class service_type(type):
         'document_handler': '__documenttypes__',
         'project_type': '__projecttypes__',
         'database': '__databases__',
-        'event': '__events__'
+        'event': '__events__',
+        'View': '__views__',
     }
 
     def __new__(cls, name, bases, classdict):
