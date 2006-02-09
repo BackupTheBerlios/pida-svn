@@ -227,8 +227,9 @@ class open_with(service.service):
     
     display_name = 'Open With'
 
-    single_view_type = opener_view
-    single_view_book = 'ext'
+    class OpenWith(defs.View):
+        view_type = opener_view
+        book_name = 'ext'
 
     def init(self):
         self.__datafile = os.path.join(self.boss.pida_home,
@@ -282,8 +283,9 @@ class open_with(service.service):
         return menu
 
     def cmd_configure(self):
-        view = self.create_single_view()
+        view = self.create_view('OpenWith')
         view.set_openers(self.__openers)
+        self.show_view(view=view)
 
     def act_configure_open_with(self, action):
         self.call('configure')
