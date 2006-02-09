@@ -300,8 +300,11 @@ class WindowManager(service.service):
 
     def _bind_pluginviews(self):
         for service in self.boss.services:
-            if service.plugin_view_type is not None:
-                if service.NAME in ['buffermanager', 'projectmanager',
+            if service.NAME in ['buffermanager']:
+                view = service.create_view('BufferView')
+                service.show_view(view=view)
+            elif service.plugin_view_type is not None:
+                if service.NAME in ['projectmanager',
                                     'filemanager']:
                     self.contentview.append_page(service.plugin_view)
                 else:

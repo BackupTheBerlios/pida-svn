@@ -46,7 +46,11 @@ class view_mixin(object):
         pass
 
     def get_first_view(self, viewname):
-        pass
+        for view in self.__views.values():
+            if view.view_definition.__name__ == viewname:
+                return view
+        raise KeyError('No views of that type')
+            
 
     def view_confirm_close(self, view):
         return True
