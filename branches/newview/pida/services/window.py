@@ -303,6 +303,10 @@ class WindowManager(service.service):
             if service.NAME in ['buffermanager']:
                 view = service.create_view('BufferView')
                 service.show_view(view=view)
+            elif service.NAME == 'filemanager':
+                view = service.create_view('FileBrowser')
+                service.show_view(view=view)
+                
             elif service.plugin_view_type is not None:
                 if service.NAME in ['projectmanager',
                                     'filemanager']:
