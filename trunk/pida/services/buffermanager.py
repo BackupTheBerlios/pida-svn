@@ -357,7 +357,9 @@ class Buffermanager(service.service):
                     action=gtk.FILE_CHOOSER_ACTION_SAVE,
                     buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                              gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-        chooser.set_do_overwrite_confirmation(True)
+        # pygtk 2.6 compatibility
+        if hasattr(chooser, 'set_do_overwrite_confirmation'):
+            chooser.set_do_overwrite_confirmation(True)
         def _cb(dlg, response):
             if response == gtk.RESPONSE_ACCEPT:
                 filename = chooser.get_filename()

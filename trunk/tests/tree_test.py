@@ -87,6 +87,23 @@ class TreeTest1(testing.GtkTestCase):
         self.t.connect('clicked', _c)
         self.t.emit('clicked', self.t.model[0][1])
 
+    def test_8_d_clicked(self):
+        self.t = tree.Tree()
+        i = MockItem('k1', 'b')
+        self.t.add_item(i)
+        i2 = MockItem('k2', 'c')
+        self.t.add_item(i2)
+        self.assertEqual(self.t.selected, None)
+        def _c(tv, item):
+            # check it is None now
+            self.assertEqual(tv.selected, None)
+            def _i():
+                # but is getting set in idle
+                self.assertEqual(tv.selected, item)
+            gtk.idle_add(_i)
+        self.t.connect('double-clicked', _c)
+        self.t.emit('double-clicked', self.t.model[0][1])
+
 
 
         
