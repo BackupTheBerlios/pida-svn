@@ -40,7 +40,7 @@ class view_mixin(object):
         pass
 
     def get_view(self, unique_id):
-        pass
+        return self.__views[unique_id]
 
     def get_views(self, viewname):
         pass
