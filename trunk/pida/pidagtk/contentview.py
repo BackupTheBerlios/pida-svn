@@ -143,37 +143,35 @@ class content_view(gtk.VBox):
                             self.cb_controlbar_detach_clicked)
         self.__long_title_label = gtk.Label(self.__long_title)
         self.__long_title_label.show()
+
+        self.__toolbar = gtk.Toolbar()
+        self.__toolbar_area.pack_start(self.__toolbar)
         
         if self.HAS_TITLE:
-            self.__toolbar_area.pack_start(self.__long_title_label, padding=6)
+            lti = gtk.ToolItem()
+            lti.set_expand(True)
+            lti.add(self.__long_title_label)
+            self.__toolbar.add(lti)
+            #self.__toolbar_area.pack_start(self.__long_title_label, padding=6)
             self.__long_title_label.set_alignment(0.0, 0.5)
             self.__long_title_label.set_selectable(True)
         if self.HAS_CONTROL_BOX:
             if self.HAS_CLOSE_BUTTON:
-                align = gtk.Alignment()
-                align.show()
-                self.__toolbar_area.pack_start(align)
-                
+                #align = gtk.Alignment()
+                #align.show()
+                #self.__toolbar_area.pack_start(align)
+                tb = self.__toolbar
+                tb.set_icon_size(gtk.ICON_SIZE_SMALL_TOOLBAR)
                 closebut = paned.sizer('close', tooltip='Close this view')
+                closebut = gtk.ToolButton(stock_id=gtk.STOCK_CLOSE)
                 closebut.show()
-                
-                self.__toolbar_area.pack_start(closebut, expand=False)
+                tb.add(closebut)
                 closebut.connect('clicked',
                             self.cb_controlbar_close_clicked)
                 self.__close_button = closebut
 
     def init(self):
         pass
-
-    def toolbar_add_button(self, name, icon, tooltip):
-        self.__toolbar.add_button(name, icon, tooltip)
-
-    def toolbar_add_widget(self, widget, **kw):
-        widget.show()
-        self.__toolbar.add_widget(widget, **kw)
-
-    def toolbar_add_separator(self):
-        self.__toolbar.add_separator()
 
     def close(self):
         self.remove()
