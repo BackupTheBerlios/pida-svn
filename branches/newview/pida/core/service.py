@@ -27,7 +27,6 @@ import event
 import command
 import shelve
 import registry
-import databases
 import actions
 import definitions
 
@@ -536,7 +535,6 @@ service_base_classes =  [options_mixin,
                          commands_mixin,
                          events_mixin,
                          bindings_mixin,
-                         data_mixin,
                          document_type_mixin,
                          language_type_mixin,
                          actions_mixin,
