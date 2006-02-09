@@ -340,17 +340,20 @@ class paste_history_view(contentview.content_view):
 class paste_manager(service.service):
     """Service that manages the pastes and the pastebins"""
 
-    single_view_type = paste_history_view
-    single_view_book = 'plugin'
+    class PasteHistory(defs.View):
+        view_type = paste_history_view
+        book_name = 'plugin'
 
-    multi_view_type = paste_editor_view
-    multi_view_book = 'ext'
+    class PasteEditor(defs.View):
+        view_type = paste_editor_view
+        book_name = 'ext'
 
     # life cycle
 
-    def start(self):
+    def init(self):
         '''Initialization'''
         self.__pastes = []
+        self.__historyview = None
 
     def reset(self):
         '''Reset'''
@@ -403,15 +406,14 @@ class paste_manager(service.service):
         
            Opens a new editor
         '''
-        view = self.create_multi_view()
+        view = self.create_view('PasteEditor')
         if len(self.__pastes):
             paste = self.__pastes[-1]
             view.set_name(paste.name)
+        self.show_view(view=view)
 
     def cmd_post_paste(self, paste):
         '''Post the paste paste'''
-        self.create_single_view()
-        self.single_view.set(self.pastes)
         self.history_action.set_active(True)
         paste.set_mgr(self)
         paste.paste()
@@ -453,18 +455,27 @@ class paste_manager(service.service):
     def act_view_history(self, action):
         """Show the paste history."""
         if action.get_active():
-            self.create_single_view()
-            self.single_view.set(self.pastes)
+            if self.__historyview is None:
+                self.__historyview = self.create_view('PasteHistory')
+                self.show_view(view=self.__historyview)
+            self.__historyview.set(self.pastes)
+            self.__historyview.raise_page()
         else:
-            if self.single_view is not None:
-                self.single_view.remove()
+            if self.__historyview is not None:
+                self.__historyview.remove()
+
+    def get_single_view(self):
+        return self.__historyview
+    single_view = property(get_single_view)
         
 
     def act_paste_bin(self, action):
         """Base pastebin menu."""
 
-    def cb_single_view_closed(self, view):
-        self.history_action.set_active(False)
+    def view_closed(self, view):
+        if view is self.__historyview:
+            self.__historyview = None
+            self.history_action.set_active(False)
 
     def get_history_action(self):
         return self.action_group.get_action('pastemanager+view_history')
