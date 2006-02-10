@@ -26,6 +26,7 @@ import time
 
 # gtk imports
 import gtk
+import pango
 import gobject
 import contentbook
 
@@ -179,6 +180,7 @@ class content_view(gtk.VBox):
             #self.__toolbar_area.pack_start(self.__long_title_label, padding=6)
             self.__long_title_label.set_alignment(0.0, 0.5)
             self.__long_title_label.set_selectable(True)
+            self.__long_title_label.set_ellipsize(pango.ELLIPSIZE_START)
         if self.HAS_CONTROL_BOX:
             tb = self.__toolbar
             tb.set_icon_size(gtk.ICON_SIZE_MENU)

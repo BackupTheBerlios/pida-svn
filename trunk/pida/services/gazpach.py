@@ -287,6 +287,10 @@ class gazpacho_view(contentview.content_view):
     def init(self):
         self.__main_window = self.service.boss.get_main_window()
         self.__gazpacho = gazpacho_application(self.__main_window, self)
+        
+        from gazpacho.interfaces import IGazpachoApp
+        from kiwi.component import provide_utility
+        provide_utility(IGazpachoApp, self.__gazpacho)
         self.widget.pack_start(self.__gazpacho.get_container())
         self.set_border_width(2)
         
