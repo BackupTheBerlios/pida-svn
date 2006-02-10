@@ -219,6 +219,7 @@ class content_view(gtk.VBox):
     def detach(self):
         if self.__holder is not None:
             self.__holder.detach_page(self)
+            self.__holder = None
 
     def externalise(self):
         self.detach()
