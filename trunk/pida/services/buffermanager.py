@@ -25,7 +25,7 @@ import os
 import gtk
 
 import pida.core.service as service
-import pida.pidagtk.buffertree as buffertree
+import pida.pidagtk.tree as tree
 import pida.pidagtk.contentview as contentview
 import pida.pidagtk.contextwidgets as contextwidgets
 
@@ -33,6 +33,34 @@ from pida.core import actions
 
 defs = service.definitions
 types = service.types
+
+class BufferTree(tree.Tree):
+    
+    SORT_CONTROLS = True
+    SORT_AVAILABLE = [('Time Opened','creation_time'),
+                      ('File path','filename'),
+                      ('File name','basename'),
+                      ('Mime Type','mimetype'),
+                      ('File Length','length'),
+                      ('Project', 'project_name')]
+
+    def __init__(self):
+        tree.Tree.__init__(self)
+        self.view.set_expander_column(self.view.get_column(1))
+        self.set_property('markup-format-string', '%(filename)s')
+        self.view.set_enable_search(False)
+        def _se(model, column, key, iter):
+            val = model.get_value(iter, 1).value
+            isnt = not val.basename.startswith(key)
+            return isnt
+        self.view.set_search_equal_func(_se)
+        
+    def set_bufferlist(self, bufferlist):
+        # naive
+        self.set_items(self.__adapt_bufferlist(bufferlist))
+
+    def set_currentbuffer(self, filename):
+        self.set_selected(filename)
 
 class BufferView(contentview.content_view):
 
@@ -47,7 +75,7 @@ class BufferView(contentview.content_view):
     LONG_TITLE = 'List of open buffers'
 
     def init(self):
-        self.__buffertree = buffertree.BufferTree()
+        self.__buffertree = BufferTree()
         self.__buffertree.set_property('markup-format-string',
                                        '%(markup)s')
         self.__buffertree.connect('clicked',
