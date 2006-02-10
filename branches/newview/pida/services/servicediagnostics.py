@@ -27,6 +27,7 @@ import pida.core.service as service
 import pida.pidagtk.contentview as contentview
 import pida.pidagtk.tree as tree
 
+defs = service.definitions
 
 class service_viewer(contentview.content_view):
 
@@ -64,11 +65,14 @@ class service_viewer(contentview.content_view):
 
 class service_diagnostics(service.service):
 
-    single_view_type = service_viewer
-    single_view_book = 'view'
+
+    class Services(defs.View):
+        view_type = service_viewer
+        book_name = 'ext'
 
     def cmd_view(self):
-        view = self.create_single_view()
+        view = self.create_view('Services')
+        self.show_view(view=view)
     
     def act_services(self, action):
         self.call('view')
