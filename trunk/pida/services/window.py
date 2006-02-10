@@ -31,8 +31,6 @@ from pida.pidagtk import shiftpaned
 
 import pida.core.actions as actions
 import pida.core.service as service
-import pida.pidagtk.window as window
-import pida.pidagtk.expander as expander
 import pida.pidagtk.contentbook as contentbook
 
 
@@ -288,13 +286,12 @@ class WindowManager(service.service):
         self.editorview = contentbook.ContentBook(show_tabs=False)
         self.bookview = contentbook.ContentBook()
         self.bookview.notebook.set_tab_pos(gtk.POS_TOP)
-        self.externalview = window.external_book()
         self.pluginview = contentbook.ContentBook()
         self.__viewbooks = {'content': self.contentview,
                             'view': self.bookview,
                             'plugin': self.pluginview,
                             'edit': self.editorview,
-                            'ext': self.externalview}
+                            }
         self.menubar = self.__uim.get_toplevels(gtk.UI_MANAGER_MENUBAR)[0]
         self.toolbar = self.__uim.get_toplevels(gtk.UI_MANAGER_TOOLBAR)[0]
 

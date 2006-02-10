@@ -21,17 +21,49 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-# pidagtk import(s)
-import toolbar
-import paned
-
 # system imports
 import time
 
 # gtk imports
 import gtk
 import gobject
+import contentbook
 
+class external_window(gtk.Window):
+
+    def __init__(self, *args):
+        super(external_window, self).__init__()
+        from pkg_resources import Requirement, resource_filename
+        icon_file = resource_filename(Requirement.parse('pida'),
+                              'pida-icon.png')
+        im = gtk.Image()
+        im.set_from_file(icon_file)
+        pb = im.get_pixbuf()
+        self.set_icon(pb)
+        self.__book = contentbook.ContentBook()
+        self.__book.notebook.set_show_tabs(False)
+        self.add(self.__book)
+        self.connect('destroy', self.on_window__destroy)
+        self.resize(600, 480)
+        self.set_position(gtk.WIN_POS_CENTER)
+        self.__book.connect('empty', self.cb_empty)
+
+    def cb_empty(self, holder):
+        self.destroy()
+
+    def append_page(self, page):
+        self.__book.append_page(page)
+        self.set_title(page.long_title)
+        self.show_all()
+        page.hide_title()
+        page.hide_controlbox()
+        self.present()
+
+    def on_window__destroy(self, window):
+        self.hide()
+        self.remove(self.__book)
+        self.__book.remove_pages()
+        return True
 
 class content_view(gtk.VBox):
     __gsignals__ = {'short-title-changed': (
@@ -42,10 +74,6 @@ class content_view(gtk.VBox):
                         gobject.SIGNAL_RUN_LAST,
                         gobject.TYPE_NONE,
                         ()),
-                    'action' : (
-                        gobject.SIGNAL_RUN_LAST,
-                        gobject.TYPE_NONE,
-                        (gobject.TYPE_PYOBJECT,)),
                     'removed' : (
                         gobject.SIGNAL_RUN_LAST,
                         gobject.TYPE_NONE,
@@ -66,11 +94,7 @@ class content_view(gtk.VBox):
 
     HAS_TITLE = True
 
-    HAS_TOOLBAR = True
-
     WIDGET_TYPE = None
-
-    BUTTONS = []
 
     def __init__(self, service, prefix, widget=None, icon_name=None,
                  short_title=None, **kw):
@@ -194,6 +218,18 @@ class content_view(gtk.VBox):
         if self.__holder is not None:
             self.__holder.detach_page(self)
 
+    def externalise(self):
+        self.detach()
+        book = external_window()
+        book.append_page(self)
+        if self.view_definition.book_name == 'ext':
+            self.__det_act.set_sensitive(False)
+
+    def internalise(self):
+        self.__det_act.set_sensitive(True)
+        self.service.boss.call_command('window', 'append_page',
+                view=self, bookname=self.view_definition.book_name)
+
     def raise_page(self):
         if self.__holder is not None:
             self.__holder.set_page(self)
@@ -215,21 +251,26 @@ class content_view(gtk.VBox):
 
     def get_service(self):
         return self.__service
+    
     service = property(get_service)
     
     def get_unique_id(self):
         return self.__uid
+    
     unique_id = property(get_unique_id)
 
     def get_short_title(self):
         return self.__short_title
+
     def set_short_title(self, value):
         self.__short_title = value
         self.emit('short-title-changed')
+ 
     short_title = property(get_short_title, set_short_title)
 
     def get_long_title(self):
         return self.__long_title
+
     def set_long_title(self, value):
         self.__long_title = value
         try:
@@ -237,10 +278,12 @@ class content_view(gtk.VBox):
         except AttributeError:
             pass
         self.emit('long-title-changed')
+ 
     long_title = property(get_long_title, set_long_title)
 
     def get_icon_name(self):
         return self.__icon_name
+    
     def set_icon_name(self, value):
         self.__icon_name = value
     icon_name = property(get_icon_name, set_icon_name)
@@ -251,6 +294,7 @@ class content_view(gtk.VBox):
 
     def get_holder(self):
         return self.__holder
+    
     def set_holder(self, value):
         self.__holder = value
     holder = property(get_holder, set_holder)

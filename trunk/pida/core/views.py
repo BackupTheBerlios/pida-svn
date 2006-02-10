@@ -29,9 +29,10 @@ class view_mixin(object):
                 raise KeyError('Need either view, or unique_id')
             view = self.__views[unique_id]
         book_name = view.view_definition.book_name
-        self.boss.call_command('window', 'append_page',
-                               view=view,
-                               bookname=book_name)
+        if book_name == 'ext':
+            view.externalise()
+        else:
+            view.internalise()
 
     def get_view(self, unique_id):
         return self.__views[unique_id]
