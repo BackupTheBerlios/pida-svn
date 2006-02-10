@@ -33,6 +33,8 @@ import vimcom
 
 class vim_editor(object):
 
+    single_view = None
+
     class display(defs.optiongroup):
         class colour_scheme(defs.option):
             """The colour scheme to use in vim (Empty will be ignored)."""
