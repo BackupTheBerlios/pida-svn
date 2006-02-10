@@ -23,8 +23,6 @@
 
 import gtk
 import gobject
-import expander
-import widgets
 import icons
 
 class ContentBook(gtk.VBox):
