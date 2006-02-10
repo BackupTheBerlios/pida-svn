@@ -118,13 +118,13 @@ class todo(service.service):
             def load():
                 messages = self.service.call('check',
                               lines=document.lines)
-                self.service.lang_view.set_messages(messages)
+                self.service.plugin_view.set_messages(messages)
                 self.__cached[document.unique_id] = messages
             if messages is None:
                 t = threading.Thread(target=load)
                 t.run()
             else:
-                self.service.lang_view.set_messages(messages)
+                self.service.plugin_view.set_messages(messages)
 
     def cmd_check(self, lines):
         """Check the given lines for TODO messages."""

@@ -38,11 +38,13 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
 
     display_name = 'Embedded Vim'
 
-    single_view_type = vimembed.vim_embed
-    single_view_book = 'edit'
+    class Vim(defs.View):
+        view_type = vimembed.vim_embed
+        book_name = 'edit'
 
     def init(self):
         self.__srv = None
+        self.__view = None
         vimeditor.vim_editor.init(self)
 
     class vim_command(defs.optiongroup):
@@ -63,18 +65,19 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
     server = property(get_server)
 
     def start(self):
-        self.create_single_view()
+        self.__view = self.create_view('Vim')
         if self.opt('vim_command', 'use_cream'):
             command = 'cream'
         else:
             command = 'gvim'
-        self.single_view.run(command)
+        self.show_view(view=self.__view)
+        self.__view.run(command)
 
     def vim_new_serverlist(self, serverlist):
-        if (self.single_view is not None and
-            self.single_view.servername in serverlist and
+        if (self.__view is not None and
+            self.__view.servername in serverlist and
             not self.started):
-            self.__srv = self.single_view.servername
+            self.__srv = self.__view.servername
             self.vim_window.init_server(self.server)
             self.reset()
             self.__files = {}
@@ -88,14 +91,14 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
 
     def restart(self):
         self.__srv = None
-        self.single_view.close()
+        self.__view.close()
         self.call('start')
 
     def has_started(self):
         return self.server is not None
     started = property(has_started)
 
-    def confirm_single_view_controlbar_clicked_close(self, view):
+    def view_confirm_close(self, view):
         self.call('close', filename=self.current_file)
         return False
 
