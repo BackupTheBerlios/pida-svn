@@ -203,10 +203,10 @@ class content_view(gtk.VBox):
         self.__close_button.show()
 
     def cb_close_action_activated(self, action):
-        self.service.view_close(self)
+        self.service.close_view(self)
 
     def cb_detach_action_activated(self, action):
-        self.service.view_detach(self, action.get_active())
+        self.service.detach_view(self, action.get_active())
 
     def get_service(self):
         return self.__service

@@ -33,24 +33,14 @@ class view_mixin(object):
                                view=view,
                                bookname=book_name)
 
-    def hide_view(self, unique_id):
-        pass
-
-    def destroy_view(self, unique_id):
-        pass
-
     def get_view(self, unique_id):
         return self.__views[unique_id]
-
-    def get_views(self, viewname):
-        pass
 
     def get_first_view(self, viewname):
         for view in self.__views.values():
             if view.view_definition.__name__ == viewname:
                 return view
         raise KeyError('No views of that type')
-            
 
     def view_confirm_close(self, view):
         return True
@@ -58,7 +48,7 @@ class view_mixin(object):
     def view_confirm_detach(self, view):
         return True
 
-    def view_close(self, view):
+    def close_view(self, view):
         if self.view_confirm_close(view):
             view.remove()
 
@@ -69,7 +59,7 @@ class view_mixin(object):
     def view_closed(self, view):
         pass
 
-    def view_detach(self, view, detach):
+    def detach_view(self, view, detach):
         view.detach()
         if detach:
             bookname = 'ext'
@@ -78,14 +68,9 @@ class view_mixin(object):
             bookname = view.view_definition.book_name
         self.boss.call_command('window', 'append_page',
                                view=view, bookname=bookname)
-            
 
     def view_detached_base(self, view):
         self.view_detached(self, view)
 
     def view_detached(self, view):
         pass
-
-    def cb_view_closed(self, view, viewname):
-        pass
-

@@ -287,7 +287,7 @@ class culebra_editor(service.service):
     def cmd_close(self, document):
         #view = self.__views[document.unique_id]
         view = self.current_view
-        self.view_close(view)
+        self.close_view(view)
 
     def cmd_can_close(self):
         buffs = [view.buffer for view in self.__views.values() if view.buffer.get_modified()]

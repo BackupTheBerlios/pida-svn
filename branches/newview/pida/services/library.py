@@ -179,7 +179,7 @@ class document_library(service.service):
             self.show_view(view=self.__view)
         else:
             if self.__view is not None:
-                self.view_close(self.__view)
+                self.close_view(self.__view)
 
     def get_action(self):
         return self.action_group.get_action('library+documentation_library')
