@@ -26,12 +26,6 @@ import gtk
 import toolbar
 import os
 import pida.core.base as base
-class BufferItem(tree.IconTreeItem):
-
-    def __get_markup(self):
-        return self.value.markup
-    markup = property(__get_markup)
-
 
 class BufferTree(tree.Tree):
     
@@ -47,14 +41,12 @@ class BufferTree(tree.Tree):
         tree.Tree.__init__(self)
         self.view.set_expander_column(self.view.get_column(1))
         self.set_property('markup-format-string', '%(filename)s')
-        self.__bufferdetails = BufferDetails()
         self.view.set_enable_search(False)
         def _se(model, column, key, iter):
             val = model.get_value(iter, 1).value
             isnt = not val.basename.startswith(key)
             return isnt
         self.view.set_search_equal_func(_se)
-        #self.pack_start(self.__bufferdetails, expand=False)
         
     def set_bufferlist(self, bufferlist):
         # naive
@@ -63,50 +55,5 @@ class BufferTree(tree.Tree):
     def set_currentbuffer(self, filename):
         self.set_selected(filename)
 
-    def display_buffer(self, buf):
-        self.__bufferdetails.display_buffer(buf)
 
-    def __adapt_bufferlist(self, bufferlist):
-        for buf in bufferlist:
-            yield self.__adapt_buffer(bufferlist[buf])
 
-    def __adapt_buffer(self, buf):
-        return BufferItem(buf.filename, buf, buf.icon)
-
-    def get_details_box(self):
-        return self.__bufferdetails
-    details_box = property(get_details_box)
-
-class BufferDetails(gtk.VBox):
-
-    def __init__(self):
-        gtk.VBox.__init__(self)
-        self.__toolbar = None
-        self.__contextbars = []
-        self.__toolbarholder = gtk.HBox()
-        self.pack_start(self.__toolbarholder, expand=False)
-        self.__title = gtk.Label()
-        self.pack_start(self.__title)
-    
-    def display_buffer(self, buf):
-        self.__currentbuffer = buf
-        if self.__toolbar is not None:
-            self.__toolbarholder.remove(self.__toolbar)
-            for bar in self.__contextbars:
-                self.__toolbarholder.remove(bar)
-        self.__create_toolbar(buf)
-
-    def __create_toolbar(self, buf):
-        globaldict={'filename':buf.filename}
-        self.__contextbars = []
-        def remove(toolbar):
-            self.__toolbarholder.remove(toolbar)
-        self.__toolbarholder.foreach(remove)
-        for context in buf.contexts:
-            contextbar = buf.boss.command('contexts', 'get-toolbar',
-                                             contextname=context,
-                                             globaldict=globaldict)
-            self.__contextbars.append(contextbar)
-            self.__toolbarholder.pack_start(contextbar, expand=False)
-        self.show_all()
-        self.__title.set_markup(buf.markup)
