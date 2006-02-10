@@ -232,6 +232,7 @@ class content_view(gtk.VBox):
         self.__det_act.set_sensitive(True)
         self.service.boss.call_command('window', 'append_page',
                 view=self, bookname=self.view_definition.book_name)
+        self.show_controlbox()
 
     def raise_page(self):
         if self.__holder is not None:
@@ -241,10 +242,12 @@ class content_view(gtk.VBox):
         self.__long_title_label.hide()
 
     def hide_controlbox(self):
-        self.__close_button.hide()
+        if self.HAS_CONTROL_BOX:
+            self.__close_button.hide()
 
     def show_controlbox(self):
-        self.__close_button.show()
+        if self.HAS_CONTROL_BOX:
+            self.__close_button.show()
 
     def cb_close_action_activated(self, action):
         self.service.close_view(self)
