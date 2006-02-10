@@ -27,6 +27,7 @@ import os
 # gtk import(s)
 import gtk
 
+
 from gazpacho import main
 main.setup_app()
 import gazpacho.app.app as app
@@ -47,6 +48,7 @@ from gazpacho.uimstate import WidgetUIMState, ActionUIMState, SizeGroupUIMState
 # pida core import(s)
 import pida.core.service as service
 import pida.core.document as document
+defs = service.definitions
 
 # pidagtk import(s)
 import pida.pidagtk.contentview as contentview
@@ -63,11 +65,11 @@ class gazpacho_application(Application):
 
     def __disconnect_clipboard(self):
         i = 0 
-        while True:
-            if clipboard.handler_is_connected(i):
-                clipboard.disconnect(i)
-                break
-            i = i + 1
+        #while True:
+        #    if clipboard.handler_is_connected(i):
+        #        clipboard.disconnect(i)
+        #        break
+        #    i = i + 1
 
     def set_title(self, title):
         pass
@@ -416,8 +418,10 @@ class gazpacho_service(service.service):
 
     display_name = 'Gazpacho'
 
-    single_view_type = gazpacho_view
-    single_view_book = 'edit'
+
+    class GazpachoView(defs.View):
+        view_type = gazpacho_view
+        book_name = 'edit'
 
     class glade_handler(document.document_handler):
         """The glade file handler."""
@@ -530,17 +534,22 @@ class gazpacho_service(service.service):
             </toolbar>
                             """
 
+    def init(self):
+        self.__view = None
+
     def cmd_open(self, filename):
         self.boss.call_command('buffermanager', 'open_file',
                                 filename=filename)
 
     def cmd_start(self):
         if 1:
-            if self.single_view is None:
-                self.__view = self.create_single_view()
+            if self.__view is None:
+                self.__view = self.create_view('GazpachoView')
+                self.show_view(view=self.__view)
+    
                 return True
             else:
-                self.single_view.raise_page()
+                self.__view.raise_page()
                 return False
         else:
             self.__view = ExternalGazpacho(self)
@@ -596,6 +605,10 @@ class gazpacho_service(service.service):
         self.boss.call_command('buffermanager', 'open_file_line',
                                filename=callback_filename,
                                linenumber=linenumber + 2)
+
+    def get_single_view(self):
+        return self.__view
+    single_view = property(get_single_view)
 
 class gazpacho_document(document.realfile_document):
 

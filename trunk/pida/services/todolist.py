@@ -71,7 +71,16 @@ class todo_view(contentview.content_view):
     
 class todo(service.service):
     
-    lang_view_type = todo_view
+    class TODO(defs.View):
+        view_type = todo_view
+        book_name = 'plugin'
+
+    def init(self):
+        self.__view = self.create_view('TODO')
+
+    def get_plugin_view(self):
+        return self.__view
+    plugin_view = property(get_plugin_view)
 
     display_name = 'TODO List'
 
@@ -109,13 +118,13 @@ class todo(service.service):
             def load():
                 messages = self.service.call('check',
                               lines=document.lines)
-                self.service.lang_view.set_messages(messages)
+                self.service.plugin_view.set_messages(messages)
                 self.__cached[document.unique_id] = messages
             if messages is None:
                 t = threading.Thread(target=load)
                 t.run()
             else:
-                self.service.lang_view.set_messages(messages)
+                self.service.plugin_view.set_messages(messages)
 
     def cmd_check(self, lines):
         """Check the given lines for TODO messages."""

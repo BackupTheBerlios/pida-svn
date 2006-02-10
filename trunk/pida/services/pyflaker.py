@@ -67,7 +67,9 @@ class pyflake_view(contentview.content_view):
 
 class pyflaker(service.service):
 
-    lang_view_type = pyflake_view
+    class PyflakeView(defs.View):
+        view_type = pyflake_view
+        book_name = 'plugin'
 
     class pyflakes(defs.language_handler):
 
@@ -113,6 +115,13 @@ class pyflaker(service.service):
             w = pyflakes.Checker(tree, filename)
             #w.messages.sort(lambda a, b: cmp(a.lineno, b.lineno))
             return w.messages
+
+    def init(self):
+        self.__view = self.create_view('PyflakeView')
+
+    def get_plugin_view(self):
+        return self.__view
+    plugin_view = property(get_plugin_view)
 
 
 def checkPath(filename):

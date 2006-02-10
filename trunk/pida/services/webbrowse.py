@@ -28,6 +28,8 @@ import gtk
 import os
 import gtkhtml2
 
+defs = service.definitions
+
 import threading
 import urllib
 import urllib2
@@ -183,26 +185,17 @@ class web_browser(service.service):
 
     NAME = 'webbrowser'
 
-    multi_view_type = BrowserView
-    multi_view_book = 'view'    
-
-    def init(self):
-        self.__last_view = None
+    class Browser(defs.View):
+        view_type = BrowserView
+        book_name = 'view'    
 
     def cmd_browse(self, url=None, newview=False):
-        view = self.create_view()
+        view = self.create_view('Browser')
         if not url:
             url = 'http://pseudoscience.co.uk/'
             url = ('/usr/share/gtk-doc/html/pygtkmozembed/'
                    'gtkmozembed-class-reference.html')
+        self.show_view(view=view)
         view.fetch(url)
-
-    def create_view(self):
-        view = self.create_multi_view()
-        view.connect('raised', self.cb_view_raised)
-        return view
-    
-    def cb_view_raised(self, view):
-        self.__last_view = view
 
 Service = web_browser

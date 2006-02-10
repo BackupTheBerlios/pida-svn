@@ -67,6 +67,10 @@ class terminal_manager(service.service):
 
     multi_view_type = terminal_view
 
+    class TerminalView(defs.View):
+        view_type = terminal_view
+        book_name = 'view'
+
     def get_multi_view_book_type(self):
         opt = self.opt('general', 'terminal_location')
         return view_location_map[opt]
@@ -110,11 +114,13 @@ class terminal_manager(service.service):
                     short_title='Terminal', kwdict={}):
         if term_type == None:
             term_type = self.opt('general', 'terminal_type').lower()
-        self.create_multi_view(term_type=term_type,
-                               command_args=command_args,
-                               icon_name=icon_name,
-                               short_title=short_title,
-                               **kwdict)
+        view = self.create_view('TerminalView',
+                                term_type=term_type,
+                                command_args=command_args,
+                                icon_name=icon_name,
+                                short_title=short_title,
+                                **kwdict)
+        self.show_view(view=view)
 
     def cmd_execute_shell(self, term_type=None, kwdict={}):
         shellcommand = self.opt('shell', 'command')

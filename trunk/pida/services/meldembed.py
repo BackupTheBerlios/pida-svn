@@ -164,8 +164,9 @@ import os
 
 class Meld(service.service):
 
-    multi_view_type = MeldView
-    multi_view_book = 'view'
+    class Meld(defs.View):
+        view_type = MeldView
+        book_name = 'view'
     
     def init(self):
         self.__views = {}
@@ -181,14 +182,15 @@ class Meld(service.service):
     def create_meld_view(self, filename):
         if filename in self.__views:
             uid = self.__views[filename]
-            self.raise_multi_view(uid)
+            self.get_view(uid).raise_page()
         else:
-            view = self.create_multi_view()
+            view = self.create_view('Meld')
+            self.show_view(view=view)
             view.view(filename)
             self.__views[filename] = view.unique_id
             return view
 
-    def cb_multi_view_closed(self, view):
+    def view_closed(self, view):
         delete_file = None
         for filename, uid in self.__views.iteritems():
             if uid == view.unique_id:

@@ -121,8 +121,9 @@ class document_library(service.service):
 
     display_name = 'Documentation Library'
 
-    single_view_type = bookmark_view
-    single_view_book = 'plugin'
+    class Library(defs.View):
+        view_type = bookmark_view
+        book_name = 'plugin'
 
     class book_locations(defs.optiongroup):
         """Locations of books in the file system."""
@@ -135,6 +136,7 @@ class document_library(service.service):
         self.get_action().set_active(False)
         self.books = []
         self.fetch()
+        self.__view = None
 
     def fetch_thread(self):
         t = threading.Thread(target=self.fetch_books)
@@ -170,18 +172,20 @@ class document_library(service.service):
     def act_documentation_library(self, action):
         """View the documentation library."""
         if action.get_active():
-            self.create_single_view()
+            self.__view = self.create_view('Library')
             for book in self.books:
-                self.single_view.book_found(book)
-            self.single_view.books_done()
+                self.__view.book_found(book)
+            self.__view.books_done()
+            self.show_view(view=self.__view)
         else:
-            if self.single_view is not None:
-                self.single_view.close()
+            if self.__view is not None:
+                self.close_view(self.__view)
 
     def get_action(self):
         return self.action_group.get_action('library+documentation_library')
 
-    def cb_single_view_closed(self, view):
+    def view_closed(self, view):
+        self.__view = None
         self.get_action().set_active(False)
 
     def get_menu_definition(self):

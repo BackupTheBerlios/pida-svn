@@ -29,7 +29,9 @@ defs = service.definitions
 
 class file_manager(service.service):
 
-    plugin_view_type = filemanager.FileBrowser
+    class FileBrowser(defs.View):
+        view_type = filemanager.FileBrowser
+        book_name = 'content'
 
     class directory_changed(defs.event):
         """Called when the current directory is changed."""
@@ -66,6 +68,10 @@ class file_manager(service.service):
         
         self.boss.call_command('buffermanager', 'open_file',
                                 filename=filename)
+
+    def get_plugin_view(self):
+        return self.get_first_view('FileBrowser')
+    plugin_view = property(get_plugin_view)
 
         
 Service = file_manager

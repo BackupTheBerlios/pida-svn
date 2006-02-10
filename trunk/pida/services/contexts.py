@@ -37,12 +37,6 @@ import pida.core.actions as actions
 
 class Contexts(service.service):
 
-    class contexts(defs.database):
-        #DATA_VIEW = dataview.data_view
-        class scripts(defs.field):
-            rtype = types.string
-            default = ''
-
     def init(self):
         self.__defaults = {}
         self.__defaults['file_vc'] = file_versioncontrol_context()
@@ -50,9 +44,6 @@ class Contexts(service.service):
         self.__defaults['project_directory'] = project_directory_context()
         self.__defaults['project'] = project_context()
         self.__defaults['file_parent'] = file_parent_context()
-        for contextname in self.__defaults:
-            if contextname not in self.databases['contexts']:
-                self.add_data_item('contexts', contextname, [])
 
     def cmd_get_contexts(self, contextname, globaldict):
         if contextname in self.__defaults:

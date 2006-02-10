@@ -28,6 +28,8 @@ import pida.core.service as service
 import pida.pidagtk.tree as tree
 import pida.pidagtk.contentview as contentview
 
+defs = service.definitions
+
 class ActionWrapper(object):
     
     def __init__(self, action):
@@ -87,8 +89,10 @@ class KeyboardConfigurator(contentview.content_view):
 
 class KeyboardShortcuts(service.service):
 
-    single_view_type = KeyboardConfigurator
-    single_view_book = 'ext'
+
+    class ShortcutsView(defs.View):
+        view_type = KeyboardConfigurator
+        book_name = 'ext'
 
     def reset(self):
         self.actions = self.boss.call_command('window', 'get_action_groups')
@@ -97,11 +101,12 @@ class KeyboardShortcuts(service.service):
         self.call('edit')
 
     def cmd_edit(self):
-        self.create_single_view()
+        view = self.create_view('ShortcutsView')
+        self.show_view(view=view)
         for actiongroup in self.actions:
             for action in actiongroup.list_actions():
                 if hasattr(action, 'keyval') and action.keyval:
-                    self.single_view.add_action(action)
+                    view.add_action(action)
 
     def get_menu_definition(self):
         return """
@@ -116,6 +121,7 @@ class KeyboardShortcuts(service.service):
                 </menu>
                 </menubar>
               """
+
 
 
 Service = KeyboardShortcuts

@@ -99,8 +99,9 @@ class culebra_editor(service.service):
 
     display_name = 'Culebra Text Editor'
 
-    multi_view_type = culebra_view
-    multi_view_book = 'edit'
+    class Culebra(defs.View):
+        view_type = culebra_view
+        book_name = 'edit'
     
     class general(defs.optiongroup):
         class background_color(defs.option):
@@ -146,7 +147,7 @@ class culebra_editor(service.service):
                 self._save_action = action
 
     def __load_document(self, document):
-        view = self.create_multi_view(
+        view = self.create_view('Culebra',
             filename=document.filename,
             action_group=self.action_group,
             background_color = self.get_background_color(),
@@ -155,6 +156,7 @@ class culebra_editor(service.service):
         self.__views[document.unique_id] = view
         self.__documents[view.unique_id] = document
         view.connect_keys()
+        self.show_view(view=view)
 
     def __view_document(self, document):
         view = self.__views[document.unique_id]
@@ -285,10 +287,7 @@ class culebra_editor(service.service):
     def cmd_close(self, document):
         #view = self.__views[document.unique_id]
         view = self.current_view
-        
-        if self.confirm_multi_view_controlbar_clicked_close(view):
-            view.remove()
-            self.cb_multi_view_closed(view)
+        self.close_view(view)
 
     def cmd_can_close(self):
         buffs = [view.buffer for view in self.__views.values() if view.buffer.get_modified()]
@@ -307,7 +306,7 @@ class culebra_editor(service.service):
         
     ###############
     # Callbacks
-    def cb_multi_view_closed(self, view):
+    def view_closed(self, view):
         if view.unique_id in self.__documents:
             doc = self.__documents[view.unique_id]
             del self.__documents[view.unique_id]
@@ -315,7 +314,7 @@ class culebra_editor(service.service):
             self.boss.call_command('buffermanager', 'document_closed',
                                    document=doc)
 
-    def confirm_multi_view_controlbar_clicked_close(self, view):
+    def view_confirm_close(self, view):
         buff = view.buffer
         
         # If buffer was not modified you can safely close it

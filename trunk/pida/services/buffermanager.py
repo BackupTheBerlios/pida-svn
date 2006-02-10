@@ -124,7 +124,11 @@ class Buffermanager(service.service):
     
     display_name = 'Buffer Management'
     
-    plugin_view_type = BufferView
+    #plugin_view_type = BufferView
+    class BufferView(defs.View):
+        view_type = BufferView
+        book_name = 'content'
+    
 
     class sessions(defs.optiongroup):
         """Session management."""
@@ -561,6 +565,10 @@ class Buffermanager(service.service):
     def stop(self):
         most_recent = os.path.join(self.boss.pida_home, 'most-recent.session')
         self.call('save_session', session_filename=most_recent)
+
+    def get_single_view(self):
+        return self.get_first_view('BufferView')
+    plugin_view = property(get_single_view)
 
 
 

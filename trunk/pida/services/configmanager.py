@@ -27,6 +27,8 @@ import pida.core.service as service
 from pida.core import actions
 import pida.pidagtk.configview as configview
 
+defs = service.definitions
+
 class config_view(configview.config_view):
 
     ICON_NAME = 'config'
@@ -37,12 +39,14 @@ class config_view(configview.config_view):
 
 class config_manager(service.service):
     
-    single_view_type = config_view
-    single_view_book = 'ext'
+    class ConfigView(defs.View):
+        view_type = config_view
+        book_name = 'ext'
 
     def cmd_edit(self):
         regs = [(svc.NAME, svc.options) for svc in self.boss.services]
-        view = self.create_single_view()
+        view = self.create_view('ConfigView')
+        self.show_view(view=view)
         view.set_registries(regs)
         view.connect('data-changed', self.cb_view_data_changed)
 

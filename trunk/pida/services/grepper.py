@@ -215,8 +215,9 @@ class GrepView(contentview.content_view):
 
 class Grepper(service.service):
 
-    single_view_type = GrepView
-    single_view_book = 'view'
+    class GrepView(defs.View):
+        view_type = GrepView
+        book_name = 'view'
 
     display_name = 'Grep Search'
 
@@ -264,7 +265,8 @@ class Grepper(service.service):
 
     def cmd_find_interactive(self, directories=None, ignorevcs=None,
                              recursive=None):
-        self.create_single_view()
+        view = self.create_view('GrepView')
+        self.show_view(view=view)
         options = GrepOptions()
         if directories is None:
             proj = self.boss.call_command('projectmanager',
@@ -335,6 +337,10 @@ class Grepper(service.service):
                 </placeholder>
                 </toolbar>
             """
+
+    def get_single_view(self):
+        return self.get_first_view('GrepView')
+    single_view = property(get_single_view)
     
     
 BINARY_RE = re.compile(r'[\000-\010\013\014\016-\037\200-\377]')

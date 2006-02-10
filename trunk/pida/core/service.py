@@ -27,7 +27,6 @@ import event
 import command
 import shelve
 import registry
-import databases
 import actions
 import definitions
 
@@ -118,136 +117,6 @@ class commands_mixin(object):
     def call_external(self, servicename, commandname, **kw):
         svc = self.get_service(servicename)
         return svc.call(commandname, **kw)
-
-
-class data_mixin(object):
-    """Data support."""
-    __databases__ = []
-
-    def init(self):
-        self.__databases = {}
-        self.__schemas = {}
-        self.__views = {}
-        self.__datanames = {}
-        self.__dataview_types = {}
-        self.__init()
-
-    def __init(self):
-        dirpath = os.path.join(self.boss.pida_home, 'data', self.NAME)
-        if len(self.__databases__):
-            if not os.path.exists(dirpath):
-                os.mkdir(dirpath)
-            for dbclass in self.__class__.__databases__:
-                filepath = os.path.join(dirpath, '%s.dat' %
-                                        dbclass.__name__)
-                name = dbclass.__name__
-                self.__databases[name] = databases.data_base(filepath)
-                data_view = getattr(dbclass, 'DATA_VIEW', None)
-                self.__dataview_types[name] = data_view
-                fields = []
-                for fieldname in dir(dbclass):
-                    field = getattr(dbclass, fieldname)
-                    if len(getattr(field, '__bases__', [])):
-                        if field.__bases__[0].__name__ == 'field':
-                            fields.append((fieldname, field.rtype,
-                                           field.default, field.__doc__))
-                self.__schemas[name] = fields
-
-    def get_databases(self):
-        return self.__databases
-    databases = property(get_databases)
-
-    def get_schema(self, name):
-        return self.__schemas[name]
-    schema = property(get_schema)
-
-    def close_databases(self):
-        for name, db in self.databases.iteritems():
-            db.close()
-
-    def add_data_item(self, dataname, key, item=None):
-        if self.has_database(dataname):
-            db = self.databases[dataname]
-            db[key] = item
-            db.sync()
-            self.cb_data_changed(dataname)
-
-    def create_data_item(self, dataname, itemname, **kw):
-        if self.has_database(dataname):
-            schema = self.__schemas[dataname]
-            record = databases.data_record()
-            for fieldname, rtype, default, doc in schema:
-                if fieldname in kw:
-                    value = kw[fieldname]
-                else:
-                    value = default
-                setattr(record, fieldname, value)
-            self.add_data_item(dataname, itemname, record)
-            return record
-
-    def iter_database(self, dataname):
-        if self.has_database(dataname):
-            db = self.databases[dataname]
-            for k in db:
-                yield k, db[k]
-
-    def create_data_view(self, dataname):
-        if self.has_database(dataname):
-            if dataname not in self.__views:
-                schema = self.__schemas[dataname]
-                view_type = self.__dataview_types[dataname]
-                if view_type is not None:
-                    view = view_type(self, prefix='data_view')
-                    view.set_database(dataname, self.databases[dataname], schema)
-                    self.boss.call_command('window', 'append_page',
-                                           bookname='view', view=view)
-                    self.__views[dataname] = view
-                    self.__datanames[view.unique_id] = dataname
-                else:
-                    raise NotImplementedError(
-                        '%s Has not specified a DATA_VIEW' % self.NAME)
-
-    def cb_data_view_controlbar_clicked_close(self, view, toolbar, name):
-        assert view in self.__views.values()
-        if self.confirm_data_view_controlbar_clicked_close(view):
-            view.remove()
-            dataname = self.__datanames[view.unique_id]
-            del self.__views[dataname]
-            del self.__datanames[view.unique_id]
-            view.destroy()
-
-    def cb_data_view_newitem(self, dataname, itemname):
-        self.create_data_item(dataname, itemname)
-
-    def cb_data_view_applied(self, dataname):
-        pass
-
-    def cb_data_changed(self, dataname):
-        pass
-
-    def confirm_data_view_controlbar_clicked_close(self, view):
-        return True
-
-    def has_database(self, dataname):
-        has = dataname in self.__schemas
-        if not has:
-            self.log.info('attempt to access non-existing database %s',
-                          dataname)
-        return has
-
-    def raise_data_view(self, dataname=None):
-        if dataname is None:
-            if len(self.__views) == 1:
-                for k in self.__views:
-                    self.__views[k].raise_page()
-            else:
-                raise TypeError('Must specify dataname when there is '
-                                'more than one data view')
-        else:
-            if dataname in self.__views:
-                self.__views[dataname].raise_page()
-            else:
-                self.log.warn('data view %s is unavailable', dataname)
 
 
 class actions_mixin(object):
@@ -346,6 +215,8 @@ class language_type_mixin(object):
         if hasattr(self, 'uncache'):
             self.uncache(document)
 
+    plugin_view = None
+
 
 class project_type_mixin(object):
 
@@ -362,188 +233,15 @@ class project_type_mixin(object):
                                    handler_type=handler_type)
 
 
-class plugin_view_mixin(object):
-
-    plugin_view_type = None
-
-    def init(self):
-        self.__view = None
-
-    def create_plugin_view(self, **kw):
-        if self.plugin_view_type is not None:
-            self.__view = self.plugin_view_type(self, 'plugin_view', **kw)
-
-    def get_plugin_view(self):
-        if self.__view is None:
-            self.create_plugin_view()
-        return self.__view
-
-    plugin_view = property(get_plugin_view)
-
-
-class lang_view_mixin(object):
-    """Create a language view mixin based on view type."""
-
-    lang_view_type = None
-
-    def init(self):
-        self.__view = None
-
-    def create_lang_view(self, *args, **kwargs):
-        if self.lang_view_type:
-            self.__view = self.lang_view_type(self,
-                                              prefix='lang_view')
-
-    def get_lang_view(self):
-        if self.__view is None:
-            self.create_lang_view()
-        return self.__view
-
-    lang_view = property(get_lang_view)
-
-
-class single_view_mixin(object):
-
-    single_view_type = None
-    single_view_book = None
-
-    def init(self):
-        self.__view = None
-
-
-
-    def create_single_view(self, *args, **kwargs):
-        if self.single_view_type is not None:
-            if self.__view is None:
-                self.__view = self.single_view_type(self,
-                    prefix='single_view', *args, **kwargs)
-                self.__view.connect('removed', self.cb_single_view_removed)
-                if self.single_view_book is not None:
-                    self.boss.call_command('window', 'append_page',
-                                       bookname=self.single_view_book,
-                                       view=self.__view)
-            self.__view.raise_page()
-            return self.__view
-
-    def raise_single_view(self, name):
-        if self.__view is not None:
-            self.__view.raise_page(name)
-        else:
-            self.create_single_view()
-
-    def cb_single_view_controlbar_clicked_close(self, view, toolbar, name):
-        assert(view is self.__view)
-        if self.confirm_single_view_controlbar_clicked_close(view):
-            self.__view.remove()
-
-    def cb_single_view_controlbar_clicked_detach(self, view, toolbar, name):
-        assert(view is self.__view)
-        try:
-            ggp = view.get_parent().get_parent().get_parent()
-        except:
-            ggp = None
-        if ggp.__class__.__name__ == 'external_window':
-            bookname = self.single_view_book
-        else:
-            bookname = 'ext'
-        self.__view.detach()
-        self.boss.call_command('window', 'append_page',
-                                bookname=bookname,
-                                view=self.__view)
-        self.__view.raise_page()
-            
-
-    def cb_single_view_removed(self, view):
-        self.__view.destroy()
-        self.__view = None
-        self.cb_single_view_closed(view)
-
-    def cb_single_view_closed(self, view):
-        pass
-
-    def confirm_single_view_controlbar_clicked_close(self, view):
-        return True
-
-    def get_single_view(self):
-        return self.__view
-
-    single_view = property(get_single_view)
-
-
-class multi_view_mixin(object):
-
-    def init(self):
-        self.__views = {}
-
-    def create_multi_view(self, *args, **kw):
-        if self.multi_view_type is None:
-            return
-        view = self.multi_view_type(self, prefix='multi_view', *args, **kw)
-        self.__views[view.unique_id] = view
-        self.boss.call_command('window', 'append_page',
-                                bookname=self.multi_view_book,
-                                view=view)
-        return view
-
-    def raise_multi_view(self, unique_id):
-        if unique_id in self.__views:
-            self.__views[unique_id].raise_page()
-            return self.__views[unique_id]
-        else:
-            self.log.info('attempt to raise a non-existing multiview')
-
-    def cb_multi_view_controlbar_clicked_close(self, view, toolbar, name):
-        if self.confirm_multi_view_controlbar_clicked_close(view):
-            def closed():
-                view.remove()
-                self.cb_multi_view_closed(view)
-                del self.__views[view.unique_id]
-                #view.destroy()
-            gtk.idle_add(closed)
-
-    def cb_multi_view_controlbar_clicked_detach(self, view, toolbar, name):
-        try:
-            ggp = view.get_parent().get_parent().get_parent()
-        except:
-            ggp = None
-        if ggp.__class__.__name__ == 'external_window':
-            bookname = self.multi_view_book
-        else:
-            bookname = 'ext'
-        view.detach()
-        self.boss.call_command('window', 'append_page',
-                                bookname=bookname,
-                                view=view)
-        view.raise_page()
-
-    def confirm_multi_view_controlbar_clicked_close(self, view):
-        return True
-
-    def cb_multi_view_closed(self, view):
-        pass
-
-    def get_multi_view(self, unique_id):
-        return self.__views.get(unique_id, None)
-
-    def get_multi_views(self):
-        for view in self.__views.values():
-            yield view
-    multi_views = property(get_multi_views)
-
 from views import view_mixin
 
 service_base_classes =  [options_mixin,
                          commands_mixin,
                          events_mixin,
                          bindings_mixin,
-                         data_mixin,
+                         actions_mixin,
                          document_type_mixin,
                          language_type_mixin,
-                         actions_mixin,
-                         plugin_view_mixin,
-                         single_view_mixin,
-                         lang_view_mixin,
-                         multi_view_mixin,
                          project_type_mixin,
                          view_mixin]
 
