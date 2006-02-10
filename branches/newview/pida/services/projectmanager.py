@@ -144,10 +144,13 @@ class ProjectManager(service.service):
 
     # view definitions
 
-    plugin_view_type = project_view
+    class ProjectView(defs.View):
+        view_type = project_view
+        book_name = 'content'
 
-    single_view_type = configview.config_view
-    single_view_book = 'ext'
+    class ProjectEditor(defs.View):
+        view_type = configview.config_view
+        book_name = 'ext'
 
     class default(defs.project_type):
         project_type_name = 'default'
@@ -170,6 +173,7 @@ class ProjectManager(service.service):
         if not os.path.exists(self.__history_file):
             self.__write_history()
         self.__started = False
+        self.create_view('ProjectView')
         self.__init_project_toolbar()
 
     def __init_project_toolbar(self):
@@ -251,11 +255,12 @@ class ProjectManager(service.service):
     def __launch_editor(self, projects=None, current_project=None):
         if projects is None:
             projects = self.projects
-        view = self.create_single_view()
+        view = self.create_view('ProjectEditor')
         view.connect('data-changed', self.cb_data_changed)
         view.set_registries([(p.name, p.options) for p in projects])
         if current_project is not None:
-            self.single_view.show_page(current_project.name)
+            view.show_page(current_project.name)
+        self.show_view(view=view)
 
     def __current_project_changed(self, project):
         if project is not self.__current_project:
@@ -272,10 +277,11 @@ class ProjectManager(service.service):
                          self.cb_combo_changed)
 
     def __current_project_activated(self):
-        directory = self.__current_project.browse_directory
-        if directory is not None:
-            self.boss.call_command('filemanager', 'browse',
-                                    directory=directory)
+        if self.__current_project is not None:
+            directory = self.__current_project.browse_directory
+            if directory is not None:
+                self.boss.call_command('filemanager', 'browse',
+                                        directory=directory)
 
     # external interface
    
@@ -443,6 +449,10 @@ class ProjectManager(service.service):
             </placeholder>
             </toolbar>
         """
+
+    def get_plugin_view(self):
+        return self.get_first_view('ProjectView')
+    plugin_view = property(get_plugin_view)
 
 
 Service = ProjectManager

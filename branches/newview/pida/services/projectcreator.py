@@ -131,9 +131,6 @@ class project_options(gtk.VBox):
 
 class project_creator(service.service):
 
-    single_view_type = project_creator_view
-    single_view_book = 'content'
-
     def init(self):
         self.__projectsdir = os.path.join(self.boss.pida_home, 'projects')
 
