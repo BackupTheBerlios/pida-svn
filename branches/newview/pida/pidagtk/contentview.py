@@ -141,6 +141,11 @@ class content_view(gtk.VBox):
 
         self.__toolbar = gtk.Toolbar()
         self.__toolbar_area.pack_start(self.__toolbar)
+        self.__toolbar.add_events(gtk.gdk.BUTTON_PRESS_MASK)
+        def _rc(tb, event):
+            if event.button == 3:
+                self.create_detach_popup(event)
+        self.__toolbar.connect('button-press-event', _rc)
         
         if self.HAS_TITLE:
             lti = gtk.ToolItem()
