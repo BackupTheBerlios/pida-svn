@@ -59,7 +59,8 @@ class view_mixin(object):
         return True
 
     def view_close(self, view):
-        view.remove()
+        if self.view_confirm_close(view):
+            view.remove()
 
     def __view_closed_base(self, view):
         del self.__views[view.unique_id]
