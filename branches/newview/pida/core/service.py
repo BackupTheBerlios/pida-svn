@@ -345,6 +345,8 @@ class language_type_mixin(object):
         if hasattr(self, 'uncache'):
             self.uncache(document)
 
+    plugin_view = None
+
 
 class project_type_mixin(object):
 
@@ -538,10 +540,10 @@ service_base_classes =  [options_mixin,
                          document_type_mixin,
                          language_type_mixin,
                          actions_mixin,
-                         plugin_view_mixin,
-                         single_view_mixin,
-                         lang_view_mixin,
-                         multi_view_mixin,
+                         #plugin_view_mixin,
+                         #single_view_mixin,
+                         #lang_view_mixin,
+                         #multi_view_mixin,
                          project_type_mixin,
                          view_mixin]
 

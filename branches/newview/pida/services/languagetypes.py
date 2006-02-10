@@ -97,7 +97,7 @@ class language_types(service.service):
             return
         self.__started = True
         for handler in self.__get_active_handlers():
-            if handler.active and hasattr(handler.service, 'lang_view_type'):
+            if handler.active:
                 view = handler.service.plugin_view
                 if view is not None:
                     view.set_sensitive(True)
