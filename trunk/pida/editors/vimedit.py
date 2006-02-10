@@ -102,6 +102,10 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
         self.call('close', filename=self.current_file)
         return False
 
+    def get_single_view(self):
+        return self.__view
+    single_view = property(get_single_view)
+
 
 Service = vim_embedded_editor
 
