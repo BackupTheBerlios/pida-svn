@@ -308,12 +308,10 @@ class WindowManager(service.service):
                 service.show_view(view=view)
             elif service.NAME == 'projectmanager':
                 service.show_view(view=service.plugin_view)
-            elif service.plugin_view_type is not None:
-                if service.NAME in ['projectmanager',
-                                    'filemanager']:
-                    self.contentview.append_page(service.plugin_view)
-                else:
-                    self.pluginview.append_page(service.plugin_view)
+            #elif service.plugin_view is not None:
+            #    self.show_view(view=service.plugin_view)
+            #elif service.plugin_view_type is not None:
+            #    self.pluginview.append_page(service.plugin_view)
         def _s():
             self.contentview.notebook.set_current_page(0)
         gtk.idle_add(_s)

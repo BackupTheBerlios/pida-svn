@@ -71,7 +71,16 @@ class todo_view(contentview.content_view):
     
 class todo(service.service):
     
-    lang_view_type = todo_view
+    class TODO(defs.View):
+        view_type = todo_view
+        book_name = 'plugin'
+
+    def init(self):
+        self.__view = self.create_view('TODO')
+
+    def get_plugin_view(self):
+        return self.__view
+    plugin_view = property(get_plugin_view)
 
     display_name = 'TODO List'
 

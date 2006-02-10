@@ -89,7 +89,16 @@ class python_source_view(contentview.content_view):
 
 class PythonBrowser(service.service):
 
-    lang_view_type = python_source_view
+    class PythonBrowser(defs.View):
+        view_type = python_source_view
+        book_name = 'plugin'
+
+    def init(self):
+        self.__view = self.create_view('PythonBrowser')
+
+    def get_plugin_view(self):
+        return self.__view
+    plugin_view = property(get_plugin_view)
 
     class python_browser(defs.language_handler):
         file_name_globs = ['*.py']

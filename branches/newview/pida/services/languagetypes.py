@@ -34,6 +34,8 @@ import pida.core.actions as actions
 import pida.core.service as service
 import pida.core.languages as languages
 
+defs = service.definitions
+
 import pida.pidagtk.tree as tree
 import pida.pidagtk.contentview as contentview
 
@@ -59,7 +61,7 @@ class language_manager_view(contentview.content_view):
     def set_file_handlers(self, handlers):
         self.__list.clear()
         for handler in handlers:
-            if handler.service.lang_view_type is not None:
+            if handler.service.plugin_view is not None:
                 key, name = self.get_key_name_from_class(handler)
                 handler.display_name = name
                 self.__list.add_item(handler, key=key)
@@ -68,23 +70,19 @@ class language_manager_view(contentview.content_view):
         item.value.active = not item.value.active
         item.reset_markup()
         handler = item.value
+        view = handler.service.plugin_view
         if item.value.active:
-            view = handler.service.lang_view
-            self.service.boss.call_command('window', 'append_page',
-                                   view=view,
-                                   bookname='plugin')
+            self.service.show_view(view=view)
         else:
-            view = handler.service.lang_view
-            if view:
-                view.detach()
-        #self.service.call('show_handlers')
+            view.detach()
         self.service.call('save_state')
 
 
 class language_types(service.service):
 
-    single_view_type = language_manager_view
-    single_view_book = 'ext'
+    class Manager(defs.View):
+        view_type = language_manager_view
+        book_name = 'ext'
 
     def init(self):
         self.__langs = {}
@@ -100,12 +98,10 @@ class language_types(service.service):
         self.__started = True
         for handler in self.__get_active_handlers():
             if handler.active and hasattr(handler.service, 'lang_view_type'):
-                view = handler.service.lang_view
+                view = handler.service.plugin_view
                 if view is not None:
                     view.set_sensitive(True)
-                    self.boss.call_command('window', 'append_page',
-                                            bookname='plugin',
-                                           view=view)
+                    self.show_view(view=view)
 
     def stop(self):
         self.call('save_state')
@@ -117,8 +113,9 @@ class language_types(service.service):
         f.close()
 
     def cmd_edit(self):
-        self.create_single_view()
-        self.single_view.set_file_handlers(self.__get_all_handlers())
+        view = self.create_view('Manager')
+        view.set_file_handlers(self.__get_all_handlers())
+        self.show_view(view=view)
 
     def cmd_register_language_handler(self, handler_type):
         handler = handler_type(handler_type.service)
