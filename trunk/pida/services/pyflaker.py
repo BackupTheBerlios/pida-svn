@@ -92,14 +92,14 @@ class pyflaker(service.service):
                 messages = self.service.call('check',
                               code_string=document.string,
                               filename=document.filename)
-                self.service.lang_view.set_messages(messages)
+                self.service.plugin_view.set_messages(messages)
                 self.__cached[document.unique_id] = (messages,
                                document.stat.st_mtime)
             if messages is None:
                 t = threading.Thread(target=load)
                 t.run()
             else:
-                self.service.lang_view.set_messages(messages)
+                self.service.plugin_view.set_messages(messages)
 
     def cmd_check(self, code_string, filename):
         try:

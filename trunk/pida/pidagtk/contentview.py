@@ -226,6 +226,7 @@ class content_view(gtk.VBox):
             self.__det_act.set_sensitive(False)
 
     def internalise(self):
+        self.detach()
         self.__det_act.set_sensitive(True)
         self.service.boss.call_command('window', 'append_page',
                 view=self, bookname=self.view_definition.book_name)

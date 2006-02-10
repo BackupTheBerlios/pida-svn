@@ -119,7 +119,7 @@ class PythonBrowser(service.service):
             def load():
                 root_node = pythonparser.\
                     get_nodes_from_string(document.string)
-                self.service.lang_view.set_source_nodes(root_node)
+                self.service.plugin_view.set_source_nodes(root_node)
                 self.__cached[document.unique_id] = (root_node,
                                document.stat.st_mtime)
             if not root_node:
@@ -127,7 +127,7 @@ class PythonBrowser(service.service):
                 #t = threading.Thread(target=load)
                 #t.run()
             else:
-                self.service.lang_view.set_source_nodes(root_node)
+                self.service.plugin_view.set_source_nodes(root_node)
 
     def bnd_buffermanager_document_modified(self, document):
         self.uncache(document)

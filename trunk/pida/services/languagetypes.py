@@ -145,8 +145,8 @@ class language_types(service.service):
         handlers = self.call('get_language_handlers', document=document)
         for handler in handlers:
             handler.action_group.set_visible(True)
-            if hasattr(handler.service, 'lang_view_type'):
-                view = handler.service.lang_view
+            if handler.service.plugin_view is not None:
+                view = handler.service.plugin_view
                 if view is not None:
                     view.set_sensitive(True)
             handler.load_document(document)

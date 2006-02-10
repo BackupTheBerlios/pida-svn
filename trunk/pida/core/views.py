@@ -61,14 +61,10 @@ class view_mixin(object):
         pass
 
     def detach_view(self, view, detach):
-        view.detach()
         if detach:
-            bookname = 'ext'
+            view.externalise()
         else:
-            view.show_controlbox()
-            bookname = view.view_definition.book_name
-        self.boss.call_command('window', 'append_page',
-                               view=view, bookname=bookname)
+            view.internalise()
 
     def view_detached_base(self, view):
         self.view_detached(self, view)
