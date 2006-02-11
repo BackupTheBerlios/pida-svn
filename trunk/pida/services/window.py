@@ -89,8 +89,6 @@ class WindowManager(service.service):
     
 
     def init(self):
-        self.__splash = splash
-        self.__splash.message('<b>Starting PIDA</b>')
         self.__acels = gtk.AccelGroup()
         self._create_uim()
 
@@ -210,7 +208,6 @@ class WindowManager(service.service):
         self.call('set_title', title=title)
 
     def bnd_editormanager_started(self):
-        self.__splash.destroy()
         self.call('show_window')
 
     @actions.action(label='Next View',
