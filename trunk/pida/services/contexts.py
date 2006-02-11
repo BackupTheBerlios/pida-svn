@@ -348,7 +348,7 @@ class FilesystemContextMixin(object):
         directory = self.get_directory(filename)
         self.boss.call_command('filemanager',
                                'browse',
-                               directory=filename)
+                               directory=directory)
 
     @actions.action(
         name='terminal',
