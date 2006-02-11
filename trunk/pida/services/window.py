@@ -87,7 +87,6 @@ class WindowManager(service.service):
             rtype = types.boolean
             default = True
     
-
     def init(self):
         self.__acels = gtk.AccelGroup()
         self._create_uim()
@@ -267,7 +266,6 @@ class WindowManager(service.service):
         else:
             self.menubar.hide_all()
     
-
     def _bind_views(self):
         self._cm = ContentManager()
         self.contentview = self._cm.create_book('content')
