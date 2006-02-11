@@ -220,7 +220,7 @@ class vim_editor(object):
             if doc is not None:
                 self.__servers[server].remove(doc.unique_id)
                 del self.__documents[uid]
-                self.__currentfile = None
+                self.__currentdocument = None
                 self.boss.call_command('buffermanager', 'document_closed',
                                             document=doc)
 
@@ -251,7 +251,7 @@ class vim_editor(object):
         return self.__cw
     vim_window= property(get_vim_window)
 
-    def get_current_file(self):
-        return self.__currentfile
-    current_file = property(get_current_file)
+    def get_current_document(self):
+        return self.__currentdocument
+    current_document = property(get_current_document)
 

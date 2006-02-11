@@ -99,9 +99,12 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
     started = property(has_started)
 
     def view_confirm_close(self, view):
-        self.call('close', filename=self.current_file)
-        return False
-
+        doc=self.current_document
+        if doc:
+            self.call('close', filename=self.current_document.filename)
+            return False
+        else:
+            return True
     def get_single_view(self):
         return self.__view
     single_view = property(get_single_view)
