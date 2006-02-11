@@ -24,7 +24,6 @@
 
 import pida.core.service as service
 import pida.core.registry as registry
-import pida.pidagtk.contentbook as contentbook
 import pida.pidagtk.contentview as contentview
 import pida.pidagtk.filedialogs as filedialogs
 import pida.pidagtk.tree as tree
