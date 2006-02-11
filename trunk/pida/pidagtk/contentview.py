@@ -28,43 +28,9 @@ import time
 import gtk
 import pango
 import gobject
-import contentbook
+import icons
 
-class external_window(gtk.Window):
 
-    def __init__(self, *args):
-        super(external_window, self).__init__()
-        from pkg_resources import Requirement, resource_filename
-        icon_file = resource_filename(Requirement.parse('pida'),
-                              'pida-icon.png')
-        im = gtk.Image()
-        im.set_from_file(icon_file)
-        pb = im.get_pixbuf()
-        self.set_icon(pb)
-        self.__book = contentbook.ContentBook()
-        self.__book.notebook.set_show_tabs(False)
-        self.add(self.__book)
-        self.connect('destroy', self.on_window__destroy)
-        self.resize(600, 480)
-        self.set_position(gtk.WIN_POS_CENTER)
-        self.__book.connect('empty', self.cb_empty)
-
-    def cb_empty(self, holder):
-        self.destroy()
-
-    def append_page(self, page):
-        self.__book.append_page(page)
-        self.set_title(page.long_title)
-        self.show_all()
-        page.hide_title()
-        page.hide_controlbox()
-        self.present()
-
-    def on_window__destroy(self, window):
-        self.hide()
-        self.remove(self.__book)
-        self.__book.remove_pages()
-        return True
 
 class content_view(gtk.VBox):
     __gsignals__ = {'short-title-changed': (
@@ -203,58 +169,42 @@ class content_view(gtk.VBox):
                                     label='Close',
                                     tooltip='Close this view',
                                     stock_id=gtk.STOCK_CLOSE)
-        self.__close_act.connect('activate', self.cb_close_action_activated)
-        self.__det_act.connect('activate', self.cb_detach_action_activated)
+        self.__close_act.connect_after('activate', self.cb_close_action_activated)
+        self.__det_act.connect_after('activate', self.cb_detach_action_activated)
 
     def init(self):
         pass
 
-    def close(self):
-        self.remove()
+    def show(self):
+        self.service.show_view(view=self)
 
     def remove(self):
-        if self.__holder is not None:
-            self.__holder.remove_page(self)
+        self.service.close_view(self)
+
+    close = remove
     
     def detach(self):
-        if self.__holder is not None:
-            self.__holder.detach_page(self)
-            self.__holder = None
-
-    def externalise(self):
-        self.detach()
-        book = external_window()
-        book.append_page(self)
-        if self.view_definition.book_name == 'ext':
-            self.__det_act.set_sensitive(False)
-
-    def internalise(self):
-        self.detach()
-        self.__det_act.set_sensitive(True)
-        self.service.boss.call_command('window', 'append_page',
-                view=self, bookname=self.view_definition.book_name)
-        self.show_controlbox()
+        self.service.detach_view(self, self.__det_act.get_active())
 
     def raise_page(self):
-        if self.__holder is not None:
-            self.__holder.set_page(self)
+        self.service.raise_view(self)
 
     def hide_title(self):
         self.__long_title_label.hide()
 
     def hide_controlbox(self):
-        if self.HAS_CONTROL_BOX:
+        if self.HAS_CLOSE_BUTTON and self.HAS_CONTROL_BOX:
             self.__close_button.hide()
 
     def show_controlbox(self):
-        if self.HAS_CONTROL_BOX:
+        if self.HAS_CLOSE_BUTTON and self.HAS_CONTROL_BOX:
             self.__close_button.show()
 
     def cb_close_action_activated(self, action):
         self.service.close_view(self)
 
     def cb_detach_action_activated(self, action):
-        self.service.detach_view(self, action.get_active())
+        self.detach()
 
     def get_service(self):
         return self.__service
@@ -315,21 +265,42 @@ class content_view(gtk.VBox):
     prefix = property(get_prefix)
 
     def create_icon(self):
-        import icons
-        icon = icons.icons.get_image(self.icon_name)
-        eb = self.create_tooltip_box()
-        eb.add(icon)
-        return eb
+        return icons.icons.get_image(self.icon_name)
+
+    def get_tooltip_text(self):
+        tooltiptext = self.long_title
+        if not tooltiptext:
+            tooltiptext = self.short_title
+        if not tooltiptext:
+            tooltiptext = 'No tooltip set for %s' % contentview
+        return tooltiptext
 
     def create_tooltip_box(self):
         eb = gtk.EventBox()
         eb.add_events(gtk.gdk.BUTTON_PRESS_MASK)
+        icons.tips.set_tip(eb, self.get_tooltip_text())
         def _click(_eb, event):
             if event.button == 3:
                 self.create_detach_popup(event)
                 return True
         eb.connect('button-press-event', _click)
         return eb
+
+    def create_tab_label(self, vertical=False):
+        label = gtk.Label(self.short_title)
+        if vertical:
+            box = gtk.VBox(spacing=4)
+            label.set_angle(270)
+        else:
+            box = gtk.HBox(spacing=4)
+        box.pack_start(self.icon)
+        box.pack_start(label)
+        eb = self.create_tooltip_box()
+        eb.add(box)
+        eb.show_all()
+        return eb
+
+
 
     def create_detach_popup(self, event):
         if self.HAS_CONTROL_BOX and (self.HAS_CLOSE_BUTTON or
@@ -344,5 +315,122 @@ class content_view(gtk.VBox):
             menu.show_all()
             menu.popup(None, None, None, event.button, event.time)
         
+
+class ContentBook(gtk.Notebook):
+
+    __gsignals__ = {'empty' : (
+                        gobject.SIGNAL_RUN_LAST,
+                        gobject.TYPE_NONE,
+                        ())}
+
+    def __init__(self):
+        super(ContentBook, self).__init__()
+        self._views = {}
+        self.set_scrollable(True)
+        self.set_show_border(False)
+        self.set_property('tab-border', 2)
+        self.set_property('homogeneous', False)
+        self.set_tab_pos(gtk.POS_TOP)
+        self.popup_disable()
+
+    def raise_view(self, view):
+        self.set_current_page(self.page_num(view))
+
+    def raise_uid(self, uid):
+        self.raise_view(self._views[uid])
+
+    def add(self, view, raise_page=True):
+        vertical = self.get_tab_pos() in [gtk.POS_LEFT, gtk.POS_RIGHT]
+        tab_label=view.create_tab_label(vertical)
+        self.append_page(view, tab_label)
+        view.show_controlbox()
+        view.show_all()
+        self._views[view.unique_id] = view
+        if raise_page:
+            self.raise_view(view)
+
+    def remove_view(self, view):
+        self.remove_page(self.page_num(view))
+        del self._views[view.unique_id]
+        if len(self._views) == 0:
+            self.emit('empty')
+
+    def remove_uid(self, uid):
+        self.remove_view(self._views[uid])
+
+    def has_uid(self, uid):
+        return (uid in self._views)
+
+
+class ExternalBook(object):
+
+    def __init__(self):
+        self._views = {}
+        self._windows = {}
+
+    def add(self, view):
+        view.hide_controlbox()
+        self._views[view.unique_id] = view
+        w = gtk.Window()
+        w.add(view)
+        def _t(v):
+            w.set_title(view.long_title)
+        _t(None)
+        view.connect('long-title-changed', _t)
+        self._windows[view.unique_id] = w
+        w.connect('delete-event', self.cb_delete, view)
+        w.set_position(gtk.WIN_POS_CENTER)
+        w.resize(600, 480)
+        w.show_all()
+        view.hide_title()
+
+    def remove_view(self, view):
+        win = self._windows[view.unique_id]
+        win.remove(view)
+        del self._views[view.unique_id]
+        del self._windows[view.unique_id]
+        win.destroy()
+
+    def remove_uid(self, uid):
+        self.remove_view(self._views[uid])
+        
+    def cb_delete(self, win, event, view):
+        self.remove_view(view)
+
+    def has_uid(self, uid):
+        return uid in self._views
+
+class ContentManager(object):
+    
+    def __init__(self):
+        self._books = {'ext': ExternalBook()}
+
+    def create_book(self, bookname):
+        book = ContentBook()
+        self._books[bookname] = book
+        return book
+
+    def add(self, bookname, view):
+        self._books[bookname].add(view)
+    
+    def raise_uid(self, uid):
+        for book in self._books.values():
+            if book.has_uid(uid):
+                book.raise_uid(uid)
+                return
+        raise KeyError('view not found')
+
+    def raise_view(self, view):
+        self.raise_uid(view.unique_id)
+
+    def remove(self, view):
+        self.remove_uid(view.unique_id)
+
+    def remove_uid(self, uid):
+        for book in self._books.values():
+            if book.has_uid(uid):
+                book.remove_uid(uid)
+                return
+        raise KeyError('view not found')
 
 gobject.type_register(content_view)

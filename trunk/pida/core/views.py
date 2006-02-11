@@ -29,10 +29,11 @@ class view_mixin(object):
                 raise KeyError('Need either view, or unique_id')
             view = self.__views[unique_id]
         book_name = view.view_definition.book_name
-        if book_name == 'ext':
-            view.externalise()
-        else:
-            view.internalise()
+        self.boss.call_command('window', 'append_page',
+                                bookname=book_name, view=view)
+
+    def raise_view(self, view):
+        self.boss.call_command('window', 'raise_page', view=view)
 
     def get_view(self, unique_id):
         return self.__views[unique_id]
@@ -51,7 +52,8 @@ class view_mixin(object):
 
     def close_view(self, view):
         if self.view_confirm_close(view):
-            view.remove()
+            self.boss.call_command('window', 'remove_page', view=view)
+            view.emit('removed')
 
     def __view_closed_base(self, view):
         del self.__views[view.unique_id]
@@ -62,9 +64,13 @@ class view_mixin(object):
 
     def detach_view(self, view, detach):
         if detach:
-            view.externalise()
+            self.boss.call_command('window', 'remove_page', view=view)
+            self.boss.call_command('window', 'append_page',
+                                   bookname='ext', view=view)
         else:
-            view.internalise()
+            self.boss.call_command('window', 'remove_page', view=view)
+            self.show_view(view=view)
+            
 
     def view_detached_base(self, view):
         self.view_detached(self, view)

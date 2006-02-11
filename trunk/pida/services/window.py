@@ -33,6 +33,8 @@ import pida.core.actions as actions
 import pida.core.service as service
 import pida.pidagtk.contentbook as contentbook
 
+from pida.pidagtk.contentview import ContentManager
+
 
 types = service.types
 defs = service.definitions
@@ -45,24 +47,6 @@ im.set_from_file(icon_file)
 im2 = gtk.Image()
 im2.set_from_file(icon_file)
 
-class SplashWindow(gtk.Window):
-
-    def __init__(self):
-        gtk.Window.__init__(self, gtk.WINDOW_POPUP)
-        self.set_position(gtk.WIN_POS_CENTER)
-        hb = gtk.HBox()
-        hb.set_property('border-width', 36)
-        self.add(hb)
-        hb.pack_start(im2, padding=12)
-        self._msg = gtk.Label()
-        self._msg.set_alignment(0.8, 0.8)
-        hb.pack_start(self._msg)
-        
-    def message(self, msg):
-        self._msg.set_markup(msg)
-
-splash = SplashWindow()
-#splash.show_all()
 
 class WindowManager(service.service):
     """Class to control the main window."""
@@ -150,7 +134,13 @@ class WindowManager(service.service):
         ht.add(self.toolbar)
 
     def cmd_append_page(self, bookname, view):
-        self._append_page(bookname, view)
+        self._cm.add(bookname, view)
+
+    def cmd_remove_page(self, view):
+        self._cm.remove(view)
+
+    def cmd_raise_page(self, view):
+        self._cm.raise_view(view)
 
     def cmd_remove_pages(self, bookname):
         if bookname in self.__viewbooks:
@@ -282,16 +272,16 @@ class WindowManager(service.service):
     
 
     def _bind_views(self):
-        self.contentview = contentbook.ContentBook()
-        self.editorview = contentbook.ContentBook(show_tabs=False)
-        self.bookview = contentbook.ContentBook()
-        self.bookview.notebook.set_tab_pos(gtk.POS_TOP)
-        self.pluginview = contentbook.ContentBook()
-        self.__viewbooks = {'content': self.contentview,
-                            'view': self.bookview,
-                            'plugin': self.pluginview,
-                            'edit': self.editorview,
-                            }
+        self._cm = ContentManager()
+        self.contentview = self._cm.create_book('content')
+        self.contentview.set_tab_pos(gtk.POS_RIGHT)
+        self.bookview = self._cm.create_book('view')
+        self.editorview = self._cm.create_book('edit')
+        self.editorview.set_show_tabs(False)
+        self.pluginview = self._cm.create_book('plugin')
+        def _s():
+            self.contentview.set_current_page(0)
+        gtk.idle_add(_s)
         self.menubar = self.__uim.get_toplevels(gtk.UI_MANAGER_MENUBAR)[0]
         self.toolbar = self.__uim.get_toplevels(gtk.UI_MANAGER_TOOLBAR)[0]
 
@@ -309,9 +299,6 @@ class WindowManager(service.service):
             #    self.show_view(view=service.plugin_view)
             #elif service.plugin_view_type is not None:
             #    self.pluginview.append_page(service.plugin_view)
-        def _s():
-            self.contentview.notebook.set_current_page(0)
-        gtk.idle_add(_s)
 
     def _pack(self):
         self.__mainbox = gtk.VBox()
@@ -331,17 +318,15 @@ class WindowManager(service.service):
         self.__mainbox.pack_start(p0)
         sidebar_width = self.opt('layout', 'sidebar_width')
         sidebar = self._pack_sidebar()
-        sidebar.show()
         if sidebar_on_right:
             main_pos = 800 - sidebar_width
-            self.contentview.notebook.set_tab_pos(gtk.POS_LEFT)
-            self.pluginview.notebook.set_tab_pos(gtk.POS_LEFT)
+            self.contentview.set_tab_pos(gtk.POS_LEFT)
+            self.pluginview.set_tab_pos(gtk.POS_LEFT)
         else:
             main_pos = sidebar_width
-            self.contentview.notebook.set_tab_pos(gtk.POS_RIGHT)
-            self.pluginview.notebook.set_tab_pos(gtk.POS_RIGHT)
+            self.contentview.set_tab_pos(gtk.POS_RIGHT)
+            self.pluginview.set_tab_pos(gtk.POS_RIGHT)
         p1 = gtk.VPaned()
-        p1.show()
         p0.pack_sub(sidebar, resize=False)
         p0.pack_main(p1, resize=True)
         p0.set_position(main_pos)
@@ -372,9 +357,6 @@ class WindowManager(service.service):
             self.__window.resize(800, 600)
             self.__window.set_icon(im.get_pixbuf())
 
-    def _append_page(self, bookname, page):
-        self.__viewbooks[bookname].append_page(page)
-        self.__viewbooks[bookname].show_all()
 
     def _create_uim(self):
         self.__uim = gtk.UIManager()

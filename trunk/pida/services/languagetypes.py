@@ -72,9 +72,9 @@ class language_manager_view(contentview.content_view):
         handler = item.value
         view = handler.service.plugin_view
         if item.value.active:
-            self.service.show_view(view=view)
+            view.show()
         else:
-            view.detach()
+            view.remove()
         self.service.call('save_state')
 
 

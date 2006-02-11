@@ -272,7 +272,9 @@ class paste_bin(object):
 
     def __close_editor(self):
         self.__editor.service.single_view.stop_pulse()
-        self.__editor.close()
+        def c():
+            self.__editor.close()
+        gobject.idle_add(c)
 
     def retrieve_data(self):
         '''Retrieve data from the site to update LANGS and CHANNELS'''

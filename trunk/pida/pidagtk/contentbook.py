@@ -74,6 +74,7 @@ class ContentBook(gtk.VBox):
         box.pack_start(eb, expand=False)
         tab_label.add(box)
         tab_label.show_all()
+        contentview.show_all()
         
         # Set the tooltip text
         tooltiptext = contentview.long_title
