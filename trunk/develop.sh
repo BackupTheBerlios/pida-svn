@@ -5,9 +5,8 @@ set -e
 
 me=$(readlink -f $0)
 pidadir=${me%/*}
-distdir=$pidadir/build/egg
-tmpdir=$pidadir/build/tmp
-mkdir -p $pidadir/build/{egg,tmp}
+distdir=$pidadir/run
+mkdir -p ${distdir}/{,tmp}
 
 REMOTE= GDB= PROFILE= PDB= UPDATE=
 while [ $# -gt 0 ]; do
@@ -60,7 +59,7 @@ egg="$distdir/pida-${version//-/_}-py$pyver.egg"
 echo "Adding ${egg#$pidadir/} to '\$PYTHONPATH' ..."
 export PYTHONPATH=$egg:$PYTHONPATH
 
-pidacmd=$tmpdir/pida
+pidacmd=$distdir/tmp/pida
 tmpfile=$pidacmd.$$
 
 if [ "$REMOTE" ]; then
