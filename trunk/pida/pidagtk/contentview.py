@@ -433,4 +433,5 @@ class ContentManager(object):
                 return
         raise KeyError('view not found')
 
+gobject.type_register(ContentBook)
 gobject.type_register(content_view)
