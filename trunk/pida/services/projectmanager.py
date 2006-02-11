@@ -23,7 +23,6 @@
 
 import pida.pidagtk.tree as tree
 import pida.pidagtk.configview as configview
-import pida.pidagtk.contentbook as contentbook
 import pida.pidagtk.contentview as contentview
 import pida.pidagtk.contextwidgets as contextwidgets
 

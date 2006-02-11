@@ -31,7 +31,6 @@ from pida.pidagtk import shiftpaned
 
 import pida.core.actions as actions
 import pida.core.service as service
-import pida.pidagtk.contentbook as contentbook
 
 from pida.pidagtk.contentview import ContentManager
 
