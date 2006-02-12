@@ -180,9 +180,9 @@ class Buffermanager(service.service):
     def bnd_editormanager_started(self):
         if not self.__session_loaded:
             self.__session_loaded = True
-            def n(): 
+            def n():
                 for filename in self.boss.positional_args:
-                    self.call('open_file', filename=filename)
+                    self.call('open_file', filename=filename, quiet=True)
                 if self.opt('sessions', 'automatically_load_last_session'):
                     most_recent = os.path.join(self.boss.pida_home,
                                         'most-recent.session')
