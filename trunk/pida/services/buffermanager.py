@@ -23,6 +23,7 @@
 
 import os
 import gtk
+import gobject
 
 import pida.core.service as service
 import pida.pidagtk.tree as tree
@@ -180,18 +181,18 @@ class Buffermanager(service.service):
     def bnd_editormanager_started(self):
         if not self.__session_loaded:
             self.__session_loaded = True
-            def n():
-                for filename in self.boss.positional_args:
-                    self.call('open_file', filename=filename, quiet=True)
-                if self.opt('sessions', 'automatically_load_last_session'):
-                    most_recent = os.path.join(self.boss.pida_home,
-                                        'most-recent.session')
-                    if os.path.exists(most_recent):
-                        self.call('load_session', session_filename=most_recent)
-                if len(self.__documents) == 0 and self.opt('sessions',
-                                                           'start_with_new_file'):
-                    self.call('new_file')
-            gtk.idle_add(n)
+            for filename in self.boss.positional_args:
+                self.call('open_file', filename=filename, quiet=True)
+            if self.opt('sessions', 'automatically_load_last_session'):
+                most_recent = os.path.join(self.boss.pida_home,
+                                    'most-recent.session')
+                if os.path.exists(most_recent):
+                    self.call('load_session', session_filename=most_recent)
+                def _n():
+                    if len(self.__documents) == 0 and self.opt('sessions',
+                                                       'start_with_new_file'):
+                        self.call('new_file')
+                gobject.idle_add(_n)
 
     def init(self):
         self.__currentdocument = None
@@ -430,7 +431,10 @@ class Buffermanager(service.service):
         f = open(session_filename, 'r')
         for line in f:
             filename = line.strip()
-            self.call('open_file', filename=filename, quiet=True)
+            def _o(filename):
+                self.call('open_file', filename=filename, quiet=True)
+                print filename
+            gobject.idle_add(_o, filename)
         f.close()
 
     def cmd_file_closed(self, filename):
