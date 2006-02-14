@@ -21,16 +21,6 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import pida.pidagtk.tree as tree
-import pida.pidagtk.configview as configview
-import pida.pidagtk.contentbook as contentbook
-import pida.pidagtk.contentview as contentview
-import pida.pidagtk.contextwidgets as contextwidgets
-
-import pida.core.registry as registry
-import pida.core.service as service
-types = service.types
-defs = service.definitions
 
 import os
 import os.path
