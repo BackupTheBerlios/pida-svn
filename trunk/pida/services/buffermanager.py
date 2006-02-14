@@ -433,7 +433,6 @@ class Buffermanager(service.service):
             filename = line.strip()
             def _o(filename):
                 self.call('open_file', filename=filename, quiet=True)
-                print filename
             gobject.idle_add(_o, filename)
         f.close()
 
