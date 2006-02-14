@@ -115,6 +115,7 @@ class WindowManager(service.service):
         self._show_toolbar()
         self._create_window()
         self.toolbar.set_icon_size(size)
+        self.toolbar.set_style(gtk.TOOLBAR_ICONS)
 
     def cmd_show_window(self):
         self.__window.show_all()
