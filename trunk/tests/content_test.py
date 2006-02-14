@@ -65,5 +65,55 @@ class ContentbookTest(testing.GtkTestCase):
         def _e(cb):
             pass
         self.cb.connect('empty', _e)
+
+class ContentViewTest(testing.GtkTestCase):
+
+    def setUp(self):
+        testing.GtkTestCase.setUp(self)
+        self.cv = content_view(service=None, prefix='svcprefix')
+
+    def test1_prefix(self):
+        self.assertEqual(self.cv.prefix, 'svcprefix')
+
+    def test2_service(self):
+        self.assertEqual(self.cv.service, None)
+
+    def test3_short_title(self):
+        self.assertEqual(self.cv.short_title, 'Untitled')
+
+    def test4_short_title_init(self):
+        self.cv = content_view(service=None, prefix='svcprefix',
+                               short_title='short')
+        self.assertEqual(self.cv.short_title, 'short')
+
+    def test5_short_title_override(self):
+        class C(content_view):
+            SHORT_TITLE = 'short-over'
+        self.cv = C(service=None, prefix='svcprefix')
+        self.assertEqual(self.cv.short_title, 'short-over')
+        self.cv = C(service=None, prefix='svcprefix',
+                               short_title='short')
+        self.assertEqual(self.cv.short_title, 'short')
+
+    def test6_long_title(self):
+        self.assertEqual(self.cv.long_title, 'Long title')
+
+    def test7_icon_name(self):
+        cv = content_view(service=None, prefix='svcprefix',
+                          icon_name='gtk-close')
+        self.assertEqual(cv.icon_name, 'gtk-close')
+
+    def test8_icon(self):
+        cv = content_view(service=None, prefix='svcprefix',
+                          icon_name='gtk-close')
+        i1 = cv.icon
+        i2 = cv.icon
+        self.assertNotEqual(i1, i2)
+        self.assert_(isinstance(i1, gtk.Image))
+        
+
+        
+    
+    
         
         
