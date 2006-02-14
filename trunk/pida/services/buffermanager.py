@@ -188,11 +188,11 @@ class Buffermanager(service.service):
                                     'most-recent.session')
                 if os.path.exists(most_recent):
                     self.call('load_session', session_filename=most_recent)
-                def _n():
-                    if len(self.__documents) == 0 and self.opt('sessions',
+            def _n():
+                if len(self.__documents) == 0 and self.opt('sessions',
                                                        'start_with_new_file'):
-                        self.call('new_file')
-                gobject.idle_add(_n)
+                    self.call('new_file')
+            gobject.idle_add(_n)
 
     def init(self):
         self.__currentdocument = None
