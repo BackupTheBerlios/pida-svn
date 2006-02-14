@@ -396,9 +396,7 @@ class paste_manager(service.service):
 
     def push(self, paste):
         '''Add a paste to the pastelist and refresh'''
-        print 'goo'
         self.__add_paste(paste)
-        print 'goo'
         self.__refresh()
 
     # commands
