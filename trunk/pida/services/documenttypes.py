@@ -48,6 +48,7 @@ class document_type_handler(service.service):
         def view_document(self, document):
             self.service.get_service('editormanager').call('edit',
                                       document=document)
+            self.document = document
 
         def close_document(self, document):
             self.service.boss.call_command('editormanager', 'close',
@@ -84,7 +85,10 @@ class document_type_handler(service.service):
                         name="DocumentSave")
         def act_save(self, action):
             """Save the document"""
-            self.service.boss.call_command('editormanager', 'save')
+            if self.document.is_new:
+                self.service.boss.call_command('buffermanager', 'save_as')
+            else:
+                self.service.boss.call_command('editormanager', 'save')
 
         @actions.action(stock_id=gtk.STOCK_SAVE_AS,
                         label=None,
@@ -133,7 +137,6 @@ class document_type_handler(service.service):
                 </placeholder>
                 <placeholder name="SaveFileToolbar">
                 <toolitem name="Save" action="DocumentSave" />
-                <toolitem name="SaveAs" action="DocumentSaveAs" />
                 <separator />
                 </placeholder>
                 <placeholder name="EditToolbar">

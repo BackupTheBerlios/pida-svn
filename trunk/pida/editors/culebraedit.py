@@ -167,7 +167,7 @@ class culebra_editor(service.service):
     def __set_action_sensitivities(self, document):
         save_action = self.get_save_action()
         if document.is_new:
-            save_action.set_sensitive(False)
+            save_action.set_sensitive(True)
             self.__revertact.set_sensitive(False)
         else:
             buff = self.current_view.editor.get_buffer()
