@@ -138,6 +138,10 @@ class BufferView(contentview.content_view):
             sact = document.handler.action_group.get_action('DocumentSaveAs')
             mi = sact.create_menu_item()
             menu.add(mi)
+            clact = self.service.action_group.get_action(
+                    'buffermanager+close_buffer')
+            mi = clact.create_menu_item()
+            menu.add(mi)
         else:
             menu = self.service.boss.call_command('contexts',
                 'get_context_menu', ctxname='file', ctxargs=[document.filename])
