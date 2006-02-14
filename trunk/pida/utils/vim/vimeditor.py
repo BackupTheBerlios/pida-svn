@@ -183,12 +183,12 @@ class vim_editor(object):
         self.__cw.change_cursor(self.server, 1, linenumber)
 
     def vim_bufferchange(self, server, cwd, filename, bufnr):
+        self.log.debug('vim buffer change "%s"', filename)
         if not filename:
             return
         if os.path.abspath(filename) != filename:
             filename = os.path.join(cwd, filename)
-        self.log.debug('vim buffer change "%s"', filename)
-        if filename != self.__currentdocument.filename:
+        if self.__currentdocument is None or filename != self.__currentdocument.filename:
             for uid, fn in self.__newdocs.iteritems():
                 if fn == filename:
                     doc = self.__documents[uid]
@@ -198,6 +198,8 @@ class vim_editor(object):
                 if doc.filename == filename:
                     self.__current_doc_set(doc)
                     return
+            self.boss.call_command('buffermanager', 'open_file',
+                                    filename=filename)
 
     def __current_doc_set(self, doc):
         self.__currentdocument = doc
