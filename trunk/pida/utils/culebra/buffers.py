@@ -164,7 +164,7 @@ class _SearchMethod(ChildObject):
     
     #############
     # the search
-    def __call__(self, find_forward=True):
+    def __call__(self, find_forward=True, trigger=True):
         search_text = self.search_text
         # If we have nothing to search we can just move on
         if search_text is None or search_text == "":
@@ -180,7 +180,8 @@ class _SearchMethod(ChildObject):
             return True
         
         except StopIteration:
-            self._no_more_entries(find_forward)
+            if trigger:
+                self._no_more_entries(find_forward)
             return False
 
 
@@ -361,7 +362,9 @@ class CulebraBuffer(gtksourceview.SourceBuffer):
                     
     def search(self, *args, **kwargs):
         """
-        search(find_forward=True)
+        search(find_forward=True, trigger=True)
+        
+        If trigger is False then the 'no-more-entries' event is not triggered.
         
         Returns True if it found the self.search_text.
         """

@@ -6,7 +6,41 @@ __author__ = "Tiago Cogumbreiro <cogumbreiro@users.sf.net>"
 from common import *
 from gtkutil import SignalHolder
 
+def _activate_action(widget, action):
+    action.set_active(True)
+
+def _deactivate_action(widget, action):
+    action.set_active(False)
+
+def _toggle_visibility(action, widget):
+    if action.get_active():
+        widget.show()
+    else:
+        widget.hide()
+    
+
+class VisibilitySync:
+
+    def __init__(self, widget, toggle_action, apply_now=True):
+
+        self._activate = SignalHolder(widget, "show", _activate_action, toggle_action)
+        self._deactivate = SignalHolder(widget, "hide", _deactivate_action, toggle_action)
+        self._toggle_visible = SignalHolder(
+            toggle_action,
+            "toggled",
+            _toggle_visibility,
+            widget
+        )
+        
+        # Take effect now
+        visible = widget.get_property("visible")
+        if apply_now and visible != toggle_action.get_active():
+            toggle_action.set_active(visible)
+    
+
 class Bar(ChildObject):
+    toggle_action = None
+    
     def __init__(self, parent, action_group):
         super(Bar, self).__init__(parent)
         self.set_action_group(action_group)
@@ -42,9 +76,17 @@ class Bar(ChildObject):
         if self._widget is None:
             self._widget = self.create_widget()
             self._widget.connect("key-release-event", self._on_key_pressed)
+            self.__update_visibility_sync()
+            
         return self._widget
     
     widget = property(get_widget)
+    
+    def __update_visibility_sync(self):
+        if self._widget is not None and self.toggle_action is not None:
+            self.__visibility_sync = VisibilitySync(self._widget, self.toggle_action)
+        else:
+            self.__visibility_sync = None
     
     ##########
     # Methods
@@ -54,10 +96,12 @@ class Bar(ChildObject):
             return
         
         self.toggle_action = self._create_toggle_action(action_group)
-        self.toggle_action.set_active(self.widget.get_property("visible"))
+        self.__update_visibility_sync()
+#        self.toggle_action.set_active(self.widget.get_property("visible"))
         
-        src = SignalHolder(self.toggle_action, "toggled", self._on_action_toggled)
-        self.toggle_source = src
+#        src = SignalHolder(self.toggle_action, "toggled", self._on_action_toggled)
+#        self.toggle_source = src
+
     
     def _on_action_toggled(self, action):
         if action.get_active():

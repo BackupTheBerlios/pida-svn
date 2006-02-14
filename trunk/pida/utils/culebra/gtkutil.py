@@ -21,8 +21,8 @@ def hide_on_delete(window):
 
 
 class SignalHolder:
-    def __init__(self, obj, signal, cb):
-        self.source = obj.connect(signal, cb)
+    def __init__(self, obj, signal, cb, *args, **kwargs):
+        self.source = obj.connect(signal, cb, *args, **kwargs)
         self.obj = obj
     
     def __del__(self):

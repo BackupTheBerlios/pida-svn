@@ -12,7 +12,6 @@ __author__ = (
 )
 
 import gtk
-import sys
 import pango
 import gtksourceview
 from rat.text import make_source_view_indentable
@@ -21,7 +20,6 @@ from replacebar import ReplaceBar
 from searchbar import SearchBar
 from buffers import CulebraBuffer
 from common import KEY_ESCAPE, ACTION_FIND_FORWARD, ACTION_FIND_BACKWARD
-from gtkutil import SignalHolder
 
 
 class CulebraView(gtksourceview.SourceView):
@@ -49,21 +47,6 @@ class CulebraView(gtksourceview.SourceView):
     def set_action_group(self, action_group):
         self.search_bar.set_action_group(action_group)
         self.replace_bar.set_action_group(action_group)
-
-        if action_group is None:
-            self.find_forward_source = None
-            self.find_backward_source = None
-            return
-            
-        find_forward = action_group.get_action(ACTION_FIND_FORWARD)
-        holder = SignalHolder(find_forward, "activate", self.on_find_forward)
-        self.find_forward_source = holder
-        
-        find_backward = action_group.get_action(ACTION_FIND_BACKWARD)
-        holder = SignalHolder(find_backward, "activate", self.on_find_backwards)
-        self.find_backward_source = holder
-        
-        
     
     def set_background_color(self, color):
         self.modify_base(gtk.STATE_NORMAL, color)
@@ -79,20 +62,8 @@ class CulebraView(gtksourceview.SourceView):
     def find(self, find_forward):
         buff = self.get_buffer()
         found = buff.search(find_forward=find_forward)
-
-        if not found and len(buff.get_selection_bounds()) == 0:
-            found = buff.search(find_forward=not find_forward)
-
-        if not found:
-            return
-        
         self.focus_carret()
-
-    def on_find_forward(self, action):
-        self.find(True)
-    
-    def on_find_backwards(self, action):
-        self.find(False)
+        return found
 
     def _on_key_pressed(self, search_text, event):
         global KEY_ESCAPE
