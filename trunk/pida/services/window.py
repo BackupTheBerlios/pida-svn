@@ -111,6 +111,8 @@ class WindowManager(service.service):
         sidact = self.action_group.get_action('window+toggle_sidebar')
         sidact.set_active(self.opt('toolbar_and_menubar',
                                        'sidebar_visible'))
+        panact = self.action_group.get_action('window+toggle_viewpan')
+        panact.set_active(True)
         self._show_menubar()
         self._show_toolbar()
         self._create_window()
@@ -254,6 +256,17 @@ class WindowManager(service.service):
         self.set_option('toolbar_and_menubar', 'sidebar_visible',
                         action.get_active())
 
+    @actions.action(
+        type=actions.TYPE_TOGGLE,
+        default_accel='<Control><Shift>v',
+        label='Pane Viewer'
+    )
+    def act_toggle_viewpan(self, action):
+        if action.get_active():
+            self.show_viewpan()
+        else:
+            self.hide_viewpan()
+
     def _show_toolbar(self):
         if self.opt('toolbar_and_menubar', 'toolbar_visible'):
             self.toolbar.show_all()
@@ -321,12 +334,12 @@ class WindowManager(service.service):
             main_pos = sidebar_width
             self.contentview.set_tab_pos(gtk.POS_RIGHT)
             self.pluginview.set_tab_pos(gtk.POS_RIGHT)
-        p1 = gtk.VPaned()
+        self.__viewpan = p1 = shiftpaned.ShiftPaned(gtk.VPaned, True)
         p0.pack_sub(sidebar, resize=False)
         p0.pack_main(p1, resize=True)
         p0.set_position(main_pos)
-        p1.pack1(self.editorview, resize=True)
-        p1.pack2(self.bookview, resize=False)
+        p1.pack_main(self.editorview, resize=True)
+        p1.pack_sub(self.bookview, resize=False)
         p1.set_position(430)
 
     def _pack_sidebar(self):
@@ -472,9 +485,10 @@ class WindowManager(service.service):
                     <menu name="base_view" action="base_view_menu" >
                         <placeholder name="ViewMenu">
                             <separator />
+                            <menuitem name="togglesidebar" action="window+toggle_sidebar" />
+                            <menuitem action="window+toggle_viewpan" />
                             <menuitem name="toggletoolbar" action="window+toggle_toolbar" />
                             <menuitem name="togglemenubar" action="window+toggle_menubar" />
-                            <menuitem name="togglesidebar" action="window+toggle_sidebar" />
                             <separator />
                             <menuitem action="window+next_view" />
                             <menuitem action="window+previous_view" />
@@ -491,5 +505,11 @@ class WindowManager(service.service):
     
     def hide_sidebar(self):
         self.__sidebar.hide_sub()
+
+    def show_viewpan(self):
+        self.__viewpan.show_sub()
+
+    def hide_viewpan(self):
+        self.__viewpan.hide_sub()
 
 Service = WindowManager
