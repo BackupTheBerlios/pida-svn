@@ -196,7 +196,7 @@ class WindowManager(service.service):
 
     def cmd_previous_view(self):
         """Jump to the previos view in the viewbook."""
-        self.bookview.previous_page()
+        self.bookview.prev_page()
 
     def bnd_buffermanager_document_changed(self, document):
         if document.is_new:

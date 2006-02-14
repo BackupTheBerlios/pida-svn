@@ -361,6 +361,18 @@ class ContentBook(gtk.Notebook):
     def has_uid(self, uid):
         return (uid in self._views)
 
+    def next_page(self):
+        if self.get_current_page() == self.get_n_pages() - 1:
+            self.set_current_page(0)
+        else:
+            gtk.Notebook.next_page(self)
+
+    def prev_page(self):
+        if self.get_current_page() == 0:
+            self.set_current_page(-1)
+        else:
+            gtk.Notebook.prev_page(self)
+
 
 class ExternalBook(object):
 
