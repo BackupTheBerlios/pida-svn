@@ -44,9 +44,11 @@ class service_manager(base.pidagroup):
         for group in groups:
             self.__load_entrypoints(group)
         # load all the services, they are compulsory
+        self.__check_importants_loaded(self.__available['services'])
         self.log.debug('loading core services')
         for svc in self.__available['services']:
             self.__load_service('services', svc)
+        self.__check_importants_loaded([i.NAME for i in self])
         # load the required plugins
         self.log.debug('loading required plugins')
         for plugin in self.__available['plugins']:
@@ -102,6 +104,13 @@ class service_manager(base.pidagroup):
 
     load_service = __load_service
         
+    def __check_importants_loaded(self, svclist):
+        for name in ['window', 'editormanager', 'buffermanager',
+                     'projectmanager']:
+            if name not in svclist:
+                raise RuntimeError('Important service "%s" not loaded. Fatal' %
+                                    name)
+
     def get_display_name(self, servicename):
         if servicename in self.__display_names:
             return self.__display_names[servicename]
