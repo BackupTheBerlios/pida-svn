@@ -24,7 +24,6 @@
 import pida.pidagtk.tree as tree
 import pida.pidagtk.configview as configview
 import pida.pidagtk.contentview as contentview
-import pida.pidagtk.contextwidgets as contextwidgets
 
 import pida.core.registry as registry
 import pida.core.service as service
@@ -86,8 +85,6 @@ class project_view(contentview.content_view):
     HAS_TITLE = False
 
     def init(self):
-        self.__toolbar = contextwidgets.context_toolbar()
-        self.widget.pack_start(self.__toolbar, expand=False)
         self.__projectlist = ProjectTree()
         self.widget.pack_start(self.__projectlist)
         self.__projectlist.set_property('markup-format-string',
@@ -104,9 +101,6 @@ class project_view(contentview.content_view):
 
     def get_selected(self):
         return self.__projectlist.selected
-
-    def set_contexts(self, contexts):
-        self.__toolbar.set_contexts(contexts)
 
     def cb_list_right_clicked(self, treeview, item, event):
         if item is None:

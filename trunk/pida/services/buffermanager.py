@@ -28,7 +28,6 @@ import gobject
 import pida.core.service as service
 import pida.pidagtk.tree as tree
 import pida.pidagtk.contentview as contentview
-import pida.pidagtk.contextwidgets as contextwidgets
 
 from pida.core import actions
 
