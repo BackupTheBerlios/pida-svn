@@ -20,25 +20,30 @@
 #LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
+
 import os
-import pida.core.service as service
-import pida.core.actions as actions
-
-defs = service.definitions
-
+import mimetypes
 import subprocess
 
-
-from pida.utils.kiwiutils import gsignal
-import gobject
 import gtk
-import os
+import gobject
+
+import pida.core.service as service
+import pida.core.actions as actions
+import pida.pidagtk.tree as tree
+import pida.pidagtk.icons as icons
+from pida.utils.kiwiutils import gsignal
+import pida.pidagtk.contentview as contentview
+
+dir_icon = icons.icons.get('gtk-directory')
+mime_icons = {}
+
+defs = service.definitions
 
 STATE_IGNORED, STATE_NONE, STATE_NORMAL, STATE_NOCHANGE, \
 STATE_ERROR, STATE_EMPTY, STATE_NEW, \
 STATE_MODIFIED, STATE_CONFLICT, STATE_REMOVED, \
 STATE_MISSING, STATE_MAX = range(12)
-
 colours = {
             None: ('#000000', False, True),
             STATE_IGNORED: ('#909090', False, True),
@@ -123,11 +128,6 @@ class GtkReader(gobject.GObject):
         gobject.idle_add(_f)
 
 
-import pida.pidagtk.tree as tree
-
-import pida.pidagtk.icons as icons
-dir_icon = icons.icons.get('gtk-directory')
-
 class FileSystemItem(object):
 
     def __init__(self, path):
@@ -136,6 +136,8 @@ class FileSystemItem(object):
         self.isdir = os.path.isdir(path)
         self.status = None
         self.isnotdir = not self.isdir
+        self.mt = None
+        self.icon = None
 
     def get_markup(self):
         col, b, i = colours[self.status]
@@ -154,8 +156,16 @@ class FileSystemItem(object):
     
 
     def get_pixbuf(self):
-        if self.isdir:
+        if self.icon is not None:
+            return self.icon
+        elif self.isdir:
+            self.icon = dir_icon
             return dir_icon
+        else:
+            self.mt = mimetypes.guess_type(self.path)[0]
+            self.icon = icons.icons.get_mime_image(self.mt)
+            return self.icon
+            
     pixbuf = property(get_pixbuf)
 
 class FileTree(tree.IconTree):
@@ -166,7 +176,6 @@ class FileTree(tree.IconTree):
 
     SORT_CONTROLS = True
 
-import pida.pidagtk.contentview as contentview
 
 class FileBrowser(contentview.content_view):
 
@@ -273,9 +282,6 @@ class FileBrowser(contentview.content_view):
         self._recent[self.cwd] = self._files
         self.long_title = self.cwd
 
-   
-        
-
     def cb_plain_data(self, reader, path):
         if path not in self._files:
             fsi = FileSystemItem(path)
@@ -316,7 +322,6 @@ class FileBrowser(contentview.content_view):
             self.service.call('browse', directory=project_root)
         else:
             self.service.log.info('there is no project to go to its root')
-
 
     def cb_act_new_file(self, action):
         self.emit('newfile-clicked', self.cwd)
@@ -360,6 +365,7 @@ class FileBrowser(contentview.content_view):
             self._popup_dir(fsi.path, event)
         else:
             self._popup_file(fsi.path, event)
+
 
 class file_manager(service.service):
 
