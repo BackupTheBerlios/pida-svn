@@ -247,7 +247,9 @@ class FileBrowser(contentview.content_view):
         if directory in self._recent:
             self._view.clear()
             for fsi in self._recent[directory].values():
-                self._view.add_item(fsi)
+                def _a(fsi):
+                    self._view.add_item(fsi)
+                gobject.idle_add(_a, fsi)
             self.cwd = directory
             self.long_title = self.cwd
         else:
