@@ -140,7 +140,8 @@ class web_client(gtk.ScrolledWindow):
 
 
 class BrowserView(contentview.content_view):
-    ICON_NAME = 'internet' 
+    ICON_NAME = 'gtk-library' 
+    SHORT_TITLE = 'Browser'
 
     HAS_TITLE = False
 
