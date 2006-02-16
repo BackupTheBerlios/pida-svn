@@ -400,7 +400,7 @@ class file_manager(service.service):
         self.plugin_view.raise_page()
 
     def cmd_get_current_directory(self):
-        return self.plugin_view.directory
+        return self.plugin_view.cwd
 
     def cb_single_view_file_activated(self, view, filename):
         
