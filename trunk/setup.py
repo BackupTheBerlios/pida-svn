@@ -83,6 +83,8 @@ def discover_data_files(directory_name, extension):
             files.append('data/%s/%s' % (directory_name, name))
     return files
 
+forkscripts = ['pida/utils/forkscripts/ls.py']
+
 
 def find_entry_points(directory_name, entrypoint_name):
     """Find potential entry points by name in a directory."""
@@ -120,6 +122,7 @@ def main():
                     ('glade', uis),
                     ('pixmaps', pixmaps),
                     ('icons', icons),
+                    ('forkscripts', forkscripts),
                     ('version', ['data/version']),
                     ('', ['data/icons/pida-icon.png']),
                     ('', ['AUTHORS']),

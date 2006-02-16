@@ -299,8 +299,7 @@ class WindowManager(service.service):
                 view = service.create_view('BufferView')
                 service.show_view(view=view)
             elif service.NAME == 'filemanager':
-                view = service.create_view('FileBrowser')
-                service.show_view(view=view)
+                service.show_view(view=service.plugin_view)
             elif service.NAME == 'projectmanager':
                 service.show_view(view=service.plugin_view)
             #elif service.plugin_view is not None:
