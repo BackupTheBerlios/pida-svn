@@ -22,7 +22,6 @@
 #SOFTWARE.
 import os
 import pida.core.service as service
-import pida.pidagtk.filemanager as filemanager
 import pida.core.actions as actions
 
 defs = service.definitions
