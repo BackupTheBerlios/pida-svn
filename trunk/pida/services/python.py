@@ -57,9 +57,11 @@ class python(service.service):
     def cmd_execute_file(self, filename):
         py = self.opt('python_execution', 'python_executable')
         command_args=[py, filename]
+        directory = os.path.dirname(filename)
         self.boss.call_command('terminal', 'execute',
                                command_args=command_args,
-                               icon_name='execute')
+                               icon_name='execute',
+                               kwdict={'directory': directory})
 
     def act_python_shell(self, action):
         """Start an interactive python shell."""
