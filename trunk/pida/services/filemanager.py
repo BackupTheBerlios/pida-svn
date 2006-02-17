@@ -144,6 +144,8 @@ class GtkReader(gobject.GObject):
             self._ls()
         gobject.idle_add(_f)
 
+gobject.type_register(GtkReader)
+
 
 class FileSystemItem(object):
 
@@ -404,6 +406,7 @@ class FileBrowser(contentview.content_view):
         else:
             self._popup_file(fsi.path, event)
 
+gobject.type_register(FileBrowser)
 
 class file_manager(service.service):
 
