@@ -322,7 +322,7 @@ class FileBrowser(contentview.content_view):
             gobject.idle_add(_a, fsi)
 
     def cb_status_data(self, reader, path):
-        path, status = path.split(' ', 1)
+        status, path = path.split(' ', 1)
         if path in self._files:
             f = self._files[path]
             f.status = int(status)

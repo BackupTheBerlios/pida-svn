@@ -41,7 +41,7 @@ class Lister(object):
             statuses = vcdir.listdir(directory)
             for status in statuses:
                 self._print_lock.acquire()
-                print '<s>', status.path, status.state
+                print '<s>', status.state, status.path
                 self._print_lock.release()
             sys.exit(0)
 
