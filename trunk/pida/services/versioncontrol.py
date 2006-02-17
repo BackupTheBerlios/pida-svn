@@ -23,19 +23,66 @@
 
 import os
 
+import gtk
 import gobject
 
 import pida.core.service as service
 import pida.core.actions as actions
+import pida.pidagtk.contentview as contentview
 
 import pida.utils.vc as vc
 
 defs = service.definitions
 types = service.types
 
+class CommitView(contentview.content_view):
+
+    SHORT_TITLE = 'Commit'
+    ICON_NAME = 'vcs_commit'
+    HAS_CONTROL_BOX = False
+
+    def init(self):
+        self._text = gtk.TextView()
+        sw = gtk.ScrolledWindow()
+        sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        sw.add(self._text)
+        self.widget.pack_start(sw)
+        bb = gtk.HButtonBox()
+        self.widget.pack_start(bb, expand=False)
+        bb.set_layout(gtk.BUTTONBOX_END)
+        _ok = gtk.Button(stock=gtk.STOCK_OK)
+        _ok.connect('clicked', self.on_ok__clicked)
+        _cancel = gtk.Button(stock=gtk.STOCK_CANCEL)
+        _cancel.connect('clicked', self.on_cancel__clicked)
+        bb.pack_start(_cancel)
+        bb.pack_start(_ok)
+
+    def on_ok__clicked(self, button):
+        text = self._get_text()
+        self._callback(text)
+
+    def on_cancel__clicked(self, button):
+        self.close()
+
+    def grab_focus(self):
+        self._text.grab_focus()
+
+    def set_callback(self, callback):
+        self._callback = callback
+        self._text.get_buffer().set_text('')
+
+    def _get_text(self):
+        e = self._text.get_buffer().get_end_iter()
+        s = self._text.get_buffer().get_start_iter()
+        return self._text.get_buffer().get_text(s, e)
+
 class version_control(service.service):
 
     display_name = 'Version Control Integration'
+
+    class CommitMessage(defs.View):
+        view_type = CommitView
+        book_name = 'view'
 
     class meld_integration(defs.optiongroup):
         """How much meld will be used."""
@@ -52,6 +99,7 @@ class version_control(service.service):
         self.__currentfile = None
         self.action_group.set_sensitive(False)
         self.__cached_vcs = {}
+        self._commit_view = None
 
     def bnd_buffermanager_document_changed(self, document):
         self.__currentfile = document.filename
@@ -150,9 +198,15 @@ class version_control(service.service):
                                                    directory},
                                         short_title='Commit')
                 self._update_filemanager(directory)
-            self.boss.call_command('window', 'input',
-                                   callback_function=commit,
-                                   prompt='%s commit message' % vcs.NAME)
+            if self._commit_view is None:
+                self._commit_view = self.create_view('CommitMessage')
+                self._commit_view.show()
+            else:
+                self._commit_view.raise_page()
+            self._commit_view.grab_focus()
+            self._commit_view.set_callback(commit)
+            self._commit_view.long_title = ('Commit message for %s on %s'
+                                            % (vcs.NAME, directory))
 
     def cmd_add_file(self, filename):
         directory = os.path.dirname(filename)
@@ -224,6 +278,9 @@ class version_control(service.service):
                     is_important=False)
     def act_diff_file(self, action):
         self.call('diff_file', filename=self.__currentfile)
+
+    def view_closed(self, view):
+        self._commit_view = None
 
     def get_menu_definition(self):
         return """
