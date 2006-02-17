@@ -132,12 +132,17 @@ class version_control(service.service):
             return vcs
 
     def cmd_commit(self, directory):
+        if os.path.isdir(directory):
+            pathargs = []
+        else:
+            pathargs = [directory]
+            directory = os.path.dirname(directory)
         vcs = self.call('get_vcs_for_directory', directory=directory)
         if vcs.NAME == 'Null':
             self.log.info('"%s" is not version controlled', directory)
         else:
             def commit(message):
-                commandargs = vcs.commit_command(message)
+                commandargs = vcs.commit_command(message) + pathargs
                 self.boss.call_command('terminal', 'execute',
                                         command_args=commandargs,
                                         icon_name='vcs_commit',
@@ -207,14 +212,11 @@ class version_control(service.service):
                 self.log.info('Not implemented for %s' % vcs.NAME)
         
     def _update_filemanager(self, directory):
-        fmdir = self.boss.call_command('filemanager', 'get_current_directory')
-        print fmdir, directory
-        if directory == fmdir:
+        def browse():
             self.call('forget_directory', directory=directory)
-            def browse():
-                self.boss.call_command('filemanager', 'browse',
-                                       directory=directory)
-            gobject.timeout_add(200, browse)
+            self.boss.call_command('filemanager', 'refresh',
+                                    cwd=directory)
+        gobject.timeout_add(200, browse)
 
     @actions.action(label='Differences',
                     stock_id='vcs_diff',

@@ -196,6 +196,7 @@ class FileBrowser(contentview.content_view):
         self._reader.connect('status-data', self.cb_status_data)
         self._files = {}
         self._recent = {}
+        self._visrect = None
         self.cwd = None
         self.create_toolbar()
         self.create_actions()
@@ -272,6 +273,12 @@ class FileBrowser(contentview.content_view):
     def forget(self, directory):
         if directory in self._recent:
             del self._recent[directory]
+
+    def refresh(self):
+        if self.cwd is not None:
+            self.forget(self.cwd)
+            self._visrect = self._view.view.get_visible_rect()
+            self.browse(self.cwd)
          
     def cb_started(self, reader):
         self._files = {}
@@ -281,6 +288,9 @@ class FileBrowser(contentview.content_view):
         self.cwd = cwd
         self._recent[self.cwd] = self._files
         self.long_title = self.cwd
+        if self._visrect is not None:
+            self._view.view.scroll_to_point(self._visrect.x, self._visrect.y)
+            self._visrect = None
 
     def cb_plain_data(self, reader, path):
         if path not in self._files:
@@ -310,9 +320,7 @@ class FileBrowser(contentview.content_view):
         self.browse_up()
 
     def cb_act_refresh(self, action):
-        if self.cwd is not None:
-            self.forget(self.cwd)
-            self.browse(self.cwd)
+        self.refresh()
 
     def cb_act_home(self, action):
         project = self.service.boss.call_command('projectmanager',
@@ -408,6 +416,10 @@ class file_manager(service.service):
 
     def cmd_get_current_directory(self):
         return self.plugin_view.cwd
+
+    def cmd_refresh(self, cwd=None):
+        if cwd is not None and self.plugin_view.cwd == cwd:
+            self.plugin_view.refresh()
 
     def cb_single_view_file_activated(self, view, filename):
         
