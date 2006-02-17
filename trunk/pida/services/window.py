@@ -32,19 +32,11 @@ from pida.pidagtk import shiftpaned
 import pida.core.actions as actions
 import pida.core.service as service
 
-from pida.pidagtk.contentview import ContentManager
+from pida.pidagtk.contentview import ContentManager, create_pida_icon
 
 
 types = service.types
 defs = service.definitions
-
-from pkg_resources import Requirement, resource_filename
-icon_file = resource_filename(Requirement.parse('pida'),
-                              'pida-icon.png')
-im = gtk.Image()
-im.set_from_file(icon_file)
-im2 = gtk.Image()
-im2.set_from_file(icon_file)
 
 
 class WindowManager(service.service):
@@ -362,7 +354,7 @@ class WindowManager(service.service):
             self._connect_drag_events()
             self.__window.add(self.__mainbox)
             self.__window.resize(800, 600)
-            self.__window.set_icon(im.get_pixbuf())
+            self.__window.set_icon(create_pida_icon())
 
 
     def _create_uim(self):
