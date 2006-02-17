@@ -60,6 +60,7 @@ class CommitView(contentview.content_view):
     def on_ok__clicked(self, button):
         text = self._get_text()
         self._callback(text)
+        self.close()
 
     def on_cancel__clicked(self, button):
         self.close()
