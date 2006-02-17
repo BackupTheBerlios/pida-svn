@@ -49,6 +49,8 @@ import pida.pidagtk.contentview as contentview
 
 mime_icons = {}
 dir_icon = icons.icons.get('gtk-directory')
+pida_icon = contentview.create_pida_icon().scale_simple(16, 16,
+                                        gtk.gdk.INTERP_NEAREST)
 
 defs = service.definitions
 
@@ -177,7 +179,11 @@ class FileSystemItem(object):
         else:
             self.mt = mimetypes.guess_type(self.path)[0]
             self.icon = icons.icons.get_mime_image(self.mt)
-            return self.icon
+            if self.icon:
+                return self.icon
+            elif self.name.endswith('.pida'):
+                self.icon = pida_icon
+                return self.icon
             
     pixbuf = property(get_pixbuf)
 
@@ -259,6 +265,7 @@ class FileBrowser(contentview.content_view):
     def create_tree(self):
         self._view = FileTree()
         self._view.set_property('markup-format-string', '%(markup)s')
+        self._view.connect('clicked', self.cb_click)
         self._view.connect('double-clicked', self.cb_double_click)
         self._view.connect('right-clicked', self.cb_right_click)
         self.widget.pack_start(self._view)
@@ -309,19 +316,28 @@ class FileBrowser(contentview.content_view):
     def cb_plain_data(self, reader, path):
         if path not in self._files:
             fsi = FileSystemItem(path)
-            self._view.add_item(fsi)
             self._files[path] = fsi
+            def _a(fsi):
+                self._view.add_item(fsi)
+            gobject.idle_add(_a, fsi)
 
     def cb_status_data(self, reader, path):
         path, status = path.split(' ', 1)
-        try:
+        if path in self._files:
             f = self._files[path]
-        except KeyError:
+            f.status = int(status)
+            def _r(f):
+                f.reset_markup()
+        else:
             f = FileSystemItem(path)
             self._files[path] = f
-            self._view.add_item(f)
-        f.status = int(status)
-        f.reset_markup()
+            f.status = int(status)
+            def _r(f):
+                self._view.add_item(f)
+        gobject.idle_add(_r, f)
+        
+    def cb_click(self, tv, item):
+        pass
 
     def cb_double_click(self, tv, item):
         fsi = item.value
