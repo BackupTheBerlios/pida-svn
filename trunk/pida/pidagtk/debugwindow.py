@@ -30,6 +30,8 @@ import sys
 
 _ = gettext.gettext
 
+import pida.core.errors as errors
+
 class DebugWindow(gtk.Dialog):
 
     application = None
@@ -109,6 +111,29 @@ class DebugWindow(gtk.Dialog):
         self.notebook.show_all()
 
     def show_exception(self, exctype, value, tb):
+        if exctype is errors.ServiceNotFoundError:
+            from rat.hig import dialog_error, dialog_warn
+            svcname = value.args[0]
+            pt = 'Tried to access non-existing service "%s"' % svcname
+            st = ('PIDA tried to find a service that is not loaded'
+                  '. Most likely this is due to a missing dependency'
+                  '. Please check the file:\n\n'
+                  '<tt>~/.pida/logs/pida.log</tt>')
+            if svcname in ['window', 'buffermanager', 'contexts',
+                         'editormanager']:
+                st = ('%s\n\n<span color="#c03030">'
+                      'The service "%s" is critical.</span>\n\n'
+                      '<b>PIDA will not run without it</b>'
+                      % (st, svcname))
+                dialog_error(pt, st, title='Service Not Found')
+            else:
+                dialog_warn(pt, st, title='Service Not Found')
+            return True
+        else:
+            self.unhandled_exception(exctype, value, tb)
+
+
+    def unhandled_exception(self, exctype, value, tb):
         self._info_label.set_text(str(exctype))
         self.print_tb(tb)
         lines = traceback.format_exception_only(exctype, value)
@@ -208,7 +233,8 @@ class DebugWindow(gtk.Dialog):
 def show(exctype, value, tb):
     if exctype is not KeyboardInterrupt:
         dw = DebugWindow()
-        dw.show_exception(exctype, value, tb)
+        if dw.show_exception(exctype, value, tb):
+            return
         dw.show_all()
         if not gtk.main_level():
             def q(window):

@@ -44,11 +44,11 @@ class service_manager(base.pidagroup):
         for group in groups:
             self.__load_entrypoints(group)
         # load all the services, they are compulsory
-        self.__check_importants_loaded(self.__available['services'])
+        #self.__check_importants_loaded(self.__available['services'])
         self.log.debug('loading core services')
         for svc in self.__available['services']:
             self.__load_service('services', svc)
-        self.__check_importants_loaded([i.NAME for i in self])
+        #self.__check_importants_loaded([i.NAME for i in self])
         # load the required plugins
         self.log.debug('loading required plugins')
         for plugin in self.__available['plugins']:
