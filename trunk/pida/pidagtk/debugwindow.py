@@ -40,9 +40,10 @@ class DebugWindow(gtk.Dialog):
         gtk.Dialog.__init__(self, 'An Error Occurred', parent,
                             gtk.DIALOG_MODAL | gtk.DIALOG_NO_SEPARATOR)
 
-        self._build_ui()
         self.send = self._create_button(gtk.STOCK_NETWORK, _('_Report bug ...'))
         self.send.connect('clicked', self._on_send__clicked)
+        self.send.set_sensitive(False)
+        self._build_ui()
         self.action_area.pack_end(self.send)
 
         
@@ -106,7 +107,43 @@ class DebugWindow(gtk.Dialog):
         sw.add(self._textview)
         self._textview.show()
         
-        self.notebook.append_page(sw, tab_label=gtk.Label("Exception"))
+        br = gtk.VBox()
+        br.pack_start(sw)
+        self.notebook.append_page(br, tab_label=gtk.Label("Exception"))
+        
+        exp = gtk.Expander(label='Bug report details')
+        def _a(exp):
+            self.send.set_sensitive(exp.get_expanded()) 
+        exp.connect_after('activate', _a)
+        br.pack_start(exp, expand=False)
+        tb = gtk.VBox(spacing=6)
+        exp.add(tb)
+        sg = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
+        h1 = gtk.HBox(spacing=12)
+        tb.pack_start(h1, expand=False)
+        l = gtk.Label('Title:')
+        l.set_alignment(1, 0)
+        sg.add_widget(l)
+        h1.pack_start(l, expand=False, padding=6)
+        self._ticketname = gtk.Entry()
+        self._ticketname.set_has_frame(False)
+        h1.pack_start(self._ticketname, padding=6)
+        h1 = gtk.HBox(spacing=12)
+        tb.pack_start(h1)
+        l = gtk.Label('Description:')
+        l.set_alignment(1, 0)
+        sg.add_widget(l)
+        h1.pack_start(l, expand=False, padding=6)
+        self._ticketdesc = gtk.TextView()
+        sw = gtk.ScrolledWindow()
+        sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        sw.add(self._ticketdesc)
+        h1.pack_start(sw, padding=6)
+        self._ticketinclexc = gtk.CheckButton(
+            label='Include exception traceback in report')
+        tb.pack_start(self._ticketinclexc)
+        self._ticketinclexc.set_active(True)
+        
         
         self.notebook.show_all()
 
@@ -131,7 +168,6 @@ class DebugWindow(gtk.Dialog):
             return True
         else:
             self.unhandled_exception(exctype, value, tb)
-
 
     def unhandled_exception(self, exctype, value, tb):
         self._info_label.set_text(str(exctype))
@@ -198,19 +234,23 @@ class DebugWindow(gtk.Dialog):
         pdb.pm()
 
     def _on_send__clicked(self, button):
-        exception_text = self._buffer.get_text(*self._buffer.get_bounds())
-        reply = self.maketicket(exception_text)
-        
-        print reply
+        buf = self._ticketdesc.get_buffer()
+        desc = buf.get_text(*buf.get_bounds())
+        if self._ticketinclexc.get_active():
+            exc = self._buffer.get_text(*self._buffer.get_bounds())
+            desc = '%s\n\n{{{\n%s\n}}}\n' % (desc, exc)
+        summary = self._ticketname.get_text()
+        reply = self.maketicket(summary, desc)
 
     def _on_ok__clicked(self, button):
         self.destroy()
 
-    def maketicket(self, summary, name='Pida Bug report'):
+    def maketicket(self, summary, description, name='Pida Bug report'):
         base = 'http://pida.vm.bytemark.co.uk/projects/pida/'
         url = '%s/newticket' % base.rstrip('/')
         postdata={'reporter': name,
                   'summary': summary,
+                  'description': description,
                   'action': 'create',
                   'status': 'new',
                   'milestone': '0.3',}
@@ -246,10 +286,11 @@ if __name__ == '__main__':
     sys.excepthook = show
     print 123
     def a():
-        raise Exception('ladidadi')
+        raise errors.ServiceNotFoundError('window')
     def b():
         a()
     def c():
+        b()
         b()
     c()
     #dw = DebugWindow()
