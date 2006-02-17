@@ -31,7 +31,7 @@ defs = service.definitions
 
 class config_view(configview.config_view):
 
-    ICON_NAME = 'config'
+    ICON_NAME = 'gtk-preferences'
 
     SHORT_TITLE = 'Configuration'
 
