@@ -21,6 +21,18 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+"""
+The PIDA File browser.
+
+The PIDA filebrowser functions as a normal listed file browser with added
+version control status information for all the version control systems
+supported in PIDA.
+
+In order to open a file in the editor, it should be double-clicked. There is
+an additional context menu for various actions that can be performed on the
+selected file system item. This context menu contains the "Open With" menu.
+"""
+
 import os
 import mimetypes
 import subprocess
@@ -28,15 +40,15 @@ import subprocess
 import gtk
 import gobject
 
-import pida.core.service as service
-import pida.core.actions as actions
 import pida.pidagtk.tree as tree
 import pida.pidagtk.icons as icons
+import pida.core.service as service
+import pida.core.actions as actions
 from pida.utils.kiwiutils import gsignal
 import pida.pidagtk.contentview as contentview
 
-dir_icon = icons.icons.get('gtk-directory')
 mime_icons = {}
+dir_icon = icons.icons.get('gtk-directory')
 
 defs = service.definitions
 
@@ -44,6 +56,7 @@ STATE_IGNORED, STATE_NONE, STATE_NORMAL, STATE_NOCHANGE, \
 STATE_ERROR, STATE_EMPTY, STATE_NEW, \
 STATE_MODIFIED, STATE_CONFLICT, STATE_REMOVED, \
 STATE_MISSING, STATE_MAX = range(12)
+
 colours = {
             None: ('#000000', False, True),
             STATE_IGNORED: ('#909090', False, True),
@@ -74,7 +87,9 @@ letters = {
             STATE_MAX: '+'
             }
 
+
 class GtkReader(gobject.GObject):
+    """Read status results from a sub process."""
 
     gsignal('started')
 
@@ -153,8 +168,6 @@ class FileSystemItem(object):
         return '<span color="%s">%s%s</span>' % (col, sinf, fn)
     markup = property(get_markup)
 
-    
-
     def get_pixbuf(self):
         if self.icon is not None:
             return self.icon
@@ -167,6 +180,7 @@ class FileSystemItem(object):
             return self.icon
             
     pixbuf = property(get_pixbuf)
+
 
 class FileTree(tree.IconTree):
     
@@ -391,6 +405,8 @@ class file_manager(service.service):
                 pkg_resources.Requirement.parse('pida'),
                 'forkscripts/ls.py')
         self.plugin_view = self.create_view('FileBrowser', scriptpath=fn)
+        self.plugin_view.connect('file-activated',
+                                  self.cb_single_view_file_activated)
 
     @actions.action(
     default_accel='<Control><Shift>f',
@@ -405,10 +421,6 @@ class file_manager(service.service):
                                filename=self.plugin_view.selected)
 
     def cmd_browse(self, directory=None):
-        #if self.plugin_view is None:
-        #    self.create_plugin_view()
-        self.plugin_view.connect('file-activated',
-                                  self.cb_single_view_file_activated)
         if directory is None:
             directory = os.path.expanduser('~')
         self.plugin_view.browse(directory)
@@ -422,7 +434,6 @@ class file_manager(service.service):
             self.plugin_view.refresh()
 
     def cb_single_view_file_activated(self, view, filename):
-        
         self.boss.call_command('buffermanager', 'open_file',
                                 filename=filename)
 
@@ -432,3 +443,4 @@ class file_manager(service.service):
 
         
 Service = file_manager
+
