@@ -109,14 +109,30 @@ class project_creator_view(contentview.content_view):
 class project_options(gtk.VBox):
 
     def __init__(self):
-        super(project_options, self).__init__()
+        super(project_options, self).__init__(spacing=12)
+        helpl = gtk.Label()
+        self.pack_start(helpl, expand=False)
+        helpl.set_line_wrap(True)
+        helpl.set_alignment(0, 0.5)
+        helpmu = ('<i>This file is where the project data will be '
+                  'stored. The default is a reasonable location. You '
+                  'might wish to change it to store the project file '
+                  'inside the source directory of a project.</i>')
+        helpl.set_markup(helpmu)
         hb = gtk.HBox()
-        self.pack_start(hb, expand=False, padding=3)
-        type_label = gtk.Label('Type')
+        self.pack_start(hb, expand=False, padding=12)
+        type_label = gtk.Label('Type: ')
         hb.pack_start(type_label, expand=False, padding=3)
         type_label.set_alignment(0, 0.5)
         self.__type_combo = gtk.combo_box_new_text()
         hb.pack_start(self.__type_combo)
+        helpl = gtk.Label()
+        helpl.set_alignment(0, 0.5)
+        self.pack_start(helpl, expand=False)
+        helpl.set_line_wrap(True)
+        helpmu = ('<i>This is the project type. Python projects have '
+                  'additional features, such as execution.</i>')
+        helpl.set_markup(helpmu)
         self.show_all()
         
     def set_project_types(self, types):
@@ -157,7 +173,7 @@ class project_creator(service.service):
                                 current_project = dummy_project())
 
     def create_view(self):
-        chooser = gtk.FileChooserDialog("Create New File",
+        chooser = gtk.FileChooserDialog("Save Project File",
                         self.boss.get_main_window(),
                         gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                         (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT,
