@@ -31,6 +31,14 @@ import gobject
 import icons
 
 
+def create_pida_icon():
+    from pkg_resources import Requirement, resource_filename
+    icon_file = resource_filename(Requirement.parse('pida'),
+                              'pida-icon.png')
+    im = gtk.Image()
+    im.set_from_file(icon_file)
+    return im.get_pixbuf()
+
 
 class content_view(gtk.VBox):
     __gsignals__ = {'short-title-changed': (
@@ -393,6 +401,7 @@ class ExternalBook(object):
         w.connect('delete-event', self.cb_delete, view)
         w.set_position(gtk.WIN_POS_CENTER)
         w.resize(600, 480)
+        w.set_icon(create_pida_icon())
         w.show_all()
         view.hide_title()
 
