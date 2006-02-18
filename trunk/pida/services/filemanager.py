@@ -307,8 +307,8 @@ class FileBrowser(contentview.content_view):
         self._files = {}
         self._view.clear()
 
-    def cb_finished(self, reader, cwd):
-        self.cwd = cwd
+    def cb_finished(self, reader, args):
+        self.cwd = args[-1]
         self._recent[self.cwd] = self._files
         self.long_title = self.cwd
         if self._visrect is not None:

@@ -34,7 +34,7 @@ class GobjectReader(gobject.GObject):
 
     gsignal('started')
 
-    gsignal('finished', str)
+    gsignal('finished', gobject.TYPE_PYOBJECT)
 
     gsignal('data', str)
 
