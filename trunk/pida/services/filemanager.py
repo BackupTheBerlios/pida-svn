@@ -45,6 +45,7 @@ import pida.pidagtk.icons as icons
 import pida.core.service as service
 import pida.core.actions as actions
 from pida.utils.kiwiutils import gsignal
+import pida.utils.gobjectlinereader as glr
 import pida.pidagtk.contentview as contentview
 
 mime_icons = {}
@@ -211,11 +212,10 @@ class FileBrowser(contentview.content_view):
 
     def init(self, scriptpath):
         gobject.GObject.__init__(self)
-        self._reader = GtkReader(scriptpath)
+        self._reader = glr.PkgresourcesReader('ls.py')
         self._reader.connect('started', self.cb_started)
         self._reader.connect('finished', self.cb_finished)
-        self._reader.connect('plain-data', self.cb_plain_data)
-        self._reader.connect('status-data', self.cb_status_data)
+        self._reader.connect('data', self.cb_data)
         self._files = {}
         self._recent = {}
         self._visrect = None
@@ -285,7 +285,7 @@ class FileBrowser(contentview.content_view):
             self.cwd = directory
             self.long_title = self.cwd
         else:
-            self._reader.ls(directory)
+            self._reader.run(directory)
 
     def browse_up(self):
         directory = self.cwd
@@ -314,6 +314,14 @@ class FileBrowser(contentview.content_view):
         if self._visrect is not None:
             self._view.view.scroll_to_point(self._visrect.x, self._visrect.y)
             self._visrect = None
+
+    def cb_data(self, reader, data):
+        typ, data = data.split(' ', 1)
+        if typ == '<p>':
+            sig = self.cb_plain_data
+        else:
+            sig = self.cb_status_data
+        sig(reader, data)
 
     def cb_plain_data(self, reader, path):
         if path not in self._files:
