@@ -461,17 +461,20 @@ class Buffermanager(service.service):
     def __remove_document(self, document):
         del self.__documents[document.unique_id]
         model = self.plugin_view.bufferview.model
-        for row in model:
+        for i, row in enumerate(model):
             if row[0] == str(document.unique_id):
                 model.remove(row.iter)
+                break
         document.handler.action_group.set_visible(False)
         self.__currentdocument = None
         self.action_group.get_action('buffermanager+close_buffer').set_sensitive(False)
-        def refresh():
+        def refresh(i):
             if self.__currentdocument is None:
                 if len(model):
-                    self.__view_document(model[0][1].value)
-        gtk.idle_add(refresh)
+                    if i == len(model):
+                        i = i - 1
+                    self.__view_document(model[i][1].value)
+        gtk.idle_add(refresh, i)
 
     def __open_file(self, filename):
         document = self.boss.call_command('documenttypes',
