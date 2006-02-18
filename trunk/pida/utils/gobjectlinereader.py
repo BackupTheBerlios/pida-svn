@@ -42,12 +42,25 @@ class GobjectReader(gobject.GObject):
 
     def __init__(self):
         self.__q = []
+        self.pid = None
         super(GobjectReader, self).__init__()
 
     def run(self, *args):
         self.__q.append(args)
         if len(self.__q) == 1:
             self._run()
+
+    def stop(self):
+        gobject.source_remove(self.__watch)
+        if not self.pid:
+            return
+        try:
+            os.kill(self.pid, 15)
+        except:
+            try:
+                os.kill(self.pid, 9)
+            except:
+                pass
 
     def _run(self):
         qlen = len(self.__q)
@@ -58,6 +71,7 @@ class GobjectReader(gobject.GObject):
         self.__watch = gobject.io_add_watch(p.stdout,
                        gobject.IO_IN, self.cb_read)
         gobject.io_add_watch(p.stdout.fileno(), gobject.IO_HUP, self.cb_hup)
+        self.pid = p.pid
 
     def _received(self, data):
         self.emit('data', data)

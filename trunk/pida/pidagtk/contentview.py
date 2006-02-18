@@ -139,6 +139,7 @@ class content_view(gtk.VBox):
         self.__long_title_label.show()
 
         self.__toolbar = gtk.Toolbar()
+        self.toolbar = self.__toolbar
         self.__toolbar_area.pack_start(self.__toolbar)
         self.__toolbar.add_events(gtk.gdk.BUTTON_PRESS_MASK)
         def _rc(tb, event):
