@@ -53,11 +53,13 @@ class culebra_view(contentview.content_view):
     HAS_CONTROL_BOX = False
     HAS_TITLE = False
 
-    def init(self, filename=None, action_group=None, background_color=None, font_color=None):
+    def init(self, filename=None, action_group=None, background_color=None,
+                   font_color=None, font_text=None):
         self.widget.set_no_show_all(True)
         widget, editor = edit.create_widget(filename, action_group)
         editor.set_background_color(background_color)
         editor.set_font_color(font_color)
+        editor.set_font(font_text)
         self.__editor = editor
         self.buffer.connect('can-undo', self.cb_can_undo)
         self.buffer.connect('can-redo', self.cb_can_redo)
@@ -109,6 +111,11 @@ class culebra_editor(service.service):
             default = "#FFFFFF"
             rtype = types.color
         
+        class font(defs.option):
+            """Change the font used in Culebra."""
+            rtype = types.font
+            default = 'monospace 10'
+
         class font_color(defs.option):
             """Change the font color"""
             default = "#000000"
@@ -128,6 +135,7 @@ class culebra_editor(service.service):
         for view in self.__views.values():
             view.editor.set_background_color(self.get_background_color())
             view.editor.set_font_color(self.get_font_color())
+            view.editor.set_font(self.opt('general', 'font'))
 
     # private interface
 
@@ -152,6 +160,7 @@ class culebra_editor(service.service):
             action_group=self.action_group,
             background_color = self.get_background_color(),
             font_color = self.get_font_color(),
+            font_text = self.opt('general', 'font')
         )
         self.__views[document.unique_id] = view
         self.__documents[view.unique_id] = document

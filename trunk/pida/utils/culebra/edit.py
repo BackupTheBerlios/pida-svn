@@ -35,9 +35,6 @@ class CulebraView(gtksourceview.SourceView):
         self.set_smart_home_end(True)
         self.set_highlight_current_line(True)
         self.set_insert_spaces_instead_of_tabs(True)
-        font_desc = pango.FontDescription('monospace 10')
-        if font_desc is not None:
-            self.modify_font(font_desc)
         
         self.search_bar = SearchBar(self, action_group)
         self.replace_bar = ReplaceBar(self, self.search_bar, action_group)
@@ -53,6 +50,11 @@ class CulebraView(gtksourceview.SourceView):
     
     def set_font_color(self, color):
         self.modify_text(gtk.STATE_NORMAL, color)
+
+    def set_font(self, fontstring):
+        font_desc = pango.FontDescription(fontstring)
+        if font_desc is not None:
+            self.modify_font(font_desc)
     
     def set_buffer(self, buff):
         self.replace_bar.set_buffer(buff)
