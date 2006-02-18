@@ -42,8 +42,8 @@ import pida.pidagtk.contentview as contentview
 defs = service.definitions
 
 # markup definitions
-NAME_MU = '<big>%s</big>'
-DEF_MU = '<b>%s</b>'
+NAME_MU = '<big><b>%s</b></big>'
+DEF_MU = '%s'
 
 
 class command_line_opener(base.pidaobject):
@@ -110,10 +110,12 @@ class opener_view(contentview.content_view):
 
     LONG_TITLE = 'Open With Configuration'
 
+    HAS_CONTROL_BOX = False
+
     def init(self):
         self.__current = None
         self.widget.pack_start(self.__init_pane())
-        self.widget.pack_start(self.__init_buttons(), expand=False)
+        self.widget.pack_start(self.__init_buttons(), expand=False, padding=6)
 
     def set_openers(self, openers):
         self.__openers = openers
@@ -140,45 +142,56 @@ class opener_view(contentview.content_view):
         return names
 
     def __init_page(self):
-        box = gtk.VBox()
+        box = gtk.VBox(spacing=6)
         self.__page = box
         s1 = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
         s2 = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
         self.__name_label = gtk.Label()
-        box.pack_start(self.__name_label, expand=False)
+        box.pack_start(self.__name_label, expand=False, padding=24)
         self.__name_label.set_alignment(0, 0.5)
         box2 = gtk.HBox(spacing=6)
-        box.pack_start(box2, expand=False, padding=6)
+        box.pack_start(box2, expand=False)
         lb_command = gtk.Label()
-        box2.pack_start(lb_command, expand=False)
-        lb_command.set_markup(DEF_MU % 'Command Line')
+        box2.pack_start(lb_command, expand=False, padding=6)
+        lb_command.set_markup(DEF_MU % 'Command Line:')
         s1.add_widget(lb_command)
-        lb_command.set_alignment(0, 0.5)
+        lb_command.set_alignment(1, 0)
         self.__command_entry = gtk.Entry()
-        box2.pack_start(self.__command_entry)
+        box2.pack_start(self.__command_entry, padding=6)
         s2.add_widget(self.__command_entry)
         box2 = gtk.HBox(spacing=6)
-        box.pack_start(box2, expand=False, padding=6)
+        box.pack_start(box2, expand=False)
         lb_glob = gtk.Label()
-        box2.pack_start(lb_glob, expand=False)
-        lb_glob.set_markup(DEF_MU % 'Glob')
+        box2.pack_start(lb_glob, expand=False, padding=6)
+        lb_glob.set_markup(DEF_MU % 'Glob:')
         s1.add_widget(lb_glob)
-        lb_glob.set_alignment(0, 0.5)
+        lb_glob.set_alignment(1, 0)
         self.__glob_entry = gtk.Entry()
-        box2.pack_start(self.__glob_entry)
+        box2.pack_start(self.__glob_entry, padding=6)
         s2.add_widget(self.__glob_entry)
+        lbhelp = gtk.Label()
+        lbhelp.set_line_wrap(True)
+        helptext = ('<i>Command lines must contain the text "%s",'
+                    'which will be replaced by the filename chosen, '
+                    'for example:\n\n<tt>gimp %s</tt>\n\n'
+                    'will start the Gimp image editor with the chosen'
+                    ' file.</i>')
+        lbhelp.set_markup(helptext)
+        box.pack_start(lbhelp, expand=False, padding=24)
+        lbhelp.set_alignment(0.2, 1)
         return box
 
     def __init_buttons(self):
         box = gtk.HButtonBox()
-        add = gtk.Button(stock=gtk.STOCK_ADD)
-        box.pack_start(add)
+        box.set_layout(gtk.BUTTONBOX_END)
+        add = gtk.Button(stock=gtk.STOCK_NEW)
+        box.pack_start(add, padding=6)
         add.connect('clicked', self.cb_add_clicked)
         remove = gtk.Button(stock=gtk.STOCK_REMOVE)
-        box.pack_start(remove)
+        box.pack_start(remove, padding=6)
         remove.connect('clicked', self.cb_remove_clicked)
         save = gtk.Button(stock=gtk.STOCK_SAVE)
-        box.pack_start(save)
+        box.pack_start(save, padding=6)
         save.connect('clicked', self.cb_save_clicked)
         return box
 

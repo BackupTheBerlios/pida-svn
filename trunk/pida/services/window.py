@@ -63,6 +63,21 @@ class WindowManager(service.service):
             default = 200
             rtype = types.intrange(75, 1800, 25)
 
+    class window_size(defs.optiongroup):
+        """The starting size of the pida window."""
+        class width(defs.option):
+            """The starting width in pixels."""
+            default = 800
+            rtype = types.intrange(0, 2800, 25)
+        class height(defs.option):
+            """The starting height in pixels."""
+            default = 600
+            rtype = types.intrange(0, 2800, 25)
+        class save_on_shutdown(defs.option):
+            """Whether the size will be saved on shutdown."""
+            default = True
+            rtype = types.boolean
+            
     class toolbar_and_menubar(defs.optiongroup):
         """Options relating to the toolbar and main menu bar."""
         class toolbar_visible(defs.option):
@@ -110,6 +125,13 @@ class WindowManager(service.service):
         self._create_window()
         self.toolbar.set_icon_size(size)
         self.toolbar.set_style(gtk.TOOLBAR_ICONS)
+
+    def stop(self):
+        if self.opt('window_size', 'save_on_shutdown'):
+            w, h = self.__window.get_size()
+            self.set_option('window_size', 'width', w)
+            self.set_option('window_size', 'height', h)
+            self.options.save()
 
     def cmd_show_window(self):
         self.__window.show_all()
@@ -331,7 +353,8 @@ class WindowManager(service.service):
         p0.set_position(main_pos)
         p1.pack_main(self.editorview, resize=True)
         p1.pack_sub(self.bookview, resize=False)
-        p1.set_position(400)
+        h = self.opt('window_size', 'height')
+        p1.set_position(h - 200)
 
     def _pack_sidebar(self):
         sidebar_horiz = self.opt('layout', 'vertical_sidebar_split')
@@ -353,7 +376,9 @@ class WindowManager(service.service):
             self.__window.add_accel_group(self.__acels)
             self._connect_drag_events()
             self.__window.add(self.__mainbox)
-            self.__window.resize(800, 600)
+            w = self.opt('window_size', 'width')
+            h = self.opt('window_size', 'height')
+            self.__window.resize(w, h)
             self.__window.set_icon(create_pida_icon())
 
 
