@@ -116,7 +116,12 @@ class MultiSubprocesslist(tree.Tree):
         else:
             margs = ['pyflakes']
         args = margs + list(args)
-        self._readers[name].run(*args)
+        try:
+            self._readers[name].run(*args)
+        except OSError:
+            # The application does not exist or there was some kind of error
+            # trying to run it
+            pass
 
     def make_item(self, data, checker):
         """For overriding"""
