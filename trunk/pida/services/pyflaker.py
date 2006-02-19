@@ -108,7 +108,9 @@ class MultiSubprocesslist(tree.Tree):
 
     def run(self, name, *args):
         if name == READER_PYCHECKER:
-            margs = ['pychecker', '-Q']
+            margs = ['pychecker', '-Q', '-q',
+            '--blacklist="Tkinter,wxPython,gtk,GTK,GDK,wx,_gobject,gobject"',
+            '-a', '-I', '-8', '-1']
         elif name == READER_PYLINT:
             margs = ['pylint', '--parseable=y', '-r', 'n']
         else:
@@ -216,7 +218,7 @@ class pyflaker(service.service):
         class pylint(defs.option):
             """Use Pylint to check."""
             rtype = types.boolean
-            default = False
+            default = True
         class pychecker(defs.option):
             """Use Pychecker to check."""
             rtype = types.boolean
