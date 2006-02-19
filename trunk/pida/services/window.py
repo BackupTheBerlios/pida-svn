@@ -26,8 +26,8 @@ import os
 import gtk
 
 # XXX: should be importing from rat
-#from pida.utils import shiftpaned
-from pida.pidagtk import shiftpaned
+from rat import shiftpaned
+#from pida.pidagtk import shiftpaned
 
 import pida.core.actions as actions
 import pida.core.service as service
@@ -334,7 +334,7 @@ class WindowManager(service.service):
 
     def _pack_panes(self):
         sidebar_on_right = self.opt('layout', 'sidebar_on_right')
-        self.__sidebar = p0 = shiftpaned.ShiftPaned(gtk.HPaned,
+        self.__sidebar = p0 = shiftpaned.SidebarPaned(gtk.HPaned,
                                                     sidebar_on_right)
         self.__mainbox.pack_start(p0)
         sidebar_width = self.opt('layout', 'sidebar_width')
@@ -347,7 +347,7 @@ class WindowManager(service.service):
             main_pos = sidebar_width
             self.contentview.set_tab_pos(gtk.POS_RIGHT)
             self.pluginview.set_tab_pos(gtk.POS_RIGHT)
-        self.__viewpan = p1 = shiftpaned.ShiftPaned(gtk.VPaned, True)
+        self.__viewpan = p1 = shiftpaned.SidebarPaned(gtk.VPaned, True)
         p0.pack_sub(sidebar, resize=False)
         p0.pack_main(p1, resize=True)
         p0.set_position(main_pos)
