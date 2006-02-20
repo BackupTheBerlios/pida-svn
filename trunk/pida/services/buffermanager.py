@@ -21,17 +21,18 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import os
+"""The PIDA Buffer manager."""
 
 import gtk
 
 from pida.core import actions
 from pida.pidagtk.tree import Tree
 from pida.pidagtk.contentview import content_view
-from pida.core.service import service, types, definitions as defs
+from pida.core.service import service, definitions as defs
 
 
 class BufferTree(Tree):
+    """Widget for the buffer list"""
     
     SORT_CONTROLS = True
     SORT_AVAILABLE = [('Time Opened','creation_time'),
@@ -52,15 +53,9 @@ class BufferTree(Tree):
             return isnt
         self.view.set_search_equal_func(_se)
         
-    def set_bufferlist(self, bufferlist):
-        # naive
-        self.set_items(self.__adapt_bufferlist(bufferlist))
-
-    def set_currentbuffer(self, filename):
-        self.set_selected(filename)
-
 
 class BufferView(content_view):
+    """View for the buffer list."""
 
     HAS_CONTROL_BOX = False
     HAS_DETACH_BUTTON = False
@@ -71,6 +66,7 @@ class BufferView(content_view):
     LONG_TITLE = 'List of open buffers'
 
     def init(self):
+        """Startup"""
         self.__buffertree = BufferTree()
         self.__buffertree.set_property('markup-format-string',
                                        '%(markup)s')
@@ -81,7 +77,9 @@ class BufferView(content_view):
         self.widget.pack_start(self.__buffertree)
 
     def get_bufferview(self):
+        """Get the buffer list widget."""
         return self.__buffertree
+
     bufferview = property(get_bufferview)
 
     def add_document(self, document):
@@ -150,7 +148,7 @@ class BufferView(content_view):
 
 
 class Buffermanager(service):
-    """The PIDA buffer manager"""    
+    """The PIDA buffer manager service"""    
     display_name = 'Buffer Management'
     
     class BufferView(defs.View):
@@ -172,41 +170,6 @@ class Buffermanager(service):
         self.action_group.get_action('buffermanager+close_buffer'
                                      ).set_sensitive(False)
         self.plugin_view = self.create_view('BufferView')
-
-    @actions.action(
-        stock_id=gtk.STOCK_OPEN,
-        label=None,
-        is_important=True,
-        default_accel='<Shift><Control>o'
-    )
-    def act_open_file(self, action):
-        """Opens a document"""
-        chooser = gtk.FileChooserDialog(
-                    title='Open a file',
-                    parent=self.boss.get_main_window(),
-                    buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-        def _cb(dlg, response):
-            if response == gtk.RESPONSE_ACCEPT:
-                filename = chooser.get_filename()
-                self.call('open_file', filename=filename)
-            chooser.destroy()
-        chooser.connect('response', _cb)
-        chooser.run()
-
-    @actions.action(stock_id=gtk.STOCK_CLOSE,
-                    label='Close Document',
-                    default_accel='<Control>w')
-    def act_close_buffer(self, action):
-        """Close the current buffer."""
-        filename = self.__currentdocument.filename
-        self.call('close_file', filename=filename)
-
-    @actions.action(stock_id=gtk.STOCK_NEW, label=None,
-                    default_accel='<Shift><Control>n')
-    def act_new_file(self, action):
-        """Creates a document"""
-        self.call('new_file')
 
     def cmd_switch_search(self):
         self.plugin_view.search()
@@ -371,6 +334,41 @@ class Buffermanager(service):
         doc = bufitem.value
         if doc != self.__currentdocument:
             self.__view_document(doc)
+
+    @actions.action(
+        stock_id=gtk.STOCK_OPEN,
+        label=None,
+        is_important=True,
+        default_accel='<Shift><Control>o'
+    )
+    def act_open_file(self, action):
+        """Opens a document"""
+        chooser = gtk.FileChooserDialog(
+                    title='Open a file',
+                    parent=self.boss.get_main_window(),
+                    buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        def _cb(dlg, response):
+            if response == gtk.RESPONSE_ACCEPT:
+                filename = chooser.get_filename()
+                self.call('open_file', filename=filename)
+            chooser.destroy()
+        chooser.connect('response', _cb)
+        chooser.run()
+
+    @actions.action(stock_id=gtk.STOCK_CLOSE,
+                    label='Close Document',
+                    default_accel='<Control>w')
+    def act_close_buffer(self, action):
+        """Close the current buffer."""
+        filename = self.__currentdocument.filename
+        self.call('close_file', filename=filename)
+
+    @actions.action(stock_id=gtk.STOCK_NEW, label=None,
+                    default_accel='<Shift><Control>n')
+    def act_new_file(self, action):
+        """Creates a document"""
+        self.call('new_file')
     
     def get_menu_definition(self):
         return  """
