@@ -85,10 +85,15 @@ class python(service.service):
                 """The directory containing source code."""
                 rtype = types.directory
                 default = os.path.expanduser('~')
-            class python_binary_location(defs.option):
-                """The location of the python binary"""
-                rtype = types.file
-                default = '/usr/bin/python'
+
+        class glade(defs.optiongroup):
+            """Options relating to user interfaces in this project"""
+            class use_glade(defs.option):
+                rtype = types.boolean
+                default = False
+            class glade_directory(defs.option):
+                rtype = types.directory
+                default = os.path.expanduser('~')
 
         class execution(defs.optiongroup):
             """Options relating to executing the project"""
@@ -97,8 +102,13 @@ class python(service.service):
                 rtype = types.file
                 default = ''                
             class use_python_to_execute(defs.option):
+                """Execute the project file with python."""
                 rtype = types.boolean
                 default = True
+            class python_binary_location(defs.option):
+                """The location of the python binary"""
+                rtype = types.file
+                default = '/usr/bin/python'
 
         @actions.action(
             default_accel='<Shift><Control>x'
@@ -112,7 +122,8 @@ class python(service.service):
             use_py = proj.get_option('execution',
                         'use_python_to_execute').value
             if use_py:
-                shell_cmd = 'python'
+                shell_cmd = proj.get_option('execution',
+                                            'python_binary_location')
             else:
                 shell_cmd = 'bash'
             if projfile:
@@ -121,32 +132,15 @@ class python(service.service):
             else:
                 self.service.log.info('project has not set an executable')
         
-        # XXX: this should be on gazpach service
-        @actions.action(
-            label="Add UI Form...",
-        )
-        def act_add_ui_form(self, action):
-            """Add a user interface form to the current project."""
-            def callback(name):
-                if not name.endswith('.glade'):
-                    name = '%s.glade' % name
-                proj = self.boss.call_command('projectmanager',
-                                              'get_current_project')
-                filepath = os.path.join(proj.source_directory, name)
-                self.service.boss.call_command('gazpach', 'create',
-                                               filename=filepath)
-            self.service.boss.call_command('window', 'input',
-                                            callback_function=callback,
-                                            prompt='Form Name')
-
         def get_menu_definition(self):
             return """
             <menubar>
             <menu name="base_project" action="base_project_menu">
             <separator />
-            <menuitem name="addform" action="python+project+add_ui_form" />
+            <placeholder name="ProjectExtras">
             <menuitem name="expyproj" action="python+project+project_execute" />
             <separator />
+            </placeholder>
             </menu>
             </menubar>
             <toolbar>

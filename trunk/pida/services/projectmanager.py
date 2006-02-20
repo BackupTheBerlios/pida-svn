@@ -412,6 +412,7 @@ class ProjectManager(service.service):
                 <menu name="base_edit" action="base_edit_menu">
                 </menu>
                 <menu name="base_project" action="base_project_menu">
+                <placeholder name="ProjectMain">
                 <menuitem name="newproj" action="projectmanager+new_project" />
                 <menuitem name="addproj" action="projectmanager+add_project" />
                 <separator />
@@ -422,6 +423,7 @@ class ProjectManager(service.service):
                 <menuitem name="upproj" action="projectmanager+update_project" />
                 <menuitem name="comproj" action="projectmanager+commit_project" />
                 <separator />
+                </placeholder>
                 </menu>
                 <menu name="base_tools" action="base_tools_menu">
                 </menu>

@@ -583,7 +583,8 @@ class gazpacho_service(service.service):
         f = open(filename, 'w')
         f.write(empty_gazpacho_document)
         f.close()
-        self.call('open', filename=filename)
+        self.boss.call_command('buffermanager', 'open_file',
+                                filename=filename)
 
     def cmd_goto_signal_handler(self, glade_filename, callback_filename,
                                 callback_name):
@@ -610,6 +611,43 @@ class gazpacho_service(service.service):
                                filename=callback_filename,
                                linenumber=linenumber + 2)
 
+    @actions.action(
+       label="Add UI Form...",
+    )
+    def act_add_ui_form(self, action):
+        """Add a user interface form to the current project."""
+        proj = self.boss.call_command('projectmanager',
+                                      'get_current_project')
+        from rat.hig import dialog_warn
+        if proj.get_option('glade', 'use_glade').value:
+            gladedir = proj.get_option('glade', 'glade_directory').value
+            def callback(name):
+                if not name.endswith('.glade'):
+                    name = '%s.glade' % name
+                filepath = os.path.join(gladedir, name)
+                self.boss.call_command('gazpach', 'create',
+                                       filename=filepath)
+            self.boss.call_command('window', 'input',
+                                        callback_function=callback,
+                                        prompt='Form Name')
+        else:
+            dialog_warn('Cannot create User Interface Form',
+                        'This project must be configured to use glade.',
+                        parent=self.boss.get_main_window())
+            
+    def get_menu_definition(self):
+        return """
+            <menubar>
+            <menu name="base_project" action="base_project_menu">
+            <separator />
+            <placeholder name="ProjectExtras">
+            <menuitem name="addform" action="gazpach+add_ui_form" />
+            </placeholder>
+            <separator />
+            </menu>
+            </menubar>
+            """
+    
     def get_single_view(self):
         return self.__view
     single_view = property(get_single_view)

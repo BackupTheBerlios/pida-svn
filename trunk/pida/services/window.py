@@ -415,7 +415,10 @@ class WindowManager(service.service):
                         <placeholder name="SubPreferencesMenu" />
                         <placeholder name="PreferencesMenu" />
                     </menu>
-                    <menu name="base_project" action="base_project_menu" />
+                    <menu name="base_project" action="base_project_menu">
+                        <placeholder name="ProjectMain" />
+                        <placeholder name="ProjectExtras" />
+                    </menu> 
                     <menu name="base_python" action="base_python_menu" />
                     <menu name="base_tools" action="base_tools_menu">
                         <placeholder name="ToolsMenu" />
