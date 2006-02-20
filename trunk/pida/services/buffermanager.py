@@ -156,23 +156,20 @@ class Buffermanager(service.service):
     
     display_name = 'Buffer Management'
     
-    #plugin_view_type = BufferView
     class BufferView(defs.View):
+        """The buffer list view definition"""
         view_type = BufferView
         book_name = 'content'
-    
 
     class document_changed(defs.event):
-        pass
+        """When the user has switched to a different document"""
 
     class document_modified(defs.event):
-        pass
-
+        """When the document has been modified"""
 
     def init(self):
         self.__currentdocument = None
         self.__documents = {}
-        self.__editor = None
 
     def bind(self):
         self.action_group.get_action('buffermanager+close_buffer').set_sensitive(False)
@@ -194,7 +191,6 @@ class Buffermanager(service.service):
         chooser.connect('response', _cb)
         chooser.run()
 
-
     @actions.action(stock_id=gtk.STOCK_CLOSE,
                     label='Close Document',
                     default_accel='<Control>w')
@@ -214,23 +210,14 @@ class Buffermanager(service.service):
         """Creates a document"""
         self.call('new_file')
 
-    @actions.action(stock_id=gtk.STOCK_GO_FORWARD, label='Next Buffer',
-                    default_accel='<Alt>Right')
-    def act_next_buffer(self, action):
-        """Go to the next buffer in the buffer list"""
+    def cmd_switch_search(self):
+        self.plugin_view.search()
+
+    def cmd_switch_next(self):
         self.plugin_view.select_next()
 
-    @actions.action(stock_id=gtk.STOCK_GO_BACK, label='Previous Buffer',
-                    default_accel='<Alt>Left')
-    def act_previous_buffer(self, action):
-        """Go to the previous buffer in the buffer list."""
+    def cmd_switch_previous(self):
         self.plugin_view.select_previous()
-
-    @actions.action(stock_id=gtk.STOCK_FIND, label='Change Buffer',
-                    default_accel='<Shift><Control>b')
-    def act_interactive_buffer_change(self, action):
-        """Interactively search for a buffer name."""
-        self.plugin_view.search()
 
     def cmd_switch_index(self, index):
         self.plugin_view.goto_index(index - 1)
@@ -407,16 +394,6 @@ class Buffermanager(service.service):
                 <separator />
                 <menuitem name="quit" action="buffermanager+quit_pida" />
                 </placeholder>
-                </menu>
-                <menu name="base_view" action="base_view_menu">
-                <menuitem name="bufnext"
-                          action="buffermanager+next_buffer" />
-                <menuitem name="bufprev"
-                          action="buffermanager+previous_buffer" />
-                <separator />
-                <menuitem name="bufsrch"
-                          action="buffermanager+interactive_buffer_change" />
-                <separator />
                 </menu>
                 </menubar>
                 <toolbar>

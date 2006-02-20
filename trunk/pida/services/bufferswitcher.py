@@ -21,6 +21,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import gtk
 
 from pida.core.service import service
 from pida.core import actions
@@ -32,6 +33,24 @@ class BufferSwitcher(service):
     def _switch_index(self, index):
         self.boss.call_command('buffermanager', 'switch_index',
                                index=index)
+
+    @actions.action(stock_id=gtk.STOCK_GO_FORWARD, label='Next Buffer',
+                    default_accel='<Alt>Right')
+    def act_next_buffer(self, action):
+        """Go to the next buffer in the buffer list"""
+        self.boss.call_command('buffermanager', 'switch_next')
+
+    @actions.action(stock_id=gtk.STOCK_GO_BACK, label='Previous Buffer',
+                    default_accel='<Alt>Left')
+    def act_previous_buffer(self, action):
+        """Go to the previous buffer in the buffer list."""
+        self.boss.call_command('buffermanager', 'switch_previous')
+
+    @actions.action(stock_id=gtk.STOCK_FIND, label='Change Buffer',
+                    default_accel='<Shift><Control>b')
+    def act_interactive_buffer_change(self, action):
+        """Interactively search for a buffer name."""
+        self.boss.call_command('buffermanager', 'switch_search')
 
     @actions.action(label='Buffer 1',
                     default_accel='<Alt>1')
@@ -84,6 +103,17 @@ class BufferSwitcher(service):
         self._switch_index(10)
 
     def get_menu_definition(self):
-        return """<menubar />"""
+        return """<menubar>
+                    <menu name="base_view" action="base_view_menu">
+                    <menuitem name="bufnext"
+                          action="bufferswitcher+next_buffer" />
+                <menuitem name="bufprev"
+                          action="bufferswitcher+previous_buffer" />
+                <separator />
+                <menuitem name="bufsrch"
+                          action="bufferswitcher+interactive_buffer_change" />
+                <separator />
+                </menu>
+                </menubar>"""
 
 Service = BufferSwitcher
