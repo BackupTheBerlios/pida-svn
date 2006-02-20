@@ -42,18 +42,6 @@ not GPL_, or even closed source.
 The PIDA Project is owned by Ali Afshar (this author).
 
 
-Authors
--------
-
-- Ali Afshar
-- Bernard Pratz
-- Alejandro Mery
-
-Contributors
-------------
-
-Stephen Holmes - A consistent and competent source of pain and suffering.
-
 Getting Started
 ===============
 
