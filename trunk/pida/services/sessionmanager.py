@@ -30,6 +30,19 @@ from pida.core import service
 from pida.core.service import types
 from pida.core.service import definitions as defs
 
+def get_documents_from_file(filename):
+    f = open(filename, 'r')
+    for line in f:
+        filename = line.strip()
+        yield filename
+    f.close()
+
+def save_documents_to_file(documents, filename):
+    f = open(filename, 'w')
+    for doc in documents.values():
+        if not doc.is_new:
+            f.write('%s\n' % doc.filename)
+    f.close()
 
 class SessionManager(service.service):
 
@@ -106,22 +119,16 @@ class SessionManager(service.service):
         f = open(session_filename, 'w')
         docs = self.boss.call_command('buffermanager',
                                       'get_documents')
-        for doc in docs.values():
-            if not doc.is_new:
-                f.write('%s\n' % doc.filename)
-        f.close()
+        save_documents_to_file(docs, session_filename)
 
     def cmd_load_session(self, session_filename):
-        f = open(session_filename, 'r')
         docsloaded = 0
-        for line in f:
-            filename = line.strip()
+        for filename in get_documents_from_file(session_filename):
             docsloaded = docsloaded + 1
             def _o(filename):
                 self.boss.call_command('buffermanager',
                     'open_file', filename=filename, quiet=True)
             gobject.idle_add(_o, filename)
-        f.close()
         return docsloaded
 
     def stop(self):
