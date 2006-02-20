@@ -170,6 +170,9 @@ class culebra_editor(service.service):
     def __view_document(self, document):
         view = self.__views[document.unique_id]
         view.raise_page()
+        # Use subscription pattern
+        if self.current_view is not None:
+            self.current_view.editor.set_action_group(None)
         self.current_view = view
         self.__set_action_sensitivities(document)
 

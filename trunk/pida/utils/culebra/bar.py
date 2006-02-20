@@ -4,7 +4,7 @@ __copyright__ = "2005, Tiago Cogumbreiro"
 __author__ = "Tiago Cogumbreiro <cogumbreiro@users.sf.net>"
 
 from common import *
-from gtkutil import SignalHolder
+from gtkutil import signal_holder
 
 def _activate_action(widget, action):
     action.set_active(True)
@@ -23,13 +23,25 @@ class VisibilitySync:
 
     def __init__(self, widget, toggle_action, apply_now=True):
 
-        self._activate = SignalHolder(widget, "show", _activate_action, toggle_action)
-        self._deactivate = SignalHolder(widget, "hide", _deactivate_action, toggle_action)
-        self._toggle_visible = SignalHolder(
+        self._activate = signal_holder(
+            widget,
+            "show",
+            _activate_action,
+            userdata=toggle_action
+        )
+        
+        self._deactivate = signal_holder(
+            widget,
+            "hide",
+            _deactivate_action,
+            userdata=toggle_action
+        )
+        
+        self._toggle_visible = signal_holder(
             toggle_action,
             "toggled",
             _toggle_visibility,
-            widget
+            userdata=widget
         )
         
         # Take effect now
