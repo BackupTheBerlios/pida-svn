@@ -350,7 +350,7 @@ class service_base(base.pidacomponent):
         return self.boss.get_service(servicename)
 
     def get_menu_definition(self):
-        return ''
+        return '<menubar /><toolbar />'
 
     def stop(self):
         pass

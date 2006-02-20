@@ -290,7 +290,8 @@ class Buffermanager(service.service):
 
     def cmd_open_file_line(self, filename, linenumber):
         self.call('open_file', filename=filename)
-        self.editor.call('goto_line', linenumber=linenumber)
+        self.boss.call_command('editormanager',
+                               'goto_line', linenumber=linenumber)
 
     def cmd_close_file(self, filename):
         doc = self.__get_filename_document(filename)
@@ -375,18 +376,11 @@ class Buffermanager(service.service):
                                       filename=document.filename)
         document.set_project(proj)
 
-
     def __disable_all_handlers(self, handlers=[]):
         for uid, document in self.__documents.iteritems():
             if document.handler not in handlers:
                 document.handler.action_group.set_sensitive(False)
                 document.handler.action_group.set_visible(False)
-
-    def get_editor(self):
-        if self.__editor is None:
-            self.__editor = self.get_service('editormanager')
-        return self.__editor
-    editor = property(get_editor)
 
     def cb_plugin_view_clicked(self, view, bufitem):
         doc = bufitem.value
@@ -443,11 +437,6 @@ class Buffermanager(service.service):
                 </toolbar>
                 </ui>
                 """
-    def get_buffer_menu(self):
-        s = []
-        for i in xrange(1, 11):
-            s.append('<menuitem action="buffermanager+%s_buffer" />' % i)
-        return '\n'.join(s)
 
     def get_single_view(self):
         return self.get_first_view('BufferView')
