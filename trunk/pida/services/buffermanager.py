@@ -232,61 +232,8 @@ class Buffermanager(service.service):
         """Interactively search for a buffer name."""
         self.plugin_view.search()
 
-    def _switch_index(self, index):
+    def cmd_switch_index(self, index):
         self.plugin_view.goto_index(index - 1)
-
-    @actions.action(label='Buffer 1',
-                    default_accel='<Alt>1')
-    def act_1_buffer(self, action):
-        self._switch_index(1)
-
-    @actions.action(label='Buffer 2',
-                    default_accel='<Alt>2')
-    def act_2_buffer(self, action):
-        self._switch_index(2)
-
-    @actions.action(label='Buffer 3',
-                    default_accel='<Alt>3')
-    def act_3_buffer(self, action):
-        self._switch_index(3)
-
-    @actions.action(label='Buffer 4',
-                    default_accel='<Alt>4')
-    def act_4_buffer(self, action):
-        self._switch_index(4)
-
-    @actions.action(label='Buffer 5',
-                    default_accel='<Alt>5')
-    def act_5_buffer(self, action):
-        self._switch_index(5)
-
-    @actions.action(label='Buffer 6',
-                    default_accel='<Alt>6')
-    def act_6_buffer(self, action):
-        self._switch_index(6)
-
-    @actions.action(label='Buffer 7',
-                    default_accel='<Alt>7')
-    def act_7_buffer(self, action):
-        self._switch_index(7)
-
-    @actions.action(label='Buffer 8',
-                    default_accel='<Alt>8')
-    def act_8_buffer(self, action):
-        self._switch_index(8)
-
-    @actions.action(label='Buffer 9',
-                    default_accel='<Alt>9')
-    def act_9_buffer(self, action):
-        self._switch_index(9)
-
-    @actions.action(label='Buffer 10',
-                    default_accel='<Alt>0')
-    def act_10_buffer(self, action):
-        self._switch_index(10)
-
-    def act_buffers(self, action):
-        """The buffer part of the view menu."""
         
     def cmd_open_document(self, document):
         if document is not self.__currentdocument:
