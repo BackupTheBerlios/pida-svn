@@ -22,19 +22,16 @@
 #SOFTWARE.
 
 import os
-import gtk
-import gobject
 
-import pida.core.service as service
-import pida.pidagtk.tree as tree
-import pida.pidagtk.contentview as contentview
+import gtk
 
 from pida.core import actions
+from pida.pidagtk.tree import Tree
+from pida.pidagtk.contentview import content_view
+from pida.core.service import service, types, definitions as defs
 
-defs = service.definitions
-types = service.types
 
-class BufferTree(tree.Tree):
+class BufferTree(Tree):
     
     SORT_CONTROLS = True
     SORT_AVAILABLE = [('Time Opened','creation_time'),
@@ -45,7 +42,7 @@ class BufferTree(tree.Tree):
                       ('Project', 'project_name')]
 
     def __init__(self):
-        tree.Tree.__init__(self)
+        super(BufferTree, self).__init__()
         self.view.set_expander_column(self.view.get_column(1))
         self.set_property('markup-format-string', '%(filename)s')
         self.view.set_enable_search(False)
@@ -62,16 +59,15 @@ class BufferTree(tree.Tree):
     def set_currentbuffer(self, filename):
         self.set_selected(filename)
 
-class BufferView(contentview.content_view):
+
+class BufferView(content_view):
 
     HAS_CONTROL_BOX = False
     HAS_DETACH_BUTTON = False
     HAS_CLOSE_BUTTON = False
     HAS_SEPARATOR = False
     HAS_TITLE = False
-
     SHORT_TITLE = 'Buffers'
-
     LONG_TITLE = 'List of open buffers'
 
     def init(self):
@@ -152,8 +148,9 @@ class BufferView(contentview.content_view):
         menu.show_all()
         menu.popup(None, None, None, event.button, event.time)
 
-class Buffermanager(service.service):
-    
+
+class Buffermanager(service):
+    """The PIDA buffer manager"""    
     display_name = 'Buffer Management'
     
     class BufferView(defs.View):
@@ -172,10 +169,16 @@ class Buffermanager(service.service):
         self.__documents = {}
 
     def bind(self):
-        self.action_group.get_action('buffermanager+close_buffer').set_sensitive(False)
+        self.action_group.get_action('buffermanager+close_buffer'
+                                     ).set_sensitive(False)
+        self.plugin_view = self.create_view('BufferView')
 
-    @actions.action(stock_id=gtk.STOCK_OPEN, label=None, is_important=True,
-                    default_accel='<Shift><Control>o')
+    @actions.action(
+        stock_id=gtk.STOCK_OPEN,
+        label=None,
+        is_important=True,
+        default_accel='<Shift><Control>o'
+    )
     def act_open_file(self, action):
         """Opens a document"""
         chooser = gtk.FileChooserDialog(
@@ -198,11 +201,6 @@ class Buffermanager(service.service):
         """Close the current buffer."""
         filename = self.__currentdocument.filename
         self.call('close_file', filename=filename)
-
-    @actions.action(stock_id=gtk.STOCK_QUIT, label=None)
-    def act_quit_pida(self, action):
-        """Quits the application"""
-        self.boss.stop()
 
     @actions.action(stock_id=gtk.STOCK_NEW, label=None,
                     default_accel='<Shift><Control>n')
@@ -415,14 +413,5 @@ class Buffermanager(service.service):
                 </ui>
                 """
 
-    def get_single_view(self):
-        return self.get_first_view('BufferView')
-    plugin_view = property(get_single_view)
-
-
-
-
-
 Service = Buffermanager
-
 

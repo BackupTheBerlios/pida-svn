@@ -310,8 +310,7 @@ class WindowManager(service.service):
     def _bind_pluginviews(self):
         for service in self.boss.services:
             if service.NAME in ['buffermanager']:
-                view = service.create_view('BufferView')
-                service.show_view(view=view)
+                service.show_view(view=service.plugin_view)
             elif service.NAME == 'filemanager':
                 service.show_view(view=service.plugin_view)
             elif service.NAME == 'projectmanager':
