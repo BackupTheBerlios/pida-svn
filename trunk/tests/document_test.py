@@ -20,7 +20,7 @@ class TestDocument1_Unnamed(nose.TestCase):
         self.assertNotEqual(self.doc.unique_id, self.doc2.unique_id)
 
     def test_3_markup(self):
-        self.assert_(self.doc.markup.endswith('None'))
+        self.assert_('New File' in self.doc.markup)
 
     def test_4_project(self):
         self.assertEqual(self.doc.project_name, '')
