@@ -1,5 +1,5 @@
 
-from pida.utils.testing import _ServiceTest
+from pida.utils.testing import _ServiceTest, _setup
 
 from pida.core.document import document
 
@@ -8,6 +8,8 @@ from pida.services import sessionmanager
 import nose
 import os
 import tempfile
+
+set_up = _setup
 
 class SessionLoadTest(nose.TestCase):
 
@@ -39,6 +41,3 @@ class SessionLoadTest(nose.TestCase):
     def tearDown(self):
         os.remove(self.tfile)
 
-class SessionManagerTest(_ServiceTest):
-
-    pass

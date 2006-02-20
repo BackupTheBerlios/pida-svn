@@ -140,7 +140,6 @@ class _ServiceTest(nose.TestCase):
     tested_service = 'terminal'
 
     def setUp(self):
-        die
         mainloop = mainstop = lambda *a: None
         self.app = application.main(MockBoss, mainloop, mainstop)
         self.boss = self.app.boss

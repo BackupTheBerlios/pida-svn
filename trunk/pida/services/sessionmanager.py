@@ -28,6 +28,7 @@ import gobject
 
 from pida.core import service
 from pida.core.service import types
+from pida.core.actions import action
 from pida.core.service import definitions as defs
 
 def get_documents_from_file(filename):
@@ -92,11 +93,13 @@ class SessionManager(service.service):
                                           gtk.RESPONSE_REJECT))
         def response(dialog, response):
             if response == gtk.RESPONSE_ACCEPT:
-                self.call('save_session',
-                          session_filename=dialog.get_filename())
+                self.cmd_save_session(dialog.get_filename())
             dialog.destroy()
         fdialog.connect('response', response)
         fdialog.run()
+
+    def act_sessions(self, action):
+        """Sub menu place holder"""
 
     def act_load_session(self, action):
         """Loads another session"""
@@ -109,14 +112,12 @@ class SessionManager(service.service):
                                           gtk.RESPONSE_REJECT))
         def response(dialog, response):
             if response == gtk.RESPONSE_ACCEPT:
-                self.call('load_session',
-                          session_filename=dialog.get_filename())
+                self.cmd_load_session(dialog.get_filename())
             dialog.destroy()
         fdialog.connect('response', response)
         fdialog.run()
 
     def cmd_save_session(self, session_filename):
-        f = open(session_filename, 'w')
         docs = self.boss.call_command('buffermanager',
                                       'get_documents')
         save_documents_to_file(docs, session_filename)
@@ -142,8 +143,10 @@ class SessionManager(service.service):
                 <menu name="base_file" action="base_file_menu">
                 <placeholder name="ExtrasFileMenu">
                 <separator />
+                <menu action="sessionmanager+sessions">
                 <menuitem name="savesess" action="sessionmanager+save_session" />
                 <menuitem name="loadsess" action="sessionmanager+load_session" />
+                </menu>
                 <separator />
                 </placeholder>
                 </menu>
