@@ -233,8 +233,13 @@ class ProjectManager(service.service):
     def __update(self):
         self.__read_history()
         self.__load_projects()
+        sel = self.plugin_view.get_selected()
         self.plugin_view.set_projects()
         self.__set_toolbar()
+        if sel is not None:
+            self.plugin_view.set_selected(sel.key)
+            if self.plugin_view.get_selected() is None:
+                self.plugin_view.set_selected(self.plugin_view.get_model()[0][0])
 
     def __load_projects(self):
         self.__projects = []
