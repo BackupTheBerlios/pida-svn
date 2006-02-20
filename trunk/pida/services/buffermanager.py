@@ -162,45 +162,16 @@ class Buffermanager(service.service):
         book_name = 'content'
     
 
-    class sessions(defs.optiongroup):
-        """Session management."""
-        class automatically_load_last_session(defs.option):
-            """Whether the session will be reloaded from closing PIDA."""
-            rtype = types.boolean
-            default = True
-        class start_with_new_file(defs.option):
-            """Whether a new file will be opened on startup if none other is
-               specified on the command-line on by a session."""
-            rtype = types.boolean
-            default = True
-
-    
     class document_changed(defs.event):
         pass
 
     class document_modified(defs.event):
         pass
 
-    def bnd_editormanager_started(self):
-        if not self.__session_loaded:
-            self.__session_loaded = True
-            for filename in self.boss.positional_args:
-                self.call('open_file', filename=filename, quiet=True)
-            if self.opt('sessions', 'automatically_load_last_session'):
-                most_recent = os.path.join(self.boss.pida_home,
-                                    'most-recent.session')
-                if os.path.exists(most_recent):
-                    self.call('load_session', session_filename=most_recent)
-            def _n():
-                if len(self.__documents) == 0 and self.opt('sessions',
-                                                       'start_with_new_file'):
-                    self.call('new_file')
-            gobject.idle_add(_n)
 
     def init(self):
         self.__currentdocument = None
         self.__documents = {}
-        self.__session_loaded = False
         self.__editor = None
 
     def bind(self):
@@ -242,40 +213,6 @@ class Buffermanager(service.service):
     def act_new_file(self, action):
         """Creates a document"""
         self.call('new_file')
-
-    def act_save_session(self, action):
-        """Saves the current session"""
-        fdialog = gtk.FileChooserDialog('Please select the session file',
-                                 parent=self.boss.get_main_window(),
-                                 action=gtk.FILE_CHOOSER_ACTION_SAVE,
-                                 buttons=(gtk.STOCK_OK,
-                                          gtk.RESPONSE_ACCEPT,
-                                          gtk.STOCK_CANCEL,
-                                          gtk.RESPONSE_REJECT))
-        def response(dialog, response):
-            if response == gtk.RESPONSE_ACCEPT:
-                self.call('save_session',
-                          session_filename=dialog.get_filename())
-            dialog.destroy()
-        fdialog.connect('response', response)
-        fdialog.run()
-
-    def act_load_session(self, action):
-        """Loads another session"""
-        fdialog = gtk.FileChooserDialog('Please select the session file',
-                                 parent=self.boss.get_main_window(),
-                                 action=gtk.FILE_CHOOSER_ACTION_OPEN,
-                                 buttons=(gtk.STOCK_OK,
-                                          gtk.RESPONSE_ACCEPT,
-                                          gtk.STOCK_CANCEL,
-                                          gtk.RESPONSE_REJECT))
-        def response(dialog, response):
-            if response == gtk.RESPONSE_ACCEPT:
-                self.call('load_session',
-                          session_filename=dialog.get_filename())
-            dialog.destroy()
-        fdialog.connect('response', response)
-        fdialog.run()
 
     @actions.action(stock_id=gtk.STOCK_GO_FORWARD, label='Next Buffer',
                     default_accel='<Alt>Right')
@@ -413,22 +350,6 @@ class Buffermanager(service.service):
         if doc is not None:
             doc.handler.close_document(doc)
 
-    def cmd_save_session(self, session_filename):
-        f = open(session_filename, 'w')
-        for doc in self.__documents.values():
-            if not doc.is_new:
-                f.write('%s\n' % doc.filename)
-        f.close()
-
-    def cmd_load_session(self, session_filename):
-        f = open(session_filename, 'r')
-        for line in f:
-            filename = line.strip()
-            def _o(filename):
-                self.call('open_file', filename=filename, quiet=True)
-            gobject.idle_add(_o, filename)
-        f.close()
-
     def cmd_file_closed(self, filename):
         doc = self.__get_filename_document(filename)
         if doc is not None:
@@ -442,6 +363,9 @@ class Buffermanager(service.service):
     def cmd_reset_current_document(self):
         self.__currentdocument.reset()
         self.events.emit('document_modified', document=self.__currentdocument)
+
+    def cmd_get_documents(self):
+        return self.__documents
 
     def __get_filename_document(self, filename):
         for uid, doc in self.__documents.iteritems():
@@ -535,8 +459,6 @@ class Buffermanager(service.service):
                 <placeholder name="SaveFileMenu" />
                 <placeholder name="ExtrasFileMenu">
                 <separator />
-                <menuitem name="savesess" action="buffermanager+save_session" />
-                <menuitem name="loadsess" action="buffermanager+load_session" />
                 <separator />
                 </placeholder>
                 <placeholder name="GlobalFileMenu">
@@ -579,11 +501,6 @@ class Buffermanager(service.service):
         for i in xrange(1, 11):
             s.append('<menuitem action="buffermanager+%s_buffer" />' % i)
         return '\n'.join(s)
-
-
-    def stop(self):
-        most_recent = os.path.join(self.boss.pida_home, 'most-recent.session')
-        self.call('save_session', session_filename=most_recent)
 
     def get_single_view(self):
         return self.get_first_view('BufferView')
