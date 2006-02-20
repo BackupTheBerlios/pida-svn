@@ -7,40 +7,12 @@ The PIDA Manual
 
 .. contents:: Table Of Contents
 
-Front Matter
-============
-
-Introduction
-------------
-
-PIDA is an integrated development environment for all types of development. It
-is written in Python using the PyGTK Toolkit.
-
-PIDA is different from other IDEs. Rather than attempting to write a set of
-development tools of its own, PIDA uses tools that the developer has available.
-In this regards PIDA is a framework for assembling a bespoke IDE. PIDA allows
-you to choose the editor you wish to use (yes, Vim out of the box works).
-
-Although still a young application, pIDA can already boast a huge number of
-features because of the power of some of the tools it integrates. For example
-features such as code completion and syntax highlighting are well implemented in
-PIDA's integrated editors far better than any editor built for a commercial
-IDE.
-
-Additionally PIDA insists on stealing excellent ideas from applications it
-cannot embed. For example the Rapid Application Development in the style of
-Microsoft's development products is achieved by the combination of Gazpacho_ (a
-user interface designer) and Tepache_ (a code sketcher), via the text editor.
-
 Copyright
----------
+=========
 
 PIDA is released under the MIT_ license. This is not a particularly philosophical
 decision, except that the PIDA developers consider it a good thing that PIDA is
 not GPL_, or even closed source.
-
-The PIDA Project is owned by Ali Afshar (this author).
-
 
 Getting Started
 ===============
