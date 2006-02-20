@@ -243,13 +243,6 @@ class Buffermanager(service.service):
         """Creates a document"""
         self.call('new_file')
 
-    @actions.action(stock_id=gtk.STOCK_ADD,
-                    label=None,
-                    default_accel='<Shift><Control><Alt>n')
-    def act_new_file_wizard(self, action):
-        """Creates a document from the wizard"""
-        self.call('new_file_wizard')
-
     def act_save_session(self, action):
         """Saves the current session"""
         fdialog = gtk.FileChooserDialog('Please select the session file',
@@ -411,9 +404,6 @@ class Buffermanager(service.service):
         chooser.connect('response', _cb)
         chooser.run()
 
-    def cmd_new_file_wizard(self):
-        self.__new_file_wizard()
-
     def cmd_open_file_line(self, filename, linenumber):
         self.call('open_file', filename=filename)
         self.editor.call('goto_line', linenumber=linenumber)
@@ -485,9 +475,6 @@ class Buffermanager(service.service):
     def __new_file(self):
         return self.__open_file(None)
 
-    def __new_file_wizard(self):
-        self.boss.call_command('newfile', 'create_interactive')
-         
     def __add_document(self, document):
         self.__documents[document.unique_id] = document
         self.__set_document_project(document)
@@ -543,7 +530,6 @@ class Buffermanager(service.service):
                 <placeholder name="OpenFileMenu">
                 <menuitem name="new" action="buffermanager+new_file" />
                 <menuitem name="open" action="buffermanager+open_file" />
-                <menuitem action="buffermanager+new_file_wizard" />
                 <separator />
                 </placeholder>
                 <placeholder name="SaveFileMenu" />
