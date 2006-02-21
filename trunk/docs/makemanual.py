@@ -20,7 +20,7 @@ def edit_wiki(page, data):
     u = urllib2.urlopen(geturl)
     html = u.read()
     version = VRE.search(html).groups()[0]
-    data = '%s\n\n[[LastModified]]' % data
+    data = ('%s\n\n%s' % (data, create_advert()))
     formdata = {'action':'edit',
                 'text': data,
                 'version':version,
@@ -31,7 +31,7 @@ def edit_wiki(page, data):
         u.read()
         print page, 'done'
     except urllib2.HTTPError:
-        print page, 'no update needed'
+        print page, 'no update needed/ update failed'
 
 def render_list(ctx, (base, data)):
     for d in data:
@@ -44,6 +44,18 @@ def create_l(base, iterable, ltype=T.ol):
                         T.h2['Table Of Contents'],
                         ltype(data=(base, iterable))[render_list]
                         ])
+
+def create_advert():
+    s = ('This page was automatically generated and '
+         'uploaded using ')
+    return trac_html(flat.flatten(
+        T.div(class_='last-modified')[
+        s,
+        T.a(href='/projects/pida/wiki/TracDumbUpload')[
+            'TracDumbUpload'],
+        T.br, T.br
+        ]))
+
 
 def trac_html(html):
     return '{{{\n#!html\n%s\n}}}' % html
