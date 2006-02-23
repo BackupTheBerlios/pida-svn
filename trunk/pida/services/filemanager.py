@@ -333,15 +333,19 @@ class FileBrowser(contentview.content_view):
 
     def cb_status_data(self, reader, path):
         status, path = path.split(' ', 1)
+        try:
+            status = int(status)
+        except:
+            return
         if path in self._files:
             f = self._files[path]
-            f.status = int(status)
+            f.status = status
             def _r(f):
                 f.reset_markup()
         else:
             f = FileSystemItem(path)
             self._files[path] = f
-            f.status = int(status)
+            f.status = status
             def _r(f):
                 self._view.add_item(f)
         gobject.idle_add(_r, f)

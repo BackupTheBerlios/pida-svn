@@ -34,6 +34,7 @@ class Lister(object):
             self._print_lock.release()
 
     def status_ls(self, directory):
+        os.chdir(directory)
         vcdir = vc.Vc(directory)
         if vcdir.NAME == 'Null':
             return
