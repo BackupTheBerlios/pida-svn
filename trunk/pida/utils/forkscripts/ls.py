@@ -6,7 +6,9 @@ import pickle
 
 import threading
 
-
+# not sure why this is necessary for some distributions
+import pkg_resources
+pkg_resources.require("pida")
 
 class Lister(object):
 
