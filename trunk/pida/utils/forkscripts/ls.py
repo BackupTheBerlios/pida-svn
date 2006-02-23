@@ -1,14 +1,14 @@
 
 import os
 import sys
-import pida.utils.vc as vc
 import pickle
-
 import threading
 
 # not sure why this is necessary for some distributions
 import pkg_resources
 pkg_resources.require("pida")
+
+import pida.utils.vc as vc
 
 class Lister(object):
 
