@@ -124,6 +124,8 @@ class Vc(_vc.Vc):
                 if e.errno != errno.EAGAIN:
                     raise
         for line in p:
+            if line.startswith('No changes!'):
+                continue
             elements = line.split()
             if len(elements) > 1:
                 if elements[1] == '->':
