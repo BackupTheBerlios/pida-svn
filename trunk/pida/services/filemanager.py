@@ -61,7 +61,7 @@ STATE_MODIFIED, STATE_CONFLICT, STATE_REMOVED, \
 STATE_MISSING, STATE_MAX = range(12)
 
 colours = {
-            None: ('#000000', False, True),
+            None: ('#909090', False, True),
             STATE_IGNORED: ('#909090', False, True),
             STATE_NONE: ('#60c060', True, True),
             STATE_NORMAL: ('#000000', False, False),
@@ -219,6 +219,7 @@ class FileBrowser(contentview.content_view):
         self._files = {}
         self._recent = {}
         self._visrect = None
+        self._no_statuses = False
         self.cwd = None
         self.create_toolbar()
         self.create_actions()
@@ -279,12 +280,11 @@ class FileBrowser(contentview.content_view):
         if directory in self._recent:
             self._view.clear()
             for fsi in self._recent[directory].values():
-                def _a(fsi):
-                    self._view.add_item(fsi)
-                gobject.idle_add(_a, fsi)
+                self._view.add_item(fsi)
             self.cwd = directory
             self.long_title = self.cwd
         else:
+            self._no_statuses = False
             self._reader.run(directory)
 
     def browse_up(self):
@@ -308,12 +308,17 @@ class FileBrowser(contentview.content_view):
         self._view.clear()
 
     def cb_finished(self, reader, args):
+        if self._no_statuses:
+            for f in self._files.values():
+                f.status = 2
+                f.reset_markup()
         self.cwd = args[-1]
         self._recent[self.cwd] = self._files
         self.long_title = self.cwd
         if self._visrect is not None:
             self._view.view.scroll_to_point(self._visrect.x, self._visrect.y)
             self._visrect = None
+        
 
     def cb_data(self, reader, data):
         typ, data = data.split(' ', 1)
@@ -327,28 +332,26 @@ class FileBrowser(contentview.content_view):
         if path not in self._files:
             fsi = FileSystemItem(path)
             self._files[path] = fsi
-            def _a(fsi):
-                self._view.add_item(fsi)
-            gobject.idle_add(_a, fsi)
+            self._view.add_item(fsi)
 
     def cb_status_data(self, reader, path):
         status, path = path.split(' ', 1)
-        try:
-            status = int(status)
-        except:
-            return
-        if path in self._files:
-            f = self._files[path]
-            f.status = status
-            def _r(f):
-                f.reset_markup()
+        if status == '<s>':
+            self._no_statuses = True
         else:
-            f = FileSystemItem(path)
-            self._files[path] = f
-            f.status = status
-            def _r(f):
+            try:
+                status = int(status)
+            except:
+                return
+            if path in self._files:
+                f = self._files[path]
+                f.status = status
+                f.reset_markup()
+            else:
+                f = FileSystemItem(path)
+                self._files[path] = f
+                f.status = status
                 self._view.add_item(f)
-        gobject.idle_add(_r, f)
         
     def cb_click(self, tv, item):
         pass

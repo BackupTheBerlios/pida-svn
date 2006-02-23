@@ -39,7 +39,7 @@ class Lister(object):
         os.chdir(directory)
         vcdir = vc.Vc(directory)
         if vcdir.NAME == 'Null':
-            return
+            print '<s> <s> <s>'
         else:
             statuses = vcdir.listdir(directory)
             for status in statuses:
