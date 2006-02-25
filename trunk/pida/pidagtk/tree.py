@@ -453,6 +453,7 @@ class IconTree(Tree):
         niter = self.model.append(parent, row)
         def reset():
             self.model.set_value(niter, 2, self.get_markup(item))
+            self.model.set_value(niter, 3, item.pixbuf)
         titem.reset_markup = reset
         item.reset_markup = reset
         return niter
