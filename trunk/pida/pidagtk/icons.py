@@ -28,25 +28,7 @@ defaulticons = gtk.icon_theme_get_default()
 class Icons(object):
 
     def __init__(self, icon_file=None):
-        
-        import pkg_resources as pr
-        pidareq = pr.Requirement.parse('pida')
-        icon_names = pr.resource_listdir(pidareq, 'icons')
-        stock_ids = set(gtk.stock_list_ids())
-        iconfactory = gtk.IconFactory()
-        self.__theme = gtk.icon_theme_get_default()
-        listed = self.__theme.list_icons()
-        for icon in icon_names:
-            iconname = icon.split('.', 1)[0]
-            if iconname not in listed:
-                iconres = '/'.join(['icons', icon])
-                iconpath = pr.resource_filename(pidareq, iconres)
-                pixbuf = gtk.gdk.pixbuf_new_from_file(iconpath)
-                iconset = gtk.IconSet(pixbuf)
-                iconfactory.add(iconname, iconset)
-                gtk.icon_theme_add_builtin_icon(iconname, 128, pixbuf)
-        iconfactory.add_default()
-        self.__iconfactory = iconfactory
+        self.__theme, self.__factory = set_stock_icons('pida', 'icons')
 
     def get(self, name, *args):
         try:
@@ -103,6 +85,27 @@ class Icons(object):
         ib.pack_start(il)
         but = gtk.ToolButton(icon_widget=ib)
         return but
+
+
+def set_stock_icons(st_req, st_path):
+    import pkg_resources as pr
+    pidareq = pr.Requirement.parse(st_req)
+    icon_names = pr.resource_listdir(pidareq, st_path)
+    stock_ids = set(gtk.stock_list_ids())
+    iconfactory = gtk.IconFactory()
+    theme = gtk.icon_theme_get_default()
+    listed = theme.list_icons()
+    for icon in icon_names:
+        iconname = icon.split('.', 1)[0]
+        if iconname not in listed:
+            iconres = '/'.join(['icons', icon])
+            iconpath = pr.resource_filename(pidareq, iconres)
+            pixbuf = gtk.gdk.pixbuf_new_from_file(iconpath)
+            iconset = gtk.IconSet(pixbuf)
+            iconfactory.add(iconname, iconset)
+            gtk.icon_theme_add_builtin_icon(iconname, 128, pixbuf)
+    iconfactory.add_default()
+    return theme, iconfactory
 
 
 tips = gtk.Tooltips()
