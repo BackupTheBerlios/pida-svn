@@ -13,7 +13,13 @@ __author__ = (
 
 import gtk
 import pango
-import gtksourceview
+
+try:
+    import gtksourceview
+    BaseView = gtksourceview.SourceView
+except ImportError:
+    BaseView = gtk.TextView
+
 from rat.text import make_source_view_indentable
 
 from replacebar import ReplaceBar
@@ -21,25 +27,36 @@ from searchbar import SearchBar
 from buffers import CulebraBuffer
 from common import KEY_ESCAPE, ACTION_FIND_FORWARD, ACTION_FIND_BACKWARD
 
+def setup_view(self):
+    if not hasattr(self, "set_auto_indent"):
+        return
+    self.set_auto_indent(True)
+    self.set_show_line_numbers(True)
+    self.set_show_line_markers(True)
+    self.set_tabs_width(4)
+    self.set_margin(80)
+    self.set_show_margin(True)
+    self.set_smart_home_end(True)
+    self.set_highlight_current_line(True)
+    self.set_insert_spaces_instead_of_tabs(True)
+    make_source_view_indentable(self)
 
-class CulebraView(gtksourceview.SourceView):
+
+def _teardown_view(widget):
+    widget.set_action_group(None)
+    import weakref
+    ref = weakref.ref(widget.search_bar)
+    delattr(widget, "search_bar")
+    assert ref() is None
+    delattr(widget, "replace_bar")
+
+class CulebraView(BaseView):
     def __init__(self, action_group):
-        gtksourceview.SourceView.__init__(self)
-            
-        self.set_auto_indent(True)
-        self.set_show_line_numbers(True)
-        self.set_show_line_markers(True)
-        self.set_tabs_width(4)
-        self.set_margin(80)
-        self.set_show_margin(True)
-        self.set_smart_home_end(True)
-        self.set_highlight_current_line(True)
-        self.set_insert_spaces_instead_of_tabs(True)
-        
+        super(CulebraView, self).__init__()
         self.search_bar = SearchBar(self, action_group)
         self.replace_bar = ReplaceBar(self, self.search_bar, action_group)
         self.set_action_group(action_group)
-        make_source_view_indentable(self)
+        self.connect("destroy-event", _teardown_view)
     
     def set_action_group(self, action_group):
         self.search_bar.set_action_group(action_group)
@@ -123,6 +140,20 @@ def create_editor(filename, action_group):
     return view
 
 
+def main():
+    import sys
+    if len(sys.argv) == 2:
+        filename = sys.argv[1]
+    else:
+        filename = None
+    win = gtk.Window()
+    editor = create_editor(filename, None)
+    editor.show()
+    win.add(editor)
+    win.show()
+    win.connect("delete-event", gtk.main_quit)
+    gtk.main()
+    win.destroy()
 
-
-
+if __name__ == '__main__':
+    main()

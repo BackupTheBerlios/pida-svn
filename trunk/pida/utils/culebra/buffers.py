@@ -3,8 +3,13 @@ __license__ = "MIT License <http://www.opensource.org/licenses/mit-license.php>"
 __copyright__ = "2005, Tiago Cogumbreiro"
 __author__ = "Tiago Cogumbreiro <cogumbreiro@users.sf.net>"
 
-import gtksourceview
-
+import gtk
+try:
+    import gtksourceview
+    BaseBuffer = gtksourceview.SourceBuffer
+except ImportError:
+    BaseBuffer = gtk.TextBuffer
+    
 from events import EventsDispatcher
 from rat.text import search_iterator, get_buffer_selection
 
@@ -263,17 +268,20 @@ class _ReplaceMethod(ChildObject):
         return True
 
         
+def setup_buffer(buff):
+    if not hasattr(buff, "set_language"):
+        return
+    lm = gtksourceview.SourceLanguagesManager()
+    buff.languages_manager = lm
+    language = lm.get_language_from_mime_type("text/x-python")
+    buff.set_language(language)
 
-class CulebraBuffer(gtksourceview.SourceBuffer):
+    buff.set_highlight(True)
+
+class CulebraBuffer(BaseBuffer):
 
     def __init__(self, filename = None, encoding = "utf-8"):
-        gtksourceview.SourceBuffer.__init__(self)
-        
-        lm = gtksourceview.SourceLanguagesManager()
-        self.languages_manager = lm
-        language = lm.get_language_from_mime_type("text/x-python")
-        self.set_highlight(True)
-        self.set_language(language)
+        super(CulebraBuffer, self).__init__()
         
         self.filename = filename
         self.encoding = encoding
