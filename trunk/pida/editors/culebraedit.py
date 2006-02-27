@@ -61,8 +61,12 @@ class culebra_view(contentview.content_view):
         editor.set_font_color(font_color)
         editor.set_font(font_text)
         self.__editor = editor
-        self.buffer.connect('can-undo', self.cb_can_undo)
-        self.buffer.connect('can-redo', self.cb_can_redo)
+        try:
+            self.buffer.connect('can-undo', self.cb_can_undo)
+            self.buffer.connect('can-redo', self.cb_can_redo)
+        except TypeError:
+            # In this case we are not dealling with sourceview
+            pass
         widget.show()
         self.widget.add(widget)
 
@@ -75,7 +79,7 @@ class culebra_view(contentview.content_view):
         return self.__editor.get_buffer()
         
     buffer = property(get_buffer)
-
+    
     def can_undo(self):
         return self.buffer.can_undo()
 

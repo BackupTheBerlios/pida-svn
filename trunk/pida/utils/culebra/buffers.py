@@ -5,10 +5,9 @@ __author__ = "Tiago Cogumbreiro <cogumbreiro@users.sf.net>"
 
 import gtk
 try:
-    import gtksourceview
-    BaseBuffer = gtksourceview.SourceBuffer
+    from svbase import BaseBuffer
 except ImportError:
-    BaseBuffer = gtk.TextBuffer
+    from tvbase import BaseBuffer
     
 from events import EventsDispatcher
 from rat.text import search_iterator, get_buffer_selection
@@ -268,19 +267,9 @@ class _ReplaceMethod(ChildObject):
         return True
 
         
-def setup_buffer(buff):
-    if not hasattr(buff, "set_language"):
-        return
-    lm = gtksourceview.SourceLanguagesManager()
-    buff.languages_manager = lm
-    language = lm.get_language_from_mime_type("text/x-python")
-    buff.set_language(language)
-
-    buff.set_highlight(True)
-
 class CulebraBuffer(BaseBuffer):
 
-    def __init__(self, filename = None, encoding = "utf-8"):
+    def __init__(self, filename = None, encoding="utf-8"):
         super(CulebraBuffer, self).__init__()
         
         self.filename = filename

@@ -15,31 +15,14 @@ import gtk
 import pango
 
 try:
-    import gtksourceview
-    BaseView = gtksourceview.SourceView
+    from svbase import BaseView
 except ImportError:
-    BaseView = gtk.TextView
-
-from rat.text import make_source_view_indentable
+    from tvbase import BaseView
 
 from replacebar import ReplaceBar
 from searchbar import SearchBar
 from buffers import CulebraBuffer
 from common import KEY_ESCAPE, ACTION_FIND_FORWARD, ACTION_FIND_BACKWARD
-
-def setup_view(self):
-    if not hasattr(self, "set_auto_indent"):
-        return
-    self.set_auto_indent(True)
-    self.set_show_line_numbers(True)
-    self.set_show_line_markers(True)
-    self.set_tabs_width(4)
-    self.set_margin(80)
-    self.set_show_margin(True)
-    self.set_smart_home_end(True)
-    self.set_highlight_current_line(True)
-    self.set_insert_spaces_instead_of_tabs(True)
-    make_source_view_indentable(self)
 
 
 def _teardown_view(widget):
