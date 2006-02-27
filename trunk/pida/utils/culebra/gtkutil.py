@@ -4,6 +4,8 @@ __author__ = "Tiago Cogumbreiro <cogumbreiro@users.sf.net>"
 
 # Most of this code is redudant because it's also present on 'rat' module.
 import weakref
+import gobject
+import gtk
 
 def hide_on_delete(window):
     """
@@ -43,9 +45,33 @@ def getter_memoize(func):
     return wrapper
         
 
+class _DestroyedListener:
+    """
+    This is a helper class that helps you not create a circular reference
+    with the object you're listening too.
+    """
+    def __init__(self, holder):
+        self.holder = weakref.ref(holder)
+    
+    def on_destroyed(self, gobj):
+        # Remove the old reference
+        self.holder().obj = lambda: None
 
 class SignalHolder:
-    def __init__(self, obj, signal, cb, use_weakref=True, *args, **kwargs):
+    """
+    Simple usage::
+    
+        holder = SignalHolder(btn, "clicked", on_clicked)
+        # while this reference lives the connection to the signal lives too
+        holder = None
+        # on_connect no longer recieves callbacks from 'btn'
+        
+        # You can also send user data, you need to use the 'userdata' keyword
+        # argument
+        holder = SignalHolder(btn, "clicked", on_clicked, userdata="bar")
+        
+    """
+    def __init__(self, obj, signal, cb, use_weakref=True, destroy=True, *args, **kwargs):
         try:
             args = kwargs["userdata"],
         except KeyError:
@@ -53,13 +79,24 @@ class SignalHolder:
 
         self.source = obj.connect(signal, cb, *args)
 
+        if destroy and isinstance(obj, gtk.Object):
+            self.listener = _DestroyedListener(self)
+            self.destroy_source = obj.connect("destroy", self.listener.on_destroyed)
+
         if use_weakref:
             self.obj = weakref.ref(obj)
         else:
             self.obj = lambda: obj
     
     def __del__(self):
-        self.obj().disconnect(self.source)
+        obj = self.obj()
+        if obj is None:
+            return
+            
+        obj.disconnect(self.source)
+        if hasattr(self, "destroy_source"):
+            obj.disconnect(self.destroy_source)
+        
 
 
 def signal_holder(obj, signal, cb, use_weakref=True, **kwargs):

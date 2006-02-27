@@ -1,59 +1,36 @@
 # Nothing needs testing here
 import unittest
 from gtkutil import *
+import gtk
 
-
-class Foo(object):
-    calls = 0
-    @getter_memoize
-    def get_foo(self):
-        self.calls += 1
-        return "foo"
+class TestSignalHolder(unittest.TestCase):
+    entry = ""
     
-    foo = property(get_foo)
-
-
-class Bar(Foo):
-    def get_foo(self):
-        return Foo.get_foo(self) + " bar"
-
-    foo = property(get_foo)
-
-class AFoo(object):
-    calls = 0
-    def get_foo(self):
-        self.calls += 1
-        return "foo"
-    
-    foo = property(get_foo)
-
-class ABar(AFoo):
-    def get_foo(self):
-        return AFoo.get_foo(self) + " bar"
-
-    foo = property(get_foo)
-
-class TestMemoize(unittest.TestCase):
-    def test_mem(self):
-        f = Foo()
-        self.assertEquals(0, f.calls) 
-        self.assertEquals("foo", f.foo)
-        self.assertEquals(1, f.calls) 
-        f.foo
-        self.assertEquals(1, f.calls) 
-        f.foo
-        self.assertEquals(1, f.calls) 
-        f.foo
-        self.assertEquals(1, f.calls) 
-        b = Bar()
-        self.assertEquals("foo bar", b.foo)
-
-    def test_someth(self):
-        f = AFoo()
-        self.assertEquals("foo", f.foo)
+    def on_changed(self, entry):
+        self.text = entry.get_text()
         
-        b = ABar()
-        self.assertEquals("foo bar", b.foo)
+    def test_simple_ref(self):
+        
+        entry = gtk.Entry()
+        holder = SignalHolder(entry, "changed", self.on_changed)
+        assert hasattr(holder, "destroy_source")
+        entry.set_text("foo")
+        self.assertEquals("foo", self.text)
+        
+        
+        holder = None
+        entry.set_text("bar")
+        self.assertEquals("foo", self.text)
+
+        holder = SignalHolder(entry, "changed", self.on_changed)
+        entry.destroy()
+        # holder.obj is a function that returns the object associated
+        # with the holder
+        assert holder.obj() is None
+        entry.set_text("foo2")
+        self.assertEquals("foo", self.text)
+        
+        
 
 if __name__ == '__main__':
     unittest.main()
