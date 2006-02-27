@@ -12,11 +12,26 @@ from common import get_action, ACTION_REPLACE_TOGGLE
 
 from bar import Bar
 
+class BufferSubscription:
+    def __init__(self, buff, obj):
+        buff.replace_component.events.register("changed", obj.on_replace_changed)
+        buff.replace_text = obj.replace_entry.get_text()
+        self.obj = weakref.ref(obj)
+        self.buff = weakref.ref(buff)
+    
+    def _unbind_buffer(self, buff):
+        cb = self.obj().on_replace_changed
+        self.buff().replace_component.events.unregister("changed", cb)
+    
+
 class ReplaceBar(Bar):
     """
     This component implements an event that validates when the selection is
     synchronized with the selected text.
     """
+    
+    _buffer_subscription_factory = BufferSubscription
+    
     def __init__(self, parent, search_bar, action_group):
         self._search_bar = weakref.ref(search_bar)
         super(ReplaceBar, self).__init__(parent, action_group)

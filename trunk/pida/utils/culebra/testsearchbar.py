@@ -6,6 +6,7 @@ from rat import util
 from buffers import CulebraBuffer
 import gtk
 from bar import VisibilitySync
+import weakref
 
 class MockTextView:
     forward = None
@@ -355,7 +356,6 @@ class TestSearchBar(GtkTestCase):
         assert self.fw in act_fw.get_proxies()
         assert self.bw in act_bw.get_proxies()
         
-        
     
     def test_action_group_change(self):
         """When the action group is changed activating the old ones should not
@@ -391,6 +391,14 @@ class TestSearchBar(GtkTestCase):
         
         # TODO: test more stuff here
     
+    def test_life_cycle(self):
+        view = MockTextView()
+        sb = SearchBar(view, None)
+        ref = weakref.ref(sb)
+        sb.destroy()
+        sb = None
+        assert ref() is None
+    
     def test_no_more_entries(self):
         """When there are no more entries the carret should be moved to the top
         and select the next entry, only if there is one next entry to select.
@@ -406,6 +414,7 @@ class TestSearchBar(GtkTestCase):
         to the first element on the buffer, instead of not doing it.
         When it's not cycling it should select the last element."""
         
+    
 # XXX: there should be a way of automating the tasks, like pushing/poping
 # XXX: actions. For example: push 'move carret to top', if not 'find next', pop,
 # XXX: else leave it there.

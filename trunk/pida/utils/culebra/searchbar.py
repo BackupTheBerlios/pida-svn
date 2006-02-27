@@ -4,13 +4,13 @@ __copyright__ = "2005, Tiago Cogumbreiro"
 __author__ = "Tiago Cogumbreiro <cogumbreiro@users.sf.net>"
 
 import gtk
+import weakref
 
 from common import ACTION_FIND_FORWARD, ACTION_FIND_BACKWARD, ACTION_FIND_TOGGLE
 from common import escape_text, unescape_text
 from rat.text import get_buffer_selection, search_iterator
 from bar import Bar
 from gtkutil import signal_holder, subscribe_proxy
-
 
 def has_search_entries(buff):
     """Returns if a certain buffer contains or not a search string"""
@@ -21,13 +21,31 @@ def has_search_entries(buff):
     return False
 
 
+# TODO: there's a problem when edit.main() is called with BufferSubscription
+# refs
+class BufferSubscription:
+    def __init__(self, buff, obj):
+        search = buff.search_component
+        search.events.register("changed", obj.on_search_changed)
+        search.events.register("no-more-entries", obj.on_no_entries)
+        search.search_text = obj.entry.get_text()
+        self.buff = weakref.ref(buff)
+        self.obj = weakref.ref(obj)
+
+    def __del__(self):
+        search = self.buff().search_component
+        search.events.unregister("changed", self.obj().on_search_changed)
+        search.events.unregister("no-more-entries", self.obj().on_no_entries)
+
+
 class SearchBar(Bar):
     _cycle = True
+    _buffer_subscription_factory = BufferSubscription
     
     def __init__(self, parent, action_group):
         self._widget = None
+        self._signals = []
         self.entry = self.create_entry()
-        #assert self.entry is not None
         self.forward_button = self.create_forward_button()
         self.backward_button = self.create_backward_button()
         
@@ -38,21 +56,22 @@ class SearchBar(Bar):
         self.find_backward = action_group.get_action(ACTION_FIND_BACKWARD)
         return action_group.get_action(ACTION_FIND_TOGGLE)
     
-#    @getter_memoize
+    def _connect(self, *args, **kwargs):
+        self._signals.append(signal_holder(*args, **kwargs))
+    
     def create_entry(self):
         entry = gtk.Entry()
         entry.set_name("entry")
         # TODO: do not referentiate self
-        entry.connect("changed", self.on_entry_changed)
-        entry.connect("focus", self.on_entry_focus)
-        entry.connect("activate", self.on_entry_activate)
+        self._connect(entry, "changed", self.on_entry_changed)
+        self._connect(entry, "changed", self.on_entry_changed)
+        self._connect(entry, "focus", self.on_entry_focus)
+        self._connect(entry, "activate", self.on_entry_activate)
         
         entry.show()
         entry.set_activates_default(True)
         return entry
     
-#    entry = property(get_entry)
-
     def create_forward_button(self):
         btn_forward = gtk.Button(stock=gtk.STOCK_GO_FORWARD)
         btn_forward.show()
@@ -69,8 +88,8 @@ class SearchBar(Bar):
     def create_widget(self):
 
         hbox = gtk.HBox(spacing=6)
-        hbox.connect("show", self.on_show)
-        hbox.connect("hide", self.on_hide)
+        self._connect(hbox, "show", self.on_show)
+        self._connect(hbox, "hide", self.on_hide)
         
         lbl = gtk.Label("Search:")
         lbl.show()
@@ -113,7 +132,6 @@ class SearchBar(Bar):
         # 2. find out if there are no entries at all
         # 3. move to the top/bottom and grab the next one
         buff = self.buffer
-        
         
         if not has_search_entries(buff):
             return
@@ -229,4 +247,8 @@ class SearchBar(Bar):
     
     def on_find_backward(self, action):
         self.get_parent().find(False)
+
+    def destroy(self):
+        self._signals = []
+        
 

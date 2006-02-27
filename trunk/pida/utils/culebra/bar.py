@@ -61,16 +61,20 @@ class Bar(ChildObject):
     # buffer
     _buffer = None
     
+    def _subscribe_buffer(self, buffer):
+        if buffer is None:
+            return None
+        else:
+            return self._buffer_subscription_factory(buffer, self)
+    
     def set_buffer(self, buff):
-        old_buffer = self.buffer
-        if old_buffer is not None:
-            self._unbind_buffer(old_buffer)
-        
         if buff is None:
             self._buffer = None
         else:
             self._buffer = weakref.ref(buff)
-            self._bind_buffer(buff)
+
+        self._buffer_subscription = self._subscribe_buffer(buff)
+
     
     def get_buffer(self):
         if self._buffer is None:
@@ -109,10 +113,6 @@ class Bar(ChildObject):
         
         self.toggle_action = self._create_toggle_action(action_group)
         self.__update_visibility_sync()
-#        self.toggle_action.set_active(self.widget.get_property("visible"))
-        
-#        src = SignalHolder(self.toggle_action, "toggled", self._on_action_toggled)
-#        self.toggle_source = src
 
     
     def _on_action_toggled(self, action):
