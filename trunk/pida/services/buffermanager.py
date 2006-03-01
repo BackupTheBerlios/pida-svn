@@ -24,6 +24,7 @@
 """The PIDA Buffer manager."""
 
 import gtk
+import gobject
 
 from pida.core import actions
 from pida.pidagtk.tree import Tree
@@ -171,6 +172,16 @@ class Buffermanager(service):
                                      ).set_sensitive(False)
         self.plugin_view = self.create_view('BufferView')
 
+    def cmd_close_project_documents(self, project_name):
+        document_to_close = []
+        for document in self.__documents.values():
+            if document.project_name == project_name:
+                document_to_close.append(document)
+        for doc in document_to_close:
+            def _c(doc):
+                self.cmd_close_document(doc)
+            gobject.idle_add(_c, doc)
+
     def cmd_switch_search(self):
         self.plugin_view.search()
 
@@ -241,10 +252,14 @@ class Buffermanager(service):
         self.boss.call_command('editormanager',
                                'goto_line', linenumber=linenumber)
 
+    def cmd_close_document(self, document):
+        document.handler.close_document(document)
+
     def cmd_close_file(self, filename):
         doc = self.__get_filename_document(filename)
+        print doc, 'doc'
         if doc is not None:
-            doc.handler.close_document(doc)
+            self.cmd_close_document(doc)
 
     def cmd_file_closed(self, filename):
         doc = self.__get_filename_document(filename)

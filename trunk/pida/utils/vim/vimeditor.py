@@ -73,6 +73,7 @@ class vim_editor(object):
             fn = self.__newdocs[document.unique_id]
         else:
             fn = document.filename
+        print fn
         self.__cw.close_buffer(self.server, fn)
 
     def cmd_edit(self, document):

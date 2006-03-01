@@ -301,9 +301,10 @@ class culebra_editor(service.service):
         self.current_view.editor.emit('paste-clipboard')
     
     def cmd_close(self, document):
-        #view = self.__views[document.unique_id]
-        view = self.current_view
+        view = self.__views[document.unique_id]
+        #view = self.current_view
         self.close_view(view)
+        self.current_view = None
 
     def cmd_can_close(self):
         buffs = [view.buffer for view in self.__views.values() if view.buffer.get_modified()]
