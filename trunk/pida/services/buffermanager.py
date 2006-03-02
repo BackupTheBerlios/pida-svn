@@ -344,7 +344,6 @@ class Buffermanager(service):
             self.__refresh_view(i)
 
     def __refresh_view(self, i):
-        print 'refreshing'
         if self.__currentdocument is None:
             if len(model):
                 if i == len(model):
@@ -395,7 +394,6 @@ class Buffermanager(service):
             self.plugin_view.bufferview.set_selected(document.unique_id)
         self.action_group.get_action('buffermanager+close_buffer').set_sensitive(True)
         self.events.emit('document_changed', document=document)
-        print self.__currentdocument
 
     def __set_document_project(self, document):
         proj = self.boss.call_command('projectmanager',
