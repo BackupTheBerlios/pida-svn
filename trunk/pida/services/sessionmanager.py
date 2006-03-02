@@ -73,7 +73,8 @@ class SessionManager(service.service):
                 self.boss.call_command('buffermanager',
                     'open_file', filename=filepath, quiet=True)
                 docsloaded = docsloaded + 1
-            if self.opt('sessions', 'automatically_load_last_session'):
+            if not docsloaded and self.opt('sessions',
+                'automatically_load_last_session'):
                 most_recent = os.path.join(self.boss.pida_home,
                                     'most-recent.session')
                 if os.path.exists(most_recent):
