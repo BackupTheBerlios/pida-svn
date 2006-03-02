@@ -1,5 +1,6 @@
 
-from pida.core.testing import test, assert_in, assert_equal, block_delay
+from pida.core.testing import test, assert_in, assert_equal, block_delay,\
+    assert_notequal
 
 import gobject
 import os
@@ -59,8 +60,6 @@ def close_some_documents(boss):
     assert_equal(3, len(docs(boss)))
     b.call('close_documents', documents=docs(boss).values())
     bd(boss)
-    bd(boss)
-    bd(boss)
     assert_equal(0, len(docs(boss)))
 
 @test
@@ -81,16 +80,31 @@ def open_many_documents(boss):
                 break
     assert_equal(slen+30, len(docs(boss)))
     
-
 @test
 def close_many_documents(boss):
     """This test fails in vim."""
     b = bm(boss)
     b.call('close_documents', documents=docs(boss).values())
-    bd(boss)
-    bd(boss)
-    bd(boss)
+    block_delay(3)
     assert_equal(0, len(docs(boss)))
+
+@test
+def current_document(boss):
+    b = bm(boss)
+    b.call('open_file', filename='/etc/passwd')
+    assert_equal(curdoc(boss).filename, '/etc/passwd')
+
+@test
+def auto_select_after_close(boss):
+    b = bm(boss)
+    for fn in ['/etc/passwd', '/etc/profile', '/etc/aliases']:
+        b.call('open_file', filename=fn)
+    bd(boss)
+    b.call('close_file', filename='/etc/passwd')
+    block_delay(2)
+    assert_notequal(curdoc(boss), None)
+
+    
         
     
     

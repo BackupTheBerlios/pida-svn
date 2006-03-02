@@ -344,15 +344,16 @@ class Buffermanager(service):
             self.__refresh_view(i)
 
     def __refresh_view(self, i):
+        model = self.plugin_view.bufferview.model
         if self.__currentdocument is None:
             if len(model):
                 if i == len(model):
                     i = i - 1
                 try:
                     val = model[i][1].value
-                    self.__view_document(val)
                 except:
-                    pass
+                    return
+                self.__view_document(val)
 
     def __editor_idle(self, call, *args):
         # awfule hack but sometimes vim needs awkward delaying
@@ -360,7 +361,8 @@ class Buffermanager(service):
             #gobject.timeout_add(200, call, *args)
             gobject.idle_add(call, *args)
         else:
-            call(*args)
+            gobject.idle_add(call, *args)
+            #call(*args)
         
 
     def __open_file(self, filename):
