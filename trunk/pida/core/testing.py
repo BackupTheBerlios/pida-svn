@@ -24,11 +24,20 @@
 import gobject
 import gtk
 import sys
+import os
 import time
 import traceback
 
-from StringIO import StringIO
+from cStringIO import StringIO
 
+out = sys.stdout
+err = sys.stderr
+sys.stderr = StringIO()
+sys.stdout = StringIO()
+
+def w(text):
+    out.write(text)
+    out.flush()
 
 class Tester(object):
     """
@@ -50,11 +59,11 @@ test = Tester()
 
 def _ui_delay(seconds, callback, *args):
     seconds = seconds - 1
-    sys.stdout.write('\b\b\b(%s)' % seconds)
-    sys.stdout.flush()
+    w('\b\b\b(%s)' % seconds)
+    out.flush()
     if seconds == 0:
-        sys.stdout.write('\n')
-        sys.stdout.flush()
+        out.write('\n')
+        out.flush()
         callback(*args)
     else:
         gobject.timeout_add(1000, _ui_delay, seconds, callback, *args)
@@ -98,60 +107,66 @@ def assert_notequal(item1, item2):
         raise e
 
 def get_tb():
-    return sys.exc_info()
+    e = sys.exc_info()
+    return traceback.format_exc(e)
 
 def _test(boss):
     failed = []
     errored = []
-    print 'Starting, total', len(test.tests), 'tests'
+    w('Starting, total %s tests\n' % len(test.tests))
     for t in test.tests:
-        out = sys.stdout
-        err = sys.stderr
-        sys.stderr = StringIO()
+        tout = sys.stdout
+        terr = sys.stderr
         sys.stdout = StringIO()
+        sys.stderr = StringIO()
         try:
             ret = t(boss)
-            out.write('.')
+            w('.')
         except AssertionError, e:
-            out.write('F')
-            failed.append((t, get_tb(), sys.stderr, sys.stdout))
+            w('F')
+            outs = sys.stdout.getvalue()
+            errs = sys.stderr.getvalue()
+            failed.append((t, get_tb(), errs, outs))
         except Exception, e:
-            out.write('E')
-            errored.append((t, get_tb(), sys.stderr, sys.stdout))
-        out.flush()
-        sys.stdout = out
-        sys.stderr = err
-    print '\nDone'
+            w('E')
+            outs = sys.stdout.getvalue()
+            errs = sys.stderr.getvalue()
+            errored.append((t, get_tb(), errs, outs))
+        sys.stdout = tout
+        sys.stderr = terr
+    w('\nDone\n')
     for l, errname in [(failed, 'FAIL'), (errored, 'ERROR')]:
-        for name, e, out, err in l:
-            print '--'
-            print errname, name
-            traceback.print_exc(e)
-            print '--'
-            out.seek(0)
-            outs = out.read().strip()
+        for name, e, errs, outs in l:
+            w('--\n')
+            w('%s %s\n' % (errname, name))
+            w(e)
+            w('--\n')
             if len(outs):
-                print '--'
-                print 'STDOUT'
-                print outs
-                print '--'
-            err.seek(0)
-            errs = err.read().strip()
+                w('--\n')
+                w('STDOUT\n')
+                w('%s\n' % outs)
+                w('--\n')
             if len(errs):
-                print '--'
-                print 'STDERR'
-                print errs
-                print '--'
+                write('--\n')
+                write('STDERR\n')
+                write('%s\n % errs')
+                write('--\n')
+            out.flush()
     boss.stop()
+    #out.write(sys.stdout.read())
+    #out.write(sys.stderr.read())
+    #block_delay(2)
+    #gtk.main_quit()
     sys.exit(0)
 
 def self_test(boss):
-    sys.stdout.write('Self testing, ')
+    out.write('Self testing, ')
     if boss.get_service('editormanager').editor.NAME.startswith('vim'):
         delay = 5
     else:
         delay = 2
-    sys.stdout.write('delay %s seconds    ' % delay)
+    out.write('delay %s seconds    ' % delay)
+    out.flush()
     _ui_delay(delay, _test, boss)
 
 # The actual tests

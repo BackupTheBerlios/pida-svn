@@ -255,13 +255,9 @@ class Buffermanager(service):
         Close more than one document.
         """
         def _c():
-            if len(documents):
-                self.cmd_close_document(documents.pop())
-                return True
-            return False
-        while _c():
-            pass
-        #self.__editor_idle(_c)
+            self.cmd_close_document(documents.pop())
+            return len(documents)
+        self.__editor_idle(_c)
 
     def cmd_close_file(self, filename):
         """
@@ -281,13 +277,13 @@ class Buffermanager(service):
                 document_to_close.append(document)
         self.cmd_close_documents(document_to_close)
 
-    def cmd_document_closed(self, document):
+    def cmd_document_closed(self, document, dorefresh=True):
         """
         Called by an editor when a document has been closed.
 
         It is unlikely to be required by non-editor services.
         """
-        self.__remove_document(document)
+        self.__remove_document(document, dorefresh)
 
     def cmd_file_closed(self, filename):
         """
@@ -334,7 +330,7 @@ class Buffermanager(service):
             if doc.filename == filename:
                 return doc
         
-    def __remove_document(self, document):
+    def __remove_document(self, document, dorefresh=True):
         del self.__documents[document.unique_id]
         model = self.plugin_view.bufferview.model
         for i, row in enumerate(model):
@@ -344,24 +340,28 @@ class Buffermanager(service):
         document.handler.action_group.set_visible(False)
         self.__currentdocument = None
         self.action_group.get_action('buffermanager+close_buffer').set_sensitive(False)
-        def refresh(i):
-            if self.__currentdocument is None:
-                if len(model):
-                    if i == len(model):
-                        i = i - 1
-                    try:
-                        val = model[i][1].value
-                        self.__view_document(val)
-                    except:
-                        pass
-        self.__editor_idle(refresh, i)
+        if dorefresh:
+            self.__refresh_view(i)
+
+    def __refresh_view(self, i):
+        print 'refreshing'
+        if self.__currentdocument is None:
+            if len(model):
+                if i == len(model):
+                    i = i - 1
+                try:
+                    val = model[i][1].value
+                    self.__view_document(val)
+                except:
+                    pass
 
     def __editor_idle(self, call, *args):
         # awfule hack but sometimes vim needs awkward delaying
         if self.get_service('editormanager').editor.NAME.startswith('vim'):
-            gobject.timeout_add(200, call, *args)
+            #gobject.timeout_add(200, call, *args)
+            gobject.idle_add(call, *args)
         else:
-            gobject.timeout_add(0, call, *args)
+            call(*args)
         
 
     def __open_file(self, filename):

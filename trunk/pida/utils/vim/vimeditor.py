@@ -73,7 +73,6 @@ class vim_editor(object):
             fn = self.__newdocs[document.unique_id]
         else:
             fn = document.filename
-        print fn
         self.__cw.close_buffer(self.server, fn)
 
     def cmd_edit(self, document):
@@ -225,7 +224,7 @@ class vim_editor(object):
                 del self.__documents[uid]
                 self.__currentdocument = None
                 self.boss.call_command('buffermanager', 'document_closed',
-                                            document=doc)
+                                            document=doc, dorefresh=False)
 
     def vim_filesave(self, server, *args):
         self.boss.call_command('buffermanager', 'reset_current_document')
