@@ -25,9 +25,7 @@ import os
 
 import gtk
 
-# XXX: should be importing from rat
 from rat import shiftpaned
-#from pida.pidagtk import shiftpaned
 
 import pida.core.actions as actions
 import pida.core.service as service

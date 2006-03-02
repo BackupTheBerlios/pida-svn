@@ -27,6 +27,7 @@ import urllib2
 import pango
 import gtk
 import sys
+from rat import hig
 
 _ = gettext.gettext
 
@@ -149,7 +150,6 @@ class DebugWindow(gtk.Dialog):
 
     def show_exception(self, exctype, value, tb):
         if exctype is errors.ServiceNotFoundError:
-            from rat.hig import dialog_error, dialog_warn
             svcname = value.args[0]
             pt = 'Tried to access non-existing service "%s"' % svcname
             st = ('PIDA tried to find a service that is not loaded'
@@ -162,9 +162,9 @@ class DebugWindow(gtk.Dialog):
                       'The service "%s" is critical.</span>\n\n'
                       '<b>PIDA will not run without it</b>'
                       % (st, svcname))
-                dialog_error(pt, st, title='Service Not Found')
+                hig.error(pt, st, title='Service Not Found')
             else:
-                dialog_warn(pt, st, title='Service Not Found')
+                hig.warn(pt, st, title='Service Not Found')
             return True
         else:
             self.unhandled_exception(exctype, value, tb)

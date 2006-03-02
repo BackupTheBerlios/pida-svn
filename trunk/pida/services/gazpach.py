@@ -27,6 +27,8 @@ import os
 # gtk import(s)
 import gtk
 
+from rat import hig
+
 
 from gazpacho import main
 main.setup_app()
@@ -618,7 +620,6 @@ class gazpacho_service(service.service):
         """Add a user interface form to the current project."""
         proj = self.boss.call_command('projectmanager',
                                       'get_current_project')
-        from rat.hig import dialog_warn
         if proj.get_option('glade', 'use_glade').value:
             gladedir = proj.get_option('glade', 'glade_directory').value
             def callback(name):
@@ -631,7 +632,7 @@ class gazpacho_service(service.service):
                                         callback_function=callback,
                                         prompt='Form Name')
         else:
-            dialog_warn('Cannot create User Interface Form',
+            hig.warn('Cannot create User Interface Form',
                         'This project must be configured to use glade.',
                         parent=self.boss.get_main_window())
             

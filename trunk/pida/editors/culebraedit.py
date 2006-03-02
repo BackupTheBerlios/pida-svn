@@ -250,7 +250,7 @@ class culebra_editor(service.service):
             return
         
         # Ok the buffer is not new and exists
-        reply = hig.dialog_ok_cancel(
+        reply = hig.ok_cancel(
             "Revert the document to saved contents",
             ("Even if your document was just saved it could be altered by a "
              "third party. By reverting to its real contents you will loose "
