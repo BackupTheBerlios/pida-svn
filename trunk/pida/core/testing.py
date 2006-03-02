@@ -46,6 +46,9 @@ class Tester(object):
 
 test = Tester()
 
+import pida.tests.core
+from pida.tests.services import *
+
 def _ui_delay(seconds, callback, *args):
     print seconds
     seconds = seconds - 1

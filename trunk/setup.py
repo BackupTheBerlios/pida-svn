@@ -64,6 +64,7 @@ base_packages = ['pida',
                  'pida.services',
                  'pida.editors',
                  'pida.utils',
+                 'pida.tests', 'pida.tests.core', 'pida.tests.services',
                  'rat']
 
 # extra utility packages

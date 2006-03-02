@@ -72,6 +72,8 @@ if major < 2 or minor < 4:
 # Setuptools is needed to run PIDA
 try:
     import setuptools
+    import pkg_resources
+    pkg_resources.require('pida')
 except ImportError:
     raise
     die_gui('PIDA requires setuptools to be installed.')
