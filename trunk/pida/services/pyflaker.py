@@ -31,7 +31,6 @@ import gobject
 import pida.pidagtk.contentview as contentview
 import pida.pidagtk.tree as tree
 
-import pida.utils.pyflakes as pyflakes
 from pida.utils.gobjectlinereader import GobjectReader
 import pida.core.actions as actions
 import textwrap

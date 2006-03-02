@@ -33,7 +33,6 @@ xml.sax.handler.feature_external_pes = False
 import gtk
 import gobject
 
-import pida.utils.gforklet as gforklet
 import pida.core.service as service
 import pida.core.actions as actions
 import pida.pidagtk.contentview as contentview
