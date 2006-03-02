@@ -224,7 +224,7 @@ class vim_editor(object):
                 del self.__documents[uid]
                 self.__currentdocument = None
                 self.boss.call_command('buffermanager', 'document_closed',
-                                            document=doc, dorefresh=False)
+                                            document=doc, dorefresh=True)
 
     def vim_filesave(self, server, *args):
         self.boss.call_command('buffermanager', 'reset_current_document')
