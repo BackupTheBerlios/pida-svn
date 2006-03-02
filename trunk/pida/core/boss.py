@@ -21,6 +21,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import gobject
 
 import base
 
@@ -49,10 +50,14 @@ class boss(base.pidacomponent):
         self.__services.bind()
         self.__services.reset()
         self.__editor.call('start')
-        try:
-            self.call_command('terminal', 'execute_shell')
-        except:
-            self.log.warn('terminal emulator not configured correctly')
+        if self.__env.opts.testing_mode:
+            from testing import self_test
+            self_test(self)
+        else:
+            try:
+                self.call_command('terminal', 'execute_shell')
+            except:
+                self.log.warn('terminal emulator not configured correctly')
         #self.__window.call('show_window')
 
     def reset(self):
@@ -106,3 +111,4 @@ class boss(base.pidacomponent):
 
     ServiceNotFoundError = ServiceNotFoundError
 
+    

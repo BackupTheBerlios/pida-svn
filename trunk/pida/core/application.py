@@ -137,6 +137,8 @@ class environment(object):
                   'of PIDA. Usage pida -r <filename>.'))
         op.add_option('-F', '--first-run-wizard', action='store_true',
                       help='Run the PIDA first time wizard')
+        op.add_option('-t', '--testing-mode', action='store_true',
+                      help='Run te PIDA self test')
         opts, args = op.parse_args()
         envhome = self.__parseenv()
         if envhome is not None:
