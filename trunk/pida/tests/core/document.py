@@ -17,15 +17,18 @@ def c():
 def d(tmp):
     os.system('rm %s' % tmp)
 
+
 @test
 def new_document(boss):
     doc = document()
     assert_equal(doc.is_new, True)
 
+
 @test
 def unnamed_document(boss):
     doc = document()
     assert_equal(doc.filename, None)
+
 
 @test
 def unnamed_is_new(boss):
@@ -33,21 +36,25 @@ def unnamed_is_new(boss):
     assert_equal(doc.is_new, True)
     assert_equal(doc.filename, None)
 
+
 @test
 def new_index(boss):
     doc = document()
     doc2 = document()
     assert_notequal(doc.newfile_index, doc2.newfile_index)
 
+
 @test
 def no_project(boss):
     doc = document()
     assert_equal(doc.project_name, '')
 
+
 @test
 def no_handler(boss):
     doc = document()
     assert_equal(doc.handler, None)
+
 
 @test
 def unique_id(boss):
@@ -55,11 +62,13 @@ def unique_id(boss):
     doc2 = document()
     assert_notequal(doc.unique_id, doc2.unique_id)
 
+
 @test
 def real_file(boss):
     doc, tmp, txt = c()
     assert_equal(doc.filename, tmp)
     d(tmp)
+
 
 @test
 def file_text(boss):
@@ -67,11 +76,13 @@ def file_text(boss):
     assert_equal(doc.string, txt)
     d(tmp)
 
+
 @test
 def file_lines(boss):
     doc, tmp, txt = c()
     assert_equal(len(doc.lines), 2)
     d(tmp)
+
 
 @test
 def file_len(boss):
@@ -79,11 +90,13 @@ def file_len(boss):
     assert_equal(len(doc), len(txt))
     d(tmp)
 
+
 @test
 def file_length(boss):
     doc, tmp, txt = c()
     assert_equal(doc.length, len(doc))
     d(tmp)
+
 
 @test
 def directory(boss):
@@ -91,9 +104,18 @@ def directory(boss):
     assert_equal(doc.directory, '/tmp')
     d(tmp)
 
+
 @test
 def directory_basename(boss):
     doc, tmp, txt = c()
     assert_equal(doc.directory_basename, 'tmp')
     d(tmp)
+
+
+@test
+def basename(boss):
+    doc, tmp, txt = c()
+    assert_equal(doc.basename, os.path.basename(tmp))
+    d(tmp)
+
 
