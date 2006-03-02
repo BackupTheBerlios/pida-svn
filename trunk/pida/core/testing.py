@@ -22,10 +22,12 @@
 #SOFTWARE.
 
 import gobject
-
+import gtk
 import sys
-
+import time
 import traceback
+
+from StringIO import StringIO
 
 
 class Tester(object):
@@ -46,16 +48,24 @@ class Tester(object):
 
 test = Tester()
 
-import pida.tests.core
-from pida.tests.services import *
-
 def _ui_delay(seconds, callback, *args):
-    print seconds
     seconds = seconds - 1
+    sys.stdout.write('\b\b\b(%s)' % seconds)
+    sys.stdout.flush()
     if seconds == 0:
+        sys.stdout.write('\n')
+        sys.stdout.flush()
         callback(*args)
     else:
         gobject.timeout_add(1000, _ui_delay, seconds, callback, *args)
+
+def block_delay(seconds):
+    stime = time.time()
+    ctime = stime
+    while ctime - stime < seconds:
+        ctime = time.time()
+        gtk.main_iteration(False)
+        gtk.get_current_event()
 
 def _shorten(*varls):
     rets = []
@@ -74,8 +84,18 @@ def assert_in(item, sequence):
         raise e
 
 def assert_equal(item1, item2):
-    pass
-        
+    try:
+        assert item1 == item2
+    except AssertionError, e:
+        e.args = '%s != %s' % _shorten(item1, item2)
+        raise e
+
+def assert_notequal(item1, item2):
+    try:
+        assert item1 != item2
+    except AssertionError, e:
+        e.args = '%s == %s' % _shorten(item1, item2)
+        raise e
 
 def get_tb():
     return sys.exc_info()
@@ -83,26 +103,56 @@ def get_tb():
 def _test(boss):
     failed = []
     errored = []
-    print 'Starting', len(test.tests)
+    print 'Starting, total', len(test.tests), 'tests'
     for t in test.tests:
+        out = sys.stdout
+        err = sys.stderr
+        sys.stderr = StringIO()
+        sys.stdout = StringIO()
         try:
             ret = t(boss)
-            sys.stdout.write('.')
+            out.write('.')
         except AssertionError, e:
-            sys.stdout.write('F')
-            failed.append((t, get_tb()))
+            out.write('F')
+            failed.append((t, get_tb(), sys.stderr, sys.stdout))
         except Exception, e:
-            sys.stdout.write('E')
-            errored.append((t, get_tb()))
-        sys.stdout.flush()
+            out.write('E')
+            errored.append((t, get_tb(), sys.stderr, sys.stdout))
+        out.flush()
+        sys.stdout = out
+        sys.stderr = err
     print '\nDone'
-    for name, e in failed + errored:
-        print 'FAIL', name
-        traceback.print_exc(e)
+    for l, errname in [(failed, 'FAIL'), (errored, 'ERROR')]:
+        for name, e, out, err in l:
+            print '--'
+            print errname, name
+            traceback.print_exc(e)
+            print '--'
+            out.seek(0)
+            outs = out.read().strip()
+            if len(outs):
+                print '--'
+                print 'STDOUT'
+                print outs
+                print '--'
+            err.seek(0)
+            errs = err.read().strip()
+            if len(errs):
+                print '--'
+                print 'STDERR'
+                print errs
+                print '--'
+    boss.stop()
+    sys.exit(0)
 
 def self_test(boss):
-    print 'Self testing'
-    _ui_delay(1, _test, boss)
+    sys.stdout.write('Self testing, ')
+    if boss.get_service('editormanager').editor.NAME.startswith('vim'):
+        delay = 5
+    else:
+        delay = 2
+    sys.stdout.write('delay %s seconds    ' % delay)
+    _ui_delay(delay, _test, boss)
 
 # The actual tests
 
@@ -113,5 +163,9 @@ def check_important_services(boss):
     services = dict([(s.NAME, s) for s in boss.services])
     for n in impt:
         assert_in(n, services)
+
+# Import the tests
+from pida.tests.core import *
+from pida.tests.services import buffermanager
 
 

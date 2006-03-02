@@ -88,6 +88,7 @@ except ImportError:
 
 
 # Now we can use a gui exception hook
+old_excepthook = sys.excepthook
 sys.excepthook = debugwindow.show
 
 
@@ -275,6 +276,8 @@ def main(bosstype=boss.boss, mainloop=gtk.main, mainstop=gtk.main_quit):
     if env.opts.debug:
         os.environ['PIDA_DEBUG'] = '1'
         os.environ['PIDA_LOG_STDERR'] = '1'
+    if env.opts.testing_mode:
+        sys.excepthook = old_excepthook
     if env.opts.version is not None:
         run_func = run_version
     elif env.opts.remote:
