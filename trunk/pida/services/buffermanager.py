@@ -149,19 +149,28 @@ class BufferView(content_view):
 
 
 class Buffermanager(service):
-    """The PIDA buffer manager service"""    
+    """The PIDA buffer manager service"""
+
+    # Service basics
+
     display_name = 'Buffer Management'
     
+    # Views
+
     class BufferView(defs.View):
         """The buffer list view definition"""
         view_type = BufferView
         book_name = 'content'
+
+    # Events
 
     class document_changed(defs.event):
         """When the user has switched to a different document"""
 
     class document_modified(defs.event):
         """When the document has been modified"""
+
+    # Life cycle
 
     def init(self):
         self.__currentdocument = None
@@ -172,28 +181,8 @@ class Buffermanager(service):
                                      ).set_sensitive(False)
         self.plugin_view = self.create_view('BufferView')
 
-    def cmd_close_project_documents(self, project_name):
-        document_to_close = []
-        for document in self.__documents.values():
-            if document.project_name == project_name:
-                document_to_close.append(document)
-        for doc in document_to_close:
-            def _c(doc):
-                self.cmd_close_document(doc)
-            gobject.idle_add(_c, doc)
+    # External interface
 
-    def cmd_switch_search(self):
-        self.plugin_view.search()
-
-    def cmd_switch_next(self):
-        self.plugin_view.select_next()
-
-    def cmd_switch_previous(self):
-        self.plugin_view.select_previous()
-
-    def cmd_switch_index(self, index):
-        self.plugin_view.goto_index(index - 1)
-        
     def cmd_open_document(self, document):
         if document is not self.__currentdocument:
             if document.unique_id not in self.__documents:
@@ -201,6 +190,9 @@ class Buffermanager(service):
             self.__view_document(document)
 
     def cmd_open_file(self, filename, quiet=False):
+        """
+        Open a filename.
+        """
         if (len(filename) and (self.__currentdocument is None or
                 filename != self.__currentdocument.filename)):
             document = self.__get_filename_document(filename)
@@ -253,30 +245,89 @@ class Buffermanager(service):
                                'goto_line', linenumber=linenumber)
 
     def cmd_close_document(self, document):
+        """
+        Close a document.
+        """
         document.handler.close_document(document)
 
+    def cmd_close_documents(self, documents):
+        """
+        Close more than one document.
+        """
+        def _c():
+            if len(documents):
+                self.cmd_close_document(documents.pop())
+                return True
+            return False
+        while _c():
+            pass
+        #self.__editor_idle(_c)
+
     def cmd_close_file(self, filename):
+        """
+        Close a loaded document by filename.
+        """
         doc = self.__get_filename_document(filename)
-        print doc, 'doc'
         if doc is not None:
             self.cmd_close_document(doc)
 
+    def cmd_close_project_documents(self, project_name):
+        """
+        Close documents in a project.
+        """
+        document_to_close = []
+        for document in self.__documents.values():
+            if document.project_name == project_name:
+                document_to_close.append(document)
+        self.cmd_close_documents(document_to_close)
+
+    def cmd_document_closed(self, document):
+        """
+        Called by an editor when a document has been closed.
+
+        It is unlikely to be required by non-editor services.
+        """
+        self.__remove_document(document)
+
     def cmd_file_closed(self, filename):
+        """
+        Called by an editor when a file has been closed.
+
+        It is unlikely to be required by non-editor services.
+        """
         doc = self.__get_filename_document(filename)
         if doc is not None:
             self.__remove_document(doc)
         else:
             self.log.warn('attempt to close file not opened %s', filename)
 
-    def cmd_document_closed(self, document):
-        self.__remove_document(document)
-
     def cmd_reset_current_document(self):
+        """
+        Call to indicate that the contents of the current document have
+        changed.
+        """
         self.__currentdocument.reset()
         self.events.emit('document_modified', document=self.__currentdocument)
 
     def cmd_get_documents(self):
+        """
+        Return the loaded documents.
+        """
         return self.__documents
+
+    def cmd_switch_search(self):
+        self.plugin_view.search()
+
+    def cmd_switch_next(self):
+        self.plugin_view.select_next()
+
+    def cmd_switch_previous(self):
+        self.plugin_view.select_previous()
+
+    def cmd_switch_index(self, index):
+        self.plugin_view.goto_index(index - 1)
+        
+    # Private methods
 
     def __get_filename_document(self, filename):
         for uid, doc in self.__documents.iteritems():
@@ -298,8 +349,20 @@ class Buffermanager(service):
                 if len(model):
                     if i == len(model):
                         i = i - 1
-                    self.__view_document(model[i][1].value)
-        gtk.idle_add(refresh, i)
+                    try:
+                        val = model[i][1].value
+                        self.__view_document(val)
+                    except:
+                        pass
+        self.__editor_idle(refresh, i)
+
+    def __editor_idle(self, call, *args):
+        # awfule hack but sometimes vim needs awkward delaying
+        if self.get_service('editormanager').editor.NAME.startswith('vim'):
+            gobject.timeout_add(200, call, *args)
+        else:
+            gobject.timeout_add(0, call, *args)
+        
 
     def __open_file(self, filename):
         document = self.boss.call_command('documenttypes',
@@ -345,10 +408,14 @@ class Buffermanager(service):
                 document.handler.action_group.set_sensitive(False)
                 document.handler.action_group.set_visible(False)
 
+    # UI Callbacks
+
     def cb_plugin_view_clicked(self, view, bufitem):
         doc = bufitem.value
         if doc != self.__currentdocument:
             self.__view_document(doc)
+
+    # UI Actions
 
     @actions.action(
         stock_id=gtk.STOCK_OPEN,
@@ -385,6 +452,8 @@ class Buffermanager(service):
         """Creates a document"""
         self.call('new_file')
     
+    # UI Definitions
+
     def get_menu_definition(self):
         return  """
                 <ui>
