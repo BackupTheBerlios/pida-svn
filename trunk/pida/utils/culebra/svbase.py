@@ -1,3 +1,5 @@
+
+import mimetypes
 import gtksourceview
 from rat import text
 
@@ -20,9 +22,13 @@ class BaseBuffer(gtksourceview.SourceBuffer):
     def __init__(self):
         super(BaseBuffer, self).__init__()
         lm = gtksourceview.SourceLanguagesManager()
-        language = lm.get_language_from_mime_type("text/x-python")
         self.languages_manager = lm
-        self.set_language(language)
-
         self.set_highlight(True)
 
+    def set_language_from_filename(self):
+        mt, at = mimetypes.guess_type(self.filename)
+        if mt is None:
+            mt = 'text/plain'
+        language = self.languages_manager.get_language_from_mime_type(mt)
+        self.set_language(language)
+            

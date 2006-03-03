@@ -403,6 +403,7 @@ class CulebraBuffer(BaseBuffer):
             self.set_modified(False)
             self.place_cursor(self.get_start_iter())
             self.end_not_undoable_action()
+            self.set_language_from_filename()
 
         finally:
             fd.close()
