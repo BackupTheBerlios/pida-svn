@@ -229,6 +229,7 @@ class FileBrowser(contentview.content_view):
         self._toolbar= gtk.Toolbar()
         self.widget.pack_start(self._toolbar, expand=False)
         self._toolbar.set_icon_size(gtk.ICON_SIZE_MENU)
+        self._toolbar.set_style(gtk.TOOLBAR_ICONS)
 
     def create_actions(self):
         self._homeact = gtk.Action('Home', 'Home',
