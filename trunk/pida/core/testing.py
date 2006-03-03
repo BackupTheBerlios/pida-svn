@@ -180,7 +180,7 @@ def check_important_services(boss):
         assert_in(n, services)
 
 # Import the tests
-from pida.tests.core import document
+from pida.tests.core import document, actions
 from pida.tests.pidagtk import tree
 from pida.tests.services import buffermanager
 
