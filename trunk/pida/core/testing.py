@@ -32,8 +32,9 @@ from cStringIO import StringIO
 
 out = sys.stdout
 err = sys.stderr
-sys.stderr = StringIO()
-sys.stdout = StringIO()
+if not 'PIDA_DEBUG' in os.environ or not os.environ['PIDA_DEBUG']:
+    sys.stderr = StringIO()
+    sys.stdout = StringIO()
 
 def w(text):
     out.write(text)
@@ -74,7 +75,6 @@ def block_delay(seconds):
     while ctime - stime < seconds:
         ctime = time.time()
         gtk.main_iteration(False)
-        gtk.get_current_event()
 
 def _shorten(*varls):
     rets = []
@@ -147,10 +147,10 @@ def _test(boss):
                 w('%s\n' % outs)
                 w('--\n')
             if len(errs):
-                write('--\n')
-                write('STDERR\n')
-                write('%s\n % errs')
-                write('--\n')
+                w('--\n')
+                w('STDERR\n')
+                w('%s\n % errs')
+                w('--\n')
             out.flush()
     boss.stop()
     #out.write(sys.stdout.read())
@@ -181,6 +181,7 @@ def check_important_services(boss):
 
 # Import the tests
 from pida.tests.core import document
+from pida.tests.pidagtk import tree
 from pida.tests.services import buffermanager
 
 
