@@ -46,6 +46,13 @@ KEYMAP = {
     'documenttypes+document+cut': (120, C),
     'documenttypes+document+copy': (99, C),
     'documenttypes+document+paste': (118, C),
+    'culebraedit+cut_line': (100 ,C),
+    'culebraedit+select_line': (108 ,C),
+    'culebraedit+select_word': (104 ,C),
+    'culebraedit+cut_word': (106 ,C),
+    'culebraedit+select_sentence': (105 ,C),
+    'culebraedit+cut_sentence': (117 ,C),
+    'culebraedit+select_paragraph': (112 ,C),
 }
 
 class culebra_view(contentview.content_view):
@@ -157,7 +164,11 @@ class culebra_editor(service.service):
                 self.__revertact = action
             elif actname == 'DocumentSave':
                 self._save_action = action
-
+        for act in self.action_group.list_actions():
+            actname = act.get_name()
+            if actname in KEYMAP:
+                self.__keymods[KEYMAP[actname]] = act
+        
     def __load_document(self, document):
         view = self.create_view('Culebra',
             filename=document.filename,
@@ -321,6 +332,69 @@ class culebra_editor(service.service):
             filenames[filename].save()
         return response in (gtk.RESPONSE_CLOSE, gtk.RESPONSE_OK)
         
+    def cmd_select_line(self):
+        buf = self.current_view.editor.get_buffer()
+        si = buf.get_iter_at_mark(buf.get_insert())
+        ei = si.copy()
+        si.set_line_offset(0)
+        ei.forward_line()
+        buf.select_range(si, ei)
+        
+    def cmd_cut_line(self):
+        self.cmd_select_line()
+        self.cmd_cut()
+        
+    def cmd_select_word(self):
+        buf = self.current_view.editor.get_buffer()
+        si = buf.get_iter_at_mark(buf.get_insert())
+        if si.inside_word():
+            ei = si.copy()
+            if not si.starts_word():
+                si.backward_word_start()
+            if not ei.ends_word():
+                ei.forward_word_end()
+            buf.select_range(si, ei)
+            return True
+        else:
+            return False
+                
+    def cmd_cut_word(self):
+        if self.cmd_select_word():
+            self.cmd_cut()
+            
+    def cmd_select_sentence(self):      
+        buf = self.current_view.editor.get_buffer()
+        si = buf.get_iter_at_mark(buf.get_insert())
+        if si.inside_sentence():
+            ei = si.copy()
+            if not si.starts_sentence():
+                si.backward_sentence_start()
+            if not ei.ends_sentence():
+                ei.forward_sentence_end()
+            buf.select_range(si, ei)
+            return True
+        else:
+            return False
+            
+    def cmd_cut_sentence(self):
+        if self.cmd_select_sentence():
+            self.cmd_cut()
+    
+    def cmd_select_paragraph(self):
+        buf = self.current_view.editor.get_buffer()
+        si = buf.get_iter_at_mark(buf.get_insert())
+        if not si.get_chars_in_line() > 1:
+            return
+        ei = si.copy()
+        while si.get_chars_in_line() > 1 and not si.is_start():
+            si.backward_line()
+            si.set_line_offset(0)
+        if not si.is_start():
+            si.forward_lines(1)
+        while ei.get_chars_in_line() > 1 and not ei.is_end():
+            ei.forward_line()
+        buf.select_range(si, ei)
+        
     ###############
     # Callbacks
     def view_closed(self, view):
@@ -446,7 +520,27 @@ class culebra_editor(service.service):
     )
     def act_replace_all(self, action):
         """Replaces all matching words"""
+    
+    def act_select_line(self, action):
+        self.cmd_select_line()
+    
+    def act_cut_line(self, action):
+        self.cmd_cut_line()
+    
+    def act_select_word(self, action):
+        self.cmd_select_word()
         
+    def act_cut_word(self, action):
+        self.cmd_cut_word()
 
+    def act_select_sentence(self, action):
+        self.cmd_select_sentence()
+        
+    def act_cut_sentence(self, action):
+        self.cmd_cut_sentence()
+        
+    def act_select_paragraph(self, action):
+        self.cmd_select_paragraph()
+        
 
 Service = culebra_editor
