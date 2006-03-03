@@ -29,10 +29,10 @@ fi
 # build pida
 echo "Building pida ..."
 if ( cd $pidadir; {
-    touch data/version
+    touch pida/data/version
     python setup.py rotate --dist-dir=$distdir --match=.egg --keep=3 &&
     python setup.py build &&
-    grep '^Version:' pida.egg-info/PKG-INFO | cut -d' ' -f2- > data/version &&
+    grep '^Version:' pida.egg-info/PKG-INFO | cut -d' ' -f2- > pida/data/version &&
     python setup.py bdist --dist-dir=$distdir --formats=egg
     } 2>&1 ) > $pidadir/buildlog.$$; then
     rm $pidadir/buildlog.$$
@@ -52,7 +52,7 @@ if [ -f $pidadir/buildlog.$$ ]; then
 fi
 
 pyver=`python -V 2>&1 | cut -d' ' -f2 | cut -c1-3`
-version=`cat $pidadir/data/version`
+version=`cat $pidadir/pida/data/version`
 eggpath=$( echo build/bdist.`uname -s`-`uname -m`/egg | tr A-Z a-z )
 egg="$distdir/pida-${version//-/_}-py$pyver.egg"
 

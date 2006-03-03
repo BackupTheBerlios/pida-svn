@@ -29,7 +29,7 @@ VERSION_STRING = '0.3.1'
 
 def ensure_version_file_exists():
     """Check for existence of version file and create if unavailable."""
-    version_path = os.path.join('data', 'version')
+    version_path = os.path.join('pida', 'data', 'version')
     if not os.path.exists(version_path):
         f = open(version_path, 'w')
         f.write('%s\n' % VERSION_STRING)
@@ -105,9 +105,6 @@ def main():
     services = find_entry_points('services', 'Service')
     plugins = find_entry_points('plugins', 'Plugin')
     editors = find_entry_points('editors', 'Service')
-    pixmaps = discover_data_files('pixmaps', 'xpm')
-    icons = discover_data_files('icons', 'svg')
-    uis = discover_data_files('glade', 'glade')
     setup(name='pida',
           version=VERSION_STRING,
           author='Ali Afshar',
