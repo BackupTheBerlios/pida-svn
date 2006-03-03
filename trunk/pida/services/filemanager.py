@@ -434,11 +434,7 @@ class file_manager(service.service):
 
     def init(self):
         self.__content = None
-        import pkg_resources
-        fn = pkg_resources.resource_filename(
-                pkg_resources.Requirement.parse('pida'),
-                'forkscripts/ls.py')
-        self.plugin_view = self.create_view('FileBrowser', scriptpath=fn)
+        self.plugin_view = self.create_view('FileBrowser', scriptpath=None)
         self.plugin_view.connect('file-activated',
                                   self.cb_single_view_file_activated)
 

@@ -28,7 +28,7 @@ defaulticons = gtk.icon_theme_get_default()
 class Icons(object):
 
     def __init__(self, icon_file=None):
-        self.__theme, self.__factory = set_stock_icons('pida', 'icons')
+        self.__theme, self.__factory = set_stock_icons('pida', 'data/icons')
 
     def get(self, name, *args):
         try:
@@ -89,17 +89,18 @@ class Icons(object):
 
 def set_stock_icons(st_req, st_path):
     import pkg_resources as pr
-    pidareq = pr.Requirement.parse(st_req)
-    icon_names = pr.resource_listdir(pidareq, st_path)
+    icon_names = pr.resource_listdir(st_req, st_path)
     stock_ids = set(gtk.stock_list_ids())
     iconfactory = gtk.IconFactory()
     theme = gtk.icon_theme_get_default()
     listed = theme.list_icons()
     for icon in icon_names:
+        if icon.startswith('.'):
+            continue
         iconname = icon.split('.', 1)[0]
         if iconname not in listed:
-            iconres = '/'.join(['icons', icon])
-            iconpath = pr.resource_filename(pidareq, iconres)
+            iconres = '/'.join(['data', 'icons', icon])
+            iconpath = pr.resource_filename(st_req, iconres)
             pixbuf = gtk.gdk.pixbuf_new_from_file(iconpath)
             iconset = gtk.IconSet(pixbuf)
             iconfactory.add(iconname, iconset)

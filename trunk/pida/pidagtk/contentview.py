@@ -33,8 +33,9 @@ import icons
 
 def create_pida_icon():
     from pkg_resources import Requirement, resource_filename
-    icon_file = resource_filename(Requirement.parse('pida'),
-                              'pida-icon.png')
+    icon_file = resource_filename('pida',
+                              'data/icons/pida-icon.png')
+    print icon_file
     im = gtk.Image()
     im.set_from_file(icon_file)
     return im.get_pixbuf()

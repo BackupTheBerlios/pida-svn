@@ -39,7 +39,7 @@ ensure_version_file_exists()
 
 # setuptools import
 try:
-    from setuptools import setup
+    from setuptools import setup, find_packages
 except ImportError, e:
     s = raw_input('Setuptools is not available. '
                   'You can install it yourself while this prompt waits, or '
@@ -101,7 +101,7 @@ def find_entry_points(directory_name, entrypoint_name):
 
 def main():
     """The main script."""
-    packages = base_packages + util_packages
+    packages = find_packages('pida'),
     services = find_entry_points('services', 'Service')
     plugins = find_entry_points('plugins', 'Plugin')
     editors = find_entry_points('editors', 'Service')
@@ -117,19 +117,20 @@ def main():
           description=('A Python IDE written in Python and GTK, '
                        'which uses Vim as its editor.'),
           long_description='Please visit the Pida website for more details.',
-          packages=packages,
+          packages=find_packages(),
           package_dir = {'pida': 'pida'},
-          data_files=[
-                    ('glade', uis),
-                    ('pixmaps', pixmaps),
-                    ('icons', icons),
-                    ('forkscripts', forkscripts),
-                    ('version', ['data/version']),
-                    ('', ['data/icons/pida-icon.png']),
-                    ('', ['AUTHORS']),
-                    ('', ['CONTRIBUTORS']),
-                    ('', ['COPYING']),
-                    ],
+          
+          package_data={
+                    'pida': ['data/glade/*.glade',
+                                'data/pixmaps/*.xpm',
+                                'data/icons/*.svg',
+                                'data/forkscripts/*.py',
+                                'data/version',
+                                'data/icons/pida-icon.png',
+                                'data/AUTHORS',
+                                'data/CONTRIBUTORS',
+                                'data/COPYING'],
+                    },
           entry_points = {
             'console_scripts': [
                 'pida = pida.core.application:main',

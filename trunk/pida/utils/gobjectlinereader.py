@@ -94,8 +94,8 @@ class PkgresourcesReader(GobjectReader):
     def __init__(self, scriptname):
         import pkg_resources
         self.scriptpath = pkg_resources.resource_filename(
-                pkg_resources.Requirement.parse('pida'),
-                'forkscripts/%s' % scriptname)
+                'pida',
+                'data/forkscripts/%s' % scriptname)
         super(PkgresourcesReader, self).__init__()
 
     def run(self, *args):

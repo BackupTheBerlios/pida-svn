@@ -11,7 +11,8 @@ include setup.cfg
 recursive-include pida *.py
 recursive-include rat *.py
 recursive-include scripts *
-recursive-include data *
+recursive-include pida/data *
+recursive-include pida/utils/forkscripts *
 recursive-include extras *
 recursive-include docs *
 recursive-include tests *.py

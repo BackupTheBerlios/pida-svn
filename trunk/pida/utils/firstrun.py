@@ -23,14 +23,12 @@
 import os
 import gtk
 import pida.core.base as base
+from pida.pidagtk.contentview import create_pida_icon
 
 import distutils.spawn as spawn
 
-from pkg_resources import Requirement, resource_filename
-icon_file = resource_filename(Requirement.parse('pida'),
-                              'pida-icon.png')
 im = gtk.Image()
-im.set_from_file(icon_file)
+im.set_from_pixbuf(create_pida_icon())
 
 class IComponent(object):
 

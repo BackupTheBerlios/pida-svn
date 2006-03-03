@@ -93,13 +93,12 @@ sys.excepthook = debugwindow.show
 
 
 def get_version():
-    from pkg_resources import Requirement, resource_filename
-    version_file = resource_filename(Requirement.parse('pida'),
-                                     'version/version')
+    from pkg_resources import resource_string
     try:
-        return open(version_file).read().strip()
+        version_file = resource_string('pida', 'data/version')
     except:
-        return 'unversioned'
+        version_file = 'unversioned'
+    return version_file
 
 
 pida_version = get_version()

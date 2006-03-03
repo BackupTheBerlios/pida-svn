@@ -133,11 +133,10 @@ class glade_view(contentview.content_view):
         return handler(str1, str2, int1, int2)
 
     def __find_gladefile(self, filename):
-        from pkg_resources import Requirement, resource_filename
-        requirement = Requirement.parse('pida')
-        resource = 'glade/%s' % filename
+        from pkg_resources import resource_filename
         try:
-            glade_file = resource_filename(requirement, resource)
+            glade_file = resource_filename('pida',
+                            'data/glade/%s' % filename)
         except KeyError:
             glade_file = None
         return glade_file

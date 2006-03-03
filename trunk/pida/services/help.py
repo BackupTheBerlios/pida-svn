@@ -23,6 +23,7 @@
 
 import pida
 import pida.core.service as service
+from pida.pidagtk.contentview import create_pida_icon
 
 import gtk
 
@@ -36,12 +37,8 @@ class help(service.service):
     def cmd_about(self):
         dialog = gtk.AboutDialog()
         dialog.set_transient_for(self.boss.get_main_window())
-        from pkg_resources import Requirement, resource_filename
-        icon_file = resource_filename(Requirement.parse('pida'),
-                                      'pida-icon.png')
-        im = gtk.Image()
-        im.set_from_file(icon_file)
-        dialog.set_logo(im.get_pixbuf())
+        pb = create_pida_icon()
+        dialog.set_logo(pb)
         dialog.set_version(self.boss.version)
         dialog.set_copyright(copyright)
         dialog.set_license(license)
@@ -59,12 +56,11 @@ class help(service.service):
                     </menubar>"""
 
 
-from pkg_resources import Requirement, resource_filename
-req = Requirement.parse('pida')
-license_file = open(resource_filename(req, 'COPYING'))
+from pkg_resources import resource_filename
+license_file = open(resource_filename('pida', 'data/COPYING'))
 license = license_file.read()
 license_file.close()
-authors_file = open(resource_filename(req, 'AUTHORS'))
+authors_file = open(resource_filename('pida', 'data/AUTHORS'))
 authors = [n.strip() for n in authors_file.read().splitlines()]
 authors_file.close()
 copyright = 'Copyright (c) 2005-6 The PIDA Project aafshar@gmail.com'
