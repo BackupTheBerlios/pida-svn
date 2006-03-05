@@ -144,7 +144,7 @@ def main():
             'License :: OSI Approved :: MIT License',
             'Operating System :: OS Independent',
             'Programming Language :: Python',
-            'Topic :: Software Development']
+            'Topic :: Software Development'],
       )
 
 
