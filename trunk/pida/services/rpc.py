@@ -21,6 +21,10 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import sys
+if sys.platform == "win32":
+    raise ImportError("RPC is not compatible with win32")
+
 import pida.core.service as service
 from pida.utils.kiwiutils import gsignal
 import gobject
