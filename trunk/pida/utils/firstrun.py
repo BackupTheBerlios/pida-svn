@@ -52,10 +52,6 @@ class Culebra(IComponent):
     def get_sanity_errors(self):
         errors = []
         try:
-            import gtksourceview
-        except ImportError:
-            errors.append('Gtksourceview is not installed')
-        try:
             import rat
         except ImportError:
             errors.append('Rat is not installed')
