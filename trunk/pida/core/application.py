@@ -112,7 +112,20 @@ class environment(object):
 
     def __parseargs(self):
         home_dir_option = None
-        default_home = os.path.expanduser('~/.pida')
+        default_home = os.path.join(os.path.expanduser('~'), '.pida')
+
+        if default_home == os.path.join('~', '.pida'):
+            # When on win32
+            from win32com.shell import shell, shellcon
+            default_home = shell.SHGetSpecialFolderLocation(
+                0,
+                shellcon.CSIDL_APPDATA
+            )
+            default_home = shell.SHGetPathFromIDList(default_home)
+            default_home = os.path.join(default_home, "Pida")
+            del shell
+            del shellcon
+            
         op = optparse.OptionParser()
         op.add_option('-d', '--home-directory', type='string', nargs=1,
             action='store',
