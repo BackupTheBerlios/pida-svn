@@ -1,18 +1,13 @@
 
 include AUTHORS
-include CONTRIUTORS
+include CONTRIBUTORS
+include README
 include CHANGELOG
-include RELNOTES
-include LICENSE
-include INSTALL
+include COPYING
 include setup.py
 include develop.sh
-include setup.cfg
 recursive-include pida *.py
 recursive-include rat *.py
-recursive-include scripts *
 recursive-include pida/data *
-recursive-include pida/utils/forkscripts *
 recursive-include extras *
 recursive-include docs *
-recursive-include tests *.py
