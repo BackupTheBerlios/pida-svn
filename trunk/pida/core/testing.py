@@ -28,6 +28,8 @@ import os
 import time
 import traceback
 
+from unittest import TestCase
+
 from cStringIO import StringIO
 
 out = sys.stdout
@@ -47,7 +49,7 @@ class Tester(object):
 
     def __init__(self):
         self.tests = []
-    
+        
     def __call__(self, f):
         def _f(*args, **kw):
             return f(*args, **kw)
@@ -58,6 +60,29 @@ class Tester(object):
 
 test = Tester()
 
+class Closure(object):
+
+    def __init__(self, method, setup, teardown):
+        self.method = method
+        self.setup = setup
+        self.teardown = teardown
+    
+    def __call__(self, *args, **kw):
+        self.setup()
+        self.method()
+        self.teardown()
+
+class TestCase(TestCase):
+
+    def __init__(self):
+        for k in dir(self):
+            if k.startswith('test'):
+                attr = getattr(self, k)
+                if callable(attr):
+                    c = Closure(attr, self.setUp, self.tearDown)
+                    c.__name__ = attr.__name__
+                    f = test(c)
+            
 def _ui_delay(seconds, callback, *args):
     seconds = seconds - 1
     w('\b\b\b(%s)' % seconds)
@@ -180,7 +205,7 @@ def check_important_services(boss):
         assert_in(n, services)
 
 # Import the tests
-from pida.tests.core import document, actions, events, commands
+from pida.tests.core import document, actions, events, commands, registry
 from pida.tests.pidagtk import tree, contentview
 from pida.tests.services import buffermanager, sessionmanager
 

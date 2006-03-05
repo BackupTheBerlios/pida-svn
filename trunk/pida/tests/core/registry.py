@@ -25,15 +25,16 @@ import unittest
 import pida.core.base as base
 import pida.core.registry as registry
 import pida.core.errors as errors
-import pida.utils.testing as testing
 import pida.core.application as application
+
+from pida.core.testing import TestCase
 
 import os
 import tempfile
 
-setup = testing._setup
 
-class test_a_registry_item(unittest.TestCase):
+class test_a_registry_item(TestCase):
+
 
     def setUp(self):
         self.r = registry.registry_item('foo', 'fooddoc', 'blah')
@@ -72,7 +73,8 @@ class test_a_registry_item(unittest.TestCase):
         self.assertEquals(self.r.value, 'banana')
 
 
-class test_b_integer(unittest.TestCase):
+
+class test_b_integer(TestCase):
     
     def setUp(self):
         self.r = registry.types.integer('foo', 'foodoc', 1)
@@ -93,7 +95,7 @@ class test_b_integer(unittest.TestCase):
         self.assertEquals(self.r.value, None)
 
 
-class test_c_boolean(unittest.TestCase):
+class test_c_boolean(TestCase):
 
     def setUp(self):
         self.r = registry.types.boolean('foo', 'foodoc', True)
@@ -115,7 +117,7 @@ class test_c_boolean(unittest.TestCase):
         self.assertEquals(self.r.value, False)
 
 
-class test_d_directory(unittest.TestCase):
+class test_d_directory(TestCase):
 
     HOME = os.path.expanduser('~')
 
@@ -133,7 +135,7 @@ class test_d_directory(unittest.TestCase):
         self.assertEquals(self.r.validate('/___'), False)
 
 
-class test_e_registry_group(unittest.TestCase):
+class test_e_registry_group(TestCase):
 
     def setUp(self):
         self.r = registry.registry_group('foo', 'foodoc')
@@ -164,7 +166,7 @@ class test_e_registry_group(unittest.TestCase):
         items = [i for i in self.r]
         self.assertEquals(len(items), length)
 
-class test_f_registry(unittest.TestCase):
+class test_f_registry(TestCase):
 
     def setUp(self):
         r = """
@@ -191,7 +193,11 @@ baz = True
     def tearDown(self):
         os.remove(self.filename)
 
+t1 = test_a_registry_item()
+t2 = test_b_integer()
+t3 = test_c_boolean()
+t4 = test_d_directory()
+t5 = test_e_registry_group()
+t6 = test_f_registry()
 
-def teardown():
-    pass
     
