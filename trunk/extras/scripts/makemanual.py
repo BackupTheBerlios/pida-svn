@@ -71,7 +71,7 @@ edit_wiki(BASE, base_page_text)
 for manual in manuals:
     page = '/'.join([BASE, manual])
     sections = []
-    contentspath = os.path.join(manual, 'contents.ini')
+    contentspath = os.path.join('docs', manual, 'contents.ini')
     f = open(contentspath)
     for line in f:
         fname = line.strip()
