@@ -21,12 +21,12 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import unittest
+from pida.core.testing import TestCase
 
 import pida.core.service as service
 defs = service.definitions
 
-class test_a_service_preinit(unittest.TestCase):
+class service_preinit(TestCase):
 
     def setUp(self):
         class svc(service.service_base):
@@ -101,33 +101,7 @@ class test_a_service_preinit(unittest.TestCase):
         self.assert_(btemplate)
 
 
-class test_b_service_database_preinit(unittest.TestCase):
-
-    def setUp(self):
-        class svc(service.service_base):
-            class fruitbowl(defs.database):
-                """A database to store fruits.""" 
-                class name(defs.field):
-                    rtype = service.types.integer
-                    default = 1
-                class colour(defs.field):
-                    rtype = service.types.integer
-                    default = 1
-        self.svc = svc
-        self.databases = svc.__databases__
-
-    def test_a_databases_exists(self):
-        self.assert_(self.databases)
-
-    def test_b_database_registered_only(self):
-        print self.databases
-        self.assertEquals(len(self.databases), 1)
-
-    def test_c_database_registered(self):
-        self.assertEquals(self.databases[0].__name__, 'fruitbowl')
-
-
-class test_c_file_handler_preinit(unittest.TestCase):
+class file_handler_preinit(TestCase):
 
     def setUp(self):
         import pida.core.document as document
@@ -146,5 +120,4 @@ class test_c_file_handler_preinit(unittest.TestCase):
 
     def test_b_handler_details(self):
         self.assertEquals(self.handlers[0].globs[0], 'foo*')
-        
-        
+

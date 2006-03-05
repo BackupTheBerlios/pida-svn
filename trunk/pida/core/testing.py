@@ -72,7 +72,17 @@ class Closure(object):
         self.method()
         self.teardown()
 
+class TestCaseType(type):
+
+    def __new__(cls, name, bases, dict):
+        newcls = type.__new__(cls, name, bases, dict)
+        inst = newcls()
+        return newcls
+
+
 class TestCase(TestCase):
+
+    __metaclass__ = TestCaseType        
 
     def __init__(self):
         for k in dir(self):
@@ -205,7 +215,8 @@ def check_important_services(boss):
         assert_in(n, services)
 
 # Import the tests
-from pida.tests.core import document, actions, events, commands, registry
+from pida.tests.core import document, actions, events, commands, registry,\
+                            service
 from pida.tests.pidagtk import tree, contentview
 from pida.tests.services import buffermanager, sessionmanager
 

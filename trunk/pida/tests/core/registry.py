@@ -193,11 +193,4 @@ baz = True
     def tearDown(self):
         os.remove(self.filename)
 
-t1 = test_a_registry_item()
-t2 = test_b_integer()
-t3 = test_c_boolean()
-t4 = test_d_directory()
-t5 = test_e_registry_group()
-t6 = test_f_registry()
-
     
