@@ -1,0 +1,80 @@
+PyScintilla2
+=====
+Author: Roberto Cavada <cavada@irst.itc.it>
+
+This archive contains modules that allow you to use the Scintilla text
+widget from within pygtk2.  Pygtk2 is a Python extensions set that
+allow you to use the Gtk2 toolkit in Python programs. The author of
+pygtk2 is James Henstridge <james@daa.com.au>.
+
+Scintilla <http://www.scintilla.org> is a very powerful editing
+component developed by Neil Hodgson <neilh@scintilla.org>. 
+
+PyScintilla2 is partially based on ideas "stolen" from GtkScintilla2, 
+a wrapper of Scintilla for GTK2, which is developed and maintained by
+Dennis J Houy <djhouy@paw.co.za>. 
+
+Also, there exists a python binding of Scintilla for Gtk+-1.x and
+pygtk-0.6.5.  It is named PyGtkScintilla, and it was made by Michele
+Campeotto <moleskine@f2s.com>. 
+
+If you have any enhancements or bug reports, please send them to me at
+cavada@isrt.itc.it.
+
+
+New Versions
+============
+
+New versions of this package can be found at:
+ <http://sra.itc.it/people/cavada/PyScintilla2.html>
+
+
+Copyright Information
+=====================
+
+This software is covered by the GNU Library General Public License
+(version 2, or if you choose, a later version).  Basically just don't
+say you wrote bits you didn't.
+
+
+Building and installation
+=========================
+
+See INSTALL
+
+Take into account this is a beta version, so please if you find some
+problem during the configuration & building phases, please do not
+hesitate to contact the author.
+
+
+What is still missing
+=====================
+
+- Methods "AddStyledText", "FindText", "FormatRange", "GetStyledText", 
+  and "GetTextRange"
+- Documentation
+- Examples
+
+
+How to use it
+=============
+
+That's really simple. From within Python:
+
+import scintilla
+import gtk
+w = gtk.Window()
+s = scintilla.Scintilla()  # s is a gtk.Widget
+w.add(s)
+w.show()
+
+See the Scintilla and GtkScintilla2 docs for details.  
+
+Contacting the Author
+=====================
+
+You can contact me at the email address <cavada@irst.itc.it>.  
+I try to answer my email quickly, but occasionally there will be a bit
+of a delay.  If you have an idea for a way to extend this binding,
+have found a problem with the code, or would like to contribute some
+code, please feel free to contact me.

@@ -1,0 +1,23 @@
+Last update: Nov 12th 2004
+
+To build and install PyScintilla from source distribution:
+
+1) Download latest version of Scintilla from <http://www.scintilla.org>
+   Currently tested version is 162. 
+
+2) Unpack the downloaded archive in the current direcory. 
+   This will create direcory "scintilla" 
+     Under linux:
+     $> tar xfz scintilla-<version>.tar.gz 
+
+     Under Windows:
+     $> unzip scintilla-<version>.zip
+
+3) Enter direcory "scintilla/gtk" and build Scintilla:
+   $> cd scintilla/gtk
+   $> make
+
+3) Go back to the top level direcory and run setup.py:
+   $> python setup.py install
+
+
