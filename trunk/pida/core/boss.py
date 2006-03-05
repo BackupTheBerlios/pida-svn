@@ -51,7 +51,6 @@ class boss(base.pidacomponent):
         self.__services.reset()
         self.__editor.call('start')
         if self.__env.opts.testing_mode:
-            print 'entering self test mode'
             from testing import self_test
             self_test(self)
         else:
