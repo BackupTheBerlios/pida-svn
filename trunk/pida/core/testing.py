@@ -181,7 +181,7 @@ def check_important_services(boss):
 
 # Import the tests
 from pida.tests.core import document, actions
-from pida.tests.pidagtk import tree
+from pida.tests.pidagtk import tree, contentview
 from pida.tests.services import buffermanager, sessionmanager
 
 
