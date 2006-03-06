@@ -45,6 +45,8 @@ class Pscyntilla(scintilla.Scintilla):
         self.set_size_request(0, 0)
         self._set_blue_theme()
         self.show_edge_column()
+        self.show_line_numbers()
+        self.show_caret()
         
     def _set_blue_theme(self):
         self.set_base_sc_style(fore='ffc0c0', back='300000')
@@ -73,8 +75,7 @@ class Pscyntilla(scintilla.Scintilla):
     def show_edge_column(self, size=80):
         self.set_edge_mode(scintilla.EDGE_LINE)
         self.set_edge_colour(self.colour_from_string('f0c0c0'))
-        self.set_edge_column(size)
-        
+        self.set_edge_column(size) 
     
     def set_sc_style(self, number, fore=None, back=None, bold=None, font=None,
                     size=None):
@@ -105,18 +106,20 @@ class Pscyntilla(scintilla.Scintilla):
     def load_fd(self, fd):
         for line in fd:
             self.append_text(len(line), line)
-
-    def set_sane_defaults(self):
-        
-        self.set_caret_fore(self.colour_from_string('f0'))
-        self.set_caret_line_back(self.colour_from_string('600000'))
-        self.set_caret_line_visible(True)
-        self.show_line_numbers()
-
+   
     def show_line_numbers(self):
         self.set_margin_type_n(0, scintilla.SC_MARGIN_NUMBER)
         self.set_margin_width_n(0, 32)
-   
+        self.set_line_number_style(back='400000', fore='a09090')
+        
+    def set_line_number_style(self, **kw):
+        self.set_sc_style(scintilla.STYLE_LINENUMBER, **kw)
+        
+    def show_caret(self):
+        self.set_caret_fore(self.colour_from_string('f0'))
+        self.set_caret_line_back(self.colour_from_string('600000'))
+        self.set_caret_line_visible(True)
+        
 
 class ScintillaView(contentview.content_view):
 
