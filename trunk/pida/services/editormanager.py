@@ -44,7 +44,8 @@ class editor_manager(service.service):
         """General editor options"""
         class editor_type(defs.option):
             """Which editor pIDA will use."""
-            rtype = types.stringlist('Vim', 'Vim external', 'Culebra')
+            rtype = types.stringlist('Vim', 'Vim external', 'Culebra',
+                                     'Pscyntilla')
             default = 'Vim'            
 
     def reset(self):
@@ -120,6 +121,8 @@ class editor_manager(service.service):
             editor = 'vimmultiedit'
         elif editor_name == 'Culebra':
             editor = 'culebraedit'
+        elif editor_name == 'Pscyntilla':
+            editor = 'pscyntilla'
         else:
             self.log.error('No text editor')
             editor = 'No working editor'
