@@ -32,7 +32,7 @@ from pida.core import service
 
 import scintilla
 import mimetypes
-
+from pida.utils.culebra.buffers import SafeFileWrite
 from keyword import kwlist
 
 defs = service.definitions
@@ -95,6 +95,7 @@ class Pscyntilla(scintilla.Scintilla):
         self.set_sc_style(scintilla.STYLE_DEFAULT, **kw)
         
     def load_file(self, filename):
+        self.filename = filename
         f = open(filename, 'r')
         mimetype, n = mimetypes.guess_type(filename)
         if mimetype:
@@ -104,6 +105,15 @@ class Pscyntilla(scintilla.Scintilla):
                 self.set_key_words(0, ' '.join(kwlist))
         self.load_fd(f)
         self.empty_undo_buffer()
+        self.set_save_point()
+
+    def save(self):
+        """Saves the current buffer to the file"""
+        assert self.filename is not None
+        fd = SafeFileWrite(self.filename)
+        txt = self.get_text(self.get_length())[-1]
+        fd.write(''.join(txt))
+        fd.close()
         self.set_save_point()
 
     def load_fd(self, fd):
@@ -184,7 +194,7 @@ class ScintillaEditor(service.service):
         self._view_document(document)
 
     def cmd_save(self):
-        pass
+        self._current.editor.save()
         
     def cmd_undo(self):
         self._current.editor.undo()
@@ -228,11 +238,13 @@ class ScintillaEditor(service.service):
                 self._revert_act = action
             elif actname == 'DocumentSave':
                 self._save_act = action
+            elif actname == 'documenttypes+document+paste':
+                self._paste_act = action
     
     def _sensitise_actions(self):
         self._undo_act.set_sensitive(self._current.editor.can_undo())
         self._redo_act.set_sensitive(self._current.editor.can_redo())
-        #self._undo_act.set_sensitive(self._current.editor.can_undo())
+        self._paste_act.set_sensitive(self._current.editor.can_paste())
         
     
 Service = ScintillaEditor
