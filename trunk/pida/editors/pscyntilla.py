@@ -65,9 +65,10 @@ class Pscyntilla(scintilla.Scintilla):
         self.set_sc_style(10, fore='c0')
         self.set_sc_style(11, fore='ffc0c0')
         self.set_sc_style(12, fore='a0a0a0')
+        self.set_sel_back(True, self.colour_from_string('400040'))
     
     def set_font(self, fontname, size):
-        self.set_base_sc_style(font='Monospace', size=12)
+        self.set_base_sc_style(font='Monospace', size=10)
     
     def colour_from_string(self, colourstring):
         return int(colourstring, 16)
