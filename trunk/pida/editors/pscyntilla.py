@@ -33,13 +33,48 @@ from pida.core import service
 import scintilla
 import mimetypes
 
+from keyword import kwlist
+
 defs = service.definitions
 types = service.types
 
 class Pscyntilla(scintilla.Scintilla):
 
+    def __init__(self):
+        super(Pscyntilla, self).__init__()
+        self.set_size_request(0, 0)
+        self._set_blue_theme()
+        self.show_edge_column()
+        
+    def _set_blue_theme(self):
+        self.set_base_sc_style(fore='ffc0c0', back='300000')
+        for i in range(32):
+            self.set_sc_style(i, back='300000')
+        self.set_sc_style(0, fore='a0a0a0')
+        self.set_sc_style(1, fore='a0a0a0')
+        self.set_sc_style(2, fore='f00000')
+        self.set_sc_style(3, fore='c000c0')
+        self.set_sc_style(4, fore='c000c0')
+        self.set_sc_style(5, fore='f000')
+        self.set_sc_style(6, fore='c0c0')
+        self.set_sc_style(7, fore='c0c0')
+        self.set_sc_style(8, fore='f0f0', bold=True)
+        self.set_sc_style(9, fore='f00000', bold=True)
+        self.set_sc_style(10, fore='c0')
+        self.set_sc_style(11, fore='ffc0c0')
+        self.set_sc_style(12, fore='a0a0a0')
+    
     def set_font(self, fontname, size):
         self.set_base_sc_style(font='Monospace', size=12)
+    
+    def colour_from_string(self, colourstring):
+        return int(colourstring, 16)
+    
+    def show_edge_column(self, size=80):
+        self.set_edge_mode(scintilla.EDGE_LINE)
+        self.set_edge_colour(self.colour_from_string('f0c0c0'))
+        self.set_edge_column(size)
+        
     
     def set_sc_style(self, number, fore=None, back=None, bold=None, font=None,
                     size=None):
@@ -63,12 +98,24 @@ class Pscyntilla(scintilla.Scintilla):
         if mimetype:
             ftype = mimetype.split('/')[-1].split('-')[-1]
             self.set_lexer_language(ftype)
+            if ftype == 'python':
+                self.set_key_words(0, ' '.join(kwlist))
         self.load_fd(f)
 
     def load_fd(self, fd):
         for line in fd:
             self.append_text(len(line), line)
 
+    def set_sane_defaults(self):
+        
+        self.set_caret_fore(self.colour_from_string('f0'))
+        self.set_caret_line_back(self.colour_from_string('600000'))
+        self.set_caret_line_visible(True)
+        self.show_line_numbers()
+
+    def show_line_numbers(self):
+        self.set_margin_type_n(0, scintilla.SC_MARGIN_NUMBER)
+        self.set_margin_width_n(0, 32)
    
 
 class ScintillaView(contentview.content_view):
