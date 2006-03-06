@@ -103,6 +103,7 @@ class Pscyntilla(scintilla.Scintilla):
             if ftype == 'python':
                 self.set_key_words(0, ' '.join(kwlist))
         self.load_fd(f)
+        self.empty_undo_buffer()
 
     def load_fd(self, fd):
         for line in fd:
