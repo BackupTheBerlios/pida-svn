@@ -125,6 +125,9 @@ class Pscyntilla(scintilla.Scintilla):
 
 class ScintillaView(contentview.content_view):
 
+    HAS_CONTROL_BOX = False
+    HAS_TITLE = False
+
     def init(self):
         sw = gtk.ScrolledWindow()
         self.widget.pack_start(sw)
@@ -132,9 +135,14 @@ class ScintillaView(contentview.content_view):
         self.editor = Pscyntilla()
         sw.add(self.editor)
         self.optionize()
+        self.editor.connect('modified', self.cb_modified)
         
     def optionize(self):
         self.editor.set_font('Monospace', 10)
+        
+    def cb_modified(self, editor, *args):
+        if self.service._current:
+            self.service._sensitise_actions()
       
 
 class ScintillaEditor(service.service):    
@@ -150,6 +158,9 @@ class ScintillaEditor(service.service):
         self._views = {}
         self._current = None
     
+    def reset(self):
+        self._bind_document_actions()
+    
     def cmd_start(self):
         self.get_service('editormanager').events.emit('started')
 
@@ -157,6 +168,24 @@ class ScintillaEditor(service.service):
         if document.unique_id not in self._views:
             self._load_document(document)
         self._view_document(document)
+
+    def cmd_save(self):
+        pass
+        
+    def cmd_undo(self):
+        self._current.editor.undo()
+
+    def cmd_redo(self):
+        self._current.editor.redo()
+
+    def cmd_cut(self):
+        self._current.editor.cut()
+
+    def cmd_copy(self):
+        self._current.editor.copy()
+
+    def cmd_paste(self):
+        self._current.editor.paste()
         
     def _load_document(self, document):
         view = self.create_view('EditorView')
@@ -167,7 +196,29 @@ class ScintillaEditor(service.service):
         self.show_view(view=view)
         
     def _view_document(self, document):
-        self._current = document
-        self._views[document.unique_id].raise_page()
+        view = self._views[document.unique_id]
+        self._current = view
+        view.raise_page()
+        self._sensitise_actions()
+        
+    def _bind_document_actions(self):
+        actions = self.boss.call_command("documenttypes",
+            "get_document_actions")
+        for action in actions:
+            actname = action.get_name()
+            if actname == 'documenttypes+document+undo':
+                self._undo_act = action
+            elif actname == 'documenttypes+document+redo':
+                self._redo_act = action
+            elif actname == 'documenttypes+document+revert':
+                self._revert_act = action
+            elif actname == 'DocumentSave':
+                self._save_act = action
+    
+    def _sensitise_actions(self):
+        self._undo_act.set_sensitive(self._current.editor.can_undo())
+        self._redo_act.set_sensitive(self._current.editor.can_redo())
+        #self._undo_act.set_sensitive(self._current.editor.can_undo())
+        
     
 Service = ScintillaEditor
