@@ -37,6 +37,7 @@
 # If you have any enhancements or bug reports, please send them to me at
 # cavada@isrt.itc.it.
 
+import string
 
 
 # ----------------------------------------------------------------------
@@ -538,7 +539,6 @@ class CCodeBeautier:
 
 
 # ----------------------------------------------------------------------
-import string
 
 WHITE_LIST = {
     "UTF8": "Utf8",
