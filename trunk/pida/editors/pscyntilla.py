@@ -104,6 +104,7 @@ class Pscyntilla(scintilla.Scintilla):
                 self.set_key_words(0, ' '.join(kwlist))
         self.load_fd(f)
         self.empty_undo_buffer()
+        self.set_save_point()
 
     def load_fd(self, fd):
         for line in fd:
@@ -136,6 +137,19 @@ class ScintillaView(contentview.content_view):
         sw.add(self.editor)
         self.optionize()
         self.editor.connect('modified', self.cb_modified)
+        self.editor.connect('save-point-reached', self.cb_save_point_reached)
+        self.editor.connect('save-point-left', self.cb_save_point_left)
+
+    def cb_save_point_reached(self, editor, *args):
+        self.service._save_act.set_sensitive(False)
+        self.service._revert_act.set_sensitive(False)
+
+    
+    def cb_save_point_left(self, editor, *args):
+        self.service._save_act.set_sensitive(True)
+        self.service._revert_act.set_sensitive(True)
+
+        print 'savepointleave'    
         
     def optionize(self):
         self.editor.set_font('Monospace', 10)
