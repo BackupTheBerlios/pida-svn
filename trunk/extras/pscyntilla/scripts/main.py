@@ -40,13 +40,17 @@
 from iface import IFace
 from gens import SignalsGen, PythonWrapperGen
 
-import os.path
+from os import path
+import parsers
+
+################
+# parser of headers
 
 
 # this part generates gtk scintilla:
-def gen_gtk_scintilla_header(signals_gen, path):
+def gen_gtk_scintilla_header(signals_gen, basedir):
 
-    header_templ = open(os.path.join(path, "gtkscintilla.h.in"), "r")
+    header_templ = open(path.join(basedir, "gtkscintilla.h.in"), "r")
     header_text = header_templ.read()
     header_templ.close()
   
@@ -66,14 +70,14 @@ def gen_gtk_scintilla_header(signals_gen, path):
         pass
     header_text = header_text.replace("%signal_handlers_pointers%", str)
 
-    header =  open(os.path.join(path, "gtkscintilla.h"), "w")
+    header =  open(path.join(basedir, "gtkscintilla.h"), "w")
     header.write(header_text)
     header.close()
     return
 
 
-def gen_gtk_scintilla_impl(signal_gen, path, deprecated_enabled):
-    impl_templ = open(os.path.join(path, "gtkscintilla.c.in"), "r")
+def gen_gtk_scintilla_impl(signal_gen, basedir, deprecated_enabled):
+    impl_templ = open(path.join(basedir, "gtkscintilla.c.in"), "r")
     impl_text = impl_templ.read()
     impl_templ.close()
 
@@ -97,21 +101,21 @@ def gen_gtk_scintilla_impl(signal_gen, path, deprecated_enabled):
 
     impl_text = impl_text.replace("%notif_handling_code%", str)   
 
-    impl =  open(os.path.join(path, "gtkscintilla.c"), "w")
+    impl =  open(path.join(basedir, "gtkscintilla.c"), "w")
     impl.write(impl_text)
     impl.close()
     return
 
-def gen_glib_marshallers(signal_gen, path):
+def gen_glib_marshallers(signal_gen, basedir):
     marsh_fname = "marshallers.list"
 
     str = ""
     for m in signal_gen.signals_marshal: str += "%s\n" % m
 
 
-    if os.path.isfile(marsh_fname):
+    if path.isfile(marsh_fname):
         # writes it only if changed:
-        mf = open(os.path.join(path, marsh_fname), 'r')
+        mf = open(path.join(basedir, marsh_fname), 'r')
         if str == mf.read():
             mf.close()
             print "Marshallers did not change: skipping generation"
@@ -119,15 +123,15 @@ def gen_glib_marshallers(signal_gen, path):
         mf.close()
         pass
 
-    mf = open(os.path.join(path, "marshallers.list"), "w")
+    mf = open(path.join(basedir, "marshallers.list"), "w")
     mf.write(str)
     mf.close()
     return
 
 
 # This part generates pyscintilla
-def gen_pyscintilla_wrapper(pygen, path):
-    impl_templ = open(os.path.join(path, "pyscintilla.c.in"), "r")
+def gen_pyscintilla_wrapper(pygen, basedir):
+    impl_templ = open(path.join(basedir, "pyscintilla.c.in"), "r")
     impl_text = impl_templ.read()
     impl_templ.close()
 
@@ -144,29 +148,39 @@ def gen_pyscintilla_wrapper(pygen, path):
     str = ""
     for c in pygen.constants:
         str += "if (PyModule_AddIntConstant(m, \"%s\", %s) != 0) { return NULL; }\n" % c
-        pass
     impl_text = impl_text.replace("%constants_defs%", str)
 
-    impl = open(os.path.join(path, "pyscintilla.c"), "w")
+    impl = open(path.join(basedir, "pyscintilla.c"), "w")
     impl.write(impl_text)
     impl.close()
     return
     
 
+def update_constants(sci_ifc_path, pygen):
+    header = path.join(path.dirname(sci_ifc_path), "Scintilla.h")
+    try:
+        fd = open(header)
+        for name, val in parsers.iter_header_constants(fd):
+            pygen.constants.append((name, str(val)))
+    finally:
+        fd.close()
 
-def generate_wrapper(sci_ifc_path, path, enable_deprecated_features=True):
+
+def generate_wrapper(sci_ifc_path, basedir, enable_deprecated_features=True):
     """The highest level function"""
     ifc = IFace(sci_ifc_path)
     signals_gen = SignalsGen(ifc, enable_deprecated_features)
     signals_gen.gen_signals()
     
-    gen_gtk_scintilla_header(signals_gen, path)    
-    gen_gtk_scintilla_impl(signals_gen, path, enable_deprecated_features)       
-    gen_glib_marshallers(signals_gen, path)        
+    gen_gtk_scintilla_header(signals_gen, basedir)
+    gen_gtk_scintilla_impl(signals_gen, basedir, enable_deprecated_features)       
+    gen_glib_marshallers(signals_gen, basedir)
     
     pygen = PythonWrapperGen(ifc)
+    update_constants(sci_ifc_path, pygen)
     pygen.dump()
-    gen_pyscintilla_wrapper(pygen, path)
+    
+    gen_pyscintilla_wrapper(pygen, basedir)
 
 
 if __name__ == "__main__":

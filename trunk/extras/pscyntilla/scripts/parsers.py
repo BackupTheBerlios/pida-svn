@@ -159,3 +159,26 @@ class IFaceParser:
 
     
     pass # end of class
+
+DEC_PATT = re.compile(r"#define\s+([A-Z][A-Z0-9_]*)\s+([0-9]+)")
+HEX_PATT = re.compile(r"#define\s+([A-Z][A-Z0-9_]*)\s+(0[xX][0-9]+)")
+def extract_constants(line):
+    val = DEC_PATT.search(line)
+    if val is not None:
+        name, val = val.groups()
+        return name, int(val)
+        
+    val = HEX_PATT.search(line)
+    if val is not None:
+        name, val = val.groups()
+        val = int(val[2:], 16)
+        return name, val
+
+def iter_header_constants(buff):
+    """Accepts a file like object and iterates over it to extract the constants
+    """
+    for line in buff.readlines():
+        vals = extract_constants(line)
+        if vals is not None:
+            yield vals
+
