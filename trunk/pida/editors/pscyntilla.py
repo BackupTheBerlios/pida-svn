@@ -211,6 +211,20 @@ class ScintillaEditor(service.service):
     def cmd_paste(self):
         self._current.editor.paste()
         
+    def cmd_close(self, document):
+        view = self._views[document.unique_id]
+        self.close_view(view)
+        self._current = None
+        
+    def view_closed(self, view):
+        if view.unique_id in self._documents:
+            doc = self._documents[view.unique_id]
+            del self._documents[view.unique_id]
+            del self._views[doc.unique_id]
+            self.boss.call_command('buffermanager', 'document_closed',
+                                   document=doc)
+
+        
     def _load_document(self, document):
         view = self.create_view('EditorView')
         if not document.is_new:
