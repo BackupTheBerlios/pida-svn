@@ -237,7 +237,9 @@ class application(object):
     def start(self):
         """Start PIDA."""
         self.__boss.start()
+        gtk.threads_enter()
         self.__mainloop()
+        gtk.threads_leave()
 
     def stop(self):
         """Stop PIDA."""
@@ -296,9 +298,9 @@ def main(bosstype=boss.boss, mainloop=gtk.main, mainstop=gtk.main_quit):
         run_func = run_remote
     else:
         run_func = run_pida
+
     sys.exit(run_func(env, bosstype, mainloop, mainstop))
 
 
 if __name__ == '__main__':
     main()
-
