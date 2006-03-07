@@ -49,8 +49,8 @@ class Pscyntilla(scintilla.Scintilla):
         self.show_line_numbers()
         self.show_marker_margin()
         self.show_caret()
-        self.set_use_tabs(False)
-        self.set_indent(4)
+        #self.set_use_tabs(False)
+        #self.set_indent(4)
         self.connect('margin-click', self.cb_margin_click)
         self._bind_extra_keys()
         
@@ -240,6 +240,13 @@ class ScintillaView(contentview.content_view):
         
     def optionize(self):
         self.editor.set_font('Monospace', 12)
+        opt = self.service.opt
+        # indenting options
+        use_tabs = opt('indenting', 'use_tabs')
+        self.editor.set_use_tabs(use_tabs)
+        self.editor.set_tab_width(opt('indenting', 'tab_width'))
+        if not use_tabs:
+            self.editor.set_indent(opt('indenting', 'space_indent_width'))
         
     def cb_modified(self, editor, *args):
         if self.service._current:
@@ -253,6 +260,23 @@ class ScintillaEditor(service.service):
     class EditorView(defs.View):
         book_name = 'edit'
         view_type = ScintillaView
+
+    class indenting(defs.optiongroup):
+        """Indenting options"""
+        class use_tabs(defs.option):
+            """Use tabs for indenting"""
+            rtype = types.boolean
+            default = False
+        class tab_width(defs.option):
+            """Width of tabs"""
+            rtype = types.intrange(1, 16, 1)
+            default = 4
+        class space_indent_width(defs.option):
+            """With of space indents, if not using tabs."""
+            rtype = types.intrange(1, 16, 1)
+            default = 4
+
+        
         
     def init(self):
         self._documents = {}
@@ -261,6 +285,8 @@ class ScintillaEditor(service.service):
     
     def reset(self):
         self._bind_document_actions()
+        for view in self._views.values():
+            view.optionize()
     
     def cmd_start(self):
         self.get_service('editormanager').events.emit('started')
