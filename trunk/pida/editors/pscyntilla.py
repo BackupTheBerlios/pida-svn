@@ -21,6 +21,49 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+"""
+keyboard shorcuts
+
+undo: ctrl-z
+cut: ctrl-x
+copy: ctrl-c
+paste: ctrl-v
+
+Magnify text size.	Ctrl+Keypad+
+Reduce text size.	Ctrl+Keypad-
+Restore text size to normal.	Ctrl+Keypad/
+Indent block.	Tab
+Dedent block.	Shift+Tab
+Delete to start of word.	Ctrl+BackSpace
+Delete to end of word.	Ctrl+Delete
+Delete to start of line.	Ctrl+Shift+BackSpace
+Delete to end of line.	Ctrl+Shift+Delete
+Go to start of document.	Ctrl+Home
+Extend selection to start of document.	Ctrl+Shift+Home
+Go to start of display line.	Alt+Home
+Extend selection to start of display line.	Alt+Shift+Home
+Go to end of document.	Ctrl+End
+Extend selection to end of document.	Ctrl+Shift+End
+Go to end of display line.	Alt+End
+Extend selection to end of display line.	Alt+Shift+End
+Scroll up.	Ctrl+Up
+Scroll down.	Ctrl+Down
+Line cut.	Ctrl+L
+Line copy.	Ctrl+Shift+T
+Line transpose with previous.	Ctrl+T
+Selection duplicate.	Ctrl+D
+Previous paragraph. Shift extends selection.	Ctrl+[
+Next paragraph. Shift extends selection.	Ctrl+]
+Previous word. Shift extends selection.	Ctrl+Left
+Next word. Shift extends selection.	Ctrl+Right
+Previous word part. Shift extends selection	Ctrl+/
+Next word part. Shift extends selection.	Ctrl+\
+
+extra:
+togle fold: alt-z
+control-s: save
+"""
+
 import gtk
 
 from rat import hig
