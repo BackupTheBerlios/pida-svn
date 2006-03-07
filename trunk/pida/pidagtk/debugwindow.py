@@ -164,7 +164,7 @@ class DebugWindow(gtk.Dialog):
                       % (st, svcname))
                 hig.error(pt, st, title='Service Not Found')
             else:
-                hig.warn(pt, st, title='Service Not Found')
+                hig.warning(pt, st, title='Service Not Found')
             return True
         else:
             self.unhandled_exception(exctype, value, tb)
