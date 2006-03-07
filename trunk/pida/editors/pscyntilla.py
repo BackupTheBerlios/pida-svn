@@ -237,7 +237,7 @@ class ScintillaView(contentview.content_view):
         print 'savepointleave'    
         
     def optionize(self):
-        self.editor.set_font('Monospace', 14)
+        self.editor.set_font('Monospace', 12)
         
     def cb_modified(self, editor, *args):
         if self.service._current:
