@@ -22,6 +22,7 @@
 #SOFTWARE.
 import gtk
 import shelve
+import gobject
 
 defaulticons = gtk.icon_theme_get_default()
 
@@ -41,7 +42,7 @@ class Icons(object):
                     return self.__theme.load_icon('%s' % name, 14, 0)
                 except:
                     print name, 'notfound'
-                    return self.__theme.load_icon('gtk-brokenimage', 16, 0)
+                    return self.__theme.load_icon(gtk.STOCK_MISSING_IMAGE, 16, 0)
             
     def get_image(self, name, *size):
         im = gtk.Image()
@@ -101,10 +102,15 @@ def set_stock_icons(st_req, st_path):
         if iconname not in listed:
             iconres = '/'.join(['data', 'icons', icon])
             iconpath = pr.resource_filename(st_req, iconres)
-            pixbuf = gtk.gdk.pixbuf_new_from_file(iconpath)
-            iconset = gtk.IconSet(pixbuf)
-            iconfactory.add(iconname, iconset)
-            gtk.icon_theme_add_builtin_icon(iconname, 128, pixbuf)
+            try:
+                pixbuf = gtk.gdk.pixbuf_new_from_file(iconpath)
+                iconset = gtk.IconSet(pixbuf)
+                iconfactory.add(iconname, iconset)
+                gtk.icon_theme_add_builtin_icon(iconname, 128, pixbuf)
+            except gobject.GError:
+                # icon could not be loaded
+                pass
+            
     iconfactory.add_default()
     return theme, iconfactory
 
