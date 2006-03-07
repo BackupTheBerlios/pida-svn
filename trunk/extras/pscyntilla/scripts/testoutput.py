@@ -1,3 +1,6 @@
+# Copyright: 2006 Pida Project
+# License: LGPL
+
 import parsers
 
 def test_module(filename):
@@ -24,8 +27,6 @@ if __name__ == '__main__':
     base_path = path.dirname(__file__)
     val = path.join(base_path, * "../build/lib.*/scintilla.*".split("/"))
     files = glob.glob(val)
-    
-    print val
     assert len(files) == 1, "run 'setup.py build' first"
     sys.path.insert(0, path.dirname(files[0]))
     test_module(path.join(base_path, * "../scintilla/include/Scintilla.h".split("/")))

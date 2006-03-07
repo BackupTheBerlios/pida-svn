@@ -1,5 +1,6 @@
 # Author: Roberto Cavada <cavada@irst.itc.it>
 # Copyright 2004 by Roberto Cavada
+# Copyright 2006 by Pida Project
 #
 # This file contains code generators that allow you to use the Scintilla text
 # widget from within pygtk2.  Pygtk2 is a Python extensions set that
