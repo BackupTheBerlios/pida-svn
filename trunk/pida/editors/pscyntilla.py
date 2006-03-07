@@ -49,6 +49,8 @@ class Pscyntilla(scintilla.Scintilla):
         self.show_line_numbers()
         self.show_marker_margin()
         self.show_caret()
+        self.set_use_tabs(False)
+        self.set_indent(4)
         self.connect('margin-click', self.cb_margin_click)
         self._bind_extra_keys()
         
