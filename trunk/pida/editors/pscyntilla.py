@@ -35,144 +35,194 @@ import scintilla
 import mimetypes
 from pida.utils.culebra.buffers import SafeFileWrite
 from keyword import kwlist
+import gobject
+from pida.utils.kiwiutils import gsignal, gproperty
 
 defs = service.definitions
 types = service.types
 
-class Pscyntilla(scintilla.Scintilla):
+
+class Pscyntilla(gobject.GObject):
 
     def __init__(self):
-        super(Pscyntilla, self).__init__()
-        self.set_size_request(0, 0)
-        self._set_blue_theme()
-        self.show_edge_column()
-        self.show_line_numbers()
-        self.show_marker_margin()
-        self.show_caret()
-        #self.set_use_tabs(False)
-        #self.set_indent(4)
-        self.connect('margin-click', self.cb_margin_click)
-        self._bind_extra_keys()
+        self._sc = scintilla.Scintilla()
+        self._setup()
+
+    def _setup(self):
+        self._setup_margins()
+        self._sc.connect('key', self.cb_unhandled_key)
+
+    def _setup_margins(self):
+        self._sc.set_margin_type_n(0, scintilla.SC_MARGIN_NUMBER)
+        self._sc.set_margin_type_n(2, scintilla.SC_MARGIN_SYMBOL)
+        self._sc.set_margin_mask_n(2, scintilla.SC_MASK_FOLDERS)
+        self._sc.set_property("tab.timmy.whinge.level", "1")
+        self._sc.set_property("fold.comment.python", "0")
+        self._sc.set_property("fold.quotes.python", "0")
+        #self._sc.set_fold_margin_colour(True, self.colour_from_string('300000'))
+        #self._sc.set_fold_margin_hi_colour(True, self.colour_from_string('300000'))
+        self._sc.marker_define(scintilla.SC_MARKNUM_FOLDEREND,
+                           scintilla.SC_MARK_BOXPLUSCONNECTED)
+        self._sc.marker_define(scintilla.SC_MARKNUM_FOLDEROPENMID,
+                           scintilla.SC_MARK_BOXMINUSCONNECTED)
+        self._sc.marker_define(scintilla.SC_MARKNUM_FOLDERMIDTAIL,
+                           scintilla.SC_MARK_TCORNER)
+        self._sc.marker_define(scintilla.SC_MARKNUM_FOLDERTAIL,
+                           scintilla.SC_MARK_LCORNER)
+        self._sc.marker_define(scintilla.SC_MARKNUM_FOLDERSUB,
+                           scintilla.SC_MARK_VLINE)
+        self._sc.marker_define(scintilla.SC_MARKNUM_FOLDER,
+                           scintilla.SC_MARK_BOXPLUS)
+        self._sc.marker_define(scintilla.SC_MARKNUM_FOLDEROPEN,
+                           scintilla.SC_MARK_BOXMINUS)
+        self._sc.connect('margin-click', self.cb_margin_click)
+
+    def goto_line(self, linenumber):
+        self._sc.goto_line(linenumber - 1)
+        wanted = linenumber - (self._sc.lines_on_screen() / 2)
+        actual = self._sc.get_first_visible_line()
+        self._sc.line_scroll(0, wanted - actual)
+        self._sc.grab_focus()
+
+    def set_caret_colour(self, colour):
+        self._sc.set_caret_fore(self._sc_colour(colour))
+
+    def set_caret_line_visible(self, visible, colour=None):
+        self._sc.set_caret_line_visible(visible)
+        if colour is not None:
+            self._sc.set_caret_line_back(self._sc_colour(colour))
+
+    def set_edge_column_visible(self, visible, size, color):
+        self._sc.set_edge_mode(scintilla.EDGE_LINE)
+        self._sc.set_edge_column(size)
+        self._sc.set_edge_colour(self._sc_colour(color))
+
+    def set_use_tabs(self, use_tabs):
+        self._sc.set_use_tabs(use_tabs)
+
+    def set_tab_width(self, tab_width):
+        self._sc.set_tab_width(tab_width)
+
+    def set_spaceindent_width(self, si_width):
+        self._sc.set_indent(si_width)
+
+    def set_linenumbers_visible(self, visible, width=32):
+        if not visible:
+            width = 0
+        self._sc.set_margin_width_n(0, width)
+
+    def use_folding(self, use, width=14, show_line=True):
+        if use:
+            self._sc.set_property('fold', '1')
+            if show_line:
+                self._sc.set_fold_flags(16)
+        else:
+            width = 0
+            self._sc.set_property('fold', '0')
+        self._sc.set_margin_width_n(2, width)
+        self._sc.set_margin_sensitive_n(2, use)
+
+    def set_foldmargin_colours(self, fore, back):
+        b = self._sc_colour(back)
+        f = self._sc_colour(fore)
+        self._sc.set_fold_margin_colour(True, b)
+        self._sc.set_fold_margin_hi_colour(True, b)
+        for i in range(25, 32):
+            self._sc.marker_set_back(i, f)
+            self._sc.marker_set_fore(i, b)
+        self.set_style(scintilla.STYLE_DEFAULT, fore=fore)
         
-    def _bind_extra_keys(self):
-        
-        def _kp(widg, *args):
-            if args == (122, 4):
-                i = self.line_from_position(self.get_current_pos())
-                self.toggle_fold(i)
-        self.connect('key', _kp)
-        
-    def _set_blue_theme(self):
-        self.set_base_sc_style(fore='606060', back='300000')
-        for i in range(32):
-            self.set_sc_style(i, back='300000')
-        self.set_sc_style(0, fore='a0a0a0')
-        self.set_sc_style(1, fore='a0a0a0')
-        self.set_sc_style(2, fore='f00000')
-        self.set_sc_style(3, fore='c000c0')
-        self.set_sc_style(4, fore='c000c0')
-        self.set_sc_style(5, fore='f000')
-        self.set_sc_style(6, fore='c0c0')
-        self.set_sc_style(7, fore='c0c0')
-        self.set_sc_style(8, fore='f0f0', bold=True)
-        self.set_sc_style(9, fore='f00000', bold=True)
-        self.set_sc_style(10, fore='c0')
-        self.set_sc_style(11, fore='ffc0c0')
-        self.set_sc_style(12, fore='a0a0a0')
-        self.set_sel_back(True, self.colour_from_string('400040'))
-    
-    def set_font(self, fontname, size):
-        self.set_base_sc_style(font=fontname, size=size)
-    
-    def colour_from_string(self, colourstring):
-        return int(colourstring, 16)
-    
-    def show_edge_column(self, size=80):
-        self.set_edge_mode(scintilla.EDGE_LINE)
-        self.set_edge_colour(self.colour_from_string('f0c0c0'))
-        self.set_edge_column(size) 
-    
-    def set_sc_style(self, number, fore=None, back=None, bold=None, font=None,
-                    size=None):
+    def set_style(self, number,
+                        fore=None,
+                        back=None,
+                        bold=None,
+                        font=None,
+                        size=None,
+                        italic=None):
         if fore is not None:
-            self.style_set_fore(number, self.colour_from_string(fore))
+            self._sc.style_set_fore(number, self._sc_colour(fore))
         if back is not None:
-            self.style_set_back(number, self.colour_from_string(back))
+            self._sc.style_set_back(number, self._sc_colour(back))
         if bold is not None:
-            self.style_set_bold(number, bold)
+            self._sc.style_set_bold(number, bold)
         if font is not None:
-            self.style_set_font(number, '!%s' % font)
+            self._sc.style_set_font(number, '!%s' % font)
         if size is not None:
-            self.style_set_size(number, size)
+            self._sc.style_set_size(number, size)
+        if italic is not None:
+            self._sc.style_set_italic(number, italic)
+
+    def set_font(self, fontname, size):
+        self.set_style(scintilla.STYLE_DEFAULT, font=fontname, size=size)
+
+    def set_linenumber_margin_colours(self, foreground, background):
+        self.set_style(scintilla.STYLE_LINENUMBER, fore=foreground,
+                        back=background)
     
-    def set_base_sc_style(self, **kw):
-        self.set_sc_style(scintilla.STYLE_DEFAULT, **kw)
-        
+    def get_widget(self):
+        return self._sc
+
+    def _sc_colour(self, colorspec):
+        c = gtk.gdk.color_parse(colorspec)
+        return (c.red/256) | (c.green/256) << 8 | (c.blue/256) << 16
+
     def load_file(self, filename):
         self.filename = filename
         f = open(filename, 'r')
         mimetype, n = mimetypes.guess_type(filename)
         if mimetype:
             ftype = mimetype.split('/')[-1].split('-')[-1]
-            self.set_lexer_language(ftype)
+            self._sc.set_lexer_language(ftype)
             if ftype == 'python':
-                self.set_key_words(0, ' '.join(kwlist))
+                self._sc.set_key_words(0, ' '.join(kwlist))
         self.load_fd(f)
-        self.empty_undo_buffer()
-        self.set_save_point()
+        self._sc.empty_undo_buffer()
+        self._sc.set_save_point()
+
+    def grab_focus(self):
+        self._sc.grab_focus()
+
+    def cut(self):
+        self._sc.cut()
+
+    def copy(self):
+        self._sc.copy()
+
+    def paste(self):
+        self._sc.paste()
+
+    def undo(self):
+        self._sc.undo()
+
+    def redo(self):
+        self._sc.redo()
+
+    def can_undo(self):
+        return self._sc.can_undo()
+
+    def can_redo(self):
+        return self._sc.can_redo()
+
+    def can_paste(self):
+        return self._sc.can_paste()
 
     def save(self):
         """Saves the current buffer to the file"""
         assert self.filename is not None
         fd = SafeFileWrite(self.filename)
-        txt = self.get_text(self.get_length())[-1]
+        txt = self._sc.get_text(self._sc.get_length())[-1]
         fd.write(''.join(txt))
         fd.close()
-        self.set_save_point()
+        self._sc.set_save_point()
 
     def load_fd(self, fd):
         for line in fd:
-            self.append_text(len(line), line)
-        self.colourise(0, -1)
-   
-    def show_line_numbers(self):
-        self.set_margin_type_n(0, scintilla.SC_MARGIN_NUMBER)
-        self.set_margin_width_n(0, 32)
-        self.set_line_number_style(back='400000', fore='a09090')
-        
-    def show_marker_margin(self):
-        #margin 2 for markers
-        self.set_property('fold', '1')
-        self.set_property("tab.timmy.whinge.level", "1")
-        self.set_property("fold.comment.python", "0")
-        self.set_property("fold.quotes.python", "0")
-        self.set_fold_flags(16)
-        self.set_margin_type_n(2, scintilla.SC_MARGIN_SYMBOL)
-        self.set_margin_mask_n(2, scintilla.SC_MASK_FOLDERS)
-        self.set_margin_sensitive_n(2, True)
-        self.set_margin_width_n(2, 14)
-        self.set_fold_margin_colour(True, self.colour_from_string('300000'))
-        self.set_fold_margin_hi_colour(True, self.colour_from_string('300000'))
-        self.marker_define(scintilla.SC_MARKNUM_FOLDEREND,
-                           scintilla.SC_MARK_BOXPLUSCONNECTED)
-        self.marker_define(scintilla.SC_MARKNUM_FOLDEROPENMID,
-                           scintilla.SC_MARK_BOXMINUSCONNECTED)
-        self.marker_define(scintilla.SC_MARKNUM_FOLDERMIDTAIL,
-                           scintilla.SC_MARK_TCORNER)
-        self.marker_define(scintilla.SC_MARKNUM_FOLDERTAIL,
-                           scintilla.SC_MARK_LCORNER)
-        self.marker_define(scintilla.SC_MARKNUM_FOLDERSUB,
-                           scintilla.SC_MARK_VLINE)
-        self.marker_define(scintilla.SC_MARKNUM_FOLDER,
-                           scintilla.SC_MARK_BOXPLUS)
-        self.marker_define(scintilla.SC_MARKNUM_FOLDEROPEN,
-                           scintilla.SC_MARK_BOXMINUS)
-        for i in range(25, 32):
-            self.marker_set_back(i, self.colour_from_string('606060'))
-    
+            self._sc.append_text(len(line), line)
+        self._sc.colourise(0, -1)
+
     def get_all_fold_headers(self):
-        for i in xrange(self.get_line_count()):
-            level = self.get_fold_level(i)
+        for i in xrange(self._sc.get_line_count()):
+            level = self._sc.get_fold_level(i)
             if level & scintilla.SC_FOLDLEVELHEADERFLAG:
                 yield i, level
     
@@ -183,22 +233,14 @@ class Pscyntilla(scintilla.Scintilla):
     
     def collapse_all(self):
         for i in self.get_toplevel_fold_headers():
-            if self.get_fold_expanded(i):
-                self.toggle_fold(i)
+            if self._sc.get_fold_expanded(i):
+                self._sc.toggle_fold(i)
     
     def expand_all(self):
         for i in self.get_toplevel_fold_headers():
-            if not self.get_fold_expanded(i):
-                self.toggle_fold(i)
-           
-    def set_line_number_style(self, **kw):
-        self.set_sc_style(scintilla.STYLE_LINENUMBER, **kw)
-        
-    def show_caret(self):
-        self.set_caret_fore(self.colour_from_string('f0'))
-        self.set_caret_line_back(self.colour_from_string('600000'))
-        self.set_caret_line_visible(True)
-        
+            if not self._sc.get_fold_expanded(i):
+                self._sc.toggle_fold(i)
+   
     def cb_margin_click(self, ed, mod, pos, margin):
         if margin == 2:
             if mod == 1:
@@ -206,10 +248,71 @@ class Pscyntilla(scintilla.Scintilla):
             elif mod == 6:
                 self.expand_all()
             else:
-                lineClicked = self.line_from_position(pos)
-                if (self.get_fold_level(lineClicked) &
+                line = self._sc.line_from_position(pos)
+                if (self._sc.get_fold_level(line) &
                     scintilla.SC_FOLDLEVELHEADERFLAG):
-                    self.toggle_fold(lineClicked)
+                    self._sc.toggle_fold(line)
+
+    def cb_unhandled_key(self, widg, *args):
+        if args == (122, 4):
+            i = self._sc.line_from_position(self._sc.get_current_pos())
+            self._sc.toggle_fold(i)
+        elif args == (83, 2):
+            self.save()
+            #TODO: emit a saved event
+
+    def set_background_color(self, back):
+        self.set_style(scintilla.STYLE_DEFAULT,
+                       back=back)
+        for i in range(32):
+            self.set_style(i, back=back)
+
+    def set_selection_color(self, color):
+        self._sc.set_sel_back(True, self._sc_colour(color))
+
+    def use_dark_theme(self):
+        self.set_background_color('#000033')
+        self.set_style(0, fore='#f0f0f0')
+        self.set_style(1, fore='#a0a0a0')
+        self.set_style(2, fore='#00f000')
+        self.set_style(3, fore='#c000c0')
+        self.set_style(4, fore='#c000c0')
+        self.set_style(5, fore='#6060fa')
+        self.set_style(6, fore='#c0c000')
+        self.set_style(7, fore='#c0c000')
+        self.set_style(8, fore='#00f000', bold=True)
+        self.set_style(9, fore='#f0a000', bold=True)
+        self.set_style(10, fore='#00f0f0')
+        self.set_style(11, fore='#f0f0f0')
+        self.set_style(12, fore='#a0a0a0')
+
+    def use_light_theme(self):
+        self.set_background_color('#fafafa')
+        # base
+        self.set_style(0, fore='#000000')
+        # comments
+        self.set_style(1, fore='#909090')
+        # numbers
+        self.set_style(2, fore='#00a000')
+        # dq strings
+        self.set_style(3, fore='#600060')
+        # sq strings
+        self.set_style(4, fore='#600060')
+        # keywords
+        self.set_style(5, fore='#0000a0')
+        self.set_style(6, fore='#00c000')
+        # docstring
+        self.set_style(7, fore='#a0a000')
+        # class names
+        self.set_style(8, fore='#009000')
+        # func names
+        self.set_style(9, fore='#a05000')
+        # symbols
+        self.set_style(10, fore='#c00000')
+        # base
+        self.set_style(11, fore='#000000')
+        self.set_style(12, fore='#0000a0')
+
 
 class ScintillaView(contentview.content_view):
 
@@ -217,15 +320,16 @@ class ScintillaView(contentview.content_view):
     HAS_TITLE = False
 
     def init(self):
-        sw = gtk.ScrolledWindow()
-        self.widget.pack_start(sw)
-        sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        #sw = gtk.ScrolledWindow()
+        #self.widget.pack_start(sw)
+        #sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.editor = Pscyntilla()
-        sw.add(self.editor)
+        #sw.add(self.editor)
+        self.widget.pack_start(self.editor._sc)
         self.optionize()
-        self.editor.connect('modified', self.cb_modified)
-        self.editor.connect('save-point-reached', self.cb_save_point_reached)
-        self.editor.connect('save-point-left', self.cb_save_point_left)
+        self.editor._sc.connect('modified', self.cb_modified)
+        self.editor._sc.connect('save-point-reached', self.cb_save_point_reached)
+        self.editor._sc.connect('save-point-left', self.cb_save_point_left)
 
     def cb_save_point_reached(self, editor, *args):
         self.service._save_act.set_sensitive(False)
@@ -239,14 +343,48 @@ class ScintillaView(contentview.content_view):
         print 'savepointleave'    
         
     def optionize(self):
-        self.editor.set_font('Monospace', 12)
+        self.editor.set_font('Monospace', 11)
         opt = self.service.opt
         # indenting options
         use_tabs = opt('indenting', 'use_tabs')
         self.editor.set_use_tabs(use_tabs)
         self.editor.set_tab_width(opt('indenting', 'tab_width'))
         if not use_tabs:
-            self.editor.set_indent(opt('indenting', 'space_indent_width'))
+            self.editor.set_spaceindent_width(
+                opt('indenting', 'space_indent_width'))
+        # folding options
+        self.editor.use_folding(
+            opt('folding', 'use_folding'), width=opt('folding', 'marker_size'))
+        self.editor.set_foldmargin_colours(
+            back=opt('folding', 'marker_background'),
+            fore=opt('folding', 'marker_foreground'))
+        # line numbers
+        self.editor.set_linenumber_margin_colours(
+            background=opt('line_numbers', 'background'),
+            foreground=opt('line_numbers', 'foreground'))
+        self.editor.set_linenumbers_visible(
+            opt('line_numbers', 'show_line_numbers'))
+        if opt('colors', 'use_dark_theme'):
+            self.editor.use_dark_theme()
+        else:
+            self.editor.use_light_theme()
+        # caret and selection
+        car = 'caret'
+        self.editor.set_caret_colour(opt(car, 'caret_colour'))
+        self.editor.set_caret_line_visible(
+            opt(car, 'highlight_current_line'),
+            opt(car, 'current_line_color'))
+        self.editor.set_selection_color(
+            opt(car, 'selection_color'))
+        # edge column
+        el = 'edge_line'
+        self.editor.set_edge_column_visible(
+            opt(el, 'show_edge_line'),
+            opt(el, 'position'),
+            opt(el, 'color'))
+
+    def _font_and_size(self, fontdesc):
+        pass
         
     def cb_modified(self, editor, *args):
         if self.service._current:
@@ -276,6 +414,79 @@ class ScintillaEditor(service.service):
             rtype = types.intrange(1, 16, 1)
             default = 4
 
+    class line_numbers(defs.optiongroup):
+        """Options relating to line numbers and the line number margin."""
+        class show_line_numbers(defs.option):
+            """Whether line numbers will be shown."""
+            rtype = types.boolean
+            default = True
+        class background(defs.option):
+            """The line number margin background colour"""
+            rtype = types.color
+            default = '#e0e0e0'
+        class foreground(defs.option):
+            """The line number margin foreground colour"""
+            rtype = types.color
+            default = '#a0a0a0'
+
+    class colors(defs.optiongroup):
+        """Options for colours."""
+        class use_dark_theme(defs.option):
+            """Use a dark scheme"""
+            rtype = types.boolean
+            default = False
+
+    class folding(defs.optiongroup):
+        """Options relating to code folding"""
+        class use_folding(defs.option):
+            rtype = types.boolean
+            default = True
+        class marker_size(defs.option):
+            rtype = types.intrange(8, 32, 1)
+            default = 14
+        class marker_background(defs.option):
+            rtype = types.color
+            default = '#e0e0e0'
+        class marker_foreground(defs.option):
+            rtype = types.color
+            default = '#a0a0a0'
+
+    class caret(defs.optiongroup):
+        """Options relating to the caret and selection"""
+        class caret_colour(defs.option):
+            """The colour of the caret."""
+            default = '#000000'
+            rtype = types.color
+        class highlight_current_line(defs.option):
+            """Whether the current line will e highlighted"""
+            default = True
+            rtype = types.boolean
+        class current_line_color(defs.option):
+            """The color that will be used to highligh the current line"""
+            default = '#f0f0f0'
+            rtype = types.color
+        class selection_color(defs.option):
+            """The background colour of the selection."""
+            default = '#fefe90'
+            rtype = types.color
+
+    class edge_line(defs.optiongroup):
+        """The line that appears at a set column width"""
+        class show_edge_line(defs.option):
+            """Whether the edge line will be shown."""
+            rtype = types.boolean
+            default = True
+        class position(defs.option):
+            """The character position of the line"""
+            rtype = types.intrange(0, 240, 1)
+            default = 78
+        class color(defs.option):
+            """The color of the edge line"""
+            rtype = types.color
+            default = '#909090'
+        
+
+
         
         
     def init(self):
@@ -304,13 +515,8 @@ class ScintillaEditor(service.service):
         self._current.editor.save()
         
     def cmd_goto_line(self, linenumber):
-        e = self._current.editor
-        e.goto_line(linenumber - 1)
-        wanted = linenumber - (e.lines_on_screen() / 2)
-        actual = e.get_first_visible_line()
-        e.line_scroll(0, wanted - actual)        
-        e.grab_focus()
-        
+        self._current.editor.goto_line(linenumber + 1)
+ 
     def cmd_undo(self):
         self._current.editor.undo()
 
