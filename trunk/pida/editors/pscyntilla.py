@@ -25,6 +25,7 @@ import gtk
 
 from rat import hig
 from gtk import gdk
+import gtk
 
 from pida.pidagtk import contentview
 from pida.core import actions
@@ -46,10 +47,21 @@ class Pscyntilla(scintilla.Scintilla):
         self._set_blue_theme()
         self.show_edge_column()
         self.show_line_numbers()
+        self.show_marker_margin()
         self.show_caret()
+        self.connect('margin-click', self.cb_margin_click)
+        self._bind_extra_keys()
+        
+    def _bind_extra_keys(self):
+        
+        def _kp(widg, *args):
+            if args == (122, 4):
+                i = self.line_from_position(self.get_current_pos())
+                self.toggle_fold(i)
+        self.connect('key', _kp)
         
     def _set_blue_theme(self):
-        self.set_base_sc_style(fore='ffc0c0', back='300000')
+        self.set_base_sc_style(fore='606060', back='300000')
         for i in range(32):
             self.set_sc_style(i, back='300000')
         self.set_sc_style(0, fore='a0a0a0')
@@ -68,7 +80,7 @@ class Pscyntilla(scintilla.Scintilla):
         self.set_sel_back(True, self.colour_from_string('400040'))
     
     def set_font(self, fontname, size):
-        self.set_base_sc_style(font='Monospace', size=10)
+        self.set_base_sc_style(font=fontname, size=size)
     
     def colour_from_string(self, colourstring):
         return int(colourstring, 16)
@@ -119,12 +131,64 @@ class Pscyntilla(scintilla.Scintilla):
     def load_fd(self, fd):
         for line in fd:
             self.append_text(len(line), line)
+        self.colourise(0, -1)
    
     def show_line_numbers(self):
         self.set_margin_type_n(0, scintilla.SC_MARGIN_NUMBER)
         self.set_margin_width_n(0, 32)
         self.set_line_number_style(back='400000', fore='a09090')
         
+    def show_marker_margin(self):
+        #margin 2 for markers
+        self.set_property('fold', '1')
+        self.set_property("tab.timmy.whinge.level", "1")
+        self.set_property("fold.comment.python", "0")
+        self.set_property("fold.quotes.python", "0")
+        self.set_fold_flags(16)
+        self.set_margin_type_n(2, scintilla.SC_MARGIN_SYMBOL)
+        self.set_margin_mask_n(2, scintilla.SC_MASK_FOLDERS)
+        self.set_margin_sensitive_n(2, True)
+        self.set_margin_width_n(2, 14)
+        self.set_fold_margin_colour(True, self.colour_from_string('300000'))
+        self.set_fold_margin_hi_colour(True, self.colour_from_string('300000'))
+        self.marker_define(scintilla.SC_MARKNUM_FOLDEREND,
+                           scintilla.SC_MARK_BOXPLUSCONNECTED)
+        self.marker_define(scintilla.SC_MARKNUM_FOLDEROPENMID,
+                           scintilla.SC_MARK_BOXMINUSCONNECTED)
+        self.marker_define(scintilla.SC_MARKNUM_FOLDERMIDTAIL,
+                           scintilla.SC_MARK_TCORNER)
+        self.marker_define(scintilla.SC_MARKNUM_FOLDERTAIL,
+                           scintilla.SC_MARK_LCORNER)
+        self.marker_define(scintilla.SC_MARKNUM_FOLDERSUB,
+                           scintilla.SC_MARK_VLINE)
+        self.marker_define(scintilla.SC_MARKNUM_FOLDER,
+                           scintilla.SC_MARK_BOXPLUS)
+        self.marker_define(scintilla.SC_MARKNUM_FOLDEROPEN,
+                           scintilla.SC_MARK_BOXMINUS)
+        for i in range(25, 32):
+            self.marker_set_back(i, self.colour_from_string('606060'))
+    
+    def get_all_fold_headers(self):
+        for i in xrange(self.get_line_count()):
+            level = self.get_fold_level(i)
+            if level & scintilla.SC_FOLDLEVELHEADERFLAG:
+                yield i, level
+    
+    def get_toplevel_fold_headers(self):
+        for i, level in self.get_all_fold_headers():
+            if level & scintilla.SC_FOLDLEVELNUMBERMASK == 1024:
+                yield i
+    
+    def collapse_all(self):
+        for i in self.get_toplevel_fold_headers():
+            if self.get_fold_expanded(i):
+                self.toggle_fold(i)
+    
+    def expand_all(self):
+        for i in self.get_toplevel_fold_headers():
+            if not self.get_fold_expanded(i):
+                self.toggle_fold(i)
+           
     def set_line_number_style(self, **kw):
         self.set_sc_style(scintilla.STYLE_LINENUMBER, **kw)
         
@@ -133,6 +197,17 @@ class Pscyntilla(scintilla.Scintilla):
         self.set_caret_line_back(self.colour_from_string('600000'))
         self.set_caret_line_visible(True)
         
+    def cb_margin_click(self, ed, mod, pos, margin):
+        if margin == 2:
+            if mod == 1:
+                self.collapse_all()
+            elif mod == 6:
+                self.expand_all()
+            else:
+                lineClicked = self.line_from_position(pos)
+                if (self.get_fold_level(lineClicked) &
+                    scintilla.SC_FOLDLEVELHEADERFLAG):
+                    self.toggle_fold(lineClicked)
 
 class ScintillaView(contentview.content_view):
 
@@ -162,7 +237,7 @@ class ScintillaView(contentview.content_view):
         print 'savepointleave'    
         
     def optionize(self):
-        self.editor.set_font('Monospace', 10)
+        self.editor.set_font('Monospace', 14)
         
     def cb_modified(self, editor, *args):
         if self.service._current:
