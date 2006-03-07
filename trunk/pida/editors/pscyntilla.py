@@ -195,6 +195,18 @@ class ScintillaEditor(service.service):
 
     def cmd_save(self):
         self._current.editor.save()
+   
+    def cmd_save_as(self, filename):
+        self._current.editor.filename = filename
+        self._current.editor.save()
+        
+    def cmd_goto_line(self, linenumber):
+        e = self._current.editor
+        e.goto_line(linenumber - 1)
+        wanted = linenumber - (e.lines_on_screen() / 2)
+        actual = e.get_first_visible_line()
+        e.line_scroll(0, wanted - actual)        
+        e.grab_focus()
         
     def cmd_undo(self):
         self._current.editor.undo()
@@ -237,6 +249,7 @@ class ScintillaEditor(service.service):
         view = self._views[document.unique_id]
         self._current = view
         view.raise_page()
+        view.editor.grab_focus()
         self._sensitise_actions()
         
     def _bind_document_actions(self):
