@@ -1,0 +1,10 @@
+#!/bin/bash
+# This acts as make to cross compile pscyntilla
+[ -z $PREFIX ] && PREFIX=/home/tiago/win32
+
+export PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig"
+export PKG_CONFIG_LIBDIR="$PREFIX/lib/pkgconfig"
+
+cd scintilla/gtk
+M=i586-mingw32msvc
+make CC=$M-g++ CCOMP=$M-gcc RANLIB=$M-ranlib INCLUDEDIRS="-I ../include -I ../src -I$PREFIX/include" AR=$M-ar "$@"
