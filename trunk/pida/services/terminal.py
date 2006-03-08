@@ -88,7 +88,7 @@ class terminal_manager(service.service):
         class terminal_type(defs.option):
             """The default terminal type used."""
             default = 'Vte'
-            rtype = types.stringlist('Vte')#, 'Moo')
+            rtype = types.stringlist('Vte', 'Moo')
         class terminal_location(defs.option):
             """Where newly started terminals will appear by default"""
             rtype = types.stringlist(*view_location_map.keys())
@@ -254,16 +254,36 @@ class moo_terminal(pida_terminal):
     def init(self):
         import moo
         self.__term = moo.term.Term()
+        self.__term.connect('child-died', self.cb_exited)
+
+    def cb_exited(self, term):
+        self.feed('Child exited\r\n', '1;34')
+        self.feed('Press any key to close.')
+        self.__term.add_events(gtk.gdk.KEY_PRESS_MASK)
+        self.__term.connect('key-press-event', self.cb_press_any_key)
+
+    def feed(self, text, color=None):
+        """ Feed text to the terminal, optionally coloured."""
+        if color is not None:
+            text = '\x1b[%sm%s\x1b[0m' % (color, text)
+        self.__term.feed(text)
+
+    def cb_press_any_key(self, term, event):
+        self.exited()
 
     def execute(self, command_args, **kw):
         self.__term.fork_argv(command_args, **kw)
 
+    def configure(self, fg, bg, font):
+        self.__term.set_font_from_string(font)
+        self.__term.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse(fg))
+        self.__term.modify_text(gtk.STATE_NORMAL, gtk.gdk.color_parse(fg))
+        self.__term.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(bg))
+        pass
+
     def get_widget(self):
         return self.__term
     widget = property(get_widget)
-
-    def connect_child_exit(self):
-        pass
 
     def translate_kwargs(self, **kw):
         kwdict = {}
