@@ -107,8 +107,6 @@ class Pscyntilla(gobject.GObject):
         self._sc.set_property("tab.timmy.whinge.level", "1")
         self._sc.set_property("fold.comment.python", "0")
         self._sc.set_property("fold.quotes.python", "0")
-        #self._sc.set_fold_margin_colour(True, self.colour_from_string('300000'))
-        #self._sc.set_fold_margin_hi_colour(True, self.colour_from_string('300000'))
         self._sc.marker_define(scintilla.SC_MARKNUM_FOLDEREND,
                            scintilla.SC_MARK_BOXPLUSCONNECTED)
         self._sc.marker_define(scintilla.SC_MARKNUM_FOLDEROPENMID,
@@ -368,11 +366,7 @@ class ScintillaView(contentview.content_view):
     HAS_TITLE = False
 
     def init(self):
-        #sw = gtk.ScrolledWindow()
-        #self.widget.pack_start(sw)
-        #sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.editor = Pscyntilla()
-        #sw.add(self.editor)
         self.widget.pack_start(self.editor._sc)
         self.optionize()
         self.editor._sc.connect('modified', self.cb_modified)
@@ -382,13 +376,10 @@ class ScintillaView(contentview.content_view):
     def cb_save_point_reached(self, editor, *args):
         self.service._save_act.set_sensitive(False)
         self.service._revert_act.set_sensitive(False)
-
     
     def cb_save_point_left(self, editor, *args):
         self.service._save_act.set_sensitive(True)
         self.service._revert_act.set_sensitive(True)
-
-        print 'savepointleave'    
         
     def optionize(self):
         opt = self.service.opt
