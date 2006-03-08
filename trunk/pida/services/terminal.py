@@ -292,7 +292,9 @@ class moo_terminal(pida_terminal):
         return kwdict
 
     def connect_title(self, callback):
-        pass
+        def title_changed(term, title):
+            callback(title)
+        self.__term.connect('set-window-title', title_changed)
 
 class dumb_terminal(pida_terminal):
 
@@ -407,7 +409,6 @@ def test_terminal(terminal_type_names, command_line, **kw):
     w.show_all()
     w.connect('destroy', lambda *a: gtk.main_quit())
     gtk.main()
-
 
 
 
