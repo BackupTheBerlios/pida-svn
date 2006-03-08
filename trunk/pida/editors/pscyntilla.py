@@ -25,9 +25,14 @@
 keyboard shorcuts
 
 undo: ctrl-z
+redo: ctrl-shift-z
+
 cut: ctrl-x
 copy: ctrl-c
 paste: ctrl-v
+
+select: shift-arrow
+rectangular select: shift-alt-arrow
 
 Magnify text size.	Ctrl+Keypad+
 Reduce text size.	Ctrl+Keypad-
