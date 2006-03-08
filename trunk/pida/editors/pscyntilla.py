@@ -391,8 +391,10 @@ class ScintillaView(contentview.content_view):
         print 'savepointleave'    
         
     def optionize(self):
-        self.editor.set_font('Monospace', 11)
         opt = self.service.opt
+        # font
+        self.editor.set_font(
+                *self._font_and_size(opt('font', 'font')))
         # indenting options
         use_tabs = opt('indenting', 'use_tabs')
         self.editor.set_use_tabs(use_tabs)
@@ -432,7 +434,9 @@ class ScintillaView(contentview.content_view):
             opt(el, 'color'))
 
     def _font_and_size(self, fontdesc):
-        pass
+        name, size = fontdesc.rsplit(' ', 1)
+        size = int(size)
+        return name, size
         
     def cb_modified(self, editor, *args):
         if self.service._current:
@@ -446,6 +450,13 @@ class ScintillaEditor(service.service):
     class EditorView(defs.View):
         book_name = 'edit'
         view_type = ScintillaView
+
+    class font(defs.optiongroup):
+        """The font used in the editor"""
+        class font(defs.option):
+            """The font used in the editor"""
+            rtype = types.font
+            default = 'Monospace 12'
 
     class indenting(defs.optiongroup):
         """Indenting options"""
