@@ -221,9 +221,10 @@ class vte_terminal(pida_terminal):
         command = command_args[0]
         self.__term.fork_command(command, command_args, **kw)
 
-
     def feed(self, text, color=None):
-        """ Feed text to the terminal, optionally coloured."""
+        """
+        Feed text to the terminal, optionally coloured.
+        """
         if color is not None:
             text = '\x1b[%sm%s\x1b[0m' % (color, text)
         self.__term.feed(text)
@@ -255,6 +256,12 @@ class moo_terminal(pida_terminal):
         import moo
         self.__term = moo.term.Term()
         self.__term.connect('child-died', self.cb_exited)
+        #def pp(t, menu):
+        #    mi = gtk.MenuItem()
+        #    mi.add(gtk.Label('hello'))
+        #    menu.add(mi)
+        #    mi.show_all()
+        #self.__term.connect('populate-popup', pp)
 
     def cb_exited(self, term):
         self.feed('Child exited\r\n', '1;34')
