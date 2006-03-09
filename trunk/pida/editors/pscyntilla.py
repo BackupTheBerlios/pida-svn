@@ -95,10 +95,12 @@ class Pscyntilla(gobject.GObject):
     def __init__(self):
         self._sc = scintilla.Scintilla()
         self._setup()
+        
 
     def _setup(self):
         self._setup_margins()
         self._sc.connect('key', self.cb_unhandled_key)
+        self._sc.connect('char-added', self.cb_char)
 
     def _setup_margins(self):
         self._sc.set_margin_type_n(0, scintilla.SC_MARGIN_NUMBER)
@@ -306,6 +308,19 @@ class Pscyntilla(gobject.GObject):
         elif args == (83, 2):
             self.save()
             #TODO: emit a saved event
+
+    def cb_char(self, scint, ch):
+        if ch in [10, 13]:
+            pos =  self._sc.get_current_pos()
+            i = self._sc.line_from_position(pos)
+            text = self._sc.get_line(i - 1)
+            for c in text[-1]:
+                if c in '\t ':
+                    self._sc.insert_text(pos, c)
+                    pos = pos + 1
+                    self._sc.goto_pos(pos)
+                else:
+                    break
 
     def set_background_color(self, back):
         self.set_style(scintilla.STYLE_DEFAULT,
