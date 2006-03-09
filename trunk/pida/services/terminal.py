@@ -49,6 +49,7 @@ class terminal_view(contentview.content_view):
                                             'background_colour'),
                            self.service.opt('fonts_and_colours',
                                             'font'))
+        terminal.service = self.service
         terminal.connect_child_exit(self.cb_exited)
         terminal.connect_title(self.set_long_title)
         terminal.execute(command_args, **kw)
@@ -249,6 +250,9 @@ class vte_terminal(pida_terminal):
             callback(title)
         self.__term.connect('window-title-changed', title_changed)
         
+import re
+
+fre = re.compile(r'(/.+):([0-9]+):')
 
 class moo_terminal(pida_terminal):
 
@@ -256,12 +260,59 @@ class moo_terminal(pida_terminal):
         import moo
         self.__term = moo.term.Term()
         self.__term.connect('child-died', self.cb_exited)
-        #def pp(t, menu):
-        #    mi = gtk.MenuItem()
-        #    mi.add(gtk.Label('hello'))
-        #    menu.add(mi)
-        #    mi.show_all()
-        #self.__term.connect('populate-popup', pp)
+        
+        self.it = self.__term.create_tag('a')
+        
+            
+        self.__term.connect('new-line', self.cb_newline)
+            
+        self.__term.connect('populate-popup', self.cb_popup)
+
+    def cb_popup(self, t, menu):
+        if not t.get_selection():
+            menu.get_children()[0].set_sensitive(False)
+        x, y = t.window_to_buffer_coords(*t.get_pointer())
+        i = t.get_iter_at_location(x, y)
+        if i.has_tag(self.it):
+            e = i.copy()
+            i.get_tag_start(self.it)
+            e.get_tag_end(self.it)
+            string = i.get_text(e)
+            filename, ln, empty = string.split(':')
+            menu.add(gtk.SeparatorMenuItem())
+            a = gtk.Action('goto-line', 'Goto line', 'Goto the line',
+                           gtk.STOCK_OK)
+            mi = a.create_menu_item()
+            a.connect('activate', self.act_gotoline, filename, int(ln) - 1)
+            menu.add(mi)
+            menu.show_all()
+        
+    def cb_newline(self, t):    
+        cursor_i = t.get_iter_at_cursor()
+        line_n = cursor_i.row - 1
+        startline_i = t.get_iter_at_line(line_n)
+        endline_i = startline_i.copy()
+        endline_i.forward_to_line_end()
+        line = startline_i.get_text(endline_i)
+        self._line_received(line, line_n)
+
+    def _line_received(self, line, line_n):
+        match = fre.search(line)
+        if match:
+            t = self.__term
+            msl = t.get_iter_at_line_offset(line_n, match.start())
+            esl = t.get_iter_at_line_offset(line_n, match.end())
+            t.apply_tag(self.it, msl, esl)
+        
+    def act_gotoline(self, action, file, line):
+        self.service.boss.call_command('buffermanager', 'open_file_line',
+            filename=file, linenumber=line)
+        
+    def get_line_at_click(self, x, y):
+        pass
+
+    def get_word_at_click(self, x, y):
+        pass
 
     def cb_exited(self, term):
         self.feed('Child exited\r\n', '1;34')
@@ -400,22 +451,6 @@ class popen(object):
         gobject.source_remove(self.__readtag)
         return False
 
-def test_terminal(terminal_type_names, command_line, **kw):
-    import gtk
-    w = gtk.Window()
-    b = gtk.VButtonBox()
-    w.add(b)
-    for tt in terminal_type_names:
-        t, kw = make_terminal(tt, **kw)
-        if t.widget is not None:
-            t.widget.set_size_request(200, 200)
-            b.pack_start(t.widget, expand=True)
-        else:
-            b.pack_start(gtk.Label('no widget for %s' % tt))
-        t.execute(command_line, **kw)
-    w.show_all()
-    w.connect('destroy', lambda *a: gtk.main_quit())
-    gtk.main()
 
 
 

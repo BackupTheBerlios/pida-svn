@@ -258,7 +258,7 @@ class Pscyntilla(gobject.GObject):
         """Saves the current buffer to the file"""
         assert self.filename is not None
         fd = SafeFileWrite(self.filename)
-        txt = self._sc.get_text(self._sc.get_length())[-1]
+        txt = self._sc.get_text(self._sc.get_length() + 1)[-1]
         fd.write(''.join(txt))
         fd.close()
         self._sc.set_save_point()
