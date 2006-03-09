@@ -6,4 +6,6 @@ export CFLAGS=
 export LDFLAGS=
 M=i586-mingw32msvc
 cd src
-make -f mingw32-cross.mak BASEDIR="$PREFIX" "$@"
+scintilla_dir="$1"
+shift
+make -f mingw32-cross.mak BASEDIR="$PREFIX" SCINTILLADIR="$scintilla_dir" "$@"

@@ -15,7 +15,7 @@ PACKAGES = gtk+-2.0 glib-2.0 pygtk-2.0 gthread-2.0
 # Compiler flags
 INCLUDES=-I$(PYDIR)/include -I$(BASEDIR)/include `$(PKGCONFIG) --cflags $(PACKAGES)` -I../scintilla/include
 
-LDFLAGS+=-L$(PYDIR)/libs -L$(BASEDIR)/libs -lscintilla -L../scintilla/bin -lstdc++ `$(PKGCONFIG) --libs $(PACKAGES)`
+LDFLAGS+=-L$(PYDIR)/libs -L$(BASEDIR)/libs -lscintilla -L$(SCINTILLADIR)/bin -lstdc++ `$(PKGCONFIG) --libs $(PACKAGES)`
 
 LIBS=-lpython$(PYVER)
 

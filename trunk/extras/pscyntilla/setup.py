@@ -1,40 +1,6 @@
-# Author: Roberto Cavada <cavada@irst.itc.it>
-# Copyright 2004 by Roberto Cavada
-#
-# This file contains code that allow you to use the Scintilla text
-# widget from within pygtk2.  Pygtk2 is a Python extensions set that
-# allow you to use the Gtk2 toolkit in Python programs. The author of
-# pygtk2 is James Henstridge <james@daa.com.au>.
-# 
-# Scintilla <http://www.scintilla.org> is a very powerful editing
-# component developed by Neil Hodgson <neilh@scintilla.org>. 
-# 
-# Also, there exists a python binding of Scintilla for Gtk+-1.x and
-# pygtk-0.6.5.  It is named PyGtkScintilla, and it was made by Michele
-# Campeotto <moleskine@f2s.com>. 
-# 
-# PygtkScintilla is partially based on ideas "stolen" from GtkScintilla2, 
-# a wrapper of Scintilla for GTK2, which is developed and maintained by
-# Dennis J Houy <djhouy@paw.co.za>. 
-#
-#
-# PygtkScintilla is free software; you can redistribute it and/or 
-# modify it under the terms of the GNU Lesser General Public 
-# License as published by the Free Software Foundation; either 
-# version 2 of the License, or (at your option) any later version.
-#
-# PygtkScintilla is distributed in the hope that it will be useful, 
-# but WITHOUT ANY WARRANTY; without even the implied warranty of 
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
-# Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public 
-# License along with this library; if not, write to the Free Software 
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA.
-#
-#
-# If you have any enhancements or bug reports, please send them to me at
-# cavada@isrt.itc.it.
+__copyright__ = """"2006 by Tiago Cogumbreiro <cogumbreiro@users.sf.net>
+2004 by Roberto Cavada <cavada@irst.itc.it>"""
+__license__ = "LGPL <http://www.gnu.org/copyleft/lesser.txt>"
 
 from distutils.core import setup, Extension, Command
 from distutils.command.build import build
@@ -151,8 +117,6 @@ if not os.path.isdir(SCINTILLA_DIR) and os.environ.has_key('SCINTILLA_DIR'):
     print "Reading SCINTILLA_DIR from environment variable"
     SCINTILLA_DIR = os.environ['SCINTILLA_DIR']
 
-#if SCINTILLA_DIR: print "Found scintilla in '%s'" % SCINTILLA_DIR
-
 SCINTILLA_LIB = os.path.join(SCINTILLA_DIR, "bin/scintilla.a")
 SCINTILLA_IFC = os.path.join(SCINTILLA_DIR, "include/Scintilla.iface")
 
@@ -203,27 +167,73 @@ scintilla = Extension('scintilla',
                       sources = SOURCES)
 
 class CrossCompile(Command):
-    user_options = []
+    description = ("cross compile the Python extension module to win32 "
+                   "and generate the installer for it.")
+    user_options = [
+        ("scintilla-dir=", None, "Scintilla source directory."),
+        ("build-scintilla", None, ("cross compiles the Scintilla library, "
+                                   "and quits.")),
+        ("build-only", None, "doesn't create the installer."),
+        ("clean-only", None, "cleans the generated files and quits."),
+    ]
+    
+    boolean_options = ["build-scintilla", "build-only", "clean-only"]
 
     def initialize_options(self):
-        pass
-
+        self.scintilla_dir = None
+        self.build_scintilla = False
+        self.build_only = False
+        self.clean_only = False
+        
+        get_dir = lambda foo: os.path.join(".", foo)
+        self._compile_scintilla = get_dir("cross-compile-scintilla")
+        self._compile_pscyntilla = get_dir("cross-compile-pscyntilla")
+        
     def finalize_options(self):
-        pass
+        if self.scintilla_dir is None:
+            self.scintilla_dir = os.path.abspath(os.path.join(".", "scintilla"))
 
-    def run(self):
+    def _make(self, make, *args):
+        cmd = ["sh", make, self.scintilla_dir]
+        cmd.extend(args)
+        self.spawn(cmd)
+
+    def scintilla_make(self, *args):
+        self._make(self._compile_scintilla, *args)
+        
+    def pscyntilla_make(self, *args):
+        self._make(self._compile_pscyntilla, *args)
+
+    def create_installer(self):
         bdist_dir = self.get_finalized_command('bdist').bdist_base
         bdist_dir = os.path.join(bdist_dir, "cross-compile")
         lib_dir = os.path.join(bdist_dir, "PURELIB")
         self.mkpath(lib_dir)
-        self.spawn([os.path.join(".", "cross-compile-scintilla")])
-        self.spawn([os.path.join(".", "cross-compile-pscyntilla")])
         self.copy_file("src/scintilla.pyd", os.path.join(lib_dir, "scintilla.pyd"))
         args = self.distribution.get_option_dict("bdist_wininst")
         args["bdist_dir"] = ("command line", bdist_dir)
         args["skip_build"] = ("command line", True)
         self.run_command("bdist_wininst")
 
+    def run(self):
+        if self.clean_only:
+            self.scintilla_make("clean")
+            self.pscyntilla_make("clean")
+            return
+
+        self.scintilla_make()
+        if self.build_scintilla:
+            return
+            
+        self.pscyntilla_make()
+        
+        if self.build_only:
+            return
+        
+        self.create_installer()
+
+
+CrossCompile.__name__ = "crosscompile"
 
 if len(sys.argv) > 1 and sys.argv[1] == 'crosscompile':
     # Don't list the 'scintilla' module otherwise we'll not be able
@@ -255,5 +265,4 @@ editing component.
 ''',
        **kwargs
 )
-
 
