@@ -36,8 +36,7 @@
 # If you have any enhancements or bug reports, please send them to me at
 # cavada@isrt.itc.it.
 
-from distutils.core import setup, Extension
-
+from distutils.core import setup, Extension, Command
 from distutils.command.build import build
 
 import scripts.utils
@@ -46,6 +45,8 @@ import sys
 import os.path
 import glob
 import fnmatch
+import shutil
+
 
 # Change this if you need to compile against a different version or
 # location of Scintilla's top level dir:
@@ -115,14 +116,12 @@ def generate_wrappers(dependencies):
         for f in tuple[0]:
             tm = os.path.getmtime(f)
             if tm > most_recent_time: most_recent_time = tm
-            pass
             
         for f in tuple[1]:
             if not os.path.isfile(f) or (os.path.getmtime(f) < most_recent_time):
                 tuple[2](tuple[0], tuple[1], tuple[3])
                 break
-            pass
-        pass
+
     return
 
 
@@ -142,7 +141,6 @@ def call_gen_marshal(source, targets, arg):
 
     os.system('glib-genmarshal --header %s > src/marshallers.h' % source[0])
     os.system('glib-genmarshal --body %s > src/marshallers.c' % source[0])
-    return
 
 # ----------------------------------------------------------------------
 
@@ -153,7 +151,7 @@ if not os.path.isdir(SCINTILLA_DIR) and os.environ.has_key('SCINTILLA_DIR'):
     print "Reading SCINTILLA_DIR from environment variable"
     SCINTILLA_DIR = os.environ['SCINTILLA_DIR']
 
-if SCINTILLA_DIR: print "Found scintilla in '%s'" % SCINTILLA_DIR
+#if SCINTILLA_DIR: print "Found scintilla in '%s'" % SCINTILLA_DIR
 
 SCINTILLA_LIB = os.path.join(SCINTILLA_DIR, "bin/scintilla.a")
 SCINTILLA_IFC = os.path.join(SCINTILLA_DIR, "include/Scintilla.iface")
@@ -171,12 +169,10 @@ SOURCES = ['src/pyscintilla.c',
            'src/gtkscintilla_signals.c']
 
 
-if not check_requirements(PACKAGES, "2.2.0"): sys.exit(1)
 
 # creates libscintilla:
 LIBSCINTILLA_LIB = os.path.join(SCINTILLA_DIR, "bin/libscintilla.a")
-import shutil
-shutil.copyfile(SCINTILLA_LIB, LIBSCINTILLA_LIB)
+
 
 
 INCLUDE_DIRS = [os.path.join(SCINTILLA_DIR, 'include'), os.path.join(SCINTILLA_DIR, 'src')]
@@ -187,7 +183,6 @@ for pkg in PACKAGES.keys():
     INCLUDE_DIRS += scripts.utils.pkgc_get_include_dirs(pkg)
     LIBRARY_DIRS += scripts.utils.pkgc_get_library_dirs(pkg)
     LIBRARIES += scripts.utils.pkgc_get_libraries(pkg)
-    pass
 
 
 src_dependencies = (
@@ -199,7 +194,6 @@ src_dependencies = (
     )
 
 
-generate_wrappers(src_dependencies)
 
 scintilla = Extension('scintilla',
                       define_macros = [("GTK",1), ("SCI_LEXER",1)],
@@ -207,21 +201,59 @@ scintilla = Extension('scintilla',
                       libraries = LIBRARIES,
                       library_dirs = LIBRARY_DIRS, 
                       sources = SOURCES)
-                      
 
-setup (name = 'PygtkScintilla',
-       version = '1.99.5',
+class CrossCompile(Command):
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        bdist_dir = self.get_finalized_command('bdist').bdist_base
+        bdist_dir = os.path.join(bdist_dir, "cross-compile")
+        lib_dir = os.path.join(bdist_dir, "PURELIB")
+        self.mkpath(lib_dir)
+        self.spawn([os.path.join(".", "cross-compile-scintilla")])
+        self.spawn([os.path.join(".", "cross-compile-pscyntilla")])
+        self.copy_file("src/scintilla.pyd", os.path.join(lib_dir, "scintilla.pyd"))
+        args = self.distribution.get_option_dict("bdist_wininst")
+        args["bdist_dir"] = ("command line", bdist_dir)
+        args["skip_build"] = ("command line", True)
+        self.run_command("bdist_wininst")
+
+
+if len(sys.argv) > 1 and sys.argv[1] == 'crosscompile':
+    # Don't list the 'scintilla' module otherwise we'll not be able
+    # to create the installer
+    kwargs = {
+    }
+else:
+    if not check_requirements(PACKAGES, "2.2.0"):
+        sys.exit(1)
+    shutil.copyfile(SCINTILLA_LIB, LIBSCINTILLA_LIB)
+    generate_wrappers(src_dependencies)
+
+    kwargs = {
+        "ext_modules": [scintilla]
+    }
+
+
+
+setup (name = 'pscyntilla',
+       version = '1.0',
        description = 'Python wrapper for Scintilla under GTK2',
-       author = 'Roberto Cavada',
-       author_email = 'cavada@irst.itc.it',
-       url = 'http://sra.itc.it/people/cavada/PyScintilla2.html',
+       author = 'Tiago Cogumbreiro',
+       author_email = 'cogumbreiro@users.sf.net',
+       url = 'http://pida.berlios.de/',
+       cmdclass = {'crosscompile': CrossCompile},
        long_description = '''
-PyGtkScintilla is a wrapper for the widget Scintilla, a textual editing component.
-
-PyGtkScintilla is based on PyGtk2, the Python binding for the GTK toolkit. 
+Pscyntilla is a wrapper for the widget Scintilla (GTK+ version), a textual 
+editing component.
 ''',
-       ext_modules = [scintilla]
-       )
-
+       **kwargs
+)
 
 

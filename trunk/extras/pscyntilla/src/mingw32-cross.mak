@@ -47,4 +47,4 @@ $(OUTPUT): $(INPUT) $(LIBPY_A) $(MODULE_DEF)
 	$(DLLWRAP) --dllname $(MODULE).pyd --driver-name $(CC) --def $(MODULE_DEF) -o $@ $(INPUT) -s --entry _DllMain@12 --target=i586-mingw32 $(LDFLAGS) $(LIBS)
 
 clean:
-	rm -f *.o
+	rm -f *.o *.pyd
