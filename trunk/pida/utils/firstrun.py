@@ -57,7 +57,19 @@ class Culebra(IComponent):
             errors.append('Rat is not installed')
         return errors
 
-EDITORS = [Vim(), Vimmulti(), Culebra()]
+class Scintilla(IComponent):
+    LABEL = 'Pscyntilla'
+
+    def get_sanity_error(self):
+        errors = []
+        try:
+            import scintilla
+        except ImportError:
+            errors.append('Pscyntilla is not installed')
+
+        return errors
+
+EDITORS = [Vim(), Vimmulti(), Culebra(), Scintilla()]
 
 class FirstTimeWindow(object):
 
@@ -106,7 +118,9 @@ class FirstTimeWindow(object):
         self.win.hide_all()
         editor_name = self.get_editor_option()
         self.win.destroy()
-        self.write_file(filename)
+        # Only write the token file if we want the user chose something
+        if response == gtk.RESPONSE_ACCEPT:
+            self.write_file(filename)
         return (response, editor_name)
 
     def cb_sanity(self, button, component, radio, label):
