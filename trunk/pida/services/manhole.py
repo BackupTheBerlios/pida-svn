@@ -24,13 +24,11 @@ import gtk
 import gobject
 import subprocess
 import threading
-import pty
 import sys
 import os
 import pida.core.service as service
 import pida.pidagtk.contentview as contentview
 import pida.core.registry as registry
-import rlcompleter
 import pida.utils.pyconsole as pyconsole
 
 class Holder(object):
@@ -126,8 +124,6 @@ class Manhole(service.service):
 
 
 import code
-import termios
-import tty
 class Interpreter(code.InteractiveConsole, object):
 
     def __init__(self, fd, localdict={}):
