@@ -76,6 +76,7 @@ try:
     pkg_resources.require('pida')
 except ImportError:
     raise
+    
     die_gui('PIDA requires setuptools to be installed.')
 
 
@@ -86,6 +87,9 @@ try:
 except ImportError:
     die_gui('PIDA could not import itself.')
 
+# Start lock threads here because an exception may be raised
+# and the dialog would be frozen
+gtk.threads_enter()
 
 # Now we can use a gui exception hook
 old_excepthook = sys.excepthook
@@ -237,9 +241,7 @@ class application(object):
     def start(self):
         """Start PIDA."""
         self.__boss.start()
-        gtk.threads_enter()
         self.__mainloop()
-        gtk.threads_leave()
 
     def stop(self):
         """Stop PIDA."""
@@ -299,7 +301,9 @@ def main(bosstype=boss.boss, mainloop=gtk.main, mainstop=gtk.main_quit):
     else:
         run_func = run_pida
 
-    sys.exit(run_func(env, bosstype, mainloop, mainstop))
+    exit_val = run_func(env, bosstype, mainloop, mainstop)
+    gtk.threads_leave()
+    sys.exit(exit_val)
 
 
 if __name__ == '__main__':
