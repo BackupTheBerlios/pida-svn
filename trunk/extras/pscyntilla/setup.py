@@ -127,7 +127,7 @@ class CrossCompile(Command):
         ("build-scintilla", None, ("cross compiles the Scintilla library, "
                                    "and quits.")),
         ("build-only", None, "doesn't create the installer."),
-        ("clean-only", None, "cleans the generated files and quits."),
+        ("clean-only", "c", "cleans the generated files and quits."),
     ]
     
     boolean_options = ["build-scintilla", "build-only", "clean-only"]
@@ -138,7 +138,7 @@ class CrossCompile(Command):
         self.build_only = False
         self.clean_only = False
         
-        get_dir = lambda foo: os.path.join(".", foo)
+        get_dir = lambda foo: os.path.join(".", "scripts", foo)
         self._compile_scintilla = get_dir("cross-compile-scintilla")
         self._compile_pscyntilla = get_dir("cross-compile-pscyntilla")
         
@@ -153,6 +153,10 @@ class CrossCompile(Command):
 
     def scintilla_make(self, *args):
         self._make(self._compile_scintilla, *args)
+        # Correct the 'scintilla.a' file
+        get_file = lambda foo: os.path.join(self.scintilla_dir, "bin", foo)
+        if os.path.exists(get_file("scintilla.a")):
+            self.copy_file(get_file("scintilla.a"), get_file("libscintilla.a"))
         
     def pscyntilla_make(self, *args):
         self._make(self._compile_pscyntilla, *args)
@@ -221,7 +225,7 @@ class BuildScintilla(ScintillaMake):
         self.make()
         # Correct the 'scintilla.a' file
         get_file = lambda foo: os.path.join(self.scintilla_dir, "bin", foo)
-        if not os.path.exists(get_file("libscintilla.a")):
+        if os.path.exists(get_file("scintilla.a")):
             self.copy_file(get_file("scintilla.a"), get_file("libscintilla.a"))
 
 BuildScintilla.__name__ = 'build_scintilla'
@@ -232,7 +236,7 @@ class CleanScintilla(ScintillaMake):
     
     def _run(self):
         self.make("clean")
-        
+
 CleanScintilla.__name__ = 'clean_scintilla'
 
 
@@ -268,7 +272,7 @@ class MarshallDep:
         self.spawn = spawn
 
     def genmarshall(self, *args):
-        cmd = ["sh", "genmarshall"]
+        cmd = ["sh", "scripts/genmarshall"]
         cmd.extend(args)
         self.spawn(cmd)
 

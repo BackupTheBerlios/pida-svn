@@ -9,4 +9,4 @@ cd src
 scintilla_dir="$1"
 shift
 [ -d "$scintilla_dir" ] || exit 1
-make -f mingw32-cross.mak BASEDIR="$PREFIX" SCINTILLADIR="$scintilla_dir" COMPLIB="../bin/libscintilla.a" "$@"
+make -f mingw32-cross.mak BASEDIR="$PREFIX" SCINTILLADIR="$scintilla_dir" "$@"
