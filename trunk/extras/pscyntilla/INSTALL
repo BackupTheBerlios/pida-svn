@@ -9,24 +9,11 @@ Currently tested version is 167.
 Unpack the downloaded archive in the current directory. 
 This will create direcory "scintilla"
 
-Under linux::
+To compile install it just run::
 
-    $> tar xfz scintilla-<version>.tar.gz 
+    python setup.py install
 
-
-Under Windows::
-
-    $> unzip scintilla-<version>.zip
-
-Enter direcory "scintilla/gtk" and build Scintilla::
-
-   $> cd scintilla/gtk
-   $> make
-
-Go back to the top level direcory and run setup.py::
-
-   $> python setup.py install
-
+You will need the usual Gtk+ development files installed.
 
 How to cross compile
 --------------------
@@ -55,4 +42,6 @@ Finally you have to edit **every** `.pc` file under
 
 Finally you just need to run::
     
-    python setup.py crosscompil
+    python setup.py crosscompile
+    
+   

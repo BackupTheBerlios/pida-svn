@@ -70,46 +70,6 @@ def check_requirements(packages, python_req_ver):
         return 0
 
     return 1
-# ----------------------------------------------------------------------
-
-
-def generate_wrappers(dependencies):
-    """A list of 4 elements: ( ((sources),(targets),function,arg), ...).
-    functions takes (sources),(targets) and arg"""
-
-    for tuple in dependencies:
-        most_recent_time = 0
-        for f in tuple[0]:
-            tm = os.path.getmtime(f)
-            if tm > most_recent_time: most_recent_time = tm
-            
-        for f in tuple[1]:
-            if not os.path.isfile(f) or (os.path.getmtime(f) < most_recent_time):
-                tuple[2](tuple[0], tuple[1], tuple[3])
-                break
-
-    return
-
-
-# ----------------------------------------------------------------------
-
-def call_wrapper_gen(sources, targets, arg):
-    """args is the path to the scintilla ifc"""
-    scripts.main.generate_wrapper(arg, "src")
-    return
-
-
-def call_gen_marshal(source, targets, arg):
-    assert(len(source) == 1)
-    if not scripts.utils.have_glib_genmarshal():
-        print "glib-genmarshal not found: files ", targets, "\ncannot be generated."
-        return
-
-    os.system('glib-genmarshal --header %s > src/marshallers.h' % source[0])
-    os.system('glib-genmarshal --body %s > src/marshallers.c' % source[0])
-
-# ----------------------------------------------------------------------
-
 
 SCINTILLA_DIR = get_scintilla_dir(SCINTILLA_PREFIX)
 
@@ -149,13 +109,6 @@ for pkg in PACKAGES.keys():
     LIBRARIES += scripts.utils.pkgc_get_libraries(pkg)
 
 
-src_dependencies = (
-    (("src/pyscintilla.c.in", "src/gtkscintilla.h.in", "src/gtkscintilla.c.in", SCINTILLA_IFC),
-     ("src/pyscintilla.c", "src/gtkscintilla.h", "src/gtkscintilla.c", "src/marshallers.list"),
-     call_wrapper_gen, SCINTILLA_IFC),
-    (('src/marshallers.list',), ('src/marshallers.h', 'src/marshallers.c'),
-     call_gen_marshal, None)
-    )
 
 
 
@@ -235,16 +188,166 @@ class CrossCompile(Command):
 
 CrossCompile.__name__ = "crosscompile"
 
+class Scintilla(Command):
+    
+    user_options = [
+        ("scintilla-dir=", None, "Scintilla source directory."),
+    ]
+    
+    def initialize_options(self):
+        self.scintilla_dir = None
+        
+    def finalize_options(self):
+        if self.scintilla_dir is None:
+            self.scintilla_dir = os.path.abspath(os.path.join(".", "scintilla"))
+
+class ScintillaMake(Scintilla):
+    def make(self, *args):
+        cmd = ["make"]
+        cmd.extend(args)
+        self.spawn(cmd)
+
+    def run(self):
+        cwd = os.getcwd()
+        os.chdir(os.path.join(self.scintilla_dir, "gtk"))
+        self._run()
+        os.chdir(cwd)
+
+class BuildScintilla(ScintillaMake):
+
+    description = "compile Scintilla library"
+
+    def _run(self):
+        self.make()
+        # Correct the 'scintilla.a' file
+        get_file = lambda foo: os.path.join(self.scintilla_dir, "bin", foo)
+        if not os.path.exists(get_file("libscintilla.a")):
+            self.copy_file(get_file("scintilla.a"), get_file("libscintilla.a"))
+
+BuildScintilla.__name__ = 'build_scintilla'
+
+class CleanScintilla(ScintillaMake):
+    
+    description = "cleans compiled Scintilla objects."
+    
+    def _run(self):
+        self.make("clean")
+        
+CleanScintilla.__name__ = 'clean_scintilla'
+
+
+class WrapperDep:
+
+    sources = [
+        "src/pyscintilla.c.in", "src/gtkscintilla.h.in",
+        "src/gtkscintilla.c.in",
+    ]
+    
+    targets = (
+        "src/pyscintilla.c", "src/gtkscintilla.h",
+        "src/gtkscintilla.c", "src/marshallers.list"
+    )
+    
+    def __init__(self, scintilla_dir):
+        get_dir = lambda foo: os.path.join(scintilla_dir, "include", foo)
+        
+        self.sources.append(get_dir("Scintilla.iface"))
+        self.sources.append(get_dir("Scintilla.h"))
+        self.scintilla_dir = scintilla_dir
+    
+    def generate(self):
+        headers_dir = os.path.join(self.scintilla_dir, "include")
+        scripts.main.generate_wrapper(headers_dir, "src")
+
+
+class MarshallDep:
+    sources = ('src/marshallers.list',)
+    targets = ('src/marshallers.h', 'src/marshallers.c')
+
+    def __init__(self, spawn):
+        self.spawn = spawn
+
+    def genmarshall(self, *args):
+        cmd = ["sh", "genmarshall"]
+        cmd.extend(args)
+        self.spawn(cmd)
+
+    def generate(self):
+        self.genmarshall("--header", self.sources[0], "src/marshallers.h")
+        self.genmarshall("--body", self.sources[0], "src/marshallers.c")
+
+
+class BuildWrappers(Scintilla):
+    
+    description = "generates some files for Pscyntilla"
+    
+    def run(self):
+        src_dependencies = (
+            WrapperDep(self.scintilla_dir),
+            MarshallDep(self.spawn),
+        )
+        for dep in src_dependencies:
+        
+            most_recent_time = 0
+            for filename in dep.sources:
+                tm = os.path.getmtime(filename)
+                if tm > most_recent_time:
+                    most_recent_time = tm
+                
+            for filename in dep.targets:
+                if not os.path.isfile(filename) or (os.path.getmtime(filename) < most_recent_time):
+                    dep.generate()
+                    break
+
+
+    
+BuildWrappers.__name__ = 'build_wrappers'
+
+def unlink(filename):
+    try:
+        os.unlink(filename)
+    except os.error:
+        pass
+
+class CleanWrappers(Command):
+
+    description = "cleans generated source files used in Pscyntilla"
+
+    sources = (
+        "src/gtkscintilla.c",
+        "src/gtkscintilla.h",
+        "src/pyscintilla.c",
+        "src/marshallers.h",
+        "src/marshallers.c",
+    )
+    
+    user_options = []
+    
+    def initialize_options(self):
+        pass
+    
+    def finalize_options(self):
+        pass
+    
+    def run(self):
+        for file in self.sources:
+            unlink(file)
+            
+CleanWrappers.__name__ = 'clean_wrappers'
+
+build.sub_commands.insert(0, ('build_scintilla', lambda foo: True))
+build.sub_commands.insert(1, ('build_wrappers', lambda foo: True))
+
 if len(sys.argv) > 1 and sys.argv[1] == 'crosscompile':
     # Don't list the 'scintilla' module otherwise we'll not be able
     # to create the installer
     kwargs = {
     }
 else:
-    if not check_requirements(PACKAGES, "2.2.0"):
-        sys.exit(1)
-    shutil.copyfile(SCINTILLA_LIB, LIBSCINTILLA_LIB)
-    generate_wrappers(src_dependencies)
+#    if not check_requirements(PACKAGES, "2.2.0"):
+#        sys.exit(1)
+#    shutil.copyfile(SCINTILLA_LIB, LIBSCINTILLA_LIB)
+#    generate_wrappers(src_dependencies)
 
     kwargs = {
         "ext_modules": [scintilla]
@@ -258,7 +361,13 @@ setup (name = 'pscyntilla',
        author = 'Tiago Cogumbreiro',
        author_email = 'cogumbreiro@users.sf.net',
        url = 'http://pida.berlios.de/',
-       cmdclass = {'crosscompile': CrossCompile},
+       cmdclass = {
+           'crosscompile': CrossCompile,
+           'build_scintilla': BuildScintilla,
+           'clean_scintilla': CleanScintilla,
+           'build_wrappers': BuildWrappers,
+           'clean_wrappers': CleanWrappers,
+       },
        long_description = '''
 Pscyntilla is a wrapper for the widget Scintilla (GTK+ version), a textual 
 editing component.

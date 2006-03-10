@@ -15,7 +15,7 @@ PACKAGES = gtk+-2.0 glib-2.0 pygtk-2.0 gthread-2.0
 # Compiler flags
 INCLUDES=-I$(PYDIR)/include -I$(BASEDIR)/include `$(PKGCONFIG) --cflags $(PACKAGES)` -I../scintilla/include
 
-LDFLAGS+=-L$(PYDIR)/libs -L$(BASEDIR)/libs -lscintilla -L$(SCINTILLADIR)/bin -lstdc++ `$(PKGCONFIG) --libs $(PACKAGES)`
+LDFLAGS+=-L$(PYDIR)/libs -L$(BASEDIR)/libs -L$(SCINTILLADIR)/bin -lscintilla -lstdc++ `$(PKGCONFIG) --libs $(PACKAGES)`
 
 LIBS=-lpython$(PYVER)
 
@@ -47,4 +47,4 @@ $(OUTPUT): $(INPUT) $(LIBPY_A) $(MODULE_DEF)
 	$(DLLWRAP) --dllname $(MODULE).pyd --driver-name $(CC) --def $(MODULE_DEF) -o $@ $(INPUT) -s --entry _DllMain@12 --target=i586-mingw32 $(LDFLAGS) $(LIBS)
 
 clean:
-	rm -f *.o *.pyd
+	rm -f *.o *.py

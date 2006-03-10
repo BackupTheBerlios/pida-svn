@@ -8,4 +8,5 @@ M=i586-mingw32msvc
 cd src
 scintilla_dir="$1"
 shift
-make -f mingw32-cross.mak BASEDIR="$PREFIX" SCINTILLADIR="$scintilla_dir" "$@"
+[ -d "$scintilla_dir" ] || exit 1
+make -f mingw32-cross.mak BASEDIR="$PREFIX" SCINTILLADIR="$scintilla_dir" COMPLIB="../bin/libscintilla.a" "$@"

@@ -1,2 +1,0 @@
-#!/bin/sh
-rm src/gtkscintilla.{c,h} src/pyscintilla.c

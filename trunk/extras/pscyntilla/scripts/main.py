@@ -157,8 +157,7 @@ def gen_pyscintilla_wrapper(pygen, basedir):
     return
     
 
-def update_constants(sci_ifc_path, pygen):
-    header = path.join(path.dirname(sci_ifc_path), "Scintilla.h")
+def update_constants(header, pygen):
     try:
         fd = open(header)
         for name, val in parsers.iter_header_constants(fd):
@@ -167,9 +166,13 @@ def update_constants(sci_ifc_path, pygen):
         fd.close()
 
 
-def generate_wrapper(sci_ifc_path, basedir, enable_deprecated_features=True):
+def generate_wrapper(headers_dir, basedir, enable_deprecated_features=True):
     """The highest level function"""
-    ifc = IFace(sci_ifc_path)
+    
+    scintilla_iface = path.join(headers_dir, "Scintilla.iface")
+    header = path.join(headers_dir, "Scintilla.h")
+    
+    ifc = IFace(scintilla_iface)
     signals_gen = SignalsGen(ifc, enable_deprecated_features)
     signals_gen.gen_signals()
     
@@ -178,7 +181,7 @@ def generate_wrapper(sci_ifc_path, basedir, enable_deprecated_features=True):
     gen_glib_marshallers(signals_gen, basedir)
     
     pygen = PythonWrapperGen(ifc)
-    update_constants(sci_ifc_path, pygen)
+    update_constants(header, pygen)
     pygen.dump()
     
     gen_pyscintilla_wrapper(pygen, basedir)
@@ -192,6 +195,5 @@ if __name__ == "__main__":
         pass
     
     generate_wrapper(sys.argv[1], ".")
-
 
 
