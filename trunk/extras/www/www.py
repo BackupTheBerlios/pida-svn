@@ -6,7 +6,7 @@ from ConfigParser import ConfigParser
 import os
 from string import Template
 
-
+import subprocess
 
 class Config(ConfigParser):
 
@@ -27,13 +27,15 @@ COMMON_RST = """
 .. |imagedir| replace:: %s 
 """ % CONF.get('resources', 'imagedir')
 
+import urlparse
+
 class Page(rend.Page):
 
     docFactory = loaders.stan(
                     T.html[
                         T.head[
                             T.link(rel='stylesheet',
-                                href='%s/%s' % (
+                                href=urlparse.urljoin(
                                     CONF.get('target', 'baseurl'),
                                     CONF.get('stylesheet', 'filename')),    
                                type='text/css'),
@@ -187,9 +189,17 @@ class Model(object):
     def get_output_path(self):
         root = self.get_output_root()
         return os.path.join(root, *self.get_path()[1:])
+    
+    def get_upload_path(self):
+        root = ':'.join([CONF.get('target', 'host'),
+                         CONF.get('target', 'upload')])
+        return '/'.join([root.strip('/')] + list(self.get_path()[1:]))
 
     def get_url(self):
-        url = '/'.join([self.home.get_url(),'/'.join(self.get_path()[1:])])
+        url = urlparse.urljoin(self.home.get_url(),
+                               '/'.join(self.get_path()[1:]))
+        if not os.path.isdir(self.get_output_path()):
+            url = '%s.html' % url
         return url    
             
     def render(self):
@@ -212,6 +222,26 @@ class Model(object):
             item.write()
         for item in self.get_subdirs():
             item.write()
+        self.upload()
+    
+    def upload(self):
+        def _popen(args):
+            return subprocess.Popen(args, stdout=subprocess.PIPE,
+                                          stderr=subprocess.STDOUT)
+        def _rmkdir(dirname):
+            dirargs = ['ssh', CONF.get('target', 'host'),
+                       'mkdir %s' % dirname]
+            return _popen(dirargs).stdout.read().strip()
+        def _rcp(src, dst):
+            fileargs = ['scp', src, dst]
+            return _popen(fileargs).stdout.read().strip()
+        outputpath = self.get_output_path()
+        uploadpath = self.get_upload_path()
+        if os.path.isdir(outputpath):
+            _rmkdir(uploadpath.split(':')[-1])
+            outputpath = '%s/index.html' % outputpath
+            uploadpath = '%s/index.html' % uploadpath
+        _rcp(outputpath, uploadpath)
             
     def load_rst(self):
         if self.path.endswith('.rst'):
@@ -272,6 +302,9 @@ class Item(Model):
         
     def get_output_path(self):
         return '%s.html' % super(Item, self).get_output_path()
+        
+    def get_upload_path(self):
+        return '%s.html' % super(Item, self).get_upload_path()
 
         
 class Home(Directory):
