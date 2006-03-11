@@ -380,7 +380,6 @@ class FileBrowser(contentview.content_view):
             self.service.log.info('there is no project to go to its root')
 
     def cb_act_new_file(self, action):
-        self.emit('newfile-clicked', self.cwd)
         self.service.boss.call_command('newfile', 'create_interactive',
                           directory=self.cwd)
     
