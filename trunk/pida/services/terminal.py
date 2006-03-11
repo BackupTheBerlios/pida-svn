@@ -35,6 +35,8 @@ import pida.pidagtk.contentview as contentview
 defs = service.definitions
 types = service.types
 
+import pango
+
 class terminal_view(contentview.content_view):
 
     SHORT_TITLE = 'Terminal'
@@ -253,6 +255,7 @@ class vte_terminal(pida_terminal):
 import re
 
 fre = re.compile(r'(/.+):([0-9]+):')
+pre = re.compile(r'File \"(/.+)\"\, line ([0-9]+)\,')
 
 class moo_terminal(pida_terminal):
 
@@ -262,7 +265,9 @@ class moo_terminal(pida_terminal):
         self.__term.connect('child-died', self.cb_exited)
         
         self.it = self.__term.create_tag('a')
-        
+        self.it.set_attributes(moo.term.TEXT_FOREGROUND, moo.term.BLUE)
+        self.pt = self.__term.create_tag('b')
+        self.pt.set_attributes(moo.term.TEXT_FOREGROUND, moo.term.RED)
             
         self.__term.connect('new-line', self.cb_newline)
             
@@ -273,19 +278,29 @@ class moo_terminal(pida_terminal):
             menu.get_children()[0].set_sensitive(False)
         x, y = t.window_to_buffer_coords(*t.get_pointer())
         i = t.get_iter_at_location(x, y)
-        if i.has_tag(self.it):
+        if i.has_tag(self.it) or i.has_tag(self.pt):
             e = i.copy()
-            i.get_tag_start(self.it)
-            e.get_tag_end(self.it)
-            string = i.get_text(e)
-            filename, ln, empty = string.split(':')
+            if i.has_tag(self.it):
+                i.get_tag_start(self.it)
+                e.get_tag_end(self.it)
+                string = i.get_text(e)
+                filename, ln, empty = string.split(':')
+            elif i.has_tag(self.pt):
+                i.get_tag_start(self.pt)
+                e.get_tag_end(self.pt)
+                string = i.get_text(e)
+                filename, ln = pre.search(string).groups()
+                
+                
             menu.add(gtk.SeparatorMenuItem())
             a = gtk.Action('goto-line', 'Goto line', 'Goto the line',
                            gtk.STOCK_OK)
             mi = a.create_menu_item()
-            a.connect('activate', self.act_gotoline, filename, int(ln) - 1)
             menu.add(mi)
             menu.show_all()
+            a.connect('activate', self.act_gotoline, filename, int(ln) - 1)
+
+
         
     def cb_newline(self, t):    
         cursor_i = t.get_iter_at_cursor()
@@ -297,12 +312,13 @@ class moo_terminal(pida_terminal):
         self._line_received(line, line_n)
 
     def _line_received(self, line, line_n):
-        match = fre.search(line)
-        if match:
-            t = self.__term
-            msl = t.get_iter_at_line_offset(line_n, match.start())
-            esl = t.get_iter_at_line_offset(line_n, match.end())
-            t.apply_tag(self.it, msl, esl)
+        for r, tag in [(fre, self.it), (pre, self.pt)]:
+            match = r.search(line)
+            if match:
+                t = self.__term
+                msl = t.get_iter_at_line_offset(line_n, match.start())
+                esl = t.get_iter_at_line_offset(line_n, match.end())
+                t.apply_tag(tag, msl, esl)
         
     def act_gotoline(self, action, file, line):
         self.service.boss.call_command('buffermanager', 'open_file_line',
@@ -334,10 +350,8 @@ class moo_terminal(pida_terminal):
 
     def configure(self, fg, bg, font):
         self.__term.set_font_from_string(font)
-        self.__term.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse(fg))
         self.__term.modify_text(gtk.STATE_NORMAL, gtk.gdk.color_parse(fg))
-        self.__term.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(bg))
-        pass
+        self.__term.modify_base(gtk.STATE_NORMAL, gtk.gdk.color_parse(bg))
 
     def get_widget(self):
         return self.__term
