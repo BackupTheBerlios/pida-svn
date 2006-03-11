@@ -22,18 +22,18 @@ a {
 }
 
 #main {
-    width: 600px;
+    width: 620px;
     margin-left: auto;
     margin-right: auto;
     margin-top: 2em;
     background-color: #f0f0f0;
+    color: #000000;
     }
     
 #top {
     background-color: #666699;
     color: white;
     text-align: center;
-    width: 600px;
 
 }
 
@@ -47,10 +47,9 @@ a {
     background-color: #666699;
     color: white;
     text-align: center;
-    width: 600px;
-    font-size: 0.7em;
     padding-bottom: 1em;
     padding-top: 1em;
+    font-size: 0.7em;
 }
 
 #banner {
@@ -119,6 +118,23 @@ a#table-of-contents: {
     font-size: 0.8em;
     color: #909090;
     }
+    
+td.small-caption {
+    border: 1px solid #c0c0c0;
+    
+}
+
+div.bug-menu {
+    font-size: 0.8em;
+}
+
+#quicksearch {
+    font-size: 0.8em;
+    text-align: right;
+    width: 100%;
+    margin-right: 1em;
+}
+    
 
 
 

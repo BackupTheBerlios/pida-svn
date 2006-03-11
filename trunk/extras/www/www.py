@@ -331,6 +331,7 @@ class Home(Directory):
     def _load_items(self):
         for module in CONF.get('modules', 'dirs').split(','):
             yield Directory(self, module, self)
+        yield Link('/bugs/', 'bugs')
         
     #def get_output_path(self):
     #    return os.path.join(self.output_root, 'index.html')
@@ -350,7 +351,15 @@ class Link(object):
 
     def __init__(self, url, text):
         self.url = url
-        self.text = text
+        self.title = text
+        
+    def get_url(self):
+        return self.url
+        
+    def write(self):
+        pass
+        
+    
 
 home = Home()
 home.write()
