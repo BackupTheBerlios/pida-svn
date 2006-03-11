@@ -21,6 +21,3 @@ PIDA will now be installed in your default python location, and be available
 to all users of the system.
 
 
-.. note ::
-  If you do not wish to install PIDA, it can be run from the local directory.
-  (See `Running pida without installing`_)
