@@ -2,6 +2,11 @@
 Running PIDA
 ------------
 
+.. contents:: Table Of Contents
+
+:author: Ali Afshar
+:contact: aafshar@gmail.com
+
 Running pida after installation
 +++++++++++++++++++++++++++++++
 
