@@ -38,128 +38,99 @@
 # cavada@isrt.itc.it.
 
 import re
+import models
 
-class IFaceParser:
+class NotMatchedError(StandardError):
+    """Raised when the given string is not matched"""
+
+class Parser:
+    groups = None
+    expression = None
 
     def __init__(self):
-        """Sets up a set of structure to be used later by methods"""
-
-        # good comment:
-        com_reg = r"^#\s*(?P<comment>.*)"
-        self.com_re = re.compile(com_reg)
-
-        # category:
-        cat_reg = r"^cat\s+(?P<name>\w+)"
-        self.cat_re = re.compile(cat_reg)
-
-        # functions:
-        function_str = r"(?P<ret_type>\w+)\s+(?P<name>\w+)\s*=\s*(?P<id>\d+)\s*\((?P<pars>.*,.*)\)"
-        fun_reg = r"^fun\s+%s" % function_str
-        self.fun_re = re.compile(fun_reg)
-        get_reg = r"^get\s+%s" % function_str
-        self.get_re = re.compile(get_reg)
-        set_reg = r"^set\s+%s" % function_str
-        self.set_re = re.compile(set_reg)
-
-        evt_str = r"(?P<ret_type>\w+)\s+(?P<name>\w+)\s*=\s*(?P<id>\d+)\s*\((?P<pars>.*)\)"
-        evt_reg = r"^evt\s+%s" % evt_str
-        self.evt_re = re.compile(evt_reg)
-
-        # enu:
-        enu_reg = r"^enu\s+(?P<name>\w+)=(?P<prefix>\w*)"
-        self.enu_re = re.compile(enu_reg)
-
-        # val:
-        val_reg = r"^val\s+(?P<name>\w+)=(?P<value>[\-\d\w]*)"
-        self.val_re = re.compile(val_reg)
-
-        # lex:
-        lex_reg = r"^lex\s+(?P<name>\w+)=(?P<id>\w+)\s+(?P<prefix>\w+)"
-        self.lex_re = re.compile(lex_reg)
-
-        return
-
-    def match_get(self, str):
-        """Returns a matched re object is str contains get definition, None otherwise"""
-        return self.get_re.match(str)
-
-    def match_set(self, str):
-        """Returns a matched re object is str contains set definition, None otherwise"""
-        return self.set_re.match(str)
-
-    def match_fun(self, str):
-        """Returns a matched re object is str contains fun definition, None otherwise"""
-        return self.fun_re.match(str)
-
-    def match_evt(self, str):
-        """Returns a matched re object is str contains fun definition, None otherwise"""
-        return self.evt_re.match(str)
-
-    def match_enu(self, str):
-        """Returns a matched re object is str contains an enu definition, None otherwise"""
-        return self.enu_re.match(str)
-
-    def match_val(self, str):
-        """Returns a matched re object is str contains an enu definition, None otherwise"""
-        return self.val_re.match(str)
-
-    def match_com(self, str):
-        """Returns a matched re object is str contains an comment, None otherwise"""
-        return self.com_re.match(str)
-
-    def match_lex(self, str):
-        """Returns a matched re object is str contains an enu definition, None otherwise"""
-        return self.lex_re.match(str)
-
-    def match_cat(self, str):
-        """Returns a matched re object is str contains an enu definition, None otherwise"""
-        return self.cat_re.match(str)
+        self.pattern = re.compile(self.expression)
     
+    def match(self, text):
+        return self.pattern.match(text)
+
+    def extract(self, match):
+        val = map(lambda name: match.group(name), self.groups)
+        if len(val) == 1:
+            return val[0]
+
+        return tuple(val)
+
+    def parse(self, text):
+        match = self.match(text)
+        if match is None:
+            raise NotMatchedError
+        return self.extract(match)
+
+class CategoryParser(Parser):
+    groups = "name",
+    expression = r"^cat\s+(?P<name>\w+)"
+
+class EnumParser(Parser):
+    category = "enums"
+    groups = "name", "prefix"
+    expression = r"^enu\s+(?P<name>\w+)=(?P<prefix>\w*)"
+    
+class ConstantParser(Parser):
+    category = "constants"
+    groups = "name", "value"
+    expression = r"^val\s+(?P<name>\w+)=(?P<value>[\-\d\w]*)"
+
+class LexerParser(Parser):
+    category = "lexers"
+    groups = "name", "id", "prefix"
+    expression = r"^lex\s+(?P<name>\w+)=(?P<id>\w+)\s+(?P<prefix>\w+)"
+
+class CommentParser(Parser):
+    groups = "comment",
+    expression = r"^#\s*(?P<comment>.*)"
+
+FUNCTION_EXP = (r"(?P<ret_type>\w+)\s+(?P<name>\w+)\s*"
+                r"=\s*(?P<id>\d+)\s*\((?P<pars>.*,.*)\)")
+
+class AbstractFunctionParser(Parser):
+
+    def extract(self, match):
+        pars = match.group("pars")
+        couples = pars.split(",")
+        formal_pars = map(lambda foo: foo.split(), couples)
+
+        return models.Function(match.group("name"), match.group("ret_type"),
+                               formal_pars, match.group("id"))
+
+class FunctionParser(AbstractFunctionParser):
+    category = "functions"
+    expression = r"^fun\s+%s" % FUNCTION_EXP
+
+class GetterParser(AbstractFunctionParser):
+    category = "getters"
+    expression = r"^get\s+%s" % FUNCTION_EXP
+
+class SetterParser(AbstractFunctionParser):
+    category = "setters"
+    expression = r"^set\s+%s" % FUNCTION_EXP
+
+class SignalParser(AbstractFunctionParser):
+    category = "signals"
+    expression = (r"^evt\s+(?P<ret_type>\w+)\s+(?P<name>\w+)\s*="
+                  r"\s*(?P<id>\d+)\s*\((?P<pars>.*)\)")
+
+
+class IFaceParser:
+    parsers = (
+        FunctionParser(), GetterParser(), SetterParser(), EnumParser(),
+        ConstantParser(), SignalParser(), LexerParser()
+    )
+
     def is_empty_comment(self, str):
         """Returns true if str is a not useful comment or an empty line, false otherwise"""
         stripped = str.strip()
         return (stripped == "") or (stripped[0:2] == "##")
 
-    def extract_function(self, match):
-        """Returns (name, ret_type, [(formal_type, formal_name), ...], id).
-        match is the already matched re object"""
-
-        formal_pars = []
-        pars = match.group("pars")
-        couples = pars.split(",")
-        for couple in couples:
-            formal_pars.append(couple.split())
-            pass
-
-        return match.group("name"), match.group("ret_type"), formal_pars, match.group("id")
-
-    def extract_cat(self, match):
-        """Returns (name, prefix)"""
-        return match.group("name")
-
-    def extract_com(self, match):
-        """Returns (name, prefix)"""
-        return match.group("comment")
-
-    def extract_enu(self, match):
-        """Returns (name, value)"""
-        return match.group("name"), match.group("prefix")
-
-    def extract_val(self, match):
-        """Returns (name, value)"""
-        return match.group("name"), match.group("value")
-
-
-    def extract_evt(self, match):
-        """Returns (name, ret_type, [(formal_type, formal_name), ...], id)"""
-        return self.extract_function(match)
-
-    def extract_lex(self, match):
-        """Returns (name, id, prefix)"""
-        return match.group("name"), match.group("id"), match.group("prefix")
-
-    
-    pass # end of class
 
 DEC_PATT = re.compile(r"#define\s+([A-Z][A-Z0-9_]*)\s+([0-9]+)")
 HEX_PATT = re.compile(r"#define\s+([A-Z][A-Z0-9_]*)\s+(0[xX][0-9]+)")
@@ -183,3 +154,4 @@ def iter_header_constants(buff):
         if vals is not None:
             yield vals
 
+# 209

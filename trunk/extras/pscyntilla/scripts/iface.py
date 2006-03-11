@@ -36,23 +36,16 @@
 # If you have any enhancements or bug reports, please send them to me at
 # cavada@isrt.itc.it.
 
-from parsers import IFaceParser
+from parsers import IFaceParser, CategoryParser, CommentParser, NotMatchedError
 
 class IFace:
 
     def __init__(self, filename):
         self.parser = IFaceParser()
+        self.category_parser = CategoryParser()
+        self.comment_parser = CommentParser()
 
         self.filename = filename
-
-        self.groups = (
-            ('functions', self.parser.match_fun, self.parser.extract_function),
-            ('getters', self.parser.match_get, self.parser.extract_function),
-            ('setters', self.parser.match_set, self.parser.extract_function),
-            ('enums', self.parser.match_enu, self.parser.extract_enu),
-            ('constants', self.parser.match_val, self.parser.extract_val),
-            ('signals', self.parser.match_evt, self.parser.extract_evt),
-            ('lexers', self.parser.match_lex, self.parser.extract_lex) )
 
         self.current_cat = ""
         self.categories = {}
@@ -61,24 +54,24 @@ class IFace:
 
         self.set_category("Basics")
         self.__parse_iface()
-        return
 
 
     def set_category(self, name):
         self.current_cat = name
-        if not self.categories.has_key(name):
-            self.categories[name] = {}
-            for group in self.groups:
-                self.categories[name][group[0]] = []
-                pass
-            pass
-        return
 
 
     def add_to_category(self, what, values):
-        defs = self.categories[self.current_cat][what]
+        try:
+            cat = self.categories[self.current_cat]
+        except KeyError:
+            cat = self.categories[self.current_cat] = {}
+        
+        try:
+            defs = cat[what]
+        except KeyError:
+            defs = cat[what] = []
+
         defs.append((values, self.current_comment))
-        return
 
 
     def get_categories(self):
@@ -103,34 +96,32 @@ class IFace:
                 continue
 
             # useful comments:
-            m = self.parser.match_com(str)
-            if m:
-                com = self.parser.extract_com(m)
-                if self.current_comment == "": self.current_comment = com
-                else: self.current_comment += "\n%s" % com
+            try:
+                com = self.comment_parser.parse(str)
+                if self.current_comment == "":
+                    self.current_comment = com
+                else:
+                    self.current_comment += "\n%s" % com
                 line = iface_f.readline()
                 continue
-                
-
-            # categories:
-            m = self.parser.match_cat(str)
-            if m:
-                value = self.parser.extract_cat(m)
-                self.set_category(value)
-                line = iface_f.readline()
-                continue
-
-            for group in self.groups:
-                m = group[1](str)  # Calls the matcher
-                if m:
-                    value = group[2](m) # Extract the value(s)
-                    self.add_to_category(group[0], value)
-                    pass
+            except NotMatchedError:
                 pass
 
-            line = iface_f.readline()
-            pass # while loop
-        
-        return
+            # categories:
+            try:
+                self.set_category(self.category_parser.parse(str))
+                line = iface_f.readline()
+                continue
+            except NotMatchedError:
+                pass
 
-    pass # end of class
+            # XXX: change it to class
+            for parser in self.parser.parsers:
+                try:
+                    self.add_to_category(parser.category, parser.parse(str))
+                except NotMatchedError:
+                    pass
+
+            line = iface_f.readline()
+
+#129

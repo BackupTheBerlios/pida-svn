@@ -196,6 +196,44 @@ NULL, NULL,
 
 
 # ----------------------------------------------------------------------
+import string
+
+class FunctionTemplate:
+    main_template = "$signature\n{\n$body}\n"
+    
+    def __init__(self, function, ren):
+        self.function = function
+        self.ren = ren
+
+    def generate(self):
+        return string.Template(
+            self.main_template,
+            signature=self.generate_signature(),
+            body=self.generate_body()
+        )
+    
+    __str__ = generate
+
+    proto_no_args = "static PyObject* _wrap_%s(PyGObject* self)"
+    proto_args = ("static PyObject* _wrap_%s"
+                  "(PyGObject* self, PyObject* args, PyObject* keywds)")
+
+    def generate_signature(self):
+        if len(self.local_vars) == 0:
+            proto = self.proto_no_args
+        else:
+            proto = self.proto_args
+        return proto % self.ren.rename_fun(fun.name)
+
+    
+    body_template = "$vars_decl$kwlist$parse_str$cmpx_obj_checks\n$strresult_code$scintilla_call\n$return_stmnt"
+
+'''    def generate_body(self):
+        vars_decl, kwlist, parse_str, cmpx_obj_checks,
+                      self.beautier.indent(strresult_code, 2), scintilla_call,
+                      return_stmnt
+'''
+
 class PythonWrapperGen:
 
     def __init__(self, iface):
@@ -228,7 +266,6 @@ class PythonWrapperGen:
         self.dump_setters()
         self.dump_meth_table()
         self.dump_constants()
-        return
 
     def dump_constants(self):
         cats = self.iface.get_categories()
@@ -236,14 +273,9 @@ class PythonWrapperGen:
             cs = cats[cat]['constants']
             for c in cs:
                 self.dump_constant(c)
-                pass
-            pass
-        
-        return
 
     def dump_constant(self, c):
         self.constants.append((c[0][0], c[0][1]))
-        return
 
 
     def dump_meth_table(self):
@@ -252,8 +284,11 @@ class PythonWrapperGen:
 
         meths = []
         cats = self.iface.get_categories()
-        for cat in cats.keys():
-            funcs = cats[cat]['functions'] + cats[cat]['setters'] +  cats[cat]['getters']
+        for name, category in cats.items():
+            empty = []
+            get = lambda name: category.get(name, empty)
+            funcs = get('functions') + get('setters') +  get('getters')
+            
             for func in funcs:
                 if func[0][0] in (self.dont_generate + self.did_not_generate): continue
                 has_args = False
@@ -261,7 +296,6 @@ class PythonWrapperGen:
                     if arg:
                         has_args = True
                         break
-                    pass
                 
                 if has_args:  arg_type = "METH_VARARGS|METH_KEYWORDS"
                 else: arg_type = "METH_NOARGS"
@@ -270,74 +304,45 @@ class PythonWrapperGen:
                 meths.append("{\"%s\", (PyCFunction)_wrap_%s, %s, \"%s\"}" \
                              % (func_name, func_name,
                                 arg_type, comment))
-                pass
-            pass
 
         self.meth_table = head
         for meth in meths:
             self.meth_table += "  " + meth + ",\n"
-            pass
+
         self.meth_table += tail + "\n"
-        return
         
+    def _dump_category_funcs(self, category, label):
+        cats = self.iface.get_categories()
+        for cat in cats.keys():
+            try:
+                funcs = cats[cat][category]
+                for func in funcs:
+
+                    try:
+                        self.dump_fun(func[0], func[1])
+                    except Exception, e:
+                        print "An error occurred while generating %s '%s': %s" % (label, func[0].name, e)
+                        self.did_not_generate.append(func[0].name)
+            except KeyError:
+                pass
 
     def dump_funcs(self):
-        cats = self.iface.get_categories()
-        for cat in cats.keys():
-            funcs = cats[cat]['functions']
-            for func in funcs:
-                #self.dump_fun(func[0], func[1])
-                try: self.dump_fun(func[0], func[1])
-                except Exception, e:
-                    print "An error occurred while generating function '%s': %s" % (func[0][0], e)
-                    self.did_not_generate.append(func[0][0])
-                    pass
-                pass
-            pass
-
-        return
+        self._dump_category_funcs('functions', 'function')
 
     def dump_getters(self):
-        cats = self.iface.get_categories()
-        for cat in cats.keys():
-            funcs = cats[cat]['getters']
-            for func in funcs:
-                try: self.dump_fun(func[0], func[1])
-                except Exception, e:
-                    print "An error occurred while generating getter '%s': %s" % (func[0][0], e)
-                    self.did_not_generate.append(func[0][0])
-                    pass                
-                pass
-            pass
-
-        return
+        self._dump_category_funcs('getters', 'setter')
 
     def dump_setters(self):
-        cats = self.iface.get_categories()
-        for cat in cats.keys():
-            funcs = cats[cat]['setters']
-            for func in funcs:
-                try: self.dump_fun(func[0], func[1])
-                except Exception, e:
-                    print "An error occurred while generating setter '%s': %s" % (func[0][0], e)
-                    self.did_not_generate.append(func[0][0])
-                    pass
-                pass
-            pass
-        
-        return
-
+        self._dump_category_funcs('setters', 'setter')
 
     def dump_fun(self, fun, comment):
-        name = fun[0]
-        args = fun[2]
-        id = fun[3]
 
-        ret_types = [(fun[1], "sci_ret")]
+        if fun.name in self.dont_generate:
+            return
+        
+        ret_types = [(fun.ret_type, "sci_ret")]
         before_return_code = ""
-        
-        if name in self.dont_generate: return
-        
+
         local_vars = []
         call_vars = []
         cmpx_objects_code = []
@@ -345,7 +350,7 @@ class PythonWrapperGen:
 
         # collects info about arguments
         format = ""
-        for arg in args:
+        for arg in fun.args:
             if arg is not None:
                 if len(arg) < 2:
                     call_vars.append(None)
@@ -360,14 +365,12 @@ class PythonWrapperGen:
                     ret_types.append(("string", "_%s" % arg[1]))
                     
                     # makes the length optional
-                    if (len(args) == 2) and args[0] and (args[0][0] == "int") and  (args[0][1] == "length"):
+                    if (len(fun.args) == 2) and fun.args[0] and (fun.args[0][0] == "int") and  (fun.args[0][1] == "length"):
                         format = "|%s" % format
                     else:
                         # force length to be declared:
                         if not ("gint", "_length") in local_vars:
                             local_vars.append(("gint", "_length"))
-                            pass
-                        pass
                         
                     continue
                     
@@ -381,41 +384,52 @@ class PythonWrapperGen:
                     local_vars.append(("long", "_%s_c" % arg[1]))
                     call_vars.append (("long", "_%s_c" % arg[1]))
                     cmpx_objects_code.append(self.code_fact.sci2code(arg[0], arg[1]))
-                else: call_vars.append((t, "_" + arg[1]))
+                else:
+                    call_vars.append((t, "_" + arg[1]))
 
-                pass
-            pass
+
 
         # function prototype
-        if len(local_vars) == 0: proto = "static PyObject* _wrap_%s(PyGObject* self)"  \
-           % self.ren.rename_fun(name)
-        else: proto = "static PyObject* _wrap_%s(PyGObject* self, PyObject* args, "\
-                      "PyObject* keywds)"  % self.ren.rename_fun(name)
+        if len(local_vars) == 0:
+            proto = "static PyObject* _wrap_%s(PyGObject* self)"
+            proto %= self.ren.rename_fun(fun.name)
+
+        else:
+            proto = "static PyObject* _wrap_%s(PyGObject* self, "
+            proto += "PyObject* args, PyObject* keywds)"
+            proto %= self.ren.rename_fun(fun.name)
 
         # keywords
         kwlist = ""
         parse_str = ""
         if len(local_vars) > 0:
             kwlist = "  static char* __kwlist__[] = { "
-            for arg in args:
-                if stringresult and arg and arg[1] == stringresult: continue  # skips text
-                if arg: kwlist += "\"%s\", " % arg[1]
-                pass
+            for arg in fun.args:
+                if stringresult and arg and arg[1] == stringresult:
+                    continue  # skips text
+                if arg:
+                    kwlist += "\"%s\", " % arg[1]
+
             kwlist += "NULL };\n"
         
-            parse_str = "  if (!PyArg_ParseTupleAndKeywords(args, keywds, \"%s\", __kwlist__" \
-                        % format
+            parse_str = "  if (!PyArg_ParseTupleAndKeywords(args, keywds, "
+            parse_str += "\"%s\", __kwlist__"
+            parse_str %= format
+
             vars_ref = ""
-            for var in local_vars: vars_ref += ", &%s" % var[1]
+
+            for var in local_vars:
+                vars_ref += ", &%s" % var[1]
+
             parse_str += vars_ref + ")) { \n    return NULL;\n  }"
-            pass
+
 
 
         # object checks
         cmpx_obj_checks = "\n"
         for cmpx in cmpx_objects_code:
             cmpx_obj_checks += cmpx
-            pass
+
 
         cmpx_obj_checks = self.beautier.indent(cmpx_obj_checks, 2)
 
@@ -426,35 +440,49 @@ class PythonWrapperGen:
             pass
 
         if (ret_types[0][0] != 'void'):
-            if (ret_types[0][0] == "colour"): tmp = "gint"
-            else: tmp = self.typeconv.sci2glib(ret_types[0][0])
+            if (ret_types[0][0] == "colour"):
+                tmp = "gint"
+            else:
+                tmp = self.typeconv.sci2glib(ret_types[0][0])
+
             local_vars.append((tmp, ret_types[0][1]))
-            scintilla_call = "  %s = (%s) scintilla_send_message(SCINTILLA(GTK_SCINTILLA(self->obj)->scintilla), %s, %s, %s);\n" \
-                             % (ret_types[0][1], tmp, id, call_args[0], call_args[1])
-        else: scintilla_call = "  scintilla_send_message(SCINTILLA(GTK_SCINTILLA(self->obj)->scintilla), %s, %s, %s);\n" \
-                               % (id, call_args[0], call_args[1])
+
+            scintilla_call = ("  %s = (%s) scintilla_send_message(SCINTILLA("
+                              "GTK_SCINTILLA(self->obj)->scintilla), "
+                              "%s, %s, %s);\n")
+
+            scintilla_call %= (ret_types[0][1], tmp, fun.id, call_args[0],
+                               call_args[1])
+
+        else:
+            scintilla_call = ("  scintilla_send_message(SCINTILLA("
+                              "GTK_SCINTILLA(self->obj)->scintilla), %s, %s, "
+                              "%s);\n")
+
+            scintilla_call %= (fun.id, call_args[0], call_args[1])
 
         # special handle for string result
         strresult_code = ""
+
         if stringresult:
-            strresult_code = \
-"""if (_length == -1) {
+            strresult_code = """if (_length == -1) {
   _length = %s}
 _%s = g_new(char, _length + 1);
-""" % (scintilla_call, stringresult)
+"""
+            strresult_code %= (scintilla_call, stringresult)
 
             before_return_code += "g_free(_%s);\n" % stringresult
-            pass
+
 
         if (ret_types[0][0] == "bool"):
             before_return_code += "Py_INCREF(__res__);\n"
-            pass
         
         # prepares return statement:
         if before_return_code:
             local_vars.append(("PyObject*", "__res__"))
             res_assgm = "__res__ = %%s;%sreturn __res__;" % before_return_code
-        else: res_assgm = "return %s;"
+        else:
+            res_assgm = "return %s;"
         
         if len(ret_types) == 1:
             if ret_types[0][0] == "void":                
@@ -463,7 +491,7 @@ _%s = g_new(char, _length + 1);
                 return_stmnt = res_assgm % "(%s) ? Py_True : Py_False" % ret_types[0][1]
             else:
                 return_stmnt = res_assgm % "PyInt_FromLong(%s)" % ret_types[0][1]
-                pass
+
         else:
             format = ""
             build_args = ""
@@ -471,11 +499,9 @@ _%s = g_new(char, _length + 1);
                 if ret_type[0] != "void":
                     format += self.typeconv.sci2format(ret_type[0])
                     build_args += ", %s" % ret_type[1]
-                    pass
-                pass
-
-            return_stmnt = res_assgm % "Py_BuildValue(\"%s\" %s)" % (format, build_args)
-            pass
+            
+            val = "Py_BuildValue(\"%s\" %s)" % (format, build_args)
+            return_stmnt = res_assgm % val
         
         return_stmnt = self.beautier.indent(return_stmnt, 2)
 
@@ -485,17 +511,16 @@ _%s = g_new(char, _length + 1);
                 vars_decl += "  %s %s=-1; \n" % var
             elif stringresult and var[1] == ("_%s" % stringresult):
                 vars_decl += "  %s %s=(char*) NULL; \n" % var
-            else: vars_decl += "  %s %s; \n" % var
-            pass
+            else:
+                vars_decl += "  %s %s; \n" % var
 
         self.meth_decls.append(proto + ";")
-        meth_body = "%s\n{\n%s%s%s%s\n%s%s\n%s}\n" \
-                    % (proto, vars_decl, kwlist, parse_str, cmpx_obj_checks, self.beautier.indent(strresult_code, 2), 
-                       scintilla_call, return_stmnt)
+        meth_body = "%s\n{\n%s%s%s%s\n%s%s\n%s}\n"
+        meth_body %= (proto, vars_decl, kwlist, parse_str, cmpx_obj_checks,
+                      self.beautier.indent(strresult_code, 2), scintilla_call,
+                      return_stmnt)
+
         self.meth_defs.append(meth_body)
-        return
-           
-    pass # end of class
 
 
 # ----------------------------------------------------------------------
