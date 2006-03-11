@@ -46,11 +46,13 @@
 /* include this first, before NO_IMPORT_PYGOBJECT is defined */
 #include <pygobject.h>
 
-void pyscintilla_register_classes(PyObject *d);
-/*void pyscintilla_add_constants(PyObject *module, const gchar *strip_prefix);*/
+extern void pyscintilla_register_classes(PyObject *d);
+extern PyObject* pyscintilla_register_constants(PyObject* m);
 
-extern PyMethodDef pyscintilla_methods[];
 
+static PyMethodDef scintilla_funcs[] = {
+    {NULL}
+};
 
 DL_EXPORT(void) initscintilla()
 {
@@ -61,7 +63,7 @@ DL_EXPORT(void) initscintilla()
     g_assert(pygobject_register_class != NULL);
 
 
-    m = Py_InitModule("scintilla", pyscintilla_methods);
+    m = Py_InitModule("scintilla", scintilla_funcs);
     d = PyModule_GetDict(m);
 	
     pyscintilla_register_classes(d);
