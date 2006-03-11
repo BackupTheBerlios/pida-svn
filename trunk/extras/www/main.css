@@ -4,10 +4,16 @@ body {
     }
 
 h1 {
-    font-size: 1.6em;
+    font-size: 1.4em;
     font-weight: bold;
     color: #900000;
     border-bottom: 1px solid #c0c0c0;
+    }
+
+h2 {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #900000;
     }
 
 a {
@@ -65,6 +71,10 @@ ul.main-menu {
     padding: 0em;
 }
 
+#table-of-contents {
+    font-size: 0.9em;
+}
+
 li.main-menu {
     display: inline;
     margin-left: 1.0em;
@@ -93,7 +103,22 @@ span.trail {
     
 }
 
+pre.literal-block {
+    padding: 1em;
+    font-size: 0.9em;
+    border: 1px solid #c0c0c0;
+    background-color: #ffffff;
+}
 
+a#table-of-contents: {
+    font-size: 0.9em;
+    font-weight: bold;
+}
+
+.field, .field-name{
+    font-size: 0.8em;
+    color: #909090;
+    }
 
 
 

@@ -2,6 +2,8 @@
 The PIDA FAQ
 ============
 
+.. contents:: Table Of Contents
+
 :author: Ali Afshar
 :contact: aafshar@gmail.com
 

@@ -72,7 +72,7 @@ class Page(rend.Page):
 
     def render_middle(self, context, data):
         yield T.div(render=T.directive('trail'), data=data.get_ancestry())
-        yield T.h1[data.title]
+        yield T.h1(class_='main-heading')[data.title]
 
         yield T.div(render=T.directive('items'), data=data.get_subdirs())
 
@@ -340,6 +340,7 @@ class Home(Directory):
 
 def render_page(page):
     return page.renderSynchronously()
+    
 
 def write_page(page, fd=sys.stdout):
     fd.write(render_page(page))
