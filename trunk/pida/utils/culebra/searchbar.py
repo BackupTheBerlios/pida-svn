@@ -64,7 +64,7 @@ class SearchBar(Bar):
         entry.set_name("entry")
         # TODO: do not referentiate self
         self._connect(entry, "changed", self.on_entry_changed)
-        self._connect(entry, "changed", self.on_entry_changed)
+#        self._connect(entry, "changed", self.on_entry_changed)
         self._connect(entry, "focus", self.on_entry_focus)
         self._connect(entry, "activate", self.on_entry_activate)
         

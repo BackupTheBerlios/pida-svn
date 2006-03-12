@@ -11,9 +11,10 @@ from common import escape_text, unescape_text
 from common import get_action, ACTION_REPLACE_TOGGLE
 
 from bar import Bar
-
+    
 class BufferSubscription:
     def __init__(self, buff, obj):
+        # Register to a 'replace_text_changed' event
         buff.replace_component.events.register("changed", obj.on_replace_changed)
         buff.replace_text = obj.replace_entry.get_text()
         self.obj = weakref.ref(obj)

@@ -117,7 +117,7 @@ def create_editor(filename, action_group):
     # XXX: there's no way to select an encoding
     buff = CulebraBuffer(filename)
     if filename is not None:
-        buff.load_from_file()
+        buff.get_file_ops().load()
     view.set_buffer(buff)
     
     return view

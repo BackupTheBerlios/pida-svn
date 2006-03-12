@@ -1,5 +1,6 @@
 import unittest
 import buffers
+from buffers import *
 
 class BufferCase(unittest.TestCase):
     def setUp(self):
@@ -305,6 +306,71 @@ class TestHighlight(BufferCase):
         assert not self.buffer.search()
         self.checkHighlight(True)
 
+import tempfile
+def read_file(filename):
+    fd = open(filename)
+    try:
+        data = fd.read()
+    finally:
+        fd.close()
+
+    return data
+
+def write_file(filename, data):
+    fd = open(filename, "w")
+    try:
+        fd.write(data)
+    finally:
+        fd.close()
+
+class TestFileOperations(unittest.TestCase):
+    def setUp(self):
+        self.filenames = []
+        self.buff = CulebraBuffer()
+    
+    def tearDown(self):
+        for filename in self.filenames:
+            try:
+                os.unlink(filename)
+            except OSError:
+                pass
+
+    def create_file(self):
+        filename = tempfile.mktemp()
+        self.filenames.append(filename)
+        return filename
+
+    def assertText(self, text):
+        self.assertEquals(text, self.buff.get_text(*self.buff.get_bounds()))
+
+    def assertNew(self):
+        assert self.buff.get_file_ops().get_is_new()
+
+    def assertOld(self):
+        assert not self.buff.get_file_ops().get_is_new()
+
+    def test_save_file(self):
+        buff = self.buff
+        opers = buff.get_file_ops()
+        self.assertNew()
+
+        filename = self.create_file()
+        opers.set_filename(filename)
+        opers.set_encoding("utf-8")
+        buff.set_text("foo")
+        self.assertNew()
+        opers.save()
+        self.assertOld()
+        self.assertText(read_file(filename))
+
+    def test_load_file(self):
+        buff = self.buff
+        filename = self.create_file()
+        write_file(filename, "foo")
+        opers = buff.get_file_ops()
+        opers.set_filename(filename)
+        opers.load()
+        self.assertText("foo")
 
 if __name__ == '__main__':
     unittest.main()

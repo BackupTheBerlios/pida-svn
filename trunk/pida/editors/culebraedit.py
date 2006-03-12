@@ -243,21 +243,31 @@ class culebra_editor(service.service):
     #############
     # Commands
     current_view = None
-    def cmd_edit(self, document=None):
+    def cmd_edit(self, document):
         # temporary to preserve old filename behaviour
-        filename = document.filename
+        #filename = document.filename
         #if self.current_view is not None:
         #    self.current_view.editor.set_action_group(None)
         if document.unique_id not in self.__views:
             self.__load_document(document)
         self.__view_document(document)
-            
+    
+    def _file_op(self, oper, attr, label):
+        try:
+            getattr(oper, attr)()
+            return True
+        except IOError, err:
+            hig.error("There was an error trying to %s the document" % label,
+                      str(err), parent=self.get_window())
+        return False
+
     def cmd_revert(self):
         if self.current_view is None:
             return
             
-        buff = self.current_view.editor.get_buffer()
-        if buff.is_new:
+        buff = self.current_view.editor.get_buffer().get_file_ops()
+
+        if buff.get_is_new():
             return
         
         # Ok the buffer is not new and exists
@@ -269,9 +279,9 @@ class culebra_editor(service.service):
             parent = self.get_window(),
             ok_button = gtk.STOCK_REVERT_TO_SAVED,
         )
-        if reply == gtk.RESPONSE_OK:
-            buff.load_from_file()
+        if reply == gtk.RESPONSE_OK and self._file_op(buff, "load", "revert"):
             self.boss.call_command('buffermanager', 'reset_current_document')
+                    
 
     def cmd_start(self):
         self.get_service('editormanager').events.emit('started')
@@ -288,13 +298,16 @@ class culebra_editor(service.service):
         buff.place_cursor(line_iter)
         
     def cmd_save(self):
-        self.current_view.buffer.save()
-        self.boss.call_command('buffermanager', 'reset_current_document')
+        file_ops = self.current_view.buffer.get_file_ops()
+        if self._file_op(file_ops, "save", "save"):
+            self.boss.call_command('buffermanager', 'reset_current_document')
 
     def cmd_save_as(self, filename):
-        buf = self.current_view.buffer
-        buf.filename = filename
-        buf.save()
+        buf = self.current_view.buffer.get_file_ops()
+        old_filename = buf.get_filename()
+        buf.set_filename(filename)
+        if not self._file_op(buf, "save", "save"):
+            buf.set_filename(old_filename)
 
     def cmd_undo(self):
         self.current_view.editor.emit('undo')
@@ -327,9 +340,16 @@ class culebra_editor(service.service):
         parent = self.get_window()
         files, response = hig.save_changes(filenames.keys(), parent=parent)
         # Save the files that need to be saved
+        errors = []
         for filename in files:
             # XXX: handle new files
-            filenames[filename].save()
+            try:
+                filenames[filename].save()
+            except IOError, err:
+                errors.append(filename)
+        if len(errors) > 0:
+            # XXX: handle errors
+            pass
         return response in (gtk.RESPONSE_CLOSE, gtk.RESPONSE_OK)
         
     def cmd_select_line(self):
@@ -414,7 +434,7 @@ class culebra_editor(service.service):
         
         # When the buffer is new then we need to show the save dialog instead
         # of a save changes dialog:
-        if buff.is_new:
+        if buff.get_file_ops().get_is_new():
             # XXX: this is utterly broken but there's no support for new files
             # either
             # well, there is now
@@ -427,8 +447,9 @@ class culebra_editor(service.service):
         )
         
         if response == gtk.RESPONSE_OK:
-            buff.save()
-            
+            if not self._file_ops(buff.get_file_ops(), "save", "save"):
+                return False
+
         return response in (gtk.RESPONSE_OK, gtk.RESPONSE_CLOSE)
 
             

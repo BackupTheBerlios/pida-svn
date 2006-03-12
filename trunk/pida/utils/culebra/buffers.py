@@ -11,7 +11,7 @@ except ImportError:
     
 from events import EventsDispatcher
 from rat.text import search_iterator, get_buffer_selection
-
+import interfaces
 from common import ChildObject
 
 #####################
@@ -192,6 +192,7 @@ class _SearchMethod(ChildObject):
 
 
 class _ReplaceMethod(ChildObject):
+
     def __init__(self, parent):
         super(_ReplaceMethod, self).__init__(parent)
         self._events = self.create_events()
@@ -266,18 +267,77 @@ class _ReplaceMethod(ChildObject):
         
         return True
 
+class _FileOperations(ChildObject):
+    __implements__ = interfaces.IFileOperations,
+    is_new = True
+    filename = None
+    encoding = "utf-8"
+
+    def get_filename(self):
+        return self.filename
+    
+    def set_filename(self, filename):
+        self.filename = filename
+    
+    def get_encoding(self):
+        return self.encoding
+    
+    def set_encoding(self, encoding):
+        self.encoding = encoding
+    
+    def get_is_new(self):
+        return self.is_new
+    
+    def save(self):
+        """Saves the current buffer to the file"""
+        assert self.filename is not None
+        buff = self.get_parent()
+        data = buff.get_text(*buff.get_bounds())
+
+        fd = SafeFileWrite(self.filename)
+        try:
+            fd.write(data)
+        finally:
+            fd.close()
         
+        buff.set_modified(False)
+        self.is_new = False
+
+    def load(self):
+        assert self.filename is not None
+        
+        buff = self.get_parent()
+
+        fd = open(self.filename)
+        try:
+            data = fd.read()
+        finally:
+            fd.close()
+
+        data = unicode(data, self.encoding)
+        
+        buff.begin_not_undoable_action()
+        buff.set_text(data)
+        buff.set_modified(False)
+        buff.place_cursor(buff.get_start_iter())
+        buff.end_not_undoable_action()
+        self.is_new = False
+
+
+
 class CulebraBuffer(BaseBuffer):
 
     def __init__(self, filename = None, encoding="utf-8"):
         super(CulebraBuffer, self).__init__()
-        
-        self.filename = filename
-        self.encoding = encoding
-
+        self.file_ops = _FileOperations(self)
         self.search_component = _SearchMethod(self)
         self.replace_component = _ReplaceMethod(self)
-        
+        self.file_ops.set_filename(filename)
+        self.file_ops.set_encoding(encoding)
+    
+    def get_file_ops(self):
+        return self.file_ops
+
     #########################
     # search_highlight
     def get_search_highlight(self):
@@ -312,34 +372,6 @@ class CulebraBuffer(BaseBuffer):
     
     replace_text = property(get_replace_text, set_replace_text)
 
-    #####################
-    # filename
-    def get_filename(self):
-        if self.__filename is None:
-            return "New File"
-        return self.__filename
-    
-    def set_filename(self, filename):
-        self.__filename = filename
-    
-    filename = property(get_filename, set_filename)
-    
-    ####################
-    # encoding
-    def get_encoding(self):
-        return self.__encoding
-    
-    def set_encoding(self, encoding):
-        self.__encoding = encoding
-    
-    encoding = property(get_encoding, set_encoding)
-    
-    ###################
-    # is_new
-    def get_is_new(self):
-        return self.__filename is None
-    
-    is_new = property(get_is_new)
     
     #################
     # methods
@@ -375,37 +407,5 @@ class CulebraBuffer(BaseBuffer):
         if disable_highlight:
             self.search_highlight = True
         return replaced
-
-    def save(self):
-        """Saves the current buffer to the file"""
-        assert self.filename is not None
-        fd = SafeFileWrite(self.filename)
-        fd.write(self.get_text(*self.get_bounds()))
-        fd.close()
-        self.set_modified(False)
-
-    def load_from_file(self):
-        """
-        Loads the contents of a file to this buffer.
-        """
-        assert self.filename is not None
-        
-        fd = open(self.filename)
-        
-        try:
-            self.begin_not_undoable_action()
-            self.set_text("")
-            
-            data = fd.read()
-            data = unicode(data, self.encoding)
-            
-            self.set_text(data)
-            self.set_modified(False)
-            self.place_cursor(self.get_start_iter())
-            self.end_not_undoable_action()
-            self.set_language_from_filename()
-
-        finally:
-            fd.close()
 
         
