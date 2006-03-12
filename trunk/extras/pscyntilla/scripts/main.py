@@ -161,7 +161,7 @@ def update_constants(header, pygen):
     try:
         fd = open(header)
         for name, val in parsers.iter_header_constants(fd):
-            pygen.constants.append((name, str(val)))
+            pygen.dump_constant(name, str(val))
     finally:
         fd.close()
 

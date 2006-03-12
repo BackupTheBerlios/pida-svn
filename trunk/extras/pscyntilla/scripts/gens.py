@@ -272,10 +272,12 @@ class PythonWrapperGen:
         for cat in cats.keys():
             cs = cats[cat]['constants']
             for c in cs:
-                self.dump_constant(c)
+                constant = c[0]
+                self.dump_constant(*constant)
 
-    def dump_constant(self, c):
-        self.constants.append((c[0][0], c[0][1]))
+    def dump_constant(self, name, value):
+        if not name.startswith("SCI_"):
+            self.constants.append((name, value))
 
 
     def dump_meth_table(self):

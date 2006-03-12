@@ -86,6 +86,7 @@ class IFace:
         iface_f = open(self.filename, "r")
         
         line = iface_f.readline()
+
         while (line):
             str = line.rstrip()
             # empty line or unuseful comments:
