@@ -123,6 +123,10 @@ class service_manager(base.pidagroup):
         for service in self:
             service.bind()
 
+    def start(self):
+        for service in self:
+            service.start()
+
     def reset(self):
         for service in self:
             service.reset()

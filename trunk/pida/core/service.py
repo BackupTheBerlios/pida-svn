@@ -327,7 +327,7 @@ class service_base(base.pidacomponent):
         base.pidacomponent.__init__(self)
 
     def init(self):
-        self.start()
+        pass
     
     def start(self):
         pass
