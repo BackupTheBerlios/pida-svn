@@ -245,7 +245,8 @@ class Pscyntilla(gobject.GObject):
             pos =  self._sc.get_current_pos()
             i = self._sc.line_from_position(pos)
             text = self._sc.get_line(i - 1)
-            for c in text[-1]:
+
+            for c in text:
                 if c in '\t ':
                     self._sc.insert_text(pos, c)
                     pos = pos + 1
