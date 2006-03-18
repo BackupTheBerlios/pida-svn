@@ -26,7 +26,6 @@ import gtk
 import gobject
 
 # pidagtk import(s)
-import toolbar
 from pida.utils.kiwiutils import gsignal, gproperty
 
 
@@ -58,13 +57,19 @@ class QuestionBox(gtk.HBox):
         gtk.HBox.__init__(self)
         self.__entry = gtk.Entry()
         self.pack_start(self.__entry)
-        self.__toolbar = toolbar.Toolbar()
-        self.pack_start(self.__toolbar)
-        self.__toolbar.add_button('ok', 'apply', 'ok')
-        self.__toolbar.add_button('cancel', 'cancel', 'cancel')
-        self.__toolbar.connect('clicked', self.cb_toolbar_clicked)
+        self.pack_start(self.__init_toolbar())
         self.set_sensitive(False)
 
+    def __init_toolbar(self):
+        hb = gtk.HBox()
+        b2 = gtk.ToolButton(stock_id=gtk.STOCK_CANCEL)
+        hb.pack_start(b2)
+        b2.connect('clicked', self.cb_toolbar_clicked, 'cancel')
+        b1 = gtk.ToolButton(stock_id=gtk.STOCK_YES)
+        hb.pack_start(b1)
+        b1.connect('clicked', self.cb_toolbar_clicked, 'ok')
+        return hb
+        
     def cb_toolbar_clicked(self, toolbar, action):
         if action == 'ok':
             self.__current_callback(self.__entry.get_text())
