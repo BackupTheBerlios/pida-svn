@@ -209,6 +209,8 @@ class FileBrowser(contentview.content_view):
     SHORT_TITLE = 'Files'
     HAS_CLOSE_BUTTON = False
     HAS_DETACH_BUTTON = False
+    HAS_TITLE = False
+    HAS_CONTROL_BOX = False
 
     def init(self, scriptpath):
         gobject.GObject.__init__(self)
