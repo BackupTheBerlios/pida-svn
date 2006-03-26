@@ -69,7 +69,7 @@ SMALL_MU = ('<span size="small" weight="bold">%s</span>')
 class ResultsTreeItem(tree.TreeItem):
     
     def get_markup(self):
-        return RESULT_MU % (self.value.linenumber,
+        return RESULT_MU % (self.value.linenumber + 1,
                             cgi.escape(self.value.filename),
                             self.value.muline)
     markup = property(get_markup)
