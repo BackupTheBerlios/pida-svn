@@ -114,7 +114,7 @@ class ServiceProvider:
         # First check for validation
         for key in keys:
             try:
-                self.factories[key]
+                dummy = self.factories[key]
                 raise FactoryPresentError(key)
             except KeyError:
                 pass
@@ -166,7 +166,7 @@ class ServiceProvider:
                 # MultiFactories register a service in more then one keys
                 if isinstance(factory, MultiFactory):
                     for key in factory.keys:
-                        self.services[interface] = service
+                        self.services[key] = service
                         
             except KeyError:
                 raise ServiceNotFoundError(interface)
@@ -181,4 +181,3 @@ class ServiceProvider:
         """
         
         self.services.clear()
-

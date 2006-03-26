@@ -62,7 +62,7 @@ class CulebraView(contentview.content_view):
     def init(self, filename=None, action_group=None, background_color=None,
                    font_color=None, font_text=None):
         self.widget.set_no_show_all(True)
-        self.provider = edit.create_widget(filename, action_group)
+        self.provider = edit.create_editor(filename, action_group)
         
         self.set_action_group = self.provider.get_service(interfaces.IActionGroupController).set_action_group
         
@@ -76,12 +76,11 @@ class CulebraView(contentview.content_view):
 #        except TypeError:
 #            # In this case we are not dealling with sourceview
 #            pass
+        self._real_widget.show()
+        self.widget.add(self._real_widget)
         
-        widget = self.provider.get_service(interfaces.IWidget)
-        self._real_widget = widget
-        widget.show()
-        self.widget.add(widget)
-
+    _real_widget = property(lambda self: self.provider.get_service(interfaces.IWidget))
+    
     def get_file_ops(self):
         return self.provider.get_service(interfaces.IFileOperations)
 

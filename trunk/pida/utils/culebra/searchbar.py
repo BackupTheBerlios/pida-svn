@@ -95,46 +95,6 @@ class SearchBar(Bar):
         return hbox
     
 
-    '''
-    def _bind_buffer(self, buff):
-        search = buff.search_component
-        search.events.register("changed", self.on_search_changed)
-        search.events.register("no-more-entries", self.on_no_entries)
-        search.search_text = self.entry.get_text()
-
-    
-    def _unbind_buffer(self, buff):
-        search = buff.search_component
-        search.events.unregister("changed", self.on_search_changed)
-        search.events.unregister("no-more-entries", self.on_no_entries)
-    
-    def on_no_entries(self, find_forward):
-        if not self._cycle:
-            return
-
-        # We have to cycle we need to:
-        # 1. get the orientation of where we're searching
-        # 2. find out if there are no entries at all
-        # 3. move to the top/bottom and grab the next one
-        buff = self.buffer
-        
-        if not has_search_entries(buff):
-            return
-
-        if find_forward:
-            next_iter = self.buffer.get_start_iter()
-        else:
-            next_iter = self.buffer.get_end_iter()
-
-        self.buffer.place_cursor(next_iter)
-        
-        if find_forward:
-            self.forward_button.clicked()
-        else:
-            self.backward_button.clicked()
-                    
-    '''
-
     def on_entry_activate(self, entry, *args):
         self.forward_button.clicked()
 

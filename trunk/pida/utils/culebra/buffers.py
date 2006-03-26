@@ -3,22 +3,20 @@ __license__ = "MIT License <http://www.opensource.org/licenses/mit-license.php>"
 __copyright__ = "2005, Tiago Cogumbreiro"
 __author__ = "Tiago Cogumbreiro <cogumbreiro@users.sf.net>"
 
-import gtk
 import gobject
 import interfaces
 import tempfile
 import os
 import gtkutil
-import weakref
 import core
-from interfaces import ORIENTATION_FORWARD, ORIENTATION_BACKWARD
+from interfaces import ORIENTATION_FORWARD
 
 try:
     from svbase import BaseBuffer
 except ImportError:
     from tvbase import BaseBuffer
-    
-from events import EventsDispatcher
+
+
 from rat.text import search_iterator, get_buffer_selection
 from common import ChildObject
 
@@ -165,13 +163,13 @@ def has_search_entries(buff, search_text):
 
 class _SearchMethod(core.BaseService, EventProvider):
     
-    focus = core.Depends(interfaces.ICarretController)
     
     __gsignals__ = {
         "text-changed": _VOID_VOID
     }
 
     buffer = core.Depends("buffer")
+    focus = core.Depends(interfaces.ICarretController)
     
     auto_cycle = True
     

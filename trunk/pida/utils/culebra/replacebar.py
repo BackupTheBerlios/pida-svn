@@ -4,7 +4,6 @@ __copyright__ = "2005, Tiago Cogumbreiro"
 __author__ = "Tiago Cogumbreiro <cogumbreiro@users.sf.net>"
 
 import gtk
-import weakref
 
 from common import ACTION_FIND_TOGGLE, ACTION_REPLACE_FORWARD, ACTION_REPLACE_ALL
 from common import escape_text, unescape_text
@@ -123,14 +122,6 @@ class ReplaceBar(Bar):
     
     ##################
     # Template methods
-    
-
-    def _bind_buffer(self, buff):
-        buff.replace_component.events.register("changed", self.on_replace_changed)
-        buff.replace_text = self.replace_entry.get_text()
-    
-    def _unbind_buffer(self, buff):
-        buff.replace_component.events.unregister("changed", self.on_replace_changed)
 
     def on_show(self, dialog):
         if self.toggle_find is None:

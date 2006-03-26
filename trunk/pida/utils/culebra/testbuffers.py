@@ -4,14 +4,22 @@ import buffers
 from buffers import *
 import interfaces
 import core
+import sys
+import weakref
+
+class DummyCarret(core.BaseService):
+        
+    def focus_carret(self):
+        pass
 
 class BufferCase(unittest.TestCase):
     def setUp(self):
         self.buffer = buffers.BaseBuffer()
         
-        provider = core.ServiceProvider()
+        self.p = provider = core.ServiceProvider()
         register_services(provider)
         provider.register_service(self.buffer, "buffer")
+        provider.register_factory(DummyCarret, interfaces.ICarretController)
         
         self.search = provider.get_service(interfaces.ISearch)
         self.replace = provider.get_service(interfaces.IReplace)
@@ -86,7 +94,15 @@ class BufferCase(unittest.TestCase):
             
         self.textEquals(target, "Seach string not replace: %r != %r" % (text, target))
 
-            
+class TestMemory(unittest.TestCase):
+    def test_mem(self):
+        provider = core.ServiceProvider()
+        register_services(provider)
+        provider.register_service(buffers.BaseBuffer(), "buffer")
+        buff = weakref.ref(provider.get_service("buffer"))
+        provider = None
+        assert buff() is None, sys.getrefcount(buff())
+    
 
 class TestReplace(BufferCase):
     def test_replace_all_multiple_occourrences(self):
@@ -400,4 +416,6 @@ class TestFileOperations(BufferCase):
         self.assertText("foo")
 
 if __name__ == '__main__':
-    unittest.main()
+    runner = unittest.TextTestRunner()
+    runner.run(unittest.makeSuite(TestMemory))
+    #unittest.main("__main__")

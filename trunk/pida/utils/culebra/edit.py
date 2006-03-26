@@ -23,25 +23,31 @@ import replacebar
 import searchbar
 from buffers import BaseBuffer
 import buffers
-from common import *
-#from common import create_dummy_action_group
+import common
 import core
 
-def _teardown_view(widget):
-    widget.set_action_group(None)
-    import weakref
-    ref = weakref.ref(widget.search_bar)
-    delattr(widget, "search_bar")
-    assert ref() is None
-    delattr(widget, "replace_bar")
-
+class MyServiceProvider(core.ServiceProvider):
+    def __del__(self):
+        self.get_service(interfaces.IWidget).destroy()
 
 def register_services(service_provider):
     services = ("view", interfaces.ICarretController,
                 interfaces.ISelectColors, interfaces.ISelectFont)
                 
-    service_provider.register_factory(lambda service_provider: CulebraView(), base_service=False, *services)
-    service_provider.register_factory(ActionGroupController, interfaces.IActionGroupController)
+    service_provider.register_factory(
+        lambda service_provider: CulebraView(),
+        base_service = False,
+        *services
+    )
+    service_provider.register_factory(
+        widget_factory,
+        interfaces.IWidget,
+        base_service = False,
+    )
+    service_provider.register_factory(
+        ActionGroupController,
+        interfaces.IActionGroupController
+    )
     
     # XXX: need a way to create a simple factory
     view = service_provider.get_service("view")
@@ -64,10 +70,7 @@ class CulebraView(BaseView):
     
     def __init__(self):
         super(CulebraView, self).__init__()
-        #super(CulebraView, self).set_buffer(CulebraBuffer())
-        # Make sure we have a 
         super(CulebraView, self).set_buffer(BaseBuffer())
-        self.connect("destroy-event", _teardown_view)
     
     
     def set_background_color(self, color):
@@ -82,33 +85,11 @@ class CulebraView(BaseView):
             self.modify_font(font_desc)
 
     def set_buffer(self, buff):
-        raise AttributeError
-        self.replace_bar.set_buffer(buff)
-        self.search_bar.set_buffer(buff)
-        super(CulebraView, self).set_buffer(buff)
+        raise AttributeError("You are not allowed to change buffers")
     
-    def find(self, find_forward):
-        buff = self.get_buffer()
-        found = buff.search(find_forward=find_forward)
-        self.focus_carret()
-        return found
-
     def _on_key_pressed(self, search_text, event):
-        global KEY_ESCAPE
-        
-        if event.keyval == KEY_ESCAPE:
+        if event.keyval == common.KEY_ESCAPE:
             self.toggle_action.set_active(False)
-
-#    def get_widget(self):
-#        if self._widget is None:
-#            self._widget = self.create_widget()
-#            self._widget.connect("key-release-event", self._on_key_pressed)
-#
-#        
-#        return self._widget
-#    
-#    widget = property(get_widget)
-
 
     def focus_carret(self):
         buff = self.get_buffer()
@@ -124,18 +105,15 @@ class CulebraView(BaseView):
         self.scroll_to_iter(line_iter, 0.25)
         # Place the cursor at the begining of the line
         buff.place_cursor(line_iter)
-        
-def create_widget(filename, action_group):
 
+def widget_factory(provider):
     vbox = gtk.VBox(spacing=12)
-    vbox.show()
 
     scroller = gtk.ScrolledWindow()
     scroller.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
     scroller.show()
     vbox.add(scroller)
     
-    provider = create_editor(filename, action_group)
     editor = provider.get_service("view")
     
     editor.set_name("editor")
@@ -153,17 +131,14 @@ def create_widget(filename, action_group):
     vbox.pack_end(replace_bar.widget, False, False)
     vbox.pack_end(search_bar.widget, False, False)
     
-    provider.register_service(vbox, interfaces.IWidget)
+    return vbox
     
-    return provider
-
-
-def create_editor(filename, action_group):
-    provider = core.ServiceProvider()
+def create_editor(filename=None, action_group=None):
+    provider = MyServiceProvider()
     register_services(provider)
     ag = provider.get_service(interfaces.IActionGroupController)
     ag.set_action_group(action_group)
-    view = provider.get_service("view")
+
     if filename is not None:
         file_ops = provider.get_service(interfaces.IFileOperations)
         file_ops.set_filename(filename)
@@ -175,21 +150,21 @@ def create_editor(filename, action_group):
 
 
 def main():
-    import sys, gobject
+    import sys
     if len(sys.argv) == 2:
         filename = sys.argv[1]
     else:
         filename = __file__
-    ag = create_dummy_action_group()
+    ag = common.create_dummy_action_group()
     
     win = gtk.Window()
-    provider = create_widget(filename, ag)
+    provider = create_editor(filename, ag)
     editor = provider.get_service(interfaces.IWidget)
     editor.show()
     win.add(editor)
     win.show()
-    ag.get_action(ACTION_FIND_TOGGLE).set_active(True)
-    ag.get_action(ACTION_REPLACE_TOGGLE).set_active(True)
+    ag.get_action(common.ACTION_FIND_TOGGLE).set_active(True)
+    ag.get_action(common.ACTION_REPLACE_TOGGLE).set_active(True)
 
     win.connect("delete-event", gtk.main_quit)
     gtk.main()
