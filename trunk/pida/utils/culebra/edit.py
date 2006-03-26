@@ -30,28 +30,28 @@ class MyServiceProvider(core.ServiceProvider):
     def __del__(self):
         self.get_service(interfaces.IWidget).destroy()
 
+def buffer_factory(provider):
+    return provider.get_service("view").get_buffer()
+
 def register_services(service_provider):
     services = ("view", interfaces.ICarretController,
                 interfaces.ISelectColors, interfaces.ISelectFont)
                 
-    service_provider.register_factory(
+    service_provider.register_simple_factory(
         lambda service_provider: CulebraView(),
         base_service = False,
         *services
     )
-    service_provider.register_factory(
+    service_provider.register_simple_factory(
         widget_factory,
         interfaces.IWidget,
-        base_service = False,
     )
     service_provider.register_factory(
         ActionGroupController,
         interfaces.IActionGroupController
     )
     
-    # XXX: need a way to create a simple factory
-    view = service_provider.get_service("view")
-    service_provider.register_service(view.get_buffer(), "buffer")
+    service_provider.register_simple_factory(buffer_factory, "buffer")
     
     # Register other modules
     searchbar.register_services(service_provider)

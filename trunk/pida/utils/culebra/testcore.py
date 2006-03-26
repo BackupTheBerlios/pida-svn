@@ -1,7 +1,6 @@
 from core import *
 import unittest
 import weakref
-import gc
 
 class Service2(BaseService):
     def do_something(self):
@@ -50,8 +49,8 @@ class TestServiceProvider(unittest.TestCase):
         prov = self.provider
         one_srv = lambda service_provider: "one"
         two_srv = lambda service_provider: "two"
-        prov.register_factory(one_srv, "one", base_service=False)
-        prov.register_factory(two_srv, "two", base_service=False)
+        prov.register_simple_factory(one_srv, "one")
+        prov.register_simple_factory(two_srv, "two")
         
         self.assertEquals(prov.get_service("one"), "one")
         self.assertEquals(prov.get_service("two"), "two")
@@ -69,7 +68,12 @@ class TestServiceProvider(unittest.TestCase):
     
     def test_multiple_factory(self):
         prov = self.provider
-        prov.register_factory(lambda service_provider: "one", "service1", "service2", "service3", base_service=False)
+        prov.register_simple_factory(
+            lambda service_provider: "one",
+            "service1",
+            "service2",
+            "service3",
+        )
         assert prov.factories.has_key("service1")
         srv1 = prov.get_service("service1")
         self.assertEquals(srv1, "one")
@@ -110,7 +114,7 @@ class TestServiceProvider(unittest.TestCase):
         try:
             srv2 = prov.get_service("service1")
             assert False
-        except ServiceNotFoundError:
+        except ServiceError:
             pass
         
     def test_remove_multiple_factories(self):
@@ -118,6 +122,7 @@ class TestServiceProvider(unittest.TestCase):
         prov.register_factory(Service2, "service1", "service2", "service3")
         srv1 = prov.get_service("service1")
         prov.unregister_factory("service1")
+        
         try:
             srv2 = prov.get_service("service1")
         except ServiceNotFoundError:
@@ -127,7 +132,43 @@ class TestServiceProvider(unittest.TestCase):
             srv2 = prov.get_service("service2")
         except ServiceNotFoundError:
             assert False
+        
         assert srv2 is srv1
-
+        
+        # now 'Service2' factory instance is present on both 'service2'
+        # and 'service3'
+        prov.unregister_service("service2")
+        try:
+            prov.unregister_service("service3")
+            # The service3 should already be vacant
+            assert False
+        except ServiceError:
+            pass
+            
+        srv3 = prov.get_service("service3")
+        new_srv2 = prov.get_service("service2")
+        assert srv3 is new_srv2
+        assert srv2 is not new_srv2
+        
+        # Try to change the order, everything should work the same
+        try:
+            prov.unregister_service("service2")
+        except ServiceError:
+            assert False
+            
+        srv2 = new_srv2
+        new_srv2 = prov.get_service("service2")
+        srv3 = prov.get_service("service3")
+        assert srv3 is new_srv2
+        assert srv2 is not new_srv2
+        
+    def test_propagation(self):
+        prov = self.provider
+        prov.register_factory(Service2, "service1", "service2", "service3")
+        
+        prov.register_service("foo", "service1")
+        assert prov.get_service("service2") == "foo"
+        assert prov.get_service("service3") == "foo"
+        
 if __name__ == '__main__':
     unittest.main()

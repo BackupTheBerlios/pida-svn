@@ -13,18 +13,15 @@ class ServiceFactory:
     """Should return a service provider"""
 
 
-class ServiceNotFoundError(StandardError):
+class ServiceError(StandardError):
     pass
 
 class DependencyError(StandardError):
     pass
 
-class FactoryPresentError(StandardError):
+class FactoryError(StandardError):
     pass
 
-class FactoryNotPresentError(StandardError):
-    pass
-    
 class Depends(object):
     """
     Besides 'Depends' acting like an object that holds the interface
@@ -63,7 +60,7 @@ class BaseService(object):
                     service = service_provider.get_service(val.key)
                     func = weakref.ref(service)
                     
-                except ServiceNotFoundError:
+                except ServiceError:
                     if not val.optional:
                         raise DependencyError(val.key)
                     func = lambda: None
@@ -102,53 +99,103 @@ class MultiFactory:
         return service
         
 class ServiceProvider:
+    """A service provider makes it possible for factory generated objects,
+    which we'll address as 'services', can be associated through keys.
+    When you request a service from a certain key it will call a factory to
+    create it.
+    
+    You can unregister services at any time and the factories will create them
+    again when they are requested.
+    
+    You can also register services directly, overriding the ones generated
+    from a factory. If that service overrides a key that has a service factory
+    associated with it and that factory is registred on more factories then
+    the service will override those keys too. The same thing happens when you
+    unregister a service that is controlled by a service that has more then
+    one key associated with it.
+    
+    You have two ways of registring factories, through `register_factory` and
+    through `simple_factory`, the first is used to register classes based on
+    `BaseService` whilst the second is used to register more generic factories
+    . Generic factories are callable objects which accept one argument, the
+    service provider, they *must* return the object they are supposed to
+    create.
+    
+    You can access the services alive through the `services` variable.
+    
+    You can access the factories alive through the `factories` variable.
+    """
+    
     def __init__(self):
         self.factories = {}
         self.services = {}
     ## TODO: factories that are called with one argument and return the service in question
     
-    def register_factory(self, factory, *keys, **kwargs):
+    def register_factory(self, factory, *keys):
+        self._register_factory(BaseServiceFactory(factory), keys)
+    
+    def _register_factory(self, factory, keys):
         """Registers a certain key with a factory"""
-        base_service = kwargs.get("base_service", True)
-        
         # First check for validation
         for key in keys:
             try:
                 dummy = self.factories[key]
-                raise FactoryPresentError(key)
+                raise FactoryError(key)
             except KeyError:
                 pass
 
-        if base_service:
-            factory = BaseServiceFactory(factory)
-            
         if len(keys) > 1:
             factory = MultiFactory(factory, list(keys))
         
         for key in keys:
             self.factories[key] = factory
 
+    def register_simple_factory(self, factory, *keys):
+        self._register_factory(factory, keys)
+
     
     def unregister_factory(self, key):
         """Unregisters the factory"""
         try:
             factory = self.factories[key]
-            if isinstance(factory, MultiFactory):
-                factory.keys.remove(key)
+            keys = getattr(factory, "keys", [key])
+            keys.remove(key)
             del self.factories[key]
+
         except KeyError:
-            raise FactoryNotPresentError(key)
+            raise FactoryError(key)
 
     def register_service(self, service, *keys):
-
+        """Register this service with the given keys."""
+        # Get all keys that are present in factories as well
+        all_keys = list(keys)
         for key in keys:
+            try:
+                all_keys.extend(getattr(self.factories[key], "keys", ()))
+            except KeyError:
+                pass
+        
+        for key in all_keys:
             self.services[key] = service
-
+        
     def unregister_service(self, key):
+        """Removes a service. If the service has a factory associated with
+        it then it will be created again when needed."""
+        
+        # First get all the related keys
         try:
-            del self.services[key]
+            factory = self.factories[key]
+            keys = getattr(factory, "keys", (key,))
         except KeyError:
-            raise ServiceNotFoundError
+            keys = (key,)
+        
+        # Now try to delete the services
+        try:
+            for key in keys:
+                del self.services[key]
+            
+        except KeyError:
+            raise ServiceError(key)
 
     def get_service(self, interface):
         """Returns the service associated with a certain interface"""
@@ -158,18 +205,11 @@ class ServiceProvider:
         except KeyError:
             try:
                 factory = self.factories[interface]
-                
                 service = factory(self)
-                
                 self.services[interface] = service
-                
-                # MultiFactories register a service in more then one keys
-                if isinstance(factory, MultiFactory):
-                    for key in factory.keys:
-                        self.services[key] = service
                         
             except KeyError:
-                raise ServiceNotFoundError(interface)
+                raise ServiceError(interface)
                 
         return service
     
