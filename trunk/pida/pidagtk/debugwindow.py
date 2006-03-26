@@ -246,7 +246,7 @@ class DebugWindow(gtk.Dialog):
         self.destroy()
 
     def maketicket(self, summary, description, name='Pida Bug report'):
-        base = 'http://pida.vm.bytemark.co.uk/projects/pida/'
+        base = 'http://tracos.org/pida/'
         url = '%s/newticket' % base.rstrip('/')
         postdata={'reporter': name,
                   'summary': summary,
