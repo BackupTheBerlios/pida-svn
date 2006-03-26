@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 __license__ = "MIT License <http://www.opensource.org/licenses/mit-license.php>"
 __copyright__ = "2005, Tiago Cogumbreiro"
 __author__ = "Tiago Cogumbreiro <cogumbreiro@users.sf.net>"
@@ -11,46 +11,30 @@ from common import escape_text, unescape_text
 from rat.text import get_buffer_selection, search_iterator
 from bar import Bar
 from gtkutil import signal_holder, subscribe_proxy
-
-def has_search_entries(buff):
-    """Returns if a certain buffer contains or not a search string"""
-    entries = search_iterator(buff, buff.search_text, start_in_cursor=False)
-    for bounds in entries:
-        return True
-        
-    return False
+import core
 
 
-# TODO: there's a problem when edit.main() is called with BufferSubscription
-# refs
-class BufferSubscription:
-    def __init__(self, buff, obj):
-        search = buff.search_component
-        search.events.register("changed", obj.on_search_changed)
-        search.events.register("no-more-entries", obj.on_no_entries)
-        search.search_text = obj.entry.get_text()
-        self.buff = weakref.ref(buff)
-        self.obj = weakref.ref(obj)
-
-    def __del__(self):
-        search = self.buff().search_component
-        search.events.unregister("changed", self.obj().on_search_changed)
-        search.events.unregister("no-more-entries", self.obj().on_no_entries)
-
-
+import interfaces
+from interfaces import ORIENTATION_FORWARD, ORIENTATION_BACKWARD
 class SearchBar(Bar):
     _cycle = True
-    _buffer_subscription_factory = BufferSubscription
     
-    def __init__(self, parent, action_group):
+    search = core.Depends(interfaces.ISearch)
+    # XXX: this is currently optional but the implementation could be improved
+    highlight = core.Depends(interfaces.IHighlightSearch)
+    buffer = core.Depends(interfaces.IBuffer)
+    
+    def __init__(self):
         self._widget = None
         self._signals = []
         self.entry = self.create_entry()
         self.forward_button = self.create_forward_button()
         self.backward_button = self.create_backward_button()
-        
-        super(SearchBar, self).__init__(parent, action_group)
-
+    
+    def _bind(self, service_provider):
+        cb = self.on_search_changed
+        self.src = self.search.register_event("text-changed", cb)
+    
     def _create_toggle_action(self, action_group):
         self.find_forward = action_group.get_action(ACTION_FIND_FORWARD)
         self.find_backward = action_group.get_action(ACTION_FIND_BACKWARD)
@@ -111,6 +95,7 @@ class SearchBar(Bar):
         return hbox
     
 
+    '''
     def _bind_buffer(self, buff):
         search = buff.search_component
         search.events.register("changed", self.on_search_changed)
@@ -148,14 +133,17 @@ class SearchBar(Bar):
         else:
             self.backward_button.clicked()
                     
+    '''
 
     def on_entry_activate(self, entry, *args):
         self.forward_button.clicked()
 
     def on_show(self, dialog):
         buff = self.buffer
+        search = self.search
         
-        selected_text = get_buffer_selection(buff)
+        # XXX: We need another interface that offers selections
+        selected_text = buff.get_selected_text()
         if selected_text != "":
             # There's some selected text, copy it to the search entry
             self.entry.set_text(selected_text)
@@ -167,21 +155,26 @@ class SearchBar(Bar):
         self.entry.select_region(0, -1)
         self.entry.grab_focus()
         
-        if not buff.search_highlight:
-            buff.search_highlight = True
+        ## Highlight aspect
+        highlight = self.highlight
+        if not highlight.get_highlight():
+            highlight.set_highlight(True)
 
     
     def on_hide(self, dialog):
+        ## Highlight aspect
         # Hide search the marks
-        if self.buffer.search_highlight:
-            self.buffer.search_highlight = False
+        
+        highlight = self.highlight
+        if highlight.get_highlight():
+            highlight.set_highlight(False)
     
     def on_entry_focus(self, entry, *args):
         # Select all
         entry.select_region(0, -1)
 
-    def on_search_changed(self, text):
-        self.entry.set_text(escape_text(text))
+    def on_search_changed(self, search):
+        self.entry.set_text(escape_text(search.get_text()))
 
     def on_entry_changed(self, entry):
 
@@ -204,8 +197,11 @@ class SearchBar(Bar):
         # XXX: the only reason this is here is because the action group
         # XXX: is set when the buffer is None, when the action group is set
         # XXX: it calls on_entry_changed
-        if self.buffer is not None:
-            self.buffer.search_text = unescape_text(txt)
+        try:
+            search = self.search
+            search.set_text(unescape_text(txt))
+        except AttributeError:
+            pass
     
     def set_action_group(self, action_group):
         super(SearchBar, self).set_action_group(action_group)
@@ -243,12 +239,16 @@ class SearchBar(Bar):
         
 
     def on_find_forward(self, action):
-        self.get_parent().find(True)
+        self.search.set_orientation(ORIENTATION_FORWARD)
+        self.search.search()
     
     def on_find_backward(self, action):
-        self.get_parent().find(False)
+        self.search.set_orientation(ORIENTATION_BACKWARD)
+        self.search.search()
 
     def destroy(self):
         self._signals = []
         
 
+def register_services(service_provider):
+    service_provider.register_factory(SearchBar, interfaces.ISearchBar)

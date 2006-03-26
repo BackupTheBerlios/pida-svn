@@ -29,8 +29,7 @@ from gtk import gdk
 from pida.pidagtk import contentview
 from pida.core import actions
 from pida.core import service
-from pida.utils.culebra import edit, sensitive, common
-
+from pida.utils.culebra import edit, sensitive, common, interfaces
 
 defs = service.definitions
 types = service.types
@@ -55,7 +54,7 @@ KEYMAP = {
     'culebraedit+select_paragraph': (112 ,C),
 }
 
-class culebra_view(contentview.content_view):
+class CulebraView(contentview.content_view):
 
     HAS_CONTROL_BOX = False
     HAS_TITLE = False
@@ -63,29 +62,31 @@ class culebra_view(contentview.content_view):
     def init(self, filename=None, action_group=None, background_color=None,
                    font_color=None, font_text=None):
         self.widget.set_no_show_all(True)
-        widget, editor = edit.create_widget(filename, action_group)
-        editor.set_background_color(background_color)
-        editor.set_font_color(font_color)
-        editor.set_font(font_text)
-        self.__editor = editor
-        try:
-            self.buffer.connect('can-undo', self.cb_can_undo)
-            self.buffer.connect('can-redo', self.cb_can_redo)
-        except TypeError:
-            # In this case we are not dealling with sourceview
-            pass
+        self.provider = edit.create_widget(filename, action_group)
+        
+        self.set_action_group = self.provider.get_service(interfaces.IActionGroupController).set_action_group
+        
+#        editor.set_background_color(background_color)
+#        editor.set_font_color(font_color)
+#        editor.set_font(font_text)
+#        self.__editor = editor
+#        try:
+#            self.buffer.connect('can-undo', self.cb_can_undo)
+#            self.buffer.connect('can-redo', self.cb_can_redo)
+#        except TypeError:
+#            # In this case we are not dealling with sourceview
+#            pass
+        
+        widget = self.provider.get_service(interfaces.IWidget)
+        self._real_widget = widget
         widget.show()
         self.widget.add(widget)
 
-    def get_editor(self):
-        return self.__editor
-        
-    editor = property(get_editor)
+    def get_file_ops(self):
+        return self.provider.get_service(interfaces.IFileOperations)
 
-    def get_buffer(self):
-        return self.__editor.get_buffer()
-        
-    buffer = property(get_buffer)
+    def get_carret(self):
+        return self.provider.get_service(interfaces.ICarretController)
     
     def can_undo(self):
         return self.buffer.can_undo()
@@ -100,8 +101,8 @@ class culebra_view(contentview.content_view):
         self.service.cb_can_redo(self, can)
 
     def connect_keys(self):
-        self.__editor.add_events(gtk.gdk.KEY_PRESS_MASK)
-        self.__editor.connect('key-press-event', self.cb_keypress)
+        self._real_widget.add_events(gtk.gdk.KEY_PRESS_MASK)
+        self._real_widget.connect('key-press-event', self.cb_keypress)
 
     def cb_keypress(self, widg, event):
         key, mod = event.keyval, event.state
@@ -113,7 +114,7 @@ class culebra_editor(service.service):
     display_name = 'Culebra Text Editor'
 
     class Culebra(defs.View):
-        view_type = culebra_view
+        view_type = CulebraView
         book_name = 'edit'
     
     class general(defs.optiongroup):
@@ -143,10 +144,10 @@ class culebra_editor(service.service):
 
     def reset(self):
         self.__bind_document_actions()
-        for view in self.__views.values():
-            view.editor.set_background_color(self.get_background_color())
-            view.editor.set_font_color(self.get_font_color())
-            view.editor.set_font(self.opt('general', 'font'))
+#        for view in self.__views.values():
+#            view.editor.set_background_color(self.get_background_color())
+#            view.editor.set_font_color(self.get_font_color())
+#            view.editor.set_font(self.opt('general', 'font'))
 
     # private interface
 
@@ -187,23 +188,26 @@ class culebra_editor(service.service):
         view.raise_page()
         # Use subscription pattern
         if self.current_view is not None:
-            self.current_view.editor.set_action_group(None)
+            self.current_view.set_action_group(None)
+            
         self.current_view = view
         self.__set_action_sensitivities(document)
 
     def __set_action_sensitivities(self, document):
         save_action = self.get_save_action()
-        if document.is_new:
-            save_action.set_sensitive(True)
-            self.__revertact.set_sensitive(False)
-        else:
-            buff = self.current_view.editor.get_buffer()
-            self.current_view.editor.set_action_group(self.action_group)
-            self.linker = sensitive.SaveLinker(buff, save_action)
-            self.linker2 = sensitive.SaveLinker(buff, self.__revertact)
-        # undo redo
-        self.cb_can_undo(self.current_view, self.current_view.can_undo())
-        self.cb_can_redo(self.current_view, self.current_view.can_redo())
+#        if document.is_new:
+#            save_action.set_sensitive(True)
+#            self.__revertact.set_sensitive(False)
+
+#        else:
+#            buff = self.current_view.editor.get_buffer()
+        self.current_view.set_action_group(self.action_group)
+#            
+#            #self.linker = sensitive.SaveLinker(buff, save_action)
+#            #self.linker2 = sensitive.SaveLinker(buff, self.__revertact)
+#        # undo redo
+#        self.cb_can_undo(self.current_view, self.current_view.can_undo())
+#        self.cb_can_redo(self.current_view, self.current_view.can_redo())
 
     def get_background_color(self):
         color = self.opt("general", "background_color")
@@ -265,7 +269,7 @@ class culebra_editor(service.service):
         if self.current_view is None:
             return
             
-        buff = self.current_view.editor.get_buffer().get_file_ops()
+        buff = self.current_view.get_file_ops()
 
         if buff.get_is_new():
             return
@@ -287,23 +291,18 @@ class culebra_editor(service.service):
         self.get_service('editormanager').events.emit('started')
 
     def cmd_goto_line(self, linenumber):
-        view = self.current_view.editor
-        buff = self.current_view.buffer
-        
-        # Get line iterator
-        line_iter = buff.get_iter_at_line(linenumber - 1)
-        # Move scroll to the line iterator
-        view.scroll_to_iter(line_iter, 0.25)
-        # Place the cursor at the begining of the line
-        buff.place_cursor(line_iter)
+        if self.current_view is None:
+            return
+        carret = self.current_view.get_carret()
+        carret.goto_line(linenumber - 1)
         
     def cmd_save(self):
-        file_ops = self.current_view.buffer.get_file_ops()
+        file_ops = self.current_view.get_file_ops()
         if self._file_op(file_ops, "save", "save"):
             self.boss.call_command('buffermanager', 'reset_current_document')
 
     def cmd_save_as(self, filename):
-        buf = self.current_view.buffer.get_file_ops()
+        buf = self.current_view.get_file_ops()
         old_filename = buf.get_filename()
         buf.set_filename(filename)
         if not self._file_op(buf, "save", "save"):
@@ -331,12 +330,14 @@ class culebra_editor(service.service):
         self.current_view = None
 
     def cmd_can_close(self):
-        buffs = [view.buffer for view in self.__views.values() if view.buffer.get_modified()]
+        buffs = map(lambda val: val.get_file_ops(), self.__views.values())
+        buffs = filter(lambda val: val.get_modified(), buffs)
+
         # If we have no buffers to save, go on
         if len(buffs) == 0:
             return True
             
-        filenames = dict(map(lambda buff: (buff.filename, buff), buffs))
+        filenames = dict(map(lambda buff: (buff.get_filename(), buff), buffs))
         parent = self.get_window()
         files, response = hig.save_changes(filenames.keys(), parent=parent)
         # Save the files that need to be saved
@@ -426,7 +427,7 @@ class culebra_editor(service.service):
                                    document=doc)
 
     def view_confirm_close(self, view):
-        buff = view.buffer
+        buff = view.get_file_ops()
         
         # If buffer was not modified you can safely close it
         if not buff.get_modified():
@@ -434,7 +435,7 @@ class culebra_editor(service.service):
         
         # When the buffer is new then we need to show the save dialog instead
         # of a save changes dialog:
-        if buff.get_file_ops().get_is_new():
+        if buff.get_is_new():
             # XXX: this is utterly broken but there's no support for new files
             # either
             # well, there is now
@@ -442,12 +443,12 @@ class culebra_editor(service.service):
         
         parent = self.get_window()
         files, response = hig.save_changes(
-            [buff.filename],
+            [buff.get_filename()],
             parent=parent
         )
         
         if response == gtk.RESPONSE_OK:
-            if not self._file_ops(buff.get_file_ops(), "save", "save"):
+            if not self._file_ops(buff, "save", "save"):
                 return False
 
         return response in (gtk.RESPONSE_OK, gtk.RESPONSE_CLOSE)

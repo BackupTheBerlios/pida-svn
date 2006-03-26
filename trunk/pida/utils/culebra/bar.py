@@ -5,6 +5,7 @@ __author__ = "Tiago Cogumbreiro <cogumbreiro@users.sf.net>"
 
 from common import *
 from gtkutil import signal_holder
+import core
 
 def _activate_action(widget, action):
     action.set_active(True)
@@ -50,38 +51,8 @@ class VisibilitySync:
             toggle_action.set_active(visible)
     
 
-class Bar(ChildObject):
+class Bar(core.BaseService):
     toggle_action = None
-    
-    def __init__(self, parent, action_group):
-        super(Bar, self).__init__(parent)
-        self.set_action_group(action_group)
-    
-    #############
-    # buffer
-    _buffer = None
-    
-    def _subscribe_buffer(self, buffer):
-        if buffer is None:
-            return None
-        else:
-            return self._buffer_subscription_factory(buffer, self)
-    
-    def set_buffer(self, buff):
-        if buff is None:
-            self._buffer = None
-        else:
-            self._buffer = weakref.ref(buff)
-
-        self._buffer_subscription = self._subscribe_buffer(buff)
-
-    
-    def get_buffer(self):
-        if self._buffer is None:
-            return None
-        return self._buffer()
-    
-    buffer = property(get_buffer, set_buffer)
     
     ############
     # Widget
@@ -127,5 +98,6 @@ class Bar(ChildObject):
         if event.keyval == KEY_ESCAPE:
             self.toggle_action.set_active(False)
 
+    
 
        

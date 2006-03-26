@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 __license__ = "MIT License <http://www.opensource.org/licenses/mit-license.php>"
 __copyright__ = (
     "2005-2006, Tiago Cogumbreiro "
@@ -13,17 +13,19 @@ __author__ = (
 
 import gtk
 import pango
-
+import interfaces
 try:
     from svbase import BaseView
 except ImportError:
     from tvbase import BaseView
 
-from replacebar import ReplaceBar
-from searchbar import SearchBar
-from buffers import CulebraBuffer
-from common import KEY_ESCAPE, ACTION_FIND_FORWARD, ACTION_FIND_BACKWARD
-
+import replacebar
+import searchbar
+from buffers import BaseBuffer
+import buffers
+from common import *
+#from common import create_dummy_action_group
+import core
 
 def _teardown_view(widget):
     widget.set_action_group(None)
@@ -33,17 +35,40 @@ def _teardown_view(widget):
     assert ref() is None
     delattr(widget, "replace_bar")
 
-class CulebraView(BaseView):
-    def __init__(self, action_group):
-        super(CulebraView, self).__init__()
-        self.search_bar = SearchBar(self, action_group)
-        self.replace_bar = ReplaceBar(self, self.search_bar, action_group)
-        self.set_action_group(action_group)
-        self.connect("destroy-event", _teardown_view)
+
+def register_services(service_provider):
+    services = ("view", interfaces.ICarretController,
+                interfaces.ISelectColors, interfaces.ISelectFont)
+                
+    service_provider.register_factory(lambda service_provider: CulebraView(), base_service=False, *services)
+    service_provider.register_factory(ActionGroupController, interfaces.IActionGroupController)
+    
+    # XXX: need a way to create a simple factory
+    view = service_provider.get_service("view")
+    service_provider.register_service(view.get_buffer(), "buffer")
+    
+    # Register other modules
+    searchbar.register_services(service_provider)
+    replacebar.register_services(service_provider)
+    buffers.register_services(service_provider)
+
+class ActionGroupController(core.BaseService):
+    search = core.Depends(interfaces.ISearchBar)
+    replace = core.Depends(interfaces.IReplaceBar)
     
     def set_action_group(self, action_group):
-        self.search_bar.set_action_group(action_group)
-        self.replace_bar.set_action_group(action_group)
+        self.search.set_action_group(action_group)
+        self.replace.set_action_group(action_group)
+
+class CulebraView(BaseView):
+    
+    def __init__(self):
+        super(CulebraView, self).__init__()
+        #super(CulebraView, self).set_buffer(CulebraBuffer())
+        # Make sure we have a 
+        super(CulebraView, self).set_buffer(BaseBuffer())
+        self.connect("destroy-event", _teardown_view)
+    
     
     def set_background_color(self, color):
         self.modify_base(gtk.STATE_NORMAL, color)
@@ -55,8 +80,9 @@ class CulebraView(BaseView):
         font_desc = pango.FontDescription(fontstring)
         if font_desc is not None:
             self.modify_font(font_desc)
-    
+
     def set_buffer(self, buff):
+        raise AttributeError
         self.replace_bar.set_buffer(buff)
         self.search_bar.set_buffer(buff)
         super(CulebraView, self).set_buffer(buff)
@@ -73,15 +99,15 @@ class CulebraView(BaseView):
         if event.keyval == KEY_ESCAPE:
             self.toggle_action.set_active(False)
 
-    def get_widget(self):
-        if self._widget is None:
-            self._widget = self.create_widget()
-            self._widget.connect("key-release-event", self._on_key_pressed)
-
-        
-        return self._widget
-    
-    widget = property(get_widget)
+#    def get_widget(self):
+#        if self._widget is None:
+#            self._widget = self.create_widget()
+#            self._widget.connect("key-release-event", self._on_key_pressed)
+#
+#        
+#        return self._widget
+#    
+#    widget = property(get_widget)
 
 
     def focus_carret(self):
@@ -90,6 +116,15 @@ class CulebraView(BaseView):
         line_iter = buff.get_iter_at_mark(mark)
         self.scroll_to_iter(line_iter, 0.25)
 
+    def goto_line(self, index):
+        buff = self.get_buffer()
+        # Get line iterator
+        line_iter = buff.get_iter_at_line(index)
+        # Move scroll to the line iterator
+        self.scroll_to_iter(line_iter, 0.25)
+        # Place the cursor at the begining of the line
+        buff.place_cursor(line_iter)
+        
 def create_widget(filename, action_group):
 
     vbox = gtk.VBox(spacing=12)
@@ -99,41 +134,63 @@ def create_widget(filename, action_group):
     scroller.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
     scroller.show()
     vbox.add(scroller)
-
-    editor = create_editor(filename, action_group)
+    
+    provider = create_editor(filename, action_group)
+    editor = provider.get_service("view")
+    
     editor.set_name("editor")
+    
+    search_bar = provider.get_service(interfaces.ISearchBar)
+    widget = search_bar.get_widget()
+    widget.set_name("search_bar")
+
+    replace_bar = provider.get_service(interfaces.IReplaceBar)
+    widget = replace_bar.get_widget()
+    widget.set_name("replace_bar")
+    
     editor.show()
     scroller.add(editor)
+    vbox.pack_end(replace_bar.widget, False, False)
+    vbox.pack_end(search_bar.widget, False, False)
     
-    vbox.pack_end(editor.replace_bar.widget, False, False)
-    vbox.pack_end(editor.search_bar.widget, False, False)
+    provider.register_service(vbox, interfaces.IWidget)
     
-    
-    return vbox, editor
+    return provider
 
 
 def create_editor(filename, action_group):
-    view = CulebraView(action_group)
-    # XXX: there's no way to select an encoding
-    buff = CulebraBuffer(filename)
+    provider = core.ServiceProvider()
+    register_services(provider)
+    ag = provider.get_service(interfaces.IActionGroupController)
+    ag.set_action_group(action_group)
+    view = provider.get_service("view")
     if filename is not None:
-        buff.get_file_ops().load()
-    view.set_buffer(buff)
+        file_ops = provider.get_service(interfaces.IFileOperations)
+        file_ops.set_filename(filename)
+        file_ops.load()
+        #view.set_buffer(buff)
     
-    return view
+    return provider
+
 
 
 def main():
-    import sys
+    import sys, gobject
     if len(sys.argv) == 2:
         filename = sys.argv[1]
     else:
-        filename = None
+        filename = __file__
+    ag = create_dummy_action_group()
+    
     win = gtk.Window()
-    editor = create_editor(filename, None)
+    provider = create_widget(filename, ag)
+    editor = provider.get_service(interfaces.IWidget)
     editor.show()
     win.add(editor)
     win.show()
+    ag.get_action(ACTION_FIND_TOGGLE).set_active(True)
+    ag.get_action(ACTION_REPLACE_TOGGLE).set_active(True)
+
     win.connect("delete-event", gtk.main_quit)
     gtk.main()
     win.destroy()

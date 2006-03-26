@@ -1,18 +1,41 @@
+import tempfile
 import unittest
 import buffers
 from buffers import *
+import interfaces
+import core
 
 class BufferCase(unittest.TestCase):
     def setUp(self):
-        self.buffer = buffers.CulebraBuffer()
+        self.buffer = buffers.BaseBuffer()
+        
+        provider = core.ServiceProvider()
+        register_services(provider)
+        provider.register_service(self.buffer, "buffer")
+        
+        self.search = provider.get_service(interfaces.ISearch)
+        self.replace = provider.get_service(interfaces.IReplace)
+        self.highlight = provider.get_service(interfaces.IHighlightSearch)
+        self.file_ops = provider.get_service(interfaces.IFileOperations)
+    
+    def do_search(self):
+        return self.search.search()
+    
+    def do_replace(self):
+        return self.replace.replace()
+    
+    def do_replace_all(self):
+        return self.replace.replace_all()
     
     def searchEquals(self, text, search, count=1):
         self.buffer.set_text(text)
-        self.buffer.search_text = search
+        
+        self.search.set_text(search)
+        
         self.buffer.place_cursor(self.buffer.get_start_iter())
         
         for val in range(count):
-            assert self.buffer.search()
+            assert self.search.search()
             self.textEquals(text)
     
     
@@ -32,34 +55,34 @@ class BufferCase(unittest.TestCase):
     
     def replaceAllEquals(self, text, search, replace, target):
         self.buffer.set_text(text)
-        self.buffer.search_text = search
-        self.buffer.replace_text = replace
-        self.buffer.replace_all()
+        self.search.set_text(search)
+        self.replace.set_text(replace)
+        self.replace.replace_all()
         self.textEquals(target)
     
     def replaceEquals(self, text, search, replace, target, offset=0, repeat=0):
         self.selectedTextEquals("")
         self.buffer.set_text(text)
-        self.buffer.search_text = search
-        self.buffer.replace_text = replace
+        self.search.set_text(search)
+        self.replace.set_text(replace)
 
         # Move to start
         self.buffer.place_cursor(self.buffer.get_start_iter())
         
         # selects next entry
-        assert self.buffer.search()
+        assert self.do_search()
         self.selectedTextEquals(search, "Search string %r not selected on %r" % (search, text))
         
         # Move the offset of search entries
         for val in range(offset):
-            assert self.buffer.search()
+            assert self.do_search()
         
         # replaces it
-        assert self.buffer.replace()
+        assert self.do_replace()
         # Repeat if necessary
         for val in range(repeat):
-            assert self.buffer.search()
-            assert self.buffer.replace()
+            assert self.do_search()
+            assert self.do_replace()
             
         self.textEquals(target, "Seach string not replace: %r != %r" % (text, target))
 
@@ -111,10 +134,10 @@ class TestReplace(BufferCase):
             replace = "def",
             target = "abc def ghi \n"
         )
-        assert self.buffer.search()
-        assert self.buffer.replace()
-        assert not self.buffer.search()
-        assert not self.buffer.replace()
+        assert self.do_search()
+        assert self.do_replace()
+        assert not self.do_search()
+        assert not self.do_replace()
 
         
         self.replaceEquals(
@@ -124,8 +147,8 @@ class TestReplace(BufferCase):
             target = "abc 123 ghi jkl",
             offset = 1
         )
-        assert not self.buffer.search()
-        assert not self.buffer.replace()
+        assert not self.do_search()
+        assert not self.do_replace()
     
     def test_replace_multiple(self):
         self.replaceEquals(
@@ -135,8 +158,8 @@ class TestReplace(BufferCase):
             target = "abc def ghi def",
             repeat = 1
         )
-        assert not self.buffer.search()
-        assert not self.buffer.replace()
+        assert not self.do_search()
+        assert not self.do_replace()
         
     def test_replace_nothing(self):
         text = "abc 123 ghi 123"
@@ -153,19 +176,19 @@ class TestReplace(BufferCase):
         self.buffer.place_cursor(self.buffer.get_start_iter())
         
         # selects next entry
-        assert not self.buffer.search()
+        assert not self.do_search()
         
         # replaces it
-        assert not self.buffer.replace()
+        assert not self.do_replace()
 
         # Repeat if necessary
         for val in range(3):
-            assert not self.buffer.search()
-            assert not self.buffer.replace()
+            assert not self.do_search()
+            assert not self.do_replace()
             
         self.textEquals(target, "Seach string not replace: %r != %r" % (text, target))
 
-class TestSearch(BufferCase):
+class TestSearch:#(BufferCase):
     def test_search(self):
         self.searchEquals(
             text = "foo1bar1foo",
@@ -259,14 +282,18 @@ class TestHighlight(BufferCase):
     
 
     def test_defaults(self):
-        assert not self.buffer.search_highlight
-        self.buffer.search_highlight = True
-        assert self.buffer.search_highlight
-        self.buffer.search_highlight = False
-        assert not self.buffer.search_highlight
+        hl = self.highlight
+        assert not hl.get_highlight()
+        hl.set_highlight(True)
+        assert hl.get_highlight()
         
+        hl.set_highlight(False)
+        assert not hl.get_highlight()
+
     def test_highlight(self):
-        self.buffer.search_highlight = True
+        
+        self.highlight.set_highlight(True)
+        
         self.searchEquals(
             text = "foo bar foo",
             search = "foo",
@@ -274,9 +301,9 @@ class TestHighlight(BufferCase):
         )
         
         self.checkHighlight(True)
-        assert self.buffer.search()
+        assert self.search.search()
         self.checkHighlight(True)
-        assert not self.buffer.search()
+        assert not self.search.search()
         self.checkHighlight(True)
 
     def test_no_highlight(self):
@@ -287,10 +314,11 @@ class TestHighlight(BufferCase):
         )
         
         self.checkHighlight(False)
-        assert self.buffer.search()
+        assert self.search.search()
         self.checkHighlight(False)
-        assert not self.buffer.search()
+        assert not self.search.search()
         self.checkHighlight(False)
+
 
     def test_half_highlight(self):
         self.searchEquals(
@@ -300,13 +328,13 @@ class TestHighlight(BufferCase):
         )
         
         self.checkHighlight(False)
-        assert self.buffer.search()
-        self.buffer.search_highlight = True
+        assert self.search.search()
+        self.highlight.set_highlight(True)
         self.checkHighlight(True)
-        assert not self.buffer.search()
+        assert not self.search.search()
         self.checkHighlight(True)
 
-import tempfile
+
 def read_file(filename):
     fd = open(filename)
     try:
@@ -323,10 +351,11 @@ def write_file(filename, data):
     finally:
         fd.close()
 
-class TestFileOperations(unittest.TestCase):
+class TestFileOperations(BufferCase):
     def setUp(self):
+        super(TestFileOperations, self).setUp()
         self.filenames = []
-        self.buff = CulebraBuffer()
+#        self.buff = BaseBuffer()
     
     def tearDown(self):
         for filename in self.filenames:
@@ -341,33 +370,31 @@ class TestFileOperations(unittest.TestCase):
         return filename
 
     def assertText(self, text):
-        self.assertEquals(text, self.buff.get_text(*self.buff.get_bounds()))
+        self.assertEquals(text, self.buffer.get_text(*self.buffer.get_bounds()))
 
     def assertNew(self):
-        assert self.buff.get_file_ops().get_is_new()
+        assert self.file_ops.get_is_new()
 
     def assertOld(self):
-        assert not self.buff.get_file_ops().get_is_new()
+        assert not self.file_ops.get_is_new()
 
     def test_save_file(self):
-        buff = self.buff
-        opers = buff.get_file_ops()
+        opers = self.file_ops
         self.assertNew()
 
         filename = self.create_file()
         opers.set_filename(filename)
         opers.set_encoding("utf-8")
-        buff.set_text("foo")
+        self.buffer.set_text("foo")
         self.assertNew()
         opers.save()
         self.assertOld()
         self.assertText(read_file(filename))
 
     def test_load_file(self):
-        buff = self.buff
         filename = self.create_file()
         write_file(filename, "foo")
-        opers = buff.get_file_ops()
+        opers = self.file_ops
         opers.set_filename(filename)
         opers.load()
         self.assertText("foo")

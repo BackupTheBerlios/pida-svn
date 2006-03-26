@@ -50,3 +50,11 @@ def get_action(get_action, name):
     action = get_action(name)
     assert action is not None, "Missing action: %r" % name
     return action
+
+def create_dummy_action_group():
+    ag = gtk.ActionGroup("search+replace")
+    for name in (ACTION_FIND_FORWARD, ACTION_FIND_BACKWARD, ACTION_REPLACE_FORWARD, ACTION_REPLACE_BACKWARD, ACTION_REPLACE_ALL):
+        ag.add_action(gtk.Action(name, None, None, "gtk-open"))
+    for name in (ACTION_FIND_TOGGLE, ACTION_REPLACE_TOGGLE):
+        ag.add_action(gtk.ToggleAction(name, None, None, "gtk-open"))
+    return ag

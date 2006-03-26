@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 __license__ = "MIT License <http://www.opensource.org/licenses/mit-license.php>"
 __copyright__ = "2005, Tiago Cogumbreiro"
 __author__ = "Tiago Cogumbreiro <cogumbreiro@users.sf.net>"
@@ -9,21 +9,10 @@ import weakref
 from common import ACTION_FIND_TOGGLE, ACTION_REPLACE_FORWARD, ACTION_REPLACE_ALL
 from common import escape_text, unescape_text
 from common import get_action, ACTION_REPLACE_TOGGLE
-
+from gtkutil import subscribe_proxy, signal_holder
 from bar import Bar
-    
-class BufferSubscription:
-    def __init__(self, buff, obj):
-        # Register to a 'replace_text_changed' event
-        buff.replace_component.events.register("changed", obj.on_replace_changed)
-        buff.replace_text = obj.replace_entry.get_text()
-        self.obj = weakref.ref(obj)
-        self.buff = weakref.ref(buff)
-    
-    def _unbind_buffer(self, buff):
-        cb = self.obj().on_replace_changed
-        self.buff().replace_component.events.unregister("changed", cb)
-    
+import interfaces
+import core
 
 class ReplaceBar(Bar):
     """
@@ -31,28 +20,25 @@ class ReplaceBar(Bar):
     synchronized with the selected text.
     """
     
-    _buffer_subscription_factory = BufferSubscription
+    search_bar = core.Depends(interfaces.ISearchBar)
+    replace = core.Depends(interfaces.IReplace)
+    search = core.Depends(interfaces.ISearch)
+    carret = core.Depends(interfaces.ICarretController)
     
-    def __init__(self, parent, search_bar, action_group):
-        self._search_bar = weakref.ref(search_bar)
-        super(ReplaceBar, self).__init__(parent, action_group)
+    def __init__(self):
+        btn = gtk.Button(stock=gtk.STOCK_FIND_AND_REPLACE)
+        self.btn_replace_forward = btn
+        btn = gtk.Button(stock=gtk.STOCK_FIND_AND_REPLACE)
+        btn.set_label("Replace All")
+        self.btn_replace_all = btn
+    
+    def _bind(self, service_provider):
+        cb = self.on_replace_changed
+        self.evt = self.replace.register_event("text-changed", cb)
     
     def _create_toggle_action(self, action_group):
         action = lambda name: get_action(action_group.get_action, name)
-        self.toggle_find = action(ACTION_FIND_TOGGLE)
-        self.replace_forward = action(ACTION_REPLACE_FORWARD)
-        self.replace_all = action(ACTION_REPLACE_ALL)
         return action(ACTION_REPLACE_TOGGLE)
-    
-    ##############
-    # Properties
-    
-    #############
-    # search_bar
-    def get_search_bar(self):
-        return self._search_bar()
-    
-    search_bar = property(get_search_bar)
     
     ###################
     # replace_entry
@@ -99,26 +85,45 @@ class ReplaceBar(Bar):
         self.replace_entry.show()
         hig_add(hbox, self.replace_entry)
         
-        btn = gtk.Button(stock=gtk.STOCK_FIND_AND_REPLACE)
-        self.replace_forward.connect_proxy(btn)
+        btn = self.btn_replace_forward
         btn.show()
         hig_add(hbox, btn)
         
-        btn = gtk.Button(stock=gtk.STOCK_FIND_AND_REPLACE)
-        btn.set_label("Replace All")
-        self.replace_all.connect_proxy(btn)
+        btn = self.btn_replace_all
         btn.show()
         hig_add(hbox, btn)
-
-        self.replace_forward.connect("activate", self.on_replace_curr)
-        self.replace_all.connect("activate", self.on_replace_all)
 
         self.search_bar.widget.connect("key-release-event", self._on_key_pressed)
-        
         return hbox
+    
+    
+    def set_action_group(self, action_group):
+        super(ReplaceBar, self).set_action_group(action_group)
+        # This is a little gimmnick to make it not throw an exception
+        # Since the holders return None when the first argument is
+        # None.
+        if action_group is None:
+            get_action = lambda name: None
+        else:
+            get_action = lambda name: action_group.get_action(name)
+        
+        replace_forward = get_action(ACTION_REPLACE_FORWARD)
+        replace_all = get_action(ACTION_REPLACE_ALL)
+        self.toggle_find = get_action(ACTION_FIND_TOGGLE)
+        self.signal_1 = signal_holder(replace_forward, "activate", self.on_replace_curr)
+        self.signal_2 = signal_holder(replace_all, "activate", self.on_replace_all)
+        
+        sbs = subscribe_proxy(replace_forward, self.btn_replace_forward)
+        self.replace_forward_src = sbs
+        
+        sbs = subscribe_proxy(replace_all, self.btn_replace_all)
+        self.replace_all_src = sbs
+        
+
     
     ##################
     # Template methods
+    
 
     def _bind_buffer(self, buff):
         buff.replace_component.events.register("changed", self.on_replace_changed)
@@ -128,10 +133,14 @@ class ReplaceBar(Bar):
         buff.replace_component.events.unregister("changed", self.on_replace_changed)
 
     def on_show(self, dialog):
+        if self.toggle_find is None:
+            return
         self.toggle_find.set_active(True)
         self.toggle_find.set_sensitive(False)
     
     def on_hide(self, dialog):
+        if self.toggle_find is None:
+            return
         self.toggle_find.set_active(False)
         self.toggle_find.set_sensitive(True)
     
@@ -142,19 +151,23 @@ class ReplaceBar(Bar):
         self.replace_model.append((self.replace_entry.get_text(),))
     
     def on_replace_curr(self, btn):
-        if self.buffer.replace() and self.can_update_history():
+        if self.replace.replace() and self.can_update_history():
             self.update_history()
 
-        self.buffer.search()
-        self.get_parent().focus_carret()
+        self.search.search()
+        self.carret.focus_carret()
     
     def on_replace_all(self, btn):
-        if self.buffer.replace_all() and self.can_update_history():
+        if self.replace.replace_all() and self.can_update_history():
             self.update_history()
             self.get_parent().focus_carret()
         
     def on_entry_changed(self, entry):
-        self.buffer.replace_text = unescape_text(entry.get_text())
+        self.replace.set_text(unescape_text(entry.get_text()))
     
-    def on_replace_changed(self, text):
+    def on_replace_changed(self, replace):
+        text = replace.get_text()
         self.replace_entry.set_text(escape_text(text))
+
+def register_services(service_provider):
+    service_provider.register_factory(ReplaceBar, interfaces.IReplaceBar)
