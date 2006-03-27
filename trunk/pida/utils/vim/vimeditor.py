@@ -184,7 +184,7 @@ class vim_editor(object):
 
     def vim_bufferchange(self, server, cwd, filename, bufnr):
         self.log.debug('vim buffer change "%s"', filename)
-        if not filename:
+        if not filename or filename in '-MiniBufExplorer-':
             return
         if os.path.abspath(filename) != filename:
             filename = os.path.join(cwd, filename)
