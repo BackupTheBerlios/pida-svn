@@ -22,7 +22,7 @@
 #SOFTWARE.
 
 import subprocess
-
+import os
 import gobject
 import pida.pidagtk.tree as tree
 
@@ -41,6 +41,7 @@ class GobjectReader(gobject.GObject):
     gsignal('status-data', str)
 
     def __init__(self):
+        self.__watch = None
         self.__q = []
         self.pid = None
         super(GobjectReader, self).__init__()
@@ -51,7 +52,8 @@ class GobjectReader(gobject.GObject):
             self._run()
 
     def stop(self):
-        gobject.source_remove(self.__watch)
+        if self.__watch is not None:
+            gobject.source_remove(self.__watch)
         if not self.pid:
             return
         try:

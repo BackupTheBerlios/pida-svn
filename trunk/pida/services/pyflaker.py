@@ -21,20 +21,19 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+import textwrap
+
+import gobject
+
+import pida.pidagtk.tree as tree
 import pida.core.service as service
-import compiler
-import sys
+import pida.core.actions as actions
+from pida.utils.kiwiutils import gsignal
+import pida.pidagtk.contentview as contentview
+from pida.utils.gobjectlinereader import GobjectReader
 
 defs = service.definitions
 types = service.types
-import gobject
-import pida.pidagtk.contentview as contentview
-import pida.pidagtk.tree as tree
-
-from pida.utils.gobjectlinereader import GobjectReader
-import pida.core.actions as actions
-import textwrap
-import threading
 
 READER_PYFLAKES = 0
 READER_PYCHECKER = 1
@@ -49,6 +48,7 @@ READER_NAMES = {
     }
 
 import gtk
+import gobject
 
 class Message(object):
 
@@ -67,98 +67,72 @@ class Message(object):
         self.checker = READER_NAMES[checker]
     
 
+class ErrorReader(gobject.GObject):
+
+    gsignal('started')
+
+    gsignal('data', gobject.TYPE_PYOBJECT)
+
+    def __init__(self):
+        super(ErrorReader, self).__init__()
+        self._readers = {}
+        for name in [READER_PYFLAKES, READER_PYLINT, READER_PYCHECKER]:
+            self._readers[name] = GobjectReader()
+            self._readers[name].connect('data', self.cb_data, name)
+    
+    def run(self, filename, readers):
+        self.stop_reader(READER_PYFLAKES)
+        self.stop_reader(READER_PYLINT)
+        self.stop_reader(READER_PYCHECKER)
+        self.emit('started')
+        if READER_PYFLAKES in readers:
+            self.run_flakes(filename)
+        if READER_PYLINT in readers:
+            self.run_lint(filename)
+        if READER_PYCHECKER in readers:
+            self.run_checker(filename)
+
+    def run_flakes(self, filename):
+        try:
+            self._readers[READER_PYFLAKES].run('pyflakes', filename)
+        except OSError:
+            pass
+
+    def run_lint(self, filename):
+        try:
+            self._readers[READER_PYLINT].run('pylint', '--parseable=y',
+                                             '-r', 'n', filename)
+        except OSError:
+            pass
+
+    def run_checker(self, filename):
+        try:
+            self._readers[READER_PYCHECKER].run('pychecker', '-Q', '-q',
+            '--blacklist="Tkinter,wxPython,gtk,GTK,GDK,wx,_gobject,gobject"',
+            '-a', '-I', '-8', '-1', filename)
+        except OSError:
+            pass
+
+    def stop_reader(self, name):
+        self._readers[name].stop()
+
+    def cb_data(self, reader, data, name):
+        m = Message(data, name)
+        self.emit('data', m)
+
+
 class MultiSubprocesslist(tree.Tree):
 
     SORT_AVAILABLE = [('Line number', 'linenumber')]
     SORT_CONTROLS = True
 
     def __init__(self, readerbut):
-        self._readers = {}
-        for name in [READER_PYCHECKER, READER_PYLINT, READER_PYFLAKES]:
-            self.create_reader(name)
         super(MultiSubprocesslist, self).__init__()
         self.set_property('markup-format-string',
                           '<tt>%(checker)s '
                           '%(linenumber)s </tt>%(data)s')
         self.view.set_expander_column(self.view.get_column(1))
-        self._q = []
-        self._readerbut = readerbut
 
-    def create_reader(self, name):
-        r = GobjectReader()
-        r.connect('started', self.cb_started, name)
-        r.connect('finished', self.cb_finished, name)
-        r.connect('data', self.cb_data, name)
-        self._readers[name] = r
-
-    def run_all(self, checkers, *args):
-        self._readerbut.set_sensitive(False)
-        self._q.append((checkers, args))
-        if len(self._q) == 1:
-            self._run()
-
-    def _run(self):
-        if not len(self._q):
-            return
-        self.clear()
-        self._checkers, args = self._q[0]
-        for name in self._checkers:
-            self.run(name, *args)
-
-    def run(self, name, *args):
-        if name == READER_PYCHECKER:
-            margs = ['pychecker', '-Q', '-q',
-            '--blacklist="Tkinter,wxPython,gtk,GTK,GDK,wx,_gobject,gobject"',
-            '-a', '-I', '-8', '-1']
-        elif name == READER_PYLINT:
-            margs = ['pylint', '--parseable=y', '-r', 'n']
-        else:
-            margs = ['pyflakes']
-        args = margs + list(args)
-        try:
-            self._readers[name].run(*args)
-        except OSError:
-            # The application does not exist or there was some kind of error
-            # trying to run it
-            pass
-
-    def make_item(self, data, checker):
-        """For overriding"""
-        return Message(data, checker)
-
-    def cb_data(self, reader, data, name):
-        try:
-            item = self.make_item(data, name)
-            def _a(item):
-                self.add_item(item)
-            gobject.idle_add(_a, item)
-        except ValueError:
-            pass
-
-    def cb_started(self, reader, name):
-        pass
-
-    def cb_finished(self, reader, currargs, name):
-        self._checkers.remove(name)
-        if not len(self._checkers):
-            self._q.pop(0)
-            self._run()
-            self._readerbut.set_sensitive(True)
-
-    def has_cached(self, filename):
-        return False
-
-    def load_stored(self, filename):
-        self.clear()
-        for item in self._cached[filename]:
-            def _a(item):
-                self.add_item(item)
-            gobject.idle_add(_a, item)
-            
-
-    def uncache(self, filename):
-        if self.has_cached(filename):
-            del self._cached[filename]
 
 class pyflake_view(contentview.content_view):
 
@@ -167,7 +141,7 @@ class pyflake_view(contentview.content_view):
     HAS_CONTROL_BOX = True
 
     LONG_TITLE = 'Python errors'
-    SHORT_TITLE = 'Flakes'
+    SHORT_TITLE = 'Py Errors'
 
     def init(self):
         refbut = gtk.ToolButton(stock_id=gtk.STOCK_REFRESH)
@@ -190,19 +164,22 @@ class pyflake_view(contentview.content_view):
         def _a(but):
             self.service.call('check_current_document')
         refbut.connect('clicked', _a)
+        self._reader = ErrorReader()
+        self._reader.connect('data', self.cb_message)
+        self._reader.connect('started', self.cb_started)
 
-    def check(self, filename):
-        if self.__list.has_cached(filename):
-            self.__list.load_stored(filename)
-        else:
-            checkers = []
-            if self._lint.get_active():
-                checkers.append(READER_PYLINT)
-            if self._checker.get_active():
-                checkers.append(READER_PYCHECKER)
-            if self._flakes.get_active():
-                checkers.append(READER_PYFLAKES)
-            self.__list.run_all(checkers, filename)
+    def check(self, filename, uncache=False):
+        self._reader.run(filename, self.get_active_readers())
+
+    def get_active_readers(self):
+        readers = []
+        if self._flakes.get_active():
+            readers.append(READER_PYFLAKES)
+        if self._lint.get_active():
+            readers.append(READER_PYLINT)
+        if self._checker.get_active():
+            readers.append(READER_PYCHECKER)
+        return readers
     
     def error(self, msg):
         self.__list.clear()
@@ -213,6 +190,12 @@ class pyflake_view(contentview.content_view):
         self.service.boss.call_command('editormanager', 'goto_line',
                                         linenumber=item.value.linenumber)
 
+    def cb_message(self, reader, message):
+        self.__list.add_item(message)
+
+    def cb_started(self, reader):
+        self.__list.clear()
+
 class pyflaker(service.service):
 
     display_name = 'Python Error Checking'
@@ -222,11 +205,11 @@ class pyflaker(service.service):
         class pylint(defs.option):
             """Use Pylint to check."""
             rtype = types.boolean
-            default = True
+            default = False
         class pychecker(defs.option):
             """Use Pychecker to check."""
             rtype = types.boolean
-            default = True
+            default = False
         class pyflakes(defs.option):
             """Use Pyflakes to check."""
             rtype = types.boolean
@@ -254,6 +237,8 @@ class pyflaker(service.service):
                 self.__view.close()
 
     def cmd_check_current_document(self):
+        if self.__view is None:
+            return
         if self._currentdocument is None:
             self.__view.error('There is no current file.')
         elif not self._currentdocument.filename.endswith('.py'):
@@ -261,8 +246,8 @@ class pyflaker(service.service):
         else:
             self.call('check', document=self._currentdocument)
 
-    def cmd_check(self, document):
-        self.__view.check(document.filename)
+    def cmd_check(self, document, uncache=False):
+        self.__view.check(document.filename, uncache)
 
     def init(self):
         self.__view = None
@@ -270,6 +255,7 @@ class pyflaker(service.service):
 
     def bnd_buffermanager_document_changed(self, document):
         self._currentdocument = document
+        self.cmd_check_current_document()
 
     def get_plugin_view(self):
         return self.__view
@@ -278,6 +264,10 @@ class pyflaker(service.service):
     def view_closed(self, view):
         self.__view = None
         self.action_group.get_action('pyflaker+show').set_active(False)
+
+    def bnd_buffermanager_document_modified(self, document):
+        if self._currentdocument is document:
+            self.cmd_check(document, uncache=True)
 
     def get_menu_definition(self):
         return """
