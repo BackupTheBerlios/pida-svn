@@ -247,6 +247,8 @@ class pyflaker(service.service):
             self.call('check', document=self._currentdocument)
 
     def cmd_check(self, document, uncache=False):
+        if self.__view is None:
+            return
         self.__view.check(document.filename, uncache)
 
     def init(self):
