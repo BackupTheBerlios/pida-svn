@@ -39,7 +39,6 @@ def register_services(service_provider):
                 
     service_provider.register_simple_factory(
         lambda service_provider: CulebraView(),
-        base_service = False,
         *services
     )
     service_provider.register_simple_factory(
