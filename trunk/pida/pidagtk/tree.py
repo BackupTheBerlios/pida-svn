@@ -274,9 +274,14 @@ class Tree(gtk.VBox):
         row = [key, titem, self.__get_markup(item)]
         niter = self.model.append(parent, row)
         def reset():
-            self.model.set_value(niter, 2, self.get_markup(item))
-        titem.reset_markup = reset
-        item.reset_markup = reset
+            for model, ite in item._tree_models:
+                model.set_value(ite, 2, self.get_markup(item))
+        for obj in [item, titem]:
+            if not hasattr(obj, 'reset_markup'):
+                obj.reset_markup = reset
+            if not hasattr(obj, '_tree_models'):
+                obj._tree_models = []
+            obj._tree_models.append([self.model, niter])
         return niter
 
     def __get_markup(self, item):
@@ -457,10 +462,15 @@ class IconTree(Tree):
         row = [key, titem, self.get_markup(item), pixbuf]
         niter = self.model.append(parent, row)
         def reset():
-            self.model.set_value(niter, 2, self.get_markup(item))
-            self.model.set_value(niter, 3, item.pixbuf)
-        titem.reset_markup = reset
-        item.reset_markup = reset
+            for model, ite in item._tree_models:
+                model.set_value(ite, 2, self.get_markup(item))
+                model.set_value(ite, 3, item.pixbuf)
+        for obj in [item, titem]:
+            if not hasattr(obj, 'reset_markup'):
+                obj.reset_markup = reset
+            if not hasattr(obj, '_tree_models'):
+                obj._tree_models = []
+            obj._tree_models.append([self.model, niter])
         return niter
 
 class ToggleTree(Tree):
