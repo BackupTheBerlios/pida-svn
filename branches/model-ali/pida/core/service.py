@@ -23,7 +23,6 @@
 
 # pIDA imports
 import base
-import event
 import command
 import shelve
 import registry
@@ -41,6 +40,8 @@ import os
 from actions import split_function_name
 from pida.utils.servicetemplates import build_optiongroup_from_class
 from errors import CommandNotFoundError
+
+from pida.core.event import events_mixin, bindings_mixin
 
 class options_mixin(object):
     """Configuration options support."""
@@ -149,38 +150,6 @@ class actions_mixin(object):
     action_group = property(get_action_group)
 
 
-class events_mixin(object):
-
-    __events__ = []
-    
-    def init(self):
-        self.__events = event.event()
-        for evtclass in self.__events__:
-            evtname = evtclass.__name__
-            self.__events.create_event(evtname)
-
-    def get_events(self):
-        return self.__events
-    events = property(get_events)
-
-
-class bindings_mixin(object):
-
-    __bindings__ = []
-
-    def init(self):
-        pass
-
-    def bind(self):
-        for bndfunc in self.__bindings__:
-            evtstring = split_function_name(bndfunc.func_name)
-            servicename, eventname = evtstring.split('_', 1)
-            svc = self.get_service(servicename)
-            func = getattr(self, bndfunc.func_name)
-            if svc.events.has_event(eventname):
-                svc.events.register(eventname, func)
-            else:
-                self.log.error('event "%s" does not exist', eventname)
 
 
 class document_type_mixin(object):

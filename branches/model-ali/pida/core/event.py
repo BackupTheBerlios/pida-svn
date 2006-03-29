@@ -22,6 +22,7 @@
 #SOFTWARE.
 
 import base
+from pida.core.actions import split_function_name
 
 class event(base.pidacomponent):
 
@@ -86,4 +87,37 @@ class event(base.pidacomponent):
     def list_events(self):
         return self.__events.keys()
 
+
+class events_mixin(object):
+
+    __events__ = []
+    
+    def init(self):
+        self.__events = event()
+        for evtclass in self.__events__:
+            evtname = evtclass.__name__
+            self.__events.create_event(evtname)
+
+    def get_events(self):
+        return self.__events
+    events = property(get_events)
+
+
+class bindings_mixin(object):
+
+    __bindings__ = []
+
+    def init(self):
+        pass
+
+    def bind(self):
+        for bndfunc in self.__bindings__:
+            evtstring = split_function_name(bndfunc.func_name)
+            servicename, eventname = evtstring.split('_', 1)
+            svc = self.get_service(servicename)
+            func = getattr(self, bndfunc.func_name)
+            if svc.events.has_event(eventname):
+                svc.events.register(eventname, func)
+            else:
+                self.log.error('event "%s" does not exist', eventname)
 
