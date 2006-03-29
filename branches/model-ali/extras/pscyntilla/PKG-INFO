@@ -1,0 +1,14 @@
+Metadata-Version: 1.0
+Name: PygtkScintilla
+Version: 1.99.5
+Summary: Python wrapper for Scintilla under GTK2
+Home-page: http://sra.itc.it/people/cavada/PyScintilla2.html
+Author: Roberto Cavada
+Author-email: cavada@irst.itc.it
+License: UNKNOWN
+Description: 
+        PyGtkScintilla is a wrapper for the widget Scintilla, a textual editing component.
+        
+        PyGtkScintilla is based on PyGtk2, the Python binding for the GTK toolkit.
+        
+Platform: UNKNOWN
