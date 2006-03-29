@@ -21,6 +21,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 import base
+from pida.core.actions import split_function_name
 
 class argument(base.pidacomponent):
     """An argument for a command."""
@@ -40,7 +41,6 @@ class argument(base.pidacomponent):
         return self.__required
     """Property for whether the argument is required."""
     required = property(get_required)
-
 
 class command(base.pidacomponent):
     """A class to represent a command."""
@@ -79,3 +79,40 @@ class exceptions(object):
 
     class bad_arguments_error(Exception):
         pass
+
+class commands_mixin(object):
+    """Command support."""
+    __commands__ = []
+
+    def init(self):
+        self.__commands = commandgroup(self.NAME)
+        self.__init()
+
+    def __init(self):
+        for cmdfunc in self.__class__.__commands__:
+            name = split_function_name(cmdfunc.func_name)
+            selffunc = getattr(self, cmdfunc.func_name)
+            self.__commands.new(name, selffunc, [])
+
+    def get_commands(self):
+        return self.__commands
+    commands = property(get_commands)
+
+    def call(self, commandname, **kw):
+        command = self.commands.get(commandname)
+        if command is not None:
+            self.log.debug('calling "%s" with "%s"', commandname, kw)
+            result = self.__call_command(command, **kw)
+            self.log.debug('called "%s" with result "%s"',
+                           commandname, result)
+            return result
+        else:
+            raise CommandNotFoundError(commandname)
+
+    def __call_command(self, command, **kw):
+        return command(**kw)
+
+    def call_external(self, servicename, commandname, **kw):
+        svc = self.get_service(servicename)
+        return svc.call(commandname, **kw)
+

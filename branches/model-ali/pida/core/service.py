@@ -42,6 +42,7 @@ from pida.utils.servicetemplates import build_optiongroup_from_class
 from errors import CommandNotFoundError
 
 from pida.core.event import events_mixin, bindings_mixin
+from pida.core.command import commands_mixin
 
 class options_mixin(object):
     """Configuration options support."""
@@ -82,42 +83,6 @@ class options_mixin(object):
 
     opt = get_option
 
-
-class commands_mixin(object):
-    """Command support."""
-    __commands__ = []
-
-    def init(self):
-        self.__commands = command.commandgroup(self.NAME)
-        self.__init()
-
-    def __init(self):
-        for cmdfunc in self.__class__.__commands__:
-            name = split_function_name(cmdfunc.func_name)
-            selffunc = getattr(self, cmdfunc.func_name)
-            self.__commands.new(name, selffunc, [])
-
-    def get_commands(self):
-        return self.__commands
-    commands = property(get_commands)
-
-    def call(self, commandname, **kw):
-        command = self.commands.get(commandname)
-        if command is not None:
-            self.log.debug('calling "%s" with "%s"', commandname, kw)
-            result = self.__call_command(command, **kw)
-            self.log.debug('called "%s" with result "%s"',
-                           commandname, result)
-            return result
-        else:
-            raise CommandNotFoundError(commandname)
-
-    def __call_command(self, command, **kw):
-        return command(**kw)
-
-    def call_external(self, servicename, commandname, **kw):
-        svc = self.get_service(servicename)
-        return svc.call(commandname, **kw)
 
 
 class actions_mixin(object):
