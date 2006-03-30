@@ -42,7 +42,16 @@ def get_defintion_attrs(definition):
 def get_groups(definition):
     for group in get_defintion_attrs(definition):
         L = []
-        G = (group.__name__, group.__doc__, L)
+        name = group.__name__
+        if hasattr(group, 'stock_id'):
+            stock_id = group.stock_id
+        else:
+            stock_id = ''
+        if hasattr(group, 'label'):
+            label = group.label
+        else:
+            label = name
+        G = (name, group.__doc__, label, stock_id, L)
         for attr in get_defintion_attrs(group):
             a = ModelAttribute.from_definition(group.__name__, attr)
             L.append(a)
@@ -90,48 +99,55 @@ class ModelAttribute(object):
                    dependents, fget)
 
 
+def add_attr_to_class(classdict, attr):
+    prop_name = attr.key
+    attr_name = '_%s' % prop_name
+    if attr.fget is not None:
+        fget = getattr(attr, 'fget')
+        fset = None
+    else:
+        classdict[attr_name] = attr.default
+        def fget(self, attr_name=attr_name):
+            return getattr(self, attr_name)
+        def fset(self, val, attr_name=attr_name, prop_name=prop_name):
+            setattr(self, attr_name, val)
+            self.__model_notify__([prop_name])
+    classdict[attr.key] = property(fget, fset)
+
 class Model(object):
 
-    def __init__(self, definition):
-        self.__model_attrs__ = []
-        self.__model_attrs_map__ = {}
-        self.__model_groups__ = []
+    def __init__(self):
         self.__model_observers__ = {}
         self.__model_dependents__ = {}
         self.__model_blocked__ = {}
         self.__model_ini_filename__ = None
-        self.__model_from_definition__(definition)
+        for attr_key in self.__model_attrs_map__:
+            self.__model_observers__[attr_key] = set()
+            self.__model_blocked__[attr_key] = set()
+        self.__model_dependents__ = self.__class__.__model_dependents__
 
-    def __model_from_definition__(self, definition):
-        for group_name, group_doc, attrs in get_groups(definition):
-            self.__model_groups__.append((group_name, group_doc,
-                [attr.key for attr in attrs]))
+    @classmethod
+    def __model_from_definition__(cls, definition):
+        classdict = dict(cls.__dict__)
+        classdict['__model_attrs__'] = []
+        classdict['__model_attrs_map__'] = {}
+        classdict['__model_groups__'] = []
+        classdict['__model_dependents__'] = {}
+        for group_name, group_doc, label, stock_id, attrs in \
+                                                get_groups(definition):
+            classdict['__model_groups__'].append((group_name, group_doc,
+                label, stock_id, [attr.key for attr in attrs]))
             for attr in attrs:
-                self.__model_build_attr__(attr)
-                self.__model_attrs__.append(attr)
+                add_attr_to_class(classdict, attr)
+                classdict['__model_attrs__'].append(attr)
                 attr_key = attr.key
-                self.__model_attrs_map__[attr_key] = attr
-                self.__model_observers__[attr_key] = set()
-                self.__model_dependents__[attr_key] = set()
-                self.__model_blocked__[attr_key] = set()
-                self.__model_register_dependent__(attr_key, attr.dependents)
-        setattr(self.__class__, '__model_markup__',
-                property(definition.__markup__))
-
-    def __model_build_attr__(self, attr):
-        prop_name = attr.key
-        attr_name = '_%s' % prop_name
-        if attr.fget is not None:
-            fget = getattr(attr, 'fget')
-            fset = None
-        else:
-            setattr(self, attr_name, attr.default)
-            def fget(self, attr_name=attr_name):
-                return getattr(self, attr_name)
-            def fset(self, val, attr_name=attr_name):
-                setattr(self, attr_name, val)
-                self.__model_notify__([prop_name])
-        setattr(self.__class__, attr.key, property(fget, fset))
+                classdict['__model_attrs_map__'][attr_key] = attr
+                classdict['__model_dependents__'][attr_key] = set()
+                for depattr in attr.dependents:
+                    classdict['__model_dependents__'][depattr].add(attr_key)
+        classdict['__model_markup__'] = property(definition.__markup__)
+        newcls = type('%sModel' % definition.__name__, (cls,), classdict)
+        return newcls
 
     def __model_notify__(self, attrs):
         for attr in attrs:
@@ -146,10 +162,6 @@ class Model(object):
             attrs = self.__model_attrs_map__.keys()
         for attr in attrs:
             self.__model_observers__[attr].add(observer)
-
-    def __model_register_dependent__(self, attr, depattrs):
-        for depattr in depattrs:
-            self.__model_dependents__[depattr].add(attr)
 
     def __model_unregister__(self, observer, attrs):
         for attr in attrs:

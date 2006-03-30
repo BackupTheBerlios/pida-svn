@@ -13,14 +13,15 @@ def get_tempopts(filename):
         f.close()
     return tempopts
 
-def load_model_from_ini(filename, definition):
-    model = Model(definition)
+def load_model_from_ini(filename, model):
     model.__model_ini_filename__ = filename
     tempopts = get_tempopts(filename)
     for attr in model.__model_attrs_map__.values():
         if tempopts.has_option(attr.group, attr.name):
             data = tempopts.get(attr.group, attr.name)
             val = attr.rtype.unserialize(data)
+            if val == '':
+                val = attr.default
             property_evading_setattr(model, attr.key, val)
     return model
 
@@ -39,7 +40,8 @@ class IniFileObserver(BaseMultiModelObserver):
             return
         f = open(model.__model_ini_filename__, 'w')
         f.write(self.file_intro)
-        for groupname, doc, attrkeys in model.__model_groups__:
+        for groupname, doc, label, stock_id, attrkeys in \
+                                            model.__model_groups__:
             f.write('\n[%s]\n' % groupname)
             for attrname in attrkeys:
                 attr = model.__model_attrs_map__[attrname]

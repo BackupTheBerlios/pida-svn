@@ -86,12 +86,14 @@ from pida.pidagtk.tree import Tree
 
 
 import gtk
+import attrtypes as types
 
 from kiwi.ui.widgets.checkbutton import CheckButton
 from kiwi.ui.widgets.filechooser import ProxyFileChooserButton
 from kiwi.ui.widgets.fontbutton import ProxyFontButton
 from kiwi.ui.widgets.colorbutton import ProxyColorButton
 from kiwi.ui.widgets.spinbutton import ProxySpinButton
+from kiwi.ui.widgets.combo import ProxyComboBox
 from kiwi.ui.widgets.entry import Entry
 from kiwi.ui.widgets.label import Label, ProxyLabel
 from cgi import escape
@@ -146,7 +148,6 @@ class WidgetObserver(BaseSingleModelObserver):
             val = getattr(self._model, attr) or False
             widget.set_sensitive(val)
 
-from registry import types
 
 def get_widget_for_type(rtype):
     if rtype is types.boolean:
@@ -174,6 +175,15 @@ def get_widget_for_type(rtype):
         return w
     elif rtype is types.readonly:
         return FormattedLabel(VC_NAME_MU)
+    elif rtype.__name__ is 'stringlist':
+        w = ProxyComboBox()
+        w.set_property('data-type', str)
+        w.prefill(rtype.choices)
+       # 
+       # for choice in rtype.choices:
+        #    w.append_item(choice)
+        #w.prefill(rtype.choices[0])
+        return w
     else:
         return Entry(data_type=str)
 
@@ -185,6 +195,7 @@ class TreeObserver(Tree, BaseMultiModelObserver):
 
     def __init__(self, model_attributes, current_callback):
         Tree.__init__(self)
+        self.set_property('markup-format-string', '%(__model_markup__)s')
         BaseMultiModelObserver.__init__(self, model_attributes)
         self._current_callback = current_callback
         self.connect('clicked', self.cb_clicked)
@@ -221,8 +232,8 @@ class PropertyPage(WidgetObserver):
             return
         for page in xrange(self._nb.get_n_pages()):
             self._nb.remove_page(page)
-        for group, doc, attr_names in model.__model_groups__:
-            self.add_page(group, gtk.STOCK_OK, doc, attr_names)
+        for group, doc, label, stock_id, attr_names in model.__model_groups__:
+            self.add_page(group, label, stock_id, doc, attr_names)
         for attr in model.__model_attrs__:
             widget = get_widget_for_type(attr.rtype)
             self.pack_widget(widget, attr=attr.key,
@@ -235,7 +246,7 @@ class PropertyPage(WidgetObserver):
     def get_widget(self):
         return self._nb
 
-    def add_page(self, title, stock_id, description, attrs):
+    def add_page(self, group, title, stock_id, description, attrs):
         page = gtk.VBox()
         page.pack_start(self.create_title_label(title,
             description, stock_id), expand=False)
@@ -307,98 +318,6 @@ class PropertyPage(WidgetObserver):
         hb.show_all()
         return hb
 
-
-class ProjectDefinition(object):
-    __order__ = ['source']
-
-    class source:
-        """
-        Options relating to source
-        """
-        __order__ = ['uses', 'directory', 'uses_vc', 'vc_name']
-        class uses:
-            """
-            Whether the project has source code
-            """
-            rtype = types.boolean
-            label = 'Uses Source'
-            default = True
-
-        class directory:
-            """
-            The location of theproject's source directory
-            """
-            rtype = types.intrange(1, 99, 1)
-            label = 'Source Directory'
-            default = 25
-            sensitive_attr = 'source__uses'
-
-        class uses_vc:
-            """
-            Whether the project uses version control
-            """
-            rtype = types.boolean
-            label = 'Uses Version Control'
-            default = True
-            sensitive_attr = 'source__uses'
-
-        class vc_name:
-            """
-            The version control system
-            """
-            rtype = types.readonly
-            label = 'Version cntrol System'
-            default = None
-            sensitive_attr = 'source__uses_vc'
-            dependents = ['source__directory']
-
-            @staticmethod
-            def fget(model):
-                return model.source__directory + 1
-
-       
-
-    @staticmethod
-    def __markup__(self):
-        from cgi import escape
-        return escape('%s' % self.source__directory)
-
-class ProjectGroup(ModelGroup):
-
-    __model_attributes__ = None
-
-mg = ProjectGroup()
-
-w = gtk.Window()
-b = gtk.HBox()
-tv = mg.create_multi_observer(TreeObserver)
-tv.set_property('markup-format-string', '%(__model_markup__)s')
-tv2 = mg.create_multi_observer(TreeObserver)
-tv2.set_property('markup-format-string', '%(__model_markup__)s')
-pp = mg.create_single_observer(PropertyPage)
-from model import Model
-from persistency import IniFileObserver, load_model_from_ini
-ini = mg.create_multi_observer(IniFileObserver)
-b.pack_start(tv)
-b.pack_start(pp.get_widget())
-b.pack_start(tv2)
-w.add(b)
-
-
-m1 =  Model(ProjectDefinition)
-m2 =  Model(ProjectDefinition)
-m3 =  Model(ProjectDefinition)
-
-m4 = load_model_from_ini('/tmp/foo_modelini', ProjectDefinition)
-
-for m in [m1, m2, m3, m4]:
-    mg.add_model(m)
-
-
-mg.set_current(m2)
-
-w.show_all()
-gtk.main()
 
 
 
