@@ -98,7 +98,19 @@ class registry_item(base.pidacomponent):
         return ('Registry Value typ=%s name=%s value=%s default=%s '
                 'doc=%s' % (self.__class__.__name__, self.__name,
                            self.__value, self.__default, self.doc))
-                    
+
+class RegistryItem(object):
+
+    @staticmethod
+    def serialize(data):
+        return '%s' % data
+
+    @staticmethod
+    def unserialize(data):
+        return data
+
+registry_item = RegistryItem
+
 class registry_group(base.pidagroup):
     """A registry group."""
     
@@ -162,40 +174,41 @@ class types(object):
         """A plain string."""
 
     class directory(registry_item):
-        def validate(self, value):
-            return os.path.isdir(value)
-        
-    class directorycreating(directory):
-        def validate(self, value):
-            if Directory.validate(self, value):
-                return True
-            else:
-                os.makedirs(value)
-                return directory.validate(self, value)
+        """A directory"""
+
+    #class directorycreating(directory):
+    #    def validate(self, value):
+    #        if Directory.validate(self, value):
+    #            return True
+    #        else:
+    #            os.makedirs(value)
+    #            return directory.validate(self, value)
 
     class file(registry_item):
-        """"""
+        """A file"""
 
-    class filemustexist(file):
+    #class filemustexist(file):
 
-        def validate(self, value):
-            return os.path.exists(value)
+    #    def validate(self, value):
+    #        return os.path.exists(value)
 
-    class filewhich(file):
-    
-        def setdefault(self):
-            import distutils.spawn as spawn
-            path = spawn.find_executable(self.default)
-            if path:
-                self.set(path)
-            else:
-                self.set('')
+    #class filewhich(file):
+   # 
+   #     def setdefault(self):
+   #         import distutils.spawn as spawn
+   #         path = spawn.find_executable(self.default)
+   #         if path:
+   #             self.set(path)
+   #         else:
+   #             self.set('')
 
     class font(registry_item):
         """Font"""
 
     class boolean(registry_item):
-        def unserialize(self, data):
+        
+        @staticmethod
+        def unserialize(data):
             try:
                 val = int(data)
             except ValueError:
@@ -205,7 +218,9 @@ class types(object):
             return val
 
     class integer(registry_item):
-        def unserialize(self, data):
+
+        @staticmethod
+        def unserialize(data):
             try:
                 val = int(data)
             except:
@@ -235,7 +250,7 @@ class types(object):
                      'upper': upper,
                      'step': step}
         return type('intrange', (types.integer,), classdict)
-    
+
     @staticmethod
     def stringlist(*args):
         classdict = {'choices': args}

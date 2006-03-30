@@ -25,6 +25,7 @@ import actions
 import registry
 import base
 import os
+from pida.utils.vc import Vc
 
 import pida.utils.servicetemplates as servicetemplates
 
@@ -110,7 +111,6 @@ class project(base.pidacomponent):
         return self.__options_file
     project_filename = property(get_project_filename)
 
-    
 
 class project_type(actions.action_handler):
 
@@ -131,6 +131,84 @@ class project_type(actions.action_handler):
     def get_name(self):
         return self.project_type_name
     name = property(get_name)
-                
 
+
+from model import Model, ModelGroup
+from views import ProjectPropertyPage, ProjectTree
+
+
+PROJECT_DATA_ATTRS = [
+    'name',
+    'uses_source',
+    'source_directory',
+    'uses_vc',
+]
+
+class Project(Model):
+
+    def __init__(self):
+        self.name = ''
+        self.uses_source = True
+        self.source_directory = ''
+        self.uses_vc = True
+        self.uses_build = False
+        self.uses_execution = False
+        self.execution_command_base = ''
+        self.execution_chdir = True
+        self.uses_unittests = False
+        self.unittest_command_base = ''
+        self.build_command = None
+        self.build_directory = None
+
+    def delayed_notify(self, attr):
+        def _s():
+                self.notify_proxies('execution_command')
+        gobject.idle_add(_s)
+
+    def notify_proxies(self, attr):
+        """Notify proxies that an attribute value has changed."""
+        if attr == 'execution_command_base':
+            self.delayed_notify('execution_command')
+        super(Project, self).notify_proxies(attr)
+
+    def get_execution_command(self):
+        try:
+            ex = self.execution_command_base % self.__dict__
+        except:
+            ex = self.execution_command_base
+        return ex
+
+    execution_command = property(get_execution_command)
+
+    def get_unittest_command(self):
+        try:
+            ex = self.unittest_command_base % self.__dict__
+        except:
+            ex = self.unittest_command_base
+        return ex
+
+    unittest_command = property(get_unittest_command)
+
+
+    def get_vcname(self):
+        if self.uses_source and self.uses_vc:
+            if self.source_directory:
+                vc = Vc(self.source_directory)
+                if vc.NAME != 'Null':
+                    return vc.NAME
+        return None
+
+    vc_name = property(get_vcname)
+
+
+class ProjectGroup(ModelGroup):
+
+    page_type = ProjectPropertyPage
+    tree_type = ProjectTree
+
+    def register_dependents(self):
+        o = self._observer
+        o.register_dependent('execution_command', 'execution_command_base')
+        o.register_dependent('vc_name', 'source_directory')
+        o.register_dependent('unittest_command', 'unittest_command_base')
 
