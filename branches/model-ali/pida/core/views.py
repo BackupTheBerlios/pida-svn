@@ -172,6 +172,8 @@ def get_widget_for_type(rtype):
         w = ProxySpinButton()
         w.set_adjustment(adj)
         return w
+    elif rtype is types.readonly:
+        return FormattedLabel(VC_NAME_MU)
     else:
         return Entry(data_type=str)
 
@@ -313,7 +315,7 @@ class ProjectDefinition(object):
         """
         Options relating to source
         """
-        __order__ = ['uses', 'directory']
+        __order__ = ['uses', 'directory', 'uses_vc', 'vc_name']
         class uses:
             """
             Whether the project has source code
@@ -330,6 +332,31 @@ class ProjectDefinition(object):
             label = 'Source Directory'
             default = 25
             sensitive_attr = 'source__uses'
+
+        class uses_vc:
+            """
+            Whether the project uses version control
+            """
+            rtype = types.boolean
+            label = 'Uses Version Control'
+            default = True
+            sensitive_attr = 'source__uses'
+
+        class vc_name:
+            """
+            The version control system
+            """
+            rtype = types.readonly
+            label = 'Version cntrol System'
+            default = None
+            sensitive_attr = 'source__uses_vc'
+            dependents = ['source__directory']
+
+            @staticmethod
+            def fget(model):
+                return model.source__directory + 1
+
+       
 
     @staticmethod
     def __markup__(self):

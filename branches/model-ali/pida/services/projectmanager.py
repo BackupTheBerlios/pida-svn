@@ -36,26 +36,26 @@ import os
 import gobject
 import os.path
 
-class Project(object):
-
-    name = None
-    directory = None
-    environment = None
-    vcs = None
-    vcsname = None
-
-class ProjectTreeItem(tree.TreeItem):
-
-    def __get_markup(self):
-        directory = self.value.directory
-        vcs = self.value.vcsname
-        wd = directory
-        wd = wd.replace(os.path.expanduser('~'), '~')
-        b = ('<span><b>%s</b> ('
-            '<span foreground="#0000c0">%s</span>)\n'
-            '%s</span>') % (self.value.name, vcs, wd)
-        return b
-    markup = property(__get_markup)
+#class Project(object):
+#
+#    name = None
+#    directory = None
+#    environment = None
+#    vcs = None
+#    vcsname = None
+#
+#class ProjectTreeItem(tree.TreeItem):
+#
+#    def __get_markup(self):
+#        directory = self.value.directory
+#        vcs = self.value.vcsname
+#        wd = directory
+#        wd = wd.replace(os.path.expanduser('~'), '~')
+#        b = ('<span><b>%s</b> ('
+#            '<span foreground="#0000c0">%s</span>)\n'
+#            '%s</span>') % (self.value.name, vcs, wd)
+#        return b
+#    markup = property(__get_markup)
 
 class ProjectTree(tree.Tree):
 
@@ -74,6 +74,94 @@ class ProjectTree(tree.Tree):
         self.view.set_expander_column(self.view.get_column(1))
 
 
+# Project
+class ProjectPropertyPage(PropertyPage):
+
+    def __init__(self, observer):
+        super(ProjectPropertyPage, self).__init__()
+        observer.register(self, PROJECT_DATA_ATTRS)
+        pp = self
+        pp.add_page('General', gtk.STOCK_PREFERENCES,
+                        'General options',
+                        ('name',
+                         'uses_source',
+                         'source_directory',
+                         'uses_vc',
+                         'vc_name'))
+        pp.add_page('Execution', gtk.STOCK_EXECUTE,
+                        'Options rlating to project execution',
+                        ('uses_execution',
+                         'execution_command_base',
+                         'execution_command'))
+        pp.add_page('Testing', gtk.STOCK_CONNECT,
+                        'Options relating to unit testing the project',
+                        ('uses_unittests',
+                         'unittest_command_base',
+                         'unittest_command'))
+
+        e = Entry(data_type=str)
+        pp.pack_widget(e, 'name', label='Project Name')
+
+        us = CheckButton()
+        pp.pack_widget(us, 'uses_source', label='Has Source',
+                       doc='Whether the project has source code')
+
+        sd = ProxyFileChooserButton(title='Project Source Directory')
+        sd.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
+        pp.pack_widget(sd, 'source_directory', label='Source Directory',
+                       sensitive_attr='uses_source',
+                       doc='The project source directory')
+
+        vc = CheckButton()
+        pp.pack_widget(vc, 'uses_vc', label='Uses Version Control',
+                       sensitive_attr='uses_source',
+                       doc='Whether the project uses version control')
+
+        vcn = FormattedLabel(VC_NAME_MU)
+        vcn.set_property('data-type', str)
+        vcn.set_alignment(0, 0.5)
+        pp.pack_widget(vcn, 'vc_name', label='Version Control System',
+                       sensitive_attr='uses_vc',
+                       doc='The automatically determined version control'
+                           ' system')
+
+        pp.pack_widget(CheckButton(), 'uses_execution',
+            label='Project is executable',
+            doc='Whether the project can be executed')
+
+        pp.pack_widget(Entry(data_type=str), 'execution_command_base',
+            sensitive_attr='uses_execution',
+            label='Execution Command',
+            doc='The execution command. Project attributes may be inserted '
+                'using the %(foo)s notation, eg %(source_directory)s')
+
+        l = FormattedLabel(BOLD_MU)
+        l.set_alignment(0, 0.5)
+        pp.pack_widget(l, 'execution_command',
+            sensitive_attr='uses_execution',
+            label='Actual execution command',
+            doc='The execution command after values have been interpolated')
+
+        pp.pack_widget(CheckButton(), 'uses_unittests',
+            label='Project is testable',
+            doc='Whether the project has unit tests')
+
+        e = Entry(data_type=str)
+        pp.pack_widget(e, 'unittest_command_base',
+            label='Test command',
+            sensitive_attr='uses_unittests',
+            doc='The test execution command. Project attributes may be '
+                'inserted using the %(foo)s notation, eg '
+                '%(source_directory)s')
+
+        l = FormattedLabel(BOLD_MU)
+        l.set_alignment(0, 0.5)
+        pp.pack_widget(l, 'unittest_command',
+            sensitive_attr='uses_unittests',
+            label='Actual execution command',
+            doc='The test execution command after values have been '
+                'interpolated')
+
 class project_view(contentview.content_view):
     SHORT_TITLE = 'Projects'
     LONG_TITLE = 'List of projects'
@@ -84,8 +172,8 @@ class project_view(contentview.content_view):
     HAS_SEPARATOR = False
     HAS_TITLE = False
 
-    def init(self):
-        self.__projectlist = ProjectTree()
+    def init(self, project_tree):
+        self.__projectlist = project_tree
         self.widget.pack_start(self.__projectlist)
         self.__projectlist.set_property('markup-format-string',
             self.__projectlist.markup_format_string)
@@ -128,7 +216,7 @@ class project_view(contentview.content_view):
 
     def set_selected(self, key):
         self.__projectlist.set_selected(key)
-    
+
     def get_selected_iter(self):
         return self.__projectlist.selected_iter
 
@@ -153,9 +241,9 @@ class ProjectManager(service.service):
                 """The directory containing source code."""
                 rtype = types.directory
                 default = os.path.expanduser('~')
-   
+
     # life cycle
- 
+
     def init(self):
         self.__current_project = None
         self.__history = []
@@ -248,7 +336,6 @@ class ProjectManager(service.service):
                         'load_project', project_file_name=filename)
             if project is not None:
                 self.__projects.append(project)
-             
 
     def __launch_editor(self, projects=None, current_project=None):
         if projects is None:
@@ -324,7 +411,6 @@ class ProjectManager(service.service):
             if project.source_directory in filename:
                 return project
         return None
-        
 
     # Actions
 

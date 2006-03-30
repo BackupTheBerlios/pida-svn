@@ -172,7 +172,10 @@ class types(object):
 
     class string(registry_item):
         """A plain string."""
-
+        
+    class readonly(registry_item):
+        """A read only string"""
+        
     class directory(registry_item):
         """A directory"""
 
