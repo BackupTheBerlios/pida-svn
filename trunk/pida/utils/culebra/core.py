@@ -97,7 +97,7 @@ class MultiFactory:
         for key in self.keys:
             service_provider.services[key] = service
         return service
-        
+
 class ServiceProvider:
     """A service provider makes it possible for factory generated objects,
     which we'll address as 'services', can be associated through keys.
@@ -129,10 +129,12 @@ class ServiceProvider:
     def __init__(self):
         self.factories = {}
         self.services = {}
+        
+        self.features = FeaturePool()
+        # now we need something like a pool of registred object
+        
+        
     ## TODO: factories that are called with one argument and return the service in question
-    
-    def register_factory(self, factory, *keys):
-        self._register_factory(BaseServiceFactory(factory), keys)
     
     def _register_factory(self, factory, keys):
         """Registers a certain key with a factory"""
@@ -150,6 +152,10 @@ class ServiceProvider:
         for key in keys:
             self.factories[key] = factory
 
+    # TODO: remove this methods
+    def register_factory(self, factory, *keys):
+        self._register_factory(BaseServiceFactory(factory), keys)
+    
     def register_simple_factory(self, factory, *keys):
         self._register_factory(factory, keys)
 
@@ -221,3 +227,198 @@ class ServiceProvider:
         """
         
         self.services.clear()
+
+######################################################################        
+
+class FeaturePool:
+
+    def __init__(self):
+        self.features = {}
+    
+    def __getitem__(self, key):
+        return self.features.get(key, ())
+    
+    def register_feature(self, feature, plugin):
+        try:
+            feats = self.features[feature]
+        except KeyError:
+            feats = set()
+            self.features[feature] = feats
+            
+        return feats.add(plugin)
+    
+    def remove(self, feature, plugin):
+        try:
+            return self.features[feature].remove(plugin)
+        except KeyError:
+            pass
+
+class PluginIterator:
+    def __init__(self, registry, real_iter):
+        self.registry = registry
+        self.real_iter = real_iter
+    
+    def next(self):
+        return self.real_iter.next().get_service(self.registry)
+    
+    def __iter__(self):
+        return self
+    
+    def __repr__(self):
+        return repr(self.real_iter)
+        
+class Plugin:
+    def __init__(self, **kwargs):
+        try:
+            self.keys = list(kwargs.get("keys", ()))
+            self.features = list(kwargs.get("features", ()))
+            try:
+                self.factory = kwargs["factory"]
+            except KeyError:
+                self.service = kwargs["service"]
+                
+        except KeyError:
+            raise TypeError("__init__() accepts one obligatory argument, either 'factory' or 'service'")
+            
+    def get_service(self, registry):
+        try:
+            return self.service
+        except AttributeError:
+            self.service = self.factory(registry)
+            return self.service
+
+    def reset(self):
+        del self.service
+
+    def __repr__(self):
+        return "<Plugin %r %r>" % (self.keys, self.features)
+
+    def unplug(self):
+        """This method is called when the service is removed from the registry"""
+
+class PluginRegistry:
+    def __init__(self, plugin_factory=Plugin):
+        self.services = {}
+        self.features = FeaturePool()
+        self.plugins = set()
+        self.plugin_factory = plugin_factory
+    
+    def register(self, plugin):
+        for key in plugin.keys:
+            try:
+                val = self.services[key]
+                raise ServiceError(key)
+            except KeyError:
+                pass
+    
+        self.plugins.add(plugin)
+        
+        for key in plugin.keys:
+            self.services[key] = plugin
+            
+        for feat in plugin.features:
+            self.features.register_feature(feat, plugin)
+        return plugin
+    
+    def unregister(self, plugin):
+        for key in plugin.keys:
+            del self.services[key]
+            
+        for feat in plugin.features:
+            self.features[feat].remove(plugin)
+            
+        self.plugins.remove(plugin)
+        plugin.unplug()
+    
+    def register_plugin(self, *args, **kwargs):
+        return self.register(self.plugin_factory(*args, **kwargs))
+
+    def get_features(self, feature):
+        return PluginIterator(self, iter(self.features[feature]))
+    
+    def get_service(self, key):
+        try:
+            return self.services[key].get_service(self)
+        except KeyError:
+            raise ServiceError(key)
+    
+    def _check_plugin(self, plugin):
+        if len(plugin.features) == 0 and len(plugin.keys) == 0:
+            self.unregister(plugin)
+    
+    def unregister_service(self, key):
+        try:
+            plugin = self.services.pop(key)
+            plugin.keys.remove(key)
+            self._check_plugin(plugin)
+
+        except KeyError:
+            raise ServiceError(key)
+    
+    def unregister_feature(self, feature, plugin):
+        self.features.remove(feature, plugin)
+        plugin.features.remove(feature)
+        self._check_plugin(plugin)
+
+
+###########################################################
+# Component framework: ATTENTION UNTESTED AND UGLY
+class ComponentPlugin(Plugin):
+    def __init__(self, component_factory):
+        self.keys = component_factory.get_interfaces()
+        self.features = component_factory.get_features()
+        self.factory = component_factory
+
+    def unplug(self):
+        try:
+            self.service.unload()
+        except AttributeError:
+            pass
+            
+class AggregationPoint(object):
+    def __init__(self, feature):
+        self.feature = feature
+        
+    def __get__(self, obj, obj_type=None):
+        return obj.registry.get_features(feature)
+
+class Dependency(object):
+    def __init__(self, interface):
+        self.interface = interface
+    
+    def __get__(self, obj, obj_type=None):
+        return getattr(obj, self.attr_name)()
+
+class MetaComponent(type):
+    def __init__(cls, name, bases, vals):
+        cls._services = []
+        for key, val in vals.iteritems():
+            if issubclass(val, Service):
+                val.attr_name = "_%s" % name
+                val.name = name
+
+class IComponent:
+    
+    def unload():
+        """Called when the service is terminated"""
+
+class Component(object):
+    __meta__ = MetaComponent
+    __implements__ = IComponent,
+    
+    def __init__(self, registry):
+        self._registry = weakref.ref(registry)
+        self._cascade = set()
+    
+    registry = property(lambda self: self._registry())
+    
+    def load(self):
+        for dependency in self._dependencies:
+            service = self.registry.get_service(dependency.interface)
+            service._cascade.add(weakref.ref(self))
+            setattr("_%s", weakref.ref(service))
+    
+    def unload(self):
+        for service in self._cascade:
+            service.registry_keys
+            

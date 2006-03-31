@@ -169,6 +169,144 @@ class TestServiceProvider(unittest.TestCase):
         prov.register_service("foo", "service1")
         assert prov.get_service("service2") == "foo"
         assert prov.get_service("service3") == "foo"
+
+# Service discovery stuff
+class TestPlugin(unittest.TestCase):
+    def test_service(self):
+        reg = PluginRegistry()
+        reg.register_plugin(
+            service="foo",
+            keys=("key1", "key2", "key3"),
+        )
+        reg.register_plugin(
+            service="bar",
+            keys=("key4",)
+        )
+        assert reg.get_service("key1") == "foo"
+        assert reg.get_service("key2") == "foo"
+        assert reg.get_service("key3") == "foo"
+        assert reg.get_service("key4") == "bar"
+        try:
+            reg.get_service("key5")
+            assert False
+        except ServiceError:
+            pass
+
+    def test_features(self):
+        reg = PluginRegistry()
+        reg.register_plugin(
+            service="foo",
+            features=("feat1", "feat2", "feat3")
+        )
+        reg.register_plugin(
+            service="bar",
+            features=("feat1", "feat3"),
+        )
+        reg.register_plugin(
+            service="gin",
+            features=("feat2", "feat3", "feat4"),
+        )
         
+        
+        self.assert_eq(reg.get_features("feat1"), ["bar", "foo"])
+        self.assert_eq(reg.get_features("feat2"), ["gin", "foo"])
+        self.assert_eq(reg.get_features("feat3"), ["bar", "foo", "gin"])
+        self.assert_eq(reg.get_features("feat4"), ["gin"])
+        self.assert_eq(reg.get_features("df"), [])
+
+    def assert_eq(self, l1, l2):
+        l1 = list(l1)
+        l1.sort()
+        l2.sort()
+        self.assertEquals(l1, l2)
+
+    def test_factory(self):
+        reg = PluginRegistry()
+        reg.register_plugin(factory=lambda foo: "bar", keys=("foo",))
+        self.assertEquals(reg.get_service("foo"), "bar")
+        
+        class S:
+            def __init__(self, foo):
+                pass
+        
+        # Make sure the objects are created once
+        reg.register_plugin(factory=S, keys=("bar",))
+        s1 = reg.get_service("bar")
+        s2 = reg.get_service("bar")
+        assert s1 is s2
+        
+    def test_unregister_plugin(self):
+        reg = PluginRegistry()
+        p = reg.register_plugin(factory=lambda foo: "bar", keys=("foo",), feats=("bar",))
+        reg.unregister(p)
+        
+        try:
+            reg.get_service("foo")
+            assert False
+        except ServiceError:
+            pass
+
+    def test_unregister_service(self):
+        reg = PluginRegistry()
+        p = reg.register_plugin(factory=lambda foo: "me", keys=("foo",), features=("bar",))
+        self.assert_eq(reg.get_features("bar"), ["me"])
+        self.assertEqual(reg.get_service("foo"), "me")
+
+        reg.unregister_service("foo")
+        assert len(p.keys) == 0
+        try:
+            reg.get_service("foo")
+            assert False
+        except ServiceError:
+            pass
+            
+        self.assert_eq(reg.get_features("bar"), ["me"])
+        
+        try:
+            reg.unregister_service("sdfds")
+            assert False
+        except ServiceError:
+            pass
+
+    def test_unregister_features(self):
+        reg = PluginRegistry()
+        p = reg.register_plugin(factory=lambda foo: "me", keys=("foo",), features=("bar",))
+        self.assert_eq(reg.get_features("bar"), ["me"])
+        self.assertEqual(reg.get_service("foo"), "me")
+
+        reg.unregister_feature("bar", p)
+        self.assert_eq(reg.get_features("bar"), [])
+
+    def test_service_conflict(self):
+        reg = PluginRegistry()
+        p1 = reg.register_plugin(factory=lambda foo: "me", keys=("foo",), features=("bar",))
+        try:
+            p2 = reg.register_plugin(factory=lambda foo: "me2", keys=("foo",), features=("bar",))
+            assert False
+        except ServiceError:
+            pass
+        self.assert_eq(reg.get_features("bar"), ["me"])
+        assert reg.get_service("foo") == "me"
+
+    def test_ghost_services(self):
+        reg = PluginRegistry()
+        p1 = reg.register_plugin(factory=lambda foo: "me", keys=("foo",))
+        assert len(reg.plugins) == 1
+        assert len(p1.keys) == 1
+        assert len(p1.features) == 0
+        reg.unregister_service("foo")
+        assert len(reg.plugins) == 0, reg.plugins
+        assert len(p1.keys) == 0
+        assert len(p1.features) == 0
+
+        p1 = reg.register_plugin(factory=lambda foo: "me", features=("foo",))
+        assert len(reg.plugins) == 1
+        assert len(p1.keys) == 0
+        assert len(p1.features) == 1
+        reg.unregister_feature("foo", p1)
+        assert len(reg.plugins) == 0
+        assert len(p1.keys) == 0
+        assert len(p1.features) == 0
+
 if __name__ == '__main__':
     unittest.main()
