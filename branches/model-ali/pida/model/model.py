@@ -220,7 +220,7 @@ class BaseMultiModelObserver(BaseObserver):
         model.__model_register__(self, self.__model_attributes__)
 
     def set_current_model(self, model):
-        """Override to set the crrent value."""
+        """Override to set the current value."""
 
 
 class ModelGroup(object):
