@@ -2,11 +2,12 @@
 
 import gtk
 
+
+import attrtypes as types
 from model import Model, ModelGroup
 from views import TreeObserver, PropertyPage
 from persistency import IniFileObserver, load_model_from_ini
 
-import attrtypes as types
 
 class AddressDefinition(object):
 

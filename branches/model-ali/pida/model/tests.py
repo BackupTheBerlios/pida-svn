@@ -1,14 +1,15 @@
 
+"""One or two test cases for the model"""
 
+import os
 import unittest
 
-from model import property_evading_setattr, get_defintion_attrs, get_groups
-from model import ModelAttribute, Model, ModelGroup
-from model import BaseSingleModelObserver, BaseMultiModelObserver
-from persistency import load_model_from_ini, IniFileObserver
-import os
-
 import attrtypes as types
+from persistency import load_model_from_ini, IniFileObserver
+from model import property_evading_setattr, get_defintion_attrs, get_groups,\
+                  ModelAttribute, Model, ModelGroup,\
+                  BaseSingleModelObserver, BaseMultiModelObserver
+
 
 class Blah:
     """A fake schema"""
@@ -514,3 +515,4 @@ class test_ini(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+

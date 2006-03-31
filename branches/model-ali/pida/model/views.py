@@ -1,80 +1,20 @@
 
 
-class view_mixin(object):
+from cgi import escape
 
-    __views__ = []
+import gtk
+from kiwi.ui.widgets.entry import ProxyEntry
+from kiwi.ui.widgets.label import ProxyLabel
+from kiwi.ui.widgets.combo import ProxyComboBox
+from kiwi.ui.widgets.spinbutton import ProxySpinButton
+from kiwi.ui.widgets.fontbutton import ProxyFontButton
+from kiwi.ui.widgets.checkbutton import ProxyCheckButton
+from kiwi.ui.widgets.colorbutton import ProxyColorButton
+from kiwi.ui.widgets.filechooser import ProxyFileChooserButton
 
-    def init(self):
-        self.__views = {}
-        self.__viewdefs = {}
-        for definition in self.__class__.__views__:
-            self.__viewdefs[definition.__name__] = definition
-
-    def create_view(self, viewname, **kw):
-        viewdef = self.__viewdefs[viewname]
-        view = viewdef.view_type(service=self,
-                                 prefix=viewname, **kw)
-        self.__views[view.unique_id] = view
-        view.view_definition = viewdef
-        view.connect('removed', self.__view_closed_base)
-        return view
-
-    def show_view(self, unique_id=None, view=None):
-        if view is None:
-            if unique_id is None:
-                raise KeyError('Need either view, or unique_id')
-            view = self.__views[unique_id]
-        book_name = view.view_definition.book_name
-        self.boss.call_command('window', 'append_page',
-                                bookname=book_name, view=view)
-
-    def raise_view(self, view):
-        self.boss.call_command('window', 'raise_page', view=view)
-
-    def get_view(self, unique_id):
-        return self.__views[unique_id]
-
-    def get_first_view(self, viewname):
-        for view in self.__views.values():
-            if view.view_definition.__name__ == viewname:
-                return view
-        raise KeyError('No views of that type')
-
-    def view_confirm_close(self, view):
-        return True
-
-    def view_confirm_detach(self, view):
-        return True
-
-    def close_view(self, view):
-        if self.view_confirm_close(view):
-            self.boss.call_command('window', 'remove_page', view=view)
-            view.emit('removed')
-
-    def __view_closed_base(self, view):
-        del self.__views[view.unique_id]
-        self.view_closed(view)
-
-    def view_closed(self, view):
-        pass
-
-    def detach_view(self, view, detach):
-        if detach:
-            self.boss.call_command('window', 'remove_page', view=view)
-            self.boss.call_command('window', 'append_page',
-                                   bookname='ext', view=view)
-        else:
-            self.boss.call_command('window', 'remove_page', view=view)
-            self.show_view(view=view)
-            
-
-    def view_detached_base(self, view):
-        self.view_detached(self, view)
-
-    def view_detached(self, view):
-        pass
-
-# the data views
+import attrtypes as types
+from pida.pidagtk.tree import Tree
+from model import BaseMultiModelObserver, BaseSingleModelObserver
 
 
 class DefaultingDict(dict):
@@ -82,30 +22,6 @@ class DefaultingDict(dict):
     def __getitem__(self, item):
         return self.setdefault(item, set())
 
-from pida.pidagtk.tree import Tree
-
-
-import gtk
-import attrtypes as types
-
-from kiwi.ui.widgets.checkbutton import CheckButton
-from kiwi.ui.widgets.filechooser import ProxyFileChooserButton
-from kiwi.ui.widgets.fontbutton import ProxyFontButton
-from kiwi.ui.widgets.colorbutton import ProxyColorButton
-from kiwi.ui.widgets.spinbutton import ProxySpinButton
-from kiwi.ui.widgets.combo import ProxyComboBox
-from kiwi.ui.widgets.entry import Entry
-from kiwi.ui.widgets.label import Label, ProxyLabel
-from cgi import escape
-import os
-import gobject
-NAME_MU = """%s:"""
-DOC_MU = """<small><i>%s</i></small>"""
-SECTION_TITLE="<big><b>%s</b></big>"
-SECTION_DESCRIPTION="<i>%s</i>"
-VC_NAME_MU='<span color="#0000c0"><b>%s</b></span>'
-BOLD_MU='<b>%s</b>'
-from model import property_evading_setattr
 
 class FormattedLabel(ProxyLabel):
     def __init__(self, format_string):
@@ -116,7 +32,6 @@ class FormattedLabel(ProxyLabel):
     def update(self, data):
         self.set_markup(self.format_string % data)
 
-from model import BaseSingleModelObserver
 
 class WidgetObserver(BaseSingleModelObserver):
 
@@ -134,10 +49,6 @@ class WidgetObserver(BaseSingleModelObserver):
         widget.set_property('model-attribute', attr)
         widget.connect('content-changed', self.on_changed, attr)
 
-    def add_widget_from_view(self, view, widget_name, attr):
-        widget = view.get_widget(name)
-        self.add_widget(widget, attr)
-
     def __model_notify__(self, model, attr, value):
         for widget in self._widgets[attr]:
             widget.update(value)
@@ -151,7 +62,7 @@ class WidgetObserver(BaseSingleModelObserver):
 
 def get_widget_for_type(rtype):
     if rtype is types.boolean:
-        return CheckButton()
+        return ProxyCheckButton()
     elif rtype is types.file:
         w = ProxyFileChooserButton('Select File')
         w.set_action(gtk.FILE_CHOOSER_ACTION_SAVE)
@@ -179,17 +90,10 @@ def get_widget_for_type(rtype):
         w = ProxyComboBox()
         w.set_property('data-type', str)
         w.prefill(rtype.choices)
-       # 
-       # for choice in rtype.choices:
-        #    w.append_item(choice)
-        #w.prefill(rtype.choices[0])
         return w
     else:
-        return Entry(data_type=str)
+        return ProxyEntry(data_type=str)
 
-from model import ModelGroup, Model,  BaseMultiModelObserver
-
-import gobject
 
 class TreeObserver(Tree, BaseMultiModelObserver):
 
@@ -242,7 +146,6 @@ class PropertyPage(WidgetObserver):
         self._nb.show_all()
         self.set_model(model)
 
-
     def get_widget(self):
         return self._nb
 
@@ -272,7 +175,7 @@ class PropertyPage(WidgetObserver):
         hb = gtk.HBox(spacing=6)
         vb.pack_start(hb)
         hb.set_border_width(0)
-        if isinstance(widget, CheckButton):
+        if isinstance(widget, ProxyCheckButton):
             widget.set_label(label)
         else:
             l = gtk.Label(label)
@@ -317,6 +220,13 @@ class PropertyPage(WidgetObserver):
         hb.pack_start(l)
         hb.show_all()
         return hb
+
+
+# markup definitions
+DOC_MU = """<small><i>%s</i></small>"""
+SECTION_TITLE="<big><b>%s</b></big>"
+SECTION_DESCRIPTION="<i>%s</i>"
+VC_NAME_MU='<span color="#0000c0"><b>%s</b></span>'
 
 
 
