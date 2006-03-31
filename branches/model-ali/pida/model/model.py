@@ -78,7 +78,6 @@ class ModelAttribute(object):
         name = definition.__name__
         doc = definition.__doc__
         rtype = definition.rtype
-        default = definition.default
         if hasattr(definition, 'label'):
             label = definition.label
         else:
@@ -93,7 +92,9 @@ class ModelAttribute(object):
             dependents = []
         if hasattr(definition, 'fget'):
             fget = definition.fget
+            default = None
         else:
+            default = definition.default
             fget = None
         return cls(group, name, doc, rtype, default, label, sensitive_attr,
                    dependents, fget)
@@ -104,7 +105,7 @@ def add_attr_to_class(classdict, attr):
     attr_name = '_%s' % prop_name
     if attr.fget is not None:
         fget = getattr(attr, 'fget')
-        fset = None
+        fset = lambda *a: None
     else:
         classdict[attr_name] = attr.default
         def fget(self, attr_name=attr_name):
@@ -209,9 +210,11 @@ class BaseSingleModelObserver(BaseObserver):
 
 class BaseMultiModelObserver(BaseObserver):
 
-    def __init__(self, model_attributes=None):
+    def __init__(self, model_attributes=None,
+                 current_callback=lambda *a: None):
         self.__model_attributes__ = model_attributes
         self._model = None
+        self.current_callback = current_callback
 
     def add_model(self, model):
         model.__model_register__(self, self.__model_attributes__)

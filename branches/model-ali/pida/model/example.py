@@ -49,8 +49,12 @@ class AddressDefinition(object):
         class work:
             """Work email address"""
             label = 'Work Email'
-            rtype = types.string
-            default = ''
+            rtype = types.readonly
+            dependents = ['email__home']
+
+            @staticmethod
+            def fget(self):
+                return self.email__home
 
         class extra:
             """Extra email address"""

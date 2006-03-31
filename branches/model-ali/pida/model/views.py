@@ -196,12 +196,12 @@ class TreeObserver(Tree, BaseMultiModelObserver):
     def __init__(self, model_attributes, current_callback):
         Tree.__init__(self)
         self.set_property('markup-format-string', '%(__model_markup__)s')
-        BaseMultiModelObserver.__init__(self, model_attributes)
-        self._current_callback = current_callback
+        BaseMultiModelObserver.__init__(self, model_attributes,
+                                        current_callback)
         self.connect('clicked', self.cb_clicked)
 
     def cb_clicked(self, tree, item):
-        self._current_callback(item.value)
+        self.current_callback(item.value)
 
     def set_current_model(self, item):
         if not self.selected or self.selected.value is not item:

@@ -4,6 +4,8 @@ import unittest
 
 from model import property_evading_setattr, get_defintion_attrs, get_groups
 from model import ModelAttribute, Model
+from model import BaseSingleModelObserver, BaseMultiModelObserver
+
 import attrtypes as types
 
 class Blah:
@@ -21,7 +23,11 @@ class Blah:
             """blah"""
             label = 'blah'
             rtype = types.string
-            default = 'no'
+
+            @staticmethod
+            def fget(self):
+                return 'no'
+
     class feh:
         """a feh feh group"""
         stock_id = 'banana'
@@ -59,6 +65,19 @@ class BlahBlah(object):
     g = property(get_g, set_g)
 
 BlahModel = Model.__model_from_definition__(Blah)
+
+class MockSingleObserver(BaseSingleModelObserver):
+
+    def __model_notify__(self, *args):
+        if hasattr(self, 'notify'):
+            self.notify(*args)
+
+class MockMultiObserver(BaseMultiModelObserver):
+
+    def __model_notify__(self, *args):
+        if hasattr(self, 'notify'):
+            self.notify(*args)
+
 
 class test_model_setattr(unittest.TestCase):
 
@@ -208,7 +227,176 @@ class test_model_class(unittest.TestCase):
 class test_model_setting(unittest.TestCase):
 
     def setUp(self):
-        self.a1 = Blah()
+        self.a1 = BlahModel()
+
+    def test_simple_attr(self):
+        self.assertEqual(self.a1.feh__gah, 'gah')
+
+    def test_fget_attr(self):
+        self.assertEqual(self.a1.meh__blah, 'no')
+
+    def test_set_simple_attr(self):
+        self.a1.feh__gah = 'hag'
+        self.assertEqual(self.a1.feh__gah, 'hag')
+
+    def test_set_fget_attr(self):
+        self.a1.meh__blah = 'yes'
+        self.assertEqual(self.a1.meh__blah, 'no')
+
+class test_observer(unittest.TestCase):
+
+    def setUp(self):
+        self._n = {}
+        self.ma = ma = ['meh__blah', 'feh__gah']
+        self.o1 = MockSingleObserver()
+        self.o2 = MockSingleObserver(model_attributes=ma)
+        self.o3 = MockMultiObserver()
+        self.o4 = MockMultiObserver(model_attributes=ma,
+                        current_callback=self.set_current)
+
+    def set_current(self, item):
+        self.current = item
+
+    def notify(self, model, attr, value):
+        self._n[(model, attr)] = value
+
+    def test_a_all_attrs(self):
+        self.assertEqual(self.o1.__model_attributes__, None)
+        self.assertEqual(self.o3.__model_attributes__, None)
+
+    def test_b_some_attrs(self):
+        self.assertEqual(self.o2.__model_attributes__, self.ma)
+        self.assertEqual(self.o4.__model_attributes__, self.ma)
+
+    def test_c_current_callback(self):
+        self.assertEqual(self.o4.current_callback, self.set_current)
+        self.assertEqual(self.o3.current_callback(), None)
+
+    def test_d_register_single_some_attrs(self):
+        a1 = BlahModel()
+        newma = ['feh__ouch', 'meh__foo']
+        a1.__model_register__(self.o1, newma)
+        for a in newma:
+            self.assert_(self.o1 in a1.__model_observers__[a])
+        for a in self.ma:
+            self.assert_(self.o1 not in a1.__model_observers__[a])
+
+    def test_e_model_attr(self):
+        a1 = BlahModel()
+        newma = ['feh__ouch', 'meh__foo']
+        a1.__model_register__(self.o2, self.o2.__model_attributes__)
+        for a in self.ma:
+            self.assert_(self.o2 in a1.__model_observers__[a])
+        for a in newma:
+            self.assert_(self.o2 not in a1.__model_observers__[a])
+
+    def test_f_no_attr(self):
+        a1 = BlahModel()
+        newma = ['feh__ouch', 'meh__foo']
+        a1.__model_register__(self.o2)
+        for a in self.ma:
+            self.assert_(self.o2 in a1.__model_observers__[a])
+        for a in newma:
+            self.assert_(self.o2 in a1.__model_observers__[a])
+
+    def test_g_register_from_observer_all(self):
+        a1 = BlahModel()
+        newma = ['feh__ouch', 'meh__foo']
+        self.o1.set_model(a1)
+        for a in newma:
+            self.assert_(self.o1 in a1.__model_observers__[a])
+        for a in self.ma:
+            self.assert_(self.o1 in a1.__model_observers__[a])
+
+    def test_h_register_from_observer_some(self):
+        a1 = BlahModel()
+        newma = ['feh__ouch', 'meh__foo']
+        self.o2.set_model(a1)
+        for a in newma:
+            self.assert_(self.o2 not in a1.__model_observers__[a])
+        for a in self.ma:
+            self.assert_(self.o2 in a1.__model_observers__[a])
+
+    def test_i_call_current_callback(self):
+        a1 = BlahModel()
+        self.o4.current_callback(a1)
+        self.assertEqual(self.current, a1)
+
+    def test_j_no_call_current(self):
+        a1 = BlahModel()
+        self.current = None
+        self.o3.current_callback(a1)
+        self.assertEqual(self.current, None)
+
+    def test_h_initial_notify(self):
+        a1 = BlahModel()
+        newma = ['feh__ouch', 'meh__foo']
+        self.o1.notify = self.notify
+        self.o1.set_model(a1)
+        for a in newma:
+            self.assert_((a1, a) in self._n)
+        for a in self.ma:
+            self.assert_((a1, a) in self._n)
+        self.assertEqual(self._n[(a1, 'feh__ouch')], 'ouch')
+        self.assertEqual(self._n[(a1, 'feh__gah')], 'gah')
+        self.assertEqual(self._n[(a1, 'meh__blah')], 'no')
+        self.assertEqual(self._n[(a1, 'meh__foo')], 'yes')
+
+    def test_h_initial_some_notify(self):
+        a1 = BlahModel()
+        newma = ['feh__ouch', 'meh__foo']
+        self.o2.notify = self.notify
+        self.o2.set_model(a1)
+        for a in newma:
+            self.assert_((a1, a) not in self._n)
+        for a in self.ma:
+            self.assert_((a1, a) in self._n)
+        self.assertEqual(self._n[(a1, 'feh__gah')], 'gah')
+        self.assertEqual(self._n[(a1, 'meh__blah')], 'no')
+
+    def test_i_single_attribute(self):
+        self.o2.notify = self.notify
+        a1 = BlahModel()
+        self.o2.set_model(a1)
+        a1.feh__gah = 100
+        self.assertEqual(self._n[(a1, 'feh__gah')], 100)
+        a1.feh__gah = 200
+        self.assertEqual(self._n[(a1, 'feh__gah')], 200)
+
+    def test_j_block_attribute(self):
+        self.o2.notify = self.notify
+        a1 = BlahModel()
+        self.o2.set_model(a1)
+        a1.feh__gah = 100
+        self.assertEqual(self._n[(a1, 'feh__gah')], 100)
+        a1.__model_block__(self.o2, ['feh__gah'])
+        a1.feh__gah = 200
+        self.assertEqual(self._n[(a1, 'feh__gah')], 100)
+
+    def test_k_unblock_attribute(self):
+        self.o2.notify = self.notify
+        a1 = BlahModel()
+        self.o2.set_model(a1)
+        a1.feh__gah = 100
+        self.assertEqual(self._n[(a1, 'feh__gah')], 100)
+        a1.__model_block__(self.o2, ['feh__gah'])
+        a1.__model_unblock__(self.o2, ['feh__gah'])
+        a1.feh__gah = 200
+        self.assertEqual(self._n[(a1, 'feh__gah')], 200)
+
+    def test_l_unregister_all_attrs(self):
+        a1 = BlahModel()
+        self.o2.set_model(a1)
+        a1.__model_unregister__(self.o2, self.ma)
+        for a in self.ma:
+            self.assert_(self.o2 not in a1.__model_observers__[a])
+
+    def test_m_unregister_one_attr(self):
+        a1 = BlahModel()
+        self.o2.set_model(a1)
+        a1.__model_unregister__(self.o2, [self.ma[0]])
+        self.assert_(self.o2 not in a1.__model_observers__[self.ma[0]])
+        self.assert_(self.o2 in a1.__model_observers__[self.ma[1]])
 
 if __name__ == '__main__':
     unittest.main()

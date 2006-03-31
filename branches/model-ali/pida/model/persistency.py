@@ -29,9 +29,6 @@ class IniFileObserver(BaseMultiModelObserver):
 
     file_intro = '# pida generated ini file'
 
-    def __init__(self, model_attributes, current_callback):
-        BaseMultiModelObserver.__init__(self, model_attributes)
-
     def __model_notify__(self, model, attr, val):
         self.save(model)
 
@@ -45,6 +42,8 @@ class IniFileObserver(BaseMultiModelObserver):
             f.write('\n[%s]\n' % groupname)
             for attrname in attrkeys:
                 attr = model.__model_attrs_map__[attrname]
+                if attr.fget is not None:
+                    continue
                 f.write('# %s\n' % attr.name)
                 f.write('# %s\n' % attr.doc.replace('\n', ' ').strip())
                 f.write('# default value = %s\n' % attr.default)
