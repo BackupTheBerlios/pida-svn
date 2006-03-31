@@ -107,7 +107,7 @@ class TreeObserver(Tree, BaseMultiModelObserver):
     def cb_clicked(self, tree, item):
         self.current_callback(item.value)
 
-    def set_current_model(self, item):
+    def set_model(self, item):
         if not self.selected or self.selected.value is not item:
             self.set_selected(hash(item))
 
@@ -119,15 +119,17 @@ class TreeObserver(Tree, BaseMultiModelObserver):
     def __model_notify__(self, model, attr, value):
         model.reset_markup()
 
-class PropertyPage(WidgetObserver):
+class PropertyPage(gtk.VBox, WidgetObserver):
 
     __model_attributes__ = []
 
     def __init__(self, *args):
-        super(PropertyPage, self).__init__(*args)
+        gtk.VBox.__init__(self)
+        WidgetObserver.__init__(self, *args)
         self._pages = {}
         self._lsizer = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
         self._nb = gtk.Notebook()
+        self.pack_start(self._nb)
 
     def set_model(self, model):
         oldmod = dir(self._model)

@@ -89,14 +89,17 @@ if __name__ == '__main__':
         m.general__name = n
         mg.add_model(m)
 
-    # pack it all in a window
+    # pack the tree and the property page
+    b = gtk.HPaned()
+    b.pack1(tv)
+    b.pack2(pp)
+
+    # put them in a window for good measure
     w = gtk.Window()
     w.connect('delete-event', lambda w, e: gtk.main_quit())
-    b = gtk.HBox()
     w.add(b)
-    b.pack_start(tv)
-    b.pack_start(pp.get_widget())
     w.show_all()
 
-    gtk.main()
+    
+    gtk.main() # give life
 

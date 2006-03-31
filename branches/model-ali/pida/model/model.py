@@ -21,8 +21,90 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+'''
+Model observer support.
+
+The concept is simple. One model, many observers. Model attributes change and
+the observers are notified. Observers notify the model of change, and the other
+observers are notified. The goal is synchronised data in different views,
+files, or anywhere.
+
+A model is a class that is created at runtime. It will be a subclass of Model
+that will be additionally tagged with the attributes that have been specified
+in the model definition.
+
+Attributes are grouped in a single level of groups, as:
+
+    group1/
+        attr1
+        attr2
+    group2/
+        attr1
+        attr2
+
+And can then be used on the subsequently created objects as so:
+
+    obj.group1__attr1
+    obj.group2__attr2
+
+The model definition is a Python class used as a schema. It contains all the
+information required to generate typed attributes with the necessary
+parameters. An example schema is available in example.py. It is used as
+follows.
+
+class MySchema:
+
+    __order__ = ['Group1']      # the rendered order of the attributes
+
+    class Group1:               # the first attribute this group
+        """About group 1"""     # documentation for this group
+        label = 'Group 1'       # display label for this group
+        stock_id = 'my_stock'   # a string for a graphical representation
+
+        class Attr1:                # the first attribute of group1
+            """About attr1"""       # documentation for attr 1
+            label = 'Attr1'
+            rtype = types.string    # the registry type, from attrypes module
+            default = 'foo'         # the default value
+
+       class Attr2:
+            """About attr2"""
+            label = 'Attr 2'
+            rtype = types.readonly  # use a readonly type
+
+            @staticmethod           # make this a staticmethod so we can use
+            def fget(self)
+                """
+                You can set a function which will be called when the
+                attribute is accessed. This is best used with read-only
+                types and is a way of changing what the observer sees
+                """
+                return self.Group1__Attr1 + '_something added'
+
+           dependents = ['Group1__Attr1']   # if this attribute is to be
+                                            # returned from a function, the
+                                            # observers will not be notified of
+                                            # the change unless we set some
+                                            # dependent attributes. In this
+                                            # case the attribute is dependent
+                                            # on Group1__Attr1, and that is the
+                                            # only member of the list that we
+                                            # pass.
+
+Once the schema has been specified, a model class needs to be created from
+it, calling Model.__model_from_definition__(schmea) with the model
+schema as the parameter. A class (type) is returned which can then be
+instantiated to create model objects, for example, using the schema above:
+
+MyModel = Model.__model_from_definition__(schema)
+obj1 = MyModel()
+obj2 = MyModel()
+
+etc.
+'''
 
 def property_evading_setattr(obj, attr, val):
+    """Set an attribute, but use the property first if available."""
     if attr in obj.__class__.__dict__:
         p = obj.__class__.__dict__[attr]
         if hasattr(p, 'fset'):
@@ -33,6 +115,7 @@ def property_evading_setattr(obj, attr, val):
 
 
 def get_defintion_attrs(definition):
+    """Generate the inner classes of a model defenition."""
     for name in definition.__order__:
         if not name.startswith('_'):
             attr = getattr(definition, name)
@@ -58,8 +141,24 @@ def get_groups(definition):
         yield G
 
 
-class ModelAttribute(object):
+def add_attr_to_class(classdict, attr):
+    prop_name = attr.key
+    attr_name = '_%s' % prop_name
+    if attr.fget is not None:
+        fget = getattr(attr, 'fget')
+        fset = lambda *a: None
+    else:
+        classdict[attr_name] = attr.default
+        def fget(self, attr_name=attr_name):
+            return getattr(self, attr_name)
+        def fset(self, val, attr_name=attr_name, prop_name=prop_name):
+            setattr(self, attr_name, val)
+            self.__model_notify__([prop_name])
+    classdict[attr.key] = property(fget, fset)
 
+
+class ModelAttribute(object):
+    """A model attribute."""
     def __init__(self, group, name, doc, rtype, default,
                  label, sensitive_attr, dependents, fget):
         self.group = group
@@ -100,23 +199,12 @@ class ModelAttribute(object):
                    dependents, fget)
 
 
-def add_attr_to_class(classdict, attr):
-    prop_name = attr.key
-    attr_name = '_%s' % prop_name
-    if attr.fget is not None:
-        fget = getattr(attr, 'fget')
-        fset = lambda *a: None
-    else:
-        classdict[attr_name] = attr.default
-        def fget(self, attr_name=attr_name):
-            return getattr(self, attr_name)
-        def fset(self, val, attr_name=attr_name, prop_name=prop_name):
-            setattr(self, attr_name, val)
-            self.__model_notify__([prop_name])
-    classdict[attr.key] = property(fget, fset)
-
 class Model(object):
+    """The Model base class.
 
+    Not really for subclassing unless you know what you are doing. Instead,
+    create a definition and call __model_from_definition__
+    """
     def __init__(self):
         self.__model_observers__ = {}
         self.__model_dependents__ = {}
@@ -129,6 +217,7 @@ class Model(object):
 
     @classmethod
     def __model_from_definition__(cls, definition):
+        """Create a new Model type for a definition schema"""
         classdict = dict(cls.__dict__)
         classdict['__model_attrs__'] = []
         classdict['__model_attrs_map__'] = {}
@@ -186,6 +275,10 @@ class BaseObserver(object):
     def __model_notify__(self, model, attr, val):
         """Called when a model attribute is changed"""
 
+    def set_model(self, model):
+        """Override to set the current value."""
+
+
 
 class BaseSingleModelObserver(BaseObserver):
 
@@ -218,9 +311,6 @@ class BaseMultiModelObserver(BaseObserver):
 
     def add_model(self, model):
         model.__model_register__(self, self.__model_attributes__)
-
-    def set_current_model(self, model):
-        """Override to set the current value."""
 
 
 class ModelGroup(object):
@@ -255,9 +345,6 @@ class ModelGroup(object):
     def set_current(self, model):
         self._current = model
         for obs in self._observers:
-            if hasattr(obs, 'set_current_model'):
-                obs.set_current_model(model)
-            elif hasattr(obs, 'set_model'):
-                obs.set_model(model)
+            obs.set_model(model)
 
 

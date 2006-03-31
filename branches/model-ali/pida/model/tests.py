@@ -81,7 +81,7 @@ class MockMultiObserver(BaseMultiModelObserver):
         if hasattr(self, 'notify'):
             self.notify(self, *args)
 
-    def set_current_model(self, model):
+    def set_model(self, model):
         self._current = model
 
 class test_model_setattr(unittest.TestCase):
