@@ -53,7 +53,6 @@ class AddressDefinition(object):
             rtype = types.readonly
             dependents = ['email__home']
 
-            @staticmethod
             def fget(self):
                 return self.email__home
 
@@ -63,7 +62,6 @@ class AddressDefinition(object):
             rtype = types.stringlist('11', '22', '33')
             default = '11'
 
-    @staticmethod
     def __markup__(self):
         mu = self.general__name
         if self.general__knows_age:

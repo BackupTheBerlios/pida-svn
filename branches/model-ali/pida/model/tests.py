@@ -27,15 +27,14 @@ class Blah:
             label = 'blah'
             rtype = types.string
 
-            @staticmethod
             def fget(self):
                 return 'no'
 
     class feh:
         """a feh feh group"""
+        __order__ = ['ouch', 'gah']
         stock_id = 'banana'
         label = 'FEH'
-        __order__ = ['ouch', 'gah']
         class ouch:
             """ouch"""
             label = 'ouch'
@@ -53,7 +52,6 @@ class Blah:
     class _notme:
         pass
 
-    @staticmethod
     def __markup__(self):
         return self.feh__gah
 

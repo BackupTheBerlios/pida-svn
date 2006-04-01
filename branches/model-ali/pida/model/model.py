@@ -72,8 +72,7 @@ class MySchema:
             label = 'Attr 2'
             rtype = types.readonly  # use a readonly type
 
-            @staticmethod           # make this a staticmethod so we can use
-            def fget(self)
+            def fget(self):
                 """
                 You can set a function which will be called when the
                 attribute is accessed. This is best used with read-only
@@ -92,7 +91,7 @@ class MySchema:
                                             # pass.
 
 Once the schema has been specified, a model class needs to be created from
-it, calling Model.__model_from_definition__(schmea) with the model
+it, calling Model.__model_from_definition__(schema) with the model
 schema as the parameter. A class (type) is returned which can then be
 instantiated to create model objects, for example, using the schema above:
 
@@ -145,7 +144,7 @@ def add_attr_to_class(classdict, attr):
     prop_name = attr.key
     attr_name = '_%s' % prop_name
     if attr.fget is not None:
-        fget = getattr(attr, 'fget')
+        fget = attr.fget.im_func
         fset = lambda *a: None
     else:
         classdict[attr_name] = attr.default
@@ -235,7 +234,7 @@ class Model(object):
                 classdict['__model_dependents__'][attr_key] = set()
                 for depattr in attr.dependents:
                     classdict['__model_dependents__'][depattr].add(attr_key)
-        classdict['__model_markup__'] = property(definition.__markup__)
+        classdict['__model_markup__'] = property(definition.__markup__.im_func)
         newcls = type('%sModel' % definition.__name__, (cls,), classdict)
         return newcls
 
@@ -277,7 +276,6 @@ class BaseObserver(object):
 
     def set_model(self, model):
         """Override to set the current value."""
-
 
 
 class BaseSingleModelObserver(BaseObserver):
