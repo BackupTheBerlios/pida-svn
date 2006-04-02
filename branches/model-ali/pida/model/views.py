@@ -28,6 +28,7 @@ class FormattedLabel(ProxyLabel):
         super(FormattedLabel, self).__init__()
         self.format_string = format_string
         self.set_property('data-type', str)
+        self.set_alignment(0, 0.5)
 
     def update(self, data):
         self.set_markup(self.format_string % data)
@@ -68,7 +69,7 @@ def get_widget_for_type(rtype):
         w.set_action(gtk.FILE_CHOOSER_ACTION_SAVE)
         return w
     elif rtype in [types.directory]:
-        w = ProxyFileChooserButton('Select Directory')
+        w = ProxyFileChooserButton(title='Select Directory')
         w.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
         return w
     elif rtype is types.font:
@@ -92,8 +93,9 @@ def get_widget_for_type(rtype):
         w.prefill(rtype.choices)
         return w
     else:
-        return ProxyEntry(data_type=str)
-
+        w = ProxyEntry(data_type=str)
+        w.set_width_chars(18)
+        return w
 
 class TreeObserver(Tree, BaseMultiModelObserver):
 
@@ -127,8 +129,8 @@ class PropertyPage(gtk.VBox, WidgetObserver):
         gtk.VBox.__init__(self)
         WidgetObserver.__init__(self, *args)
         self._pages = {}
-        self._lsizer = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
         self._nb = gtk.Notebook()
+        self._tips = gtk.Tooltips()
         self.pack_start(self._nb)
 
     def set_model(self, model):
@@ -152,11 +154,17 @@ class PropertyPage(gtk.VBox, WidgetObserver):
         return self._nb
 
     def add_page(self, group, title, stock_id, description, attrs):
+        holder = gtk.ScrolledWindow()
+        holder.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         page = gtk.VBox()
+        page.set_border_width(12)
+        holder.add_with_viewport(page)
         page.pack_start(self.create_title_label(title,
             description, stock_id), expand=False)
-        self._pages[tuple(attrs)] = page
-        self._nb.append_page(page,
+        lsizer = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
+        vsizer = gtk.SizeGroup(gtk.SIZE_GROUP_VERTICAL)
+        self._pages[tuple(attrs)] = page, lsizer, vsizer
+        self._nb.append_page(holder,
             tab_label=self.create_tab_label(title, stock_id))
 
     def pack_widget(self, widget, attr, sensitive_attr=None, label=None,
@@ -164,28 +172,37 @@ class PropertyPage(gtk.VBox, WidgetObserver):
         self.add_widget(widget, attr, sensitive_attr)
         for attrs in self._pages:
             if attr in attrs:
-                lw = self.create_labelled_widget(widget, label, doc)
-                self._pages[attrs].pack_start(lw, expand=False)
+                page, sizer, vsizer = self._pages[attrs]
+                lw = self.create_labelled_widget(widget, sizer, vsizer, label,
+                                                 doc)
+                page.pack_start(lw, expand=False)
 
-    def create_labelled_widget(self, widget, label, doc):
+    def create_labelled_widget(self, widget, sizer, vsizer, label, doc):
         if label is None:
             label = widget.get_property('model-attribute')
         if doc is None:
             doc = 'No documentation'
-        vb = gtk.VBox()
+        vb = gtk.EventBox()
         vb.set_border_width(6)
-        hb = gtk.HBox(spacing=6)
-        vb.pack_start(hb)
+        hb = gtk.HBox(spacing=12)
+        vb.add(hb)
         hb.set_border_width(0)
-        if isinstance(widget, ProxyCheckButton):
+        if 0:#isinstance(widget, ProxyCheckButton):
             widget.set_label(label)
+            hb.pack_start(gtk.Label())
+            ltext = ' '
         else:
-            l = gtk.Label(label)
-            l.set_alignment(0, 0.5)
-            hb.pack_start(l, expand=False)
-            self._lsizer.add_widget(l)
-        hb.pack_start(widget, expand=False)
-        vb.pack_start(self.create_doc_label(doc), expand=False)
+            ltext = label
+        l = gtk.Label(ltext)
+        l.set_alignment(0, 0.5)
+        hb.pack_start(l, expand=False)
+        sizer.add_widget(l)
+        al = gtk.Alignment(0, 0.5, 1, 1)
+        al.add(widget)
+        hb.pack_start(al, expand=True)
+        #vb.pack_start(self.create_doc_label(doc), expand=False)
+        self._tips.set_tip(vb, doc)
+        vsizer.add_widget(vb)
         return vb
 
     def create_title_label(self, title, desc, stock_id):
@@ -228,7 +245,7 @@ class PropertyPage(gtk.VBox, WidgetObserver):
 DOC_MU = """<small><i>%s</i></small>"""
 SECTION_TITLE="<big><b>%s</b></big>"
 SECTION_DESCRIPTION="<i>%s</i>"
-VC_NAME_MU='<span color="#0000c0"><b>%s</b></span>'
+VC_NAME_MU='<b>%s</b>'
 
 
 

@@ -33,9 +33,13 @@ class IniFileObserver(BaseMultiModelObserver):
         self.save(model)
 
     def save(self, model):
-        if model.__model_ini_filename__ is None:
+        if hasattr(model, 'general__filename') and model.general__filename:
+            filename = model.general__filename
+        elif model.__model_ini_filename__ is not None:
+            filename = model.__model_ini_filename__
+        else:
             return
-        f = open(model.__model_ini_filename__, 'w')
+        f = open(filename, 'w')
         f.write(self.file_intro)
         for groupname, doc, label, stock_id, attrkeys in \
                                             model.__model_groups__:

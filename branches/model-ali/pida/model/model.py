@@ -133,7 +133,8 @@ def get_groups(definition):
             label = group.label
         else:
             label = name
-        G = (name, group.__doc__, label, stock_id, L)
+        doc = format_docstring(group.__doc__)
+        G = (name, doc, label, stock_id, L)
         for attr in get_defintion_attrs(group):
             a = ModelAttribute.from_definition(group.__name__, attr)
             L.append(a)
@@ -155,6 +156,8 @@ def add_attr_to_class(classdict, attr):
             self.__model_notify__([prop_name])
     classdict[attr.key] = property(fget, fset)
 
+def format_docstring(doc):
+    return doc.replace('\n', ' ').strip()
 
 class ModelAttribute(object):
     """A model attribute."""
@@ -174,7 +177,7 @@ class ModelAttribute(object):
     @classmethod
     def from_definition(cls, group, definition):
         name = definition.__name__
-        doc = definition.__doc__
+        doc = format_docstring(definition.__doc__)
         rtype = definition.rtype
         if hasattr(definition, 'label'):
             label = definition.label
@@ -238,7 +241,9 @@ class Model(object):
         newcls = type('%sModel' % definition.__name__, (cls,), classdict)
         return newcls
 
-    def __model_notify__(self, attrs):
+    def __model_notify__(self, attrs=None):
+        if attrs is None:
+            attrs = self.__model_attrs_map__.keys()
         for attr in attrs:
             val = getattr(self, attr)
             for observer in self.__model_observers__[attr]:
