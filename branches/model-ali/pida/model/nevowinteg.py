@@ -1,9 +1,9 @@
-import time, os
+import time, os, sys
 
 from twisted.internet import task
 from twisted.python import log, util
 
-from nevow import athena, loaders, static, appserver, tags as T
+from nevow import athena, loaders, static, appserver,inevow,  tags as T
 
 from model import Model, BaseSingleModelObserver, BaseMultiModelObserver,\
                   ModelGroup
@@ -303,16 +303,23 @@ class PropertyPage(WidgetPage):
     def set_model(self, model):
         self.o.set_model(model)
 
+from zope.interface import implements, Interface
+
+class Fake(object):
+    pass
+
 if __name__ == '__main__':
     from twisted.application import service, internet
     #application = service.Application('helloworld')
-    page = PropertyPage()
-    a = Address()
-    a.general__name = 'Ali'
-    site = appserver.NevowSite(PropertyPage())
-    #webServer = internet.TCPServer(8080, site)
-    #webServer.setServiceParent(application)
+    def propertyResourceFactory(original):
+        return PropertyPage()
+
+    from twisted.python.components import registerAdapter
     from twisted.internet import reactor
+    registerAdapter(propertyResourceFactory, Fake, inevow.IResource)
+
+    #log.startLogging(sys.stdout)
+    site = appserver.NevowSite(Fake())
     reactor.listenTCP(8080, site, interface='')
     reactor.run()
 
