@@ -5,8 +5,12 @@ from twisted.python import log, util
 
 from nevow import athena, loaders, static, appserver, tags as T
 
-from example import Address
-from model import BaseSingleModelObserver, BaseMultiModelObserver, ModelGroup
+from model import Model, BaseSingleModelObserver, BaseMultiModelObserver,\
+                  ModelGroup
+from exampleschema import AddressDefinition
+
+# Creates a model class
+Address = Model.__model_from_definition__(AddressDefinition)
 from persistency import IniFileObserver, load_model_from_ini
 import attrtypes as types
 
