@@ -241,6 +241,7 @@ class Model(object):
             _rmkdir(uploadpath.split(':')[-1])
             outputpath = '%s/index.html' % outputpath
             uploadpath = '%s/index.html' % uploadpath
+        print outputpath, uploadpath
         _rcp(outputpath, uploadpath)
             
     def load_rst(self):
@@ -331,7 +332,7 @@ class Home(Directory):
     def _load_items(self):
         for module in CONF.get('modules', 'dirs').split(','):
             yield Directory(self, module, self)
-        yield Link('/bugs/', 'bugs')
+        yield Link('http://tracos.org/pida/report/', 'bugs')
         
     #def get_output_path(self):
     #    return os.path.join(self.output_root, 'index.html')
