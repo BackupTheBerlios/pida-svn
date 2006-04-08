@@ -2,7 +2,6 @@
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
 
-import nose
 
 import pida.core.event as event
 from pida.core.testing import test, assert_equal
