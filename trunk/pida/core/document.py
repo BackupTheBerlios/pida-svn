@@ -29,7 +29,11 @@ import base
 import time
 import tempfile
 
+from charfinder import DETECTOR_MANAGER
+import codecs
+
 import actions
+
 
 class document_handler(actions.action_handler):
     
@@ -84,6 +88,7 @@ def relpath(target, base=os.curdir):
 
 new_file_index = 1
 
+
 class document(base.pidacomponent):
     """Base document class."""
     """A real file on disk."""
@@ -105,12 +110,15 @@ class document(base.pidacomponent):
                        markup_string=None,
                        contexts=None,
                        icon_name=None,
-                       handler=None):
+                       handler=None,
+                       detect_encoding=DETECTOR_MANAGER):
         self.__handler = handler
         self.__filename = filename
         self.__unique_id = time.time()
         self.__project = None
         self.__newfile_index = None
+        self.__detect_encoding = detect_encoding
+        
         if filename is None:
             global new_file_index
             self.__newfile_index = new_file_index
@@ -129,28 +137,51 @@ class document(base.pidacomponent):
         self.__string = None
         self.__stat = None
         self.__mimetype = None
+        self.__encoding = None
+        
     reset = __reset
         
     def __load(self):
         if self.__stat is None:
             self.__stat = self.__load_stat()
-        if self.__lines is None:
-            self.__lines = self.__load_lines()
         if self.__mimetype is None:
             self.__mimetype = self.__load_mimetype()
-
-    def __load_lines(self):
-        self.__lines = []
+        
+        if self.__encoding is not None:
+            # Loading was already found, we're done
+            return
+        
+        # lines and string depend on encoding
+        stream = open(self.__filename, "rb")
+        self.__encoding = self.__detect_encoding(stream, self.__filename, self.__mimetype)
+        if self.__encoding is None:
+            return
+        stream.seek(0)
+        stream = codecs.EncodedFile(stream, self.__encoding)
+        self.__lines = list(stream)
+        self.__string = "".join(self.__lines)
+        stream.close()
+        return
+        
         try:
-            f = open(self.filename)
-            for line in f:
-                self.__lines.append(line)
-            self.__string = ''.join(self.__lines)
-            f.close()
+            
+            stream = open_encoded(self.filename)
+            try:
+                self.__encoding = stream.file_encoding
+                self.__lines = list(stream)
+                self.__string = "".join(self.__lines)
+            finally:
+                stream.close()
+                
         except IOError:
+            # When there's a problem set the encoding to None and the rest too
+            self.__encoding = None
+            self.__lines = None
+            self.__string = None
+            # Also warn the log about it
             self.log.warn('failed to open file %s', self.filename)
-        return self.__lines
-
+            
+        
     def __load_stat(self):
         try:
             stat_info = os.stat(self.filename)
@@ -198,6 +229,13 @@ class document(base.pidacomponent):
 
     mimetype = property(__get_mimetype)
 
+    __encoding = None
+    def get_encoding(self):
+        self.__load()
+        return self.__encoding
+    
+    encoding = property(get_encoding)
+    
     def get_directory(self):
         return os.path.dirname(self.filename)
     directory = property(get_directory)
