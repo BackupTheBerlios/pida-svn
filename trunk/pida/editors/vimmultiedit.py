@@ -67,7 +67,7 @@ class vim_multi_editor(vimeditor.vim_editor, service.service):
 
     display_name = 'External Vim'
 
-    def start(self):
+    def vim_start(self):
         self.__oldservers = []
         self.view = vim_plugin_view(service=self)
         self.__cw = vimcom.communication_window(self)

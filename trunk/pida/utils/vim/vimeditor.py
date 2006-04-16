@@ -56,14 +56,14 @@ class vim_editor(object):
     def get_server(self):
         raise NotImplementedError
 
-    def start(self):
+    def vim_start(self):
         raise NotImplementedError
 
     def vim_new_serverlist(self, serverlist):
         raise NotImplementedError
 
     def cmd_start(self):
-        self.start()
+        self.vim_start()
 
     def cmd_revert(self):
         self.__cw.revert(self.server)

@@ -66,7 +66,7 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
         return self.__srv
     server = property(get_server)
 
-    def start(self):
+    def vim_start(self):
         self.__view = self.create_view('Vim')
         if self.opt('vim_command', 'use_cream'):
             command = 'cream'
