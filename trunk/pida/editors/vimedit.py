@@ -22,6 +22,8 @@
 #SOFTWARE.
 
 
+import gobject
+
 # pida core import(s)
 import pida.core.service as service
 
@@ -71,7 +73,9 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
         else:
             command = 'gvim'
         self.show_view(view=self.__view)
-        self.__view.run(command)
+        def _r(command=command):
+            self.__view.run(command)
+        gobject.idle_add(_r)
 
     def vim_new_serverlist(self, serverlist):
         if (self.__view is not None and

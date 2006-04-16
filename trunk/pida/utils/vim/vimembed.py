@@ -55,7 +55,6 @@ class vim_embed(contentview.content_view):
         eb.add(socket)
         self.show_all()
         self.__eb = eb
-        self.__socket = socket
         return socket.get_id()
 
     def __generate_servername(self):
