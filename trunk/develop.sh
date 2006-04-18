@@ -3,7 +3,6 @@
 # don't accept errors
 set -e
 
-echo "Preparing pida..."
 # detect the real location of the working copy
 if type -p readlink > /dev/null; then
 	ME=$( readlink -f "$0" )
@@ -12,6 +11,15 @@ else
 fi
 PIDADIR=$( cd "${ME%/*}"; pwd )
 unset ME
+
+if [ "$1" == "--update" ]; then
+	echo "Updating $PIDADIR..."
+	shift;
+	svn up "$PIDADIR"
+fi
+
+(
+echo "Building pida..."
 
 rm -rf "$PIDADIR/run"
 mkdir -p "$PIDADIR/run"
@@ -22,13 +30,11 @@ cat <<EOT > "$PIDADIR/setup.cfg"
 tag_svn_revision = true
 EOT
 
-(
-echo "Building pida..."
 cd "$PIDADIR"
 python setup.py develop --install-dir=run --script-dir=run 2>&1>run/buildlog.log
 rm setup.cfg
 grep '^Version:' pida.egg-info/PKG-INFO | cut -d' ' -f2- > pida/data/version
 )
 
-echo "Running..."
+echo "Starting..."
 python "$PIDADIR/run/pida" $*
