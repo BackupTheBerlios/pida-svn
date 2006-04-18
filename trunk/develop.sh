@@ -19,21 +19,21 @@ if [ "$1" == "--update" ]; then
 fi
 
 (
-echo "Building pida..."
+	echo "Building pida..."
 
-rm -rf "$PIDADIR/run"
-mkdir -p "$PIDADIR/run"
+	rm -rf "$PIDADIR/run"
+	mkdir -p "$PIDADIR/run"
 
-PYTHONPATH="$PIDADIR/run:$PYTHONPATH"
-cat <<EOT > "$PIDADIR/setup.cfg"
-[egg_info]
-tag_svn_revision = true
-EOT
+	PYTHONPATH="$PIDADIR/run:$PYTHONPATH"
+	cat <<-EOT > "$PIDADIR/setup.cfg"
+	[egg_info]
+	tag_svn_revision = true
+	EOT
 
-cd "$PIDADIR"
-python setup.py develop --install-dir=run --script-dir=run 2>&1>run/buildlog.log
-rm setup.cfg
-grep '^Version:' pida.egg-info/PKG-INFO | cut -d' ' -f2- > pida/data/version
+	cd "$PIDADIR"
+	python setup.py develop --install-dir=run --script-dir=run 2>&1>run/buildlog.log
+	rm setup.cfg
+	grep '^Version:' pida.egg-info/PKG-INFO | cut -d' ' -f2- > pida/data/version
 )
 
 echo "Starting..."
