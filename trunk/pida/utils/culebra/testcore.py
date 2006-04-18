@@ -173,37 +173,37 @@ class TestServiceProvider(unittest.TestCase):
 # Service discovery stuff
 class TestPlugin(unittest.TestCase):
     def test_service(self):
-        reg = PluginRegistry()
+        reg = Registry()
         reg.register_plugin(
-            service="foo",
-            keys=("key1", "key2", "key3"),
+            instance="foo",
+            singletons=("key1", "key2", "key3"),
         )
         reg.register_plugin(
-            service="bar",
-            keys=("key4",)
+            instance="bar",
+            singletons=("key4",)
         )
-        assert reg.get_service("key1") == "foo"
-        assert reg.get_service("key2") == "foo"
-        assert reg.get_service("key3") == "foo"
-        assert reg.get_service("key4") == "bar"
+        assert reg.get_singleton("key1") == "foo"
+        assert reg.get_singleton("key2") == "foo"
+        assert reg.get_singleton("key3") == "foo"
+        assert reg.get_singleton("key4") == "bar"
         try:
-            reg.get_service("key5")
+            reg.get_singleton("key5")
             assert False
-        except ServiceError:
+        except SingletonError:
             pass
 
     def test_features(self):
-        reg = PluginRegistry()
+        reg = Registry()
         reg.register_plugin(
-            service="foo",
+            instance="foo",
             features=("feat1", "feat2", "feat3")
         )
         reg.register_plugin(
-            service="bar",
+            instance="bar",
             features=("feat1", "feat3"),
         )
         reg.register_plugin(
-            service="gin",
+            instance="gin",
             features=("feat2", "feat3", "feat4"),
         )
         
@@ -221,92 +221,105 @@ class TestPlugin(unittest.TestCase):
         self.assertEquals(l1, l2)
 
     def test_factory(self):
-        reg = PluginRegistry()
-        reg.register_plugin(factory=lambda foo: "bar", keys=("foo",))
-        self.assertEquals(reg.get_service("foo"), "bar")
+        reg = Registry()
+        reg.register_plugin(factory=lambda foo: "bar", singletons=("foo",))
+        self.assertEquals(reg.get_singleton("foo"), "bar")
         
         class S:
             def __init__(self, foo):
                 pass
         
         # Make sure the objects are created once
-        reg.register_plugin(factory=S, keys=("bar",))
-        s1 = reg.get_service("bar")
-        s2 = reg.get_service("bar")
+        reg.register_plugin(factory=S, singletons=("bar",))
+        s1 = reg.get_singleton("bar")
+        s2 = reg.get_singleton("bar")
         assert s1 is s2
         
     def test_unregister_plugin(self):
-        reg = PluginRegistry()
-        p = reg.register_plugin(factory=lambda foo: "bar", keys=("foo",), feats=("bar",))
+        reg = Registry()
+        p = reg.register_plugin(factory=lambda foo: "bar", singletons=("foo",), features=("feat1",))
+        assert reg.get_singleton("foo") == "bar"
+        self.assert_eq(reg.get_features("feat1"), ["bar"])
+
         reg.unregister(p)
         
         try:
-            reg.get_service("foo")
+            reg.get_singleton("foo")
             assert False
-        except ServiceError:
+        except SingletonError:
             pass
 
-    def test_unregister_service(self):
-        reg = PluginRegistry()
-        p = reg.register_plugin(factory=lambda foo: "me", keys=("foo",), features=("bar",))
-        self.assert_eq(reg.get_features("bar"), ["me"])
-        self.assertEqual(reg.get_service("foo"), "me")
+        self.assert_eq(reg.get_features("feat1"), [])
 
-        reg.unregister_service("foo")
-        assert len(p.keys) == 0
+
+    def test_unregister_service(self):
+        reg = Registry()
+        p = reg.register_plugin(factory=lambda foo: "me", singletons=("foo",), features=("bar",))
+        p = reg.plugins[p]
+        
+        self.assert_eq(reg.get_features("bar"), ["me"])
+        self.assertEqual(reg.get_singleton("foo"), "me")
+
+        reg.unregister_singleton("foo")
+        assert len(p.singletons) == 0
         try:
-            reg.get_service("foo")
+            reg.get_singleton("foo")
             assert False
-        except ServiceError:
+        except SingletonError:
             pass
             
         self.assert_eq(reg.get_features("bar"), ["me"])
         
         try:
-            reg.unregister_service("sdfds")
+            reg.unregister_singleton("sdfds")
             assert False
-        except ServiceError:
+        except SingletonError:
             pass
 
     def test_unregister_features(self):
-        reg = PluginRegistry()
-        p = reg.register_plugin(factory=lambda foo: "me", keys=("foo",), features=("bar",))
+        reg = Registry()
+        p = reg.register_plugin(factory=lambda foo: "me", singletons=("foo",), features=("bar",))
         self.assert_eq(reg.get_features("bar"), ["me"])
-        self.assertEqual(reg.get_service("foo"), "me")
+        self.assertEqual(reg.get_singleton("foo"), "me")
 
         reg.unregister_feature("bar", p)
         self.assert_eq(reg.get_features("bar"), [])
 
     def test_service_conflict(self):
-        reg = PluginRegistry()
-        p1 = reg.register_plugin(factory=lambda foo: "me", keys=("foo",), features=("bar",))
+        reg = Registry()
+        p1 = reg.register_plugin(factory=lambda foo: "me", singletons=("foo",), features=("bar",))
         try:
-            p2 = reg.register_plugin(factory=lambda foo: "me2", keys=("foo",), features=("bar",))
+            p2 = reg.register_plugin(factory=lambda foo: "me2", singletons=("foo",), features=("bar",))
             assert False
-        except ServiceError:
+        except SingletonError:
             pass
         self.assert_eq(reg.get_features("bar"), ["me"])
-        assert reg.get_service("foo") == "me"
+        assert reg.get_singleton("foo") == "me"
 
-    def test_ghost_services(self):
-        reg = PluginRegistry()
-        p1 = reg.register_plugin(factory=lambda foo: "me", keys=("foo",))
+    def test_ghost_plugin_entries(self):
+        reg = Registry()
+        p1 = reg.register_plugin(factory=lambda foo: "me", singletons=("foo",))
+        # Private stuff, shouldn't be tested
+        p1 = reg.plugins[p1]
+        
         assert len(reg.plugins) == 1
-        assert len(p1.keys) == 1
+        assert len(p1.singletons) == 1
         assert len(p1.features) == 0
-        reg.unregister_service("foo")
+        reg.unregister_singleton("foo")
         assert len(reg.plugins) == 0, reg.plugins
-        assert len(p1.keys) == 0
+        assert len(p1.singletons) == 0
         assert len(p1.features) == 0
 
-        p1 = reg.register_plugin(factory=lambda foo: "me", features=("foo",))
+        real_p1 = reg.register_plugin(factory=lambda foo: "me", features=("foo",))
+        p1 = reg.plugins[real_p1]
         assert len(reg.plugins) == 1
-        assert len(p1.keys) == 0
+        assert len(p1.singletons) == 0
         assert len(p1.features) == 1
-        reg.unregister_feature("foo", p1)
+        reg.unregister_feature("foo", real_p1)
         assert len(reg.plugins) == 0
-        assert len(p1.keys) == 0
+        assert len(p1.singletons) == 0
         assert len(p1.features) == 0
+        
 
 if __name__ == '__main__':
     unittest.main()

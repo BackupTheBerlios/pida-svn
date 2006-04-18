@@ -156,6 +156,7 @@ class Pscyntilla(gobject.GObject):
             if ftype == 'python':
                 self._sc.set_key_words(0, ' '.join(kwlist))
         self.load_fd(f)
+        self._sc.set_code_page(scintilla.SC_CP_UTF8)
         self._sc.empty_undo_buffer()
         self._sc.set_save_point()
 

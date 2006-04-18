@@ -56,6 +56,31 @@ def register_services(service_provider):
     searchbar.register_services(service_provider)
     replacebar.register_services(service_provider)
     buffers.register_services(service_provider)
+    
+def register(registry):
+    services = ("view", interfaces.ICarretController,
+                interfaces.ISelectColors, interfaces.ISelectFont)
+                
+    service_provider.register_plugin(
+        lambda service_provider: CulebraView(),
+        singletons=services,
+    )
+    service_provider.register_plugin(
+        widget_factory,
+        singletons=[interfaces.IWidget],
+    )
+    service_provider.register_plugin(
+        factory=ActionGroupController.factory(),
+        singletons=[interfaces.IActionGroupController]
+    )
+    
+    registry.register(factory=buffer_factory, singletons=["buffer"])
+    
+    # Register other modules
+    searchbar.register(registry)
+    replacebar.register(registry)
+    buffers.register(registry)
+    
 
 class ActionGroupController(core.BaseService):
     search = core.Depends(interfaces.ISearchBar)
@@ -132,7 +157,7 @@ def widget_factory(provider):
     
     return vbox
     
-def create_editor(filename=None, action_group=None):
+def create_editor(filename=None, action_group=None, encoding="utf-8"):
     provider = MyServiceProvider()
     register_services(provider)
     ag = provider.get_service(interfaces.IActionGroupController)
@@ -141,6 +166,7 @@ def create_editor(filename=None, action_group=None):
     if filename is not None:
         file_ops = provider.get_service(interfaces.IFileOperations)
         file_ops.set_filename(filename)
+        file_ops.set_encoding(encoding)
         file_ops.load()
         #view.set_buffer(buff)
     

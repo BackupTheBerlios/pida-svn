@@ -3,6 +3,8 @@ import mimetypes
 import gtksourceview
 from rat import text
 
+LANG_MANAGER = gtksourceview.SourceLanguagesManager()
+
 class BaseView(gtksourceview.SourceView):
     def __init__(self):
         super(BaseView, self).__init__()
@@ -17,11 +19,13 @@ class BaseView(gtksourceview.SourceView):
         self.set_insert_spaces_instead_of_tabs(True)
         text.make_source_view_indentable(self)
 
+
+"""
 class BaseBuffer(gtksourceview.SourceBuffer):
 
     def __init__(self):
         super(BaseBuffer, self).__init__()
-        lm = gtksourceview.SourceLanguagesManager()
+        lm = 
         self.languages_manager = lm
         self.set_highlight(True)
 
@@ -31,4 +35,4 @@ class BaseBuffer(gtksourceview.SourceBuffer):
             mt = 'text/plain'
         language = self.languages_manager.get_language_from_mime_type(mt)
         self.set_language(language)
-            
+"""

@@ -59,12 +59,18 @@ class CulebraView(contentview.content_view):
     HAS_CONTROL_BOX = False
     HAS_TITLE = False
 
-    def init(self, filename=None, action_group=None, background_color=None,
-                   font_color=None, font_text=None):
+    def init(self, action_group=None, background_color=None,
+                   font_color=None, font_text=None, document=None):
         self.widget.set_no_show_all(True)
-        self.provider = edit.create_editor(filename, action_group)
+        
+        self.provider = edit.create_editor(action_group=action_group)
+        
         
         self.set_action_group = self.provider.get_service(interfaces.IActionGroupController).set_action_group
+        file_ops = self.provider.get_service(interfaces.IFileOperations)
+        file_ops.set_encoding(document.encoding)
+        file_ops.set_filename(document.filename)
+        file_ops.load()
         
 #        editor.set_background_color(background_color)
 #        editor.set_font_color(font_color)
@@ -171,11 +177,11 @@ class culebra_editor(service.service):
         
     def __load_document(self, document):
         view = self.create_view('Culebra',
-            filename=document.filename,
             action_group=self.action_group,
             background_color = self.get_background_color(),
             font_color = self.get_font_color(),
-            font_text = self.opt('general', 'font')
+            font_text = self.opt('general', 'font'),
+            document = document,
         )
         self.__views[document.unique_id] = view
         self.__documents[view.unique_id] = document
