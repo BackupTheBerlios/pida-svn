@@ -142,6 +142,9 @@ class document(base.pidacomponent):
     reset = __reset
         
     def __load(self):
+        if self.__filename is None:
+            return
+
         if self.__stat is None:
             self.__stat = self.__load_stat()
         if self.__mimetype is None:
@@ -152,27 +155,17 @@ class document(base.pidacomponent):
             return
         
         # lines and string depend on encoding
-        stream = open(self.__filename, "rb")
-        self.__encoding = self.__detect_encoding(stream, self.__filename, self.__mimetype)
-        if self.__encoding is None:
-            return
-        stream.seek(0)
-        stream = codecs.EncodedFile(stream, self.__encoding)
-        self.__lines = list(stream)
-        self.__string = "".join(self.__lines)
-        stream.close()
-        return
-        
-        try:
             
-            stream = open_encoded(self.filename)
+        try:
             try:
-                self.__encoding = stream.file_encoding
+                stream = open(self.__filename, "rb")
+                self.__encoding = self.__detect_encoding(stream, self.__filename, self.__mimetype)
+                stream.seek(0)
+                stream = codecs.EncodedFile(stream, self.__encoding)
                 self.__lines = list(stream)
                 self.__string = "".join(self.__lines)
             finally:
                 stream.close()
-                
         except IOError:
             # When there's a problem set the encoding to None and the rest too
             self.__encoding = None
@@ -184,13 +177,13 @@ class document(base.pidacomponent):
         
     def __load_stat(self):
         try:
-            stat_info = os.stat(self.filename)
+            stat_info = os.stat(self.__filename)
         except OSError:
             stat_info = None
         return stat_info
 
     def __load_mimetype(self):
-        typ, encoding = mimetypes.guess_type(self.filename)
+        typ, encoding = mimetypes.guess_type(self.__filename)
         if typ is None:
             mimetype = ('', '')
         else:
