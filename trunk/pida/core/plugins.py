@@ -1,3 +1,49 @@
+"""A flexible plugin framework.
+
+Clear your mind of any previously defined concept of a plugin.
+
+Key components:
+
+    * Registry: stores a set of plugins
+    * Plugin: defines a set of behaviours
+    * Registry key: unique behavioural identifier
+
+Types of definable behaviour:
+
+    1. Singleton
+    2. Feature
+    3. Extension Point/Extender
+
+A plugin can register any number of the above behaviour
+types.
+
+1. Singleton
+
+When a plugin registers as a singleton for a key, it is saying "I provide the
+behaviour", so when the registry is looked up for that key, the object is
+returned. At this point, please consider that an ideal registry key may be an
+Interface definition (formal or otherwise), so when you ask for the behaviour
+by interface you are actually returned an object implementing that interface.
+
+2. Feature
+
+When a plugin defines a Feature, it is again saying "I provide the behaviour",
+the difference with singleton is that many plugins can define a feature, and
+these plugins are aggregated and can be looked up by registry key. The look up
+returns a list of objects that claim to provide the key.
+
+3. Extension point
+
+An extension point is identical to a feature except that the keys for it must
+be predefined and are fixed. While a plugin may invent a feature and others
+can join it, it is expected that whatever creates the registry formally
+defines the extension points and they are then fixed. This can be used to
+simulate the behaviour of traditional (Eclipse or Trac) extension points. The
+plugin itself supplies the Extender (that which extends), while the registry
+contains the Extension point itself (that which is to be extended).
+
+"""
+
 import weakref
 
 ##############################################################################
