@@ -42,6 +42,50 @@ simulate the behaviour of traditional (Eclipse or Trac) extension points. The
 plugin itself supplies the Extender (that which extends), while the registry
 contains the Extension point itself (that which is to be extended).
 
+Defining Plugins:
+
+1. Singletons
+
+a. First you will need a registry item:
+
+    reg = Registry()
+
+b. now define a behavioural interface:
+
+    class IAmYellow(Interface):
+        def get_shade():
+            "get the shade of yellow"
+
+c. now write a class that implements this behaviour:
+
+    class Banana(object):
+        def get_shade(self):
+            return 'light and greeny'
+
+d. create an instance of the plugin
+
+    plugin = Banana()
+
+e. register it with the registry:
+
+    reg.register_plugin(
+            instance=plugin,
+            singletons=(IAmYellow,)
+        )
+
+f. get the item from the registry at a later time:
+
+    plugin = reg.get_singleton(IAmYellow)
+    print plugin.get_shade()
+
+Things to note:
+
+    * Attempting to register another plugin with a singleton of IAmYellow will
+      fail.
+
+    * Looking up a non-existent singleton will raise a SingletonError.
+
+
 """
 
 import weakref
