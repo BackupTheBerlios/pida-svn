@@ -162,15 +162,14 @@ class project_creator(service.service):
         project_file_name = os.path.join(project_directory,
                                          '%s.pida' % project_name)
         f = open(project_file_name, 'w')
-        f.write('#%s\n[general]\nsource_directory=%s\n' %
-                (project_type_name, os.path.dirname(project_file_name)))
+        f.write('[general]\nname=%s\n' % project_name)
+        f.write('[general]\nfilename=%s\n' % project_file_name)
         f.close()
         self.boss.call_command('projectmanager', 'add_project',
             project_file=project_file_name)
-        class dummy_project:
-            name = project_name
-        self.boss.call_command('projectmanager', 'edit', projects=None,
-                                current_project = dummy_project())
+        #class dummy_project:
+        #    name = project_name
+        self.boss.call_command('projectmanager', 'edit')
 
     def create_view(self):
         chooser = gtk.FileChooserDialog("Save Project File",
@@ -189,9 +188,6 @@ class project_creator(service.service):
         options = project_options()
         chooser.connect('response', self.cb_response, options)
         chooser.set_extra_widget(options)
-        types = self.boss.call_command('projecttypes',
-            'get_project_type_names')
-        options.set_project_types(types)
         return chooser
 
     def cb_response(self, dlg, response, options):

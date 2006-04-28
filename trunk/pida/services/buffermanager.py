@@ -34,7 +34,7 @@ from pida.core.service import service, definitions as defs
 
 class BufferTree(Tree):
     """Widget for the buffer list"""
-    
+
     SORT_CONTROLS = True
     SORT_AVAILABLE = [('Time Opened','creation_time'),
                       ('File path','filename'),
@@ -53,7 +53,7 @@ class BufferTree(Tree):
             isnt = not val.basename.startswith(key)
             return isnt
         self.view.set_search_equal_func(_se)
-        
+
 
 class BufferView(content_view):
     """View for the buffer list."""
@@ -154,7 +154,7 @@ class Buffermanager(service):
     # Service basics
 
     display_name = 'Buffer Management'
-    
+
     # Views
 
     class BufferView(defs.View):
@@ -322,14 +322,14 @@ class Buffermanager(service):
 
     def cmd_switch_index(self, index):
         self.plugin_view.goto_index(index - 1)
-        
+
     # Private methods
 
     def __get_filename_document(self, filename):
         for uid, doc in self.__documents.iteritems():
             if doc.filename == filename:
                 return doc
-        
+
     def __remove_document(self, document, dorefresh=True):
         del self.__documents[document.unique_id]
         model = self.plugin_view.bufferview.model
@@ -363,7 +363,7 @@ class Buffermanager(service):
         else:
             gobject.idle_add(call, *args)
             #call(*args)
-        
+
 
     def __open_file(self, filename):
         document = self.boss.call_command('documenttypes',
@@ -452,7 +452,7 @@ class Buffermanager(service):
     def act_new_file(self, action):
         """Creates a document"""
         self.call('new_file')
-    
+
     # UI Definitions
 
     def get_menu_definition(self):

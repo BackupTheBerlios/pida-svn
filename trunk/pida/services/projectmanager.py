@@ -24,10 +24,11 @@
 import pida.pidagtk.tree as tree
 import pida.pidagtk.configview as configview
 import pida.pidagtk.contentview as contentview
-
+from pida.model import model, views, persistency
 import pida.core.registry as registry
 import pida.core.service as service
 import pida.core.actions as actions
+import pida.core.project as project
 types = service.types
 defs = service.definitions
 
@@ -57,7 +58,7 @@ class ProjectTreeItem(tree.TreeItem):
         return b
     markup = property(__get_markup)
 
-class ProjectTree(tree.Tree):
+class ProjectTree(views.TreeObserver):
 
     SORT_BY = 'name'
 
@@ -85,22 +86,19 @@ class project_view(contentview.content_view):
     HAS_TITLE = False
 
     def init(self):
-        self.__projectlist = ProjectTree()
-        self.widget.pack_start(self.__projectlist)
-        self.__projectlist.set_property('markup-format-string',
-            self.__projectlist.markup_format_string)
-        self.__projectlist.connect('clicked',
+        self.proj_list = self.service.proj_group.create_multi_observer(
+                                                    ProjectTree)
+        self.proj_list.connect('clicked',
             self.service.cb_plugin_view_project_clicked)
-        self.__projectlist.connect('double-clicked',
+        self.proj_list.connect('double-clicked',
             self.service.cb_plugin_view_project_double_clicked)
-        self.__projectlist.connect('right-clicked',
+        self.proj_list.connect('right-clicked',
             self.cb_list_right_clicked)
+        self.widget.pack_start(self.proj_list)
 
-    def set_projects(self, *args):
-        self.__projectlist.set_projects(self.service.projects)
 
     def get_selected(self):
-        return self.__projectlist.selected
+        return self.proj_list.selected
 
     def cb_list_right_clicked(self, treeview, item, event):
         if item is None:
@@ -113,7 +111,7 @@ class project_view(contentview.content_view):
         else:
             menu = self.service.boss.call_command('contexts',
                 'get_context_menu', ctxname='directory',
-                ctxargs=[item.value.source_directory])
+                ctxargs=[item.value.source__directory])
             menu.add(gtk.SeparatorMenuItem())
             for act in ['projectmanager+properties',
                         'projectmanager+remove_project_from_workbench']:
@@ -124,13 +122,27 @@ class project_view(contentview.content_view):
         menu.popup(None, None, None, event.button, event.time)
 
     def get_model(self):
-        return self.__projectlist.model
+        return self.proj_list.model
 
     def set_selected(self, key):
         self.__projectlist.set_selected(key)
     
     def get_selected_iter(self):
         return self.__projectlist.selected_iter
+
+
+class ProjectEditor(contentview.content_view):
+
+    def init(self):
+        mg = self.service.proj_group
+        self.tv = mg.create_multi_observer(views.TreeObserver)
+        self.pp = mg.create_single_observer(views.PropertyPage)
+        b = gtk.HPaned()
+        b.pack1(self.tv)
+        b.pack2(self.pp)
+        b.set_position(200)
+        self.widget.pack_start(b)
+
 
 class ProjectManager(service.service):
     """Project Management"""
@@ -142,20 +154,10 @@ class ProjectManager(service.service):
         book_name = 'content'
 
     class ProjectEditor(defs.View):
-        view_type = configview.config_view
-        book_name = 'ext'
+        view_type = ProjectEditor
+        book_name = 'edit'
 
-    class default(defs.project_type):
-        project_type_name = 'default'
-        class general(defs.optiongroup):
-            """General options for Python projects"""
-            class source_directory(defs.option):
-                """The directory containing source code."""
-                rtype = types.directory
-                default = os.path.expanduser('~')
-   
     # life cycle
- 
     def init(self):
         self.__current_project = None
         self.__history = []
@@ -166,8 +168,16 @@ class ProjectManager(service.service):
         if not os.path.exists(self.__history_file):
             self.__write_history()
         self.__started = False
+        self.__init_model()
+        self.__read_history()
         self.create_view('ProjectView')
         self.__init_project_toolbar()
+        self._editview = None
+
+    def __init_model(self):
+        self.proj_group = model.ModelGroup()
+        self.ini_watch = self.proj_group.create_single_observer(
+            persistency.IniFileObserver)
 
     def __init_project_toolbar(self):
         tb = self.boss.call_command('window', 'get_ui_widget',
@@ -177,121 +187,87 @@ class ProjectManager(service.service):
         i = tb.get_item_index(ph)
         ti = gtk.ToolItem()
         tb.insert(ti, i)
-        #ti.set_expand(True)
         tbox = gtk.HBox(spacing=6)
         ti.add(tbox)
-        #l = gtk.Label('Project')
-        #tbox.pack_start(l, expand=False)
-        self.__projects_combo = gtk.ComboBox()
-        self.__projects_combo.set_property('add-tearoffs', True)
+        self.__projects_combo = self.proj_group.create_multi_observer(
+            views.ComboObserver)
         tbox.pack_start(self.__projects_combo)
-        cell = gtk.CellRendererText()
-        self.__projects_combo.pack_start(cell, True)
-        self.__projects_combo.set_attributes(cell, text=0)
-        self.__cmb_con = self.__projects_combo.connect_after('changed',
-                         self.cb_combo_changed)
-
 
     def reset(self):
         if not self.__started:
             self.__started = True
             if os.path.exists(self.__last_file):
                 f = open(self.__last_file, 'r')
-                name = f.read()
+                name = f.read().strip()
                 f.close()
-                self.plugin_view.set_selected(name)
-                self.__current_project_activated()
+                for proj in self.proj_group:
+                    if proj.general__name == name:
+                        self.proj_group.set_current(proj)
+                        self.__current_project_activated()
 
     def stop(self):
         if self.__current_project is not None:
             f = open(self.__last_file, 'w')
-            f.write(self.__current_project.name)
+            f.write(self.__current_project.general__name)
             f.close()
-
-    def bnd_filemanager_directory_changed(self, directory):
-        if self.__current_project is not None:
-            self.__current_project.browse_directory = directory
 
     # private interface
 
     def __set_toolbar(self):
         self.__projects_combo.set_model(self.plugin_view.get_model())
+        self.__projects_combo.set_property('text-column', 2)
+        entry = self.__projects_combo.get_children()[0]
+        entry.set_editable(False)
 
     def __read_history(self):
-        self.__history = []
         f = open(self.__history_file, 'r')
+        hist = set()
         for filename in f:
-            self.__history.append(filename.strip())
+            filename = filename.strip()
+            if os.path.exists(filename):
+                hist.add(filename)
         f.close()
+        for filename in hist:
+                p = project.Project()
+                persistency.load_model_from_ini(filename, p)
+                self.proj_group.add_model(p)
+        self.__write_history()
 
     def __write_history(self):
         f = open(self.__history_file, 'w')
-        for filename in self.__history:
-            f.write('%s\n' % filename)
+        for proj in set(self.proj_group):
+            f.write('%s\n' % proj.general__filename)
         f.close()
 
-    def __update(self):
-        self.__read_history()
-        self.__load_projects()
-        sel = self.plugin_view.get_selected()
-        self.plugin_view.set_projects()
-        self.__set_toolbar()
-        if sel is not None:
-            self.plugin_view.set_selected(sel.key)
-            if self.plugin_view.get_selected() is None:
-                self.plugin_view.set_selected(self.plugin_view.get_model()[0][0])
-
-    def __load_projects(self):
-        self.__projects = []
-        for filename in self.__history:
-            project = self.boss.call_command('projecttypes',
-                        'load_project', project_file_name=filename)
-            if project is not None:
-                self.__projects.append(project)
-             
-
     def __launch_editor(self, projects=None, current_project=None):
-        if projects is None:
-            projects = self.projects
-        view = self.create_view('ProjectEditor')
-        view.connect('data-changed', self.cb_data_changed)
-        view.set_registries([(p.name, p.options) for p in projects])
-        if current_project is not None:
-            view.show_page(current_project.name)
-        self.show_view(view=view)
+        if self._editview is None:
+            self._editview = self.create_view('ProjectEditor')
+            self.show_view(view=self._editview)
+        self._editview.raise_page()
 
     def __current_project_changed(self, project):
         if project is not self.__current_project:
-            if self.__current_project is not None:
-                self.__current_project.project_type.action_group.\
-                    set_visible(False)
             self.__current_project = project
-            self.__current_project.project_type.action_group.set_visible(True)
-            self.boss.call_command('window', 'update_action_groups')
-            ite = self.plugin_view.get_selected_iter()
-            self.__projects_combo.disconnect(self.__cmb_con)
-            self.__projects_combo.set_active_iter(ite)
-            self.__cmb_con = self.__projects_combo.connect_after('changed',
-                         self.cb_combo_changed)
+            act = self.action_group.get_action('projectmanager+execute_project')
+            act.set_sensitive(self.__current_project.execution__uses)
 
     def __current_project_activated(self):
         if self.__current_project is not None:
-            directory = self.__current_project.browse_directory
+            directory = self.__current_project.general__browse_directory
             if directory is not None:
                 self.boss.call_command('filemanager', 'browse',
                                         directory=directory)
 
     # external interface
-   
     def get_projects(self):
         for project in self.__projects:
             yield project
     projects = property(get_projects)
 
-    # bindings
-    
-    def bnd_projecttypes_project_type_registered(self):
-        self.__update()
+    # bidings
+    def bnd_filemanager_directory_changed(self, directory):
+        if self.__current_project is not None:
+            self.__current_project.general__browse_directory = directory
 
     #commands
 
@@ -300,11 +276,41 @@ class ProjectManager(service.service):
             current_project = self.__current_project
         self.__launch_editor(projects, current_project)
 
+    def cmd_create_project(self):
+        chooser = gtk.FileChooserDialog("Save Project File",
+                        self.boss.get_main_window(),
+                        gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                        (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT,
+                        gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT))
+        chooser.set_action(gtk.FILE_CHOOSER_ACTION_SAVE)
+        filt = gtk.FileFilter()
+        filt.add_pattern('*.pida')
+        chooser.set_filter(filt)
+        try:
+            chooser.set_do_overwrite_confirmation(True)
+        except AttributeError:
+            pass
+        def response(dialog, resp):
+            chooser.hide()
+            p = project.Project()
+            p.general__filename = dialog.get_filename()
+            p.general__name = os.path.basename(p.general__filename).split('.')[0]
+            self.proj_group.add_model(p)
+            self.proj_group.set_current(p)
+            self.__write_history()
+            self.cmd_edit()
+            chooser.destroy()
+        chooser.connect('response', response)
+        chooser.show_all()
+
+
     def cmd_add_project(self, project_file):
-        self.__history.append(project_file)
-        self.__history = list(set(self.__history))
+        p = project.Project()
+        m = persistency.load_model_from_ini(project_file, p)
+        m.general__filename = project_file
+        self.proj_group.add_model(m)
         self.__write_history()
-        self.__update()
+        #self.__update()
 
     def cmd_remove_project(self, project):
         self.__history.remove(project.project_filename)
@@ -324,14 +330,13 @@ class ProjectManager(service.service):
             if project.source_directory in filename:
                 return project
         return None
-        
 
     # Actions
 
     @actions.action(stock_id='gtk-new')
     def act_new_project(self, action):
         """Create a new project."""
-        self.boss.call_command('projectcreator', 'create_interactive')
+        self.cmd_create_project()
 
     def act_properties(self, action):
         """See or edit the properties for this project."""
@@ -361,9 +366,6 @@ class ProjectManager(service.service):
             self.boss.call_command('versioncontrol', 'commit',
                                    directory=directory)
 
-    #def act_get_project_statuses(self, action):
-    #    pass
-
     @actions.action(stock_id='vcs_update',
                     default_accel='<Shift><Control>u')
     def act_update_project(self, action):
@@ -372,6 +374,18 @@ class ProjectManager(service.service):
             directory = self.__current_project.source_directory
             self.boss.call_command('versioncontrol', 'update',
                                 directory=directory)
+
+    @actions.action(stock_id='gtk-project',
+                    default_accel='<Shift><Control>x')
+    def act_execute_project(self, action):
+        com = self.__current_project.execution__command
+        """Execute the current project."""
+        shell_cmd = 'sh'
+        if com:
+            self.boss.call_command('terminal', 'execute',
+                command_args=[shell_cmd, '-c', com], icon_name='run')
+        else:
+            self.log.info('project has not set an executable')
 
     @actions.action(stock_id='gtk-remove')
     def act_remove_project_from_workbench(self, action):
@@ -404,9 +418,10 @@ class ProjectManager(service.service):
             self.databases['project_data'].sync()
             self.cb_data_changed('project_data')
 
-    def cb_data_changed(self, configview):
-        self.__update()
-
+    def view_closed(self, view):
+        self.proj_group.remove_observer(view.pp)
+        self.proj_group.remove_observer(view.tv)
+        self._editview = None
     # ui definition
 
     def get_menu_definition(self):
@@ -441,6 +456,7 @@ class ProjectManager(service.service):
             <placeholder name="EditToolbar">
             </placeholder>
             <placeholder name="ProjectToolbar">
+                <toolitem name="exproj" action="projectmanager+execute_project" />
             </placeholder>
             <placeholder name="VcToolbar">
                 <toolitem name="upproj" action="projectmanager+update_project" />

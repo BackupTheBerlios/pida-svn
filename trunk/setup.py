@@ -60,6 +60,7 @@ except ImportError, e:
 # base pida packages
 base_packages = ['pida',
                  'pida.core',
+                 'pida.model',
                  'pida.pidagtk',
                  'pida.services',
                  'pida.editors',

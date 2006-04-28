@@ -217,7 +217,7 @@ class language_type_mixin(object):
 
     plugin_view = None
 
-
+#TODO: remove project types
 class project_type_mixin(object):
 
     __projecttypes__ = []
@@ -226,6 +226,7 @@ class project_type_mixin(object):
         pass
 
     def bind(self):
+        return
         for handler_type in self.__class__.__projecttypes__:
             handler_type.service = self
             self.boss.call_command('projecttypes',
@@ -247,8 +248,7 @@ service_base_classes =  [options_mixin,
 
 
 binding_base_classes = [document_type_mixin,
-                        language_type_mixin,
-                        project_type_mixin]
+                        language_type_mixin]
 
 
 class service_type(type):
