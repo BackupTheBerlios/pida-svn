@@ -376,7 +376,7 @@ class FileBrowser(contentview.content_view):
         project = self.service.boss.call_command('projectmanager',
                                          'get_current_project')
         if project is not None:
-            project_root = project.source_directory
+            project_root = project.source__directory
             self.service.call('browse', directory=project_root)
         else:
             self.service.log.info('there is no project to go to its root')
