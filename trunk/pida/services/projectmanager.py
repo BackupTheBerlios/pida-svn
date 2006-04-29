@@ -429,7 +429,6 @@ class ProjectManager(service.service):
             self.cb_data_changed('project_data')
 
     def view_closed(self, view):
-        print 'view closed'
         self.proj_group.remove_observer(view.pp)
         self.proj_group.remove_observer(view.tv)
         self._editview = None
