@@ -208,7 +208,7 @@ class ProjectDefinition(object):
     class build:
         """Options relating to the building of this project"""
         label = 'Build'
-        stock = 'gtk-new'
+        stock_id = 'gtk-convert'
         __order__ = ['uses', 'command_base', 'command']
 
         class uses:
@@ -237,7 +237,7 @@ class ProjectDefinition(object):
     class execution:
         """Options relating to executing this project"""
         label = 'Execution'
-        stock = 'gtk-new'
+        stock_id = 'gtk-execute'
         __order__ = ['uses', 'command_base', 'command']
 
         class uses:
@@ -267,7 +267,7 @@ class ProjectDefinition(object):
     class testing:
         """Options relating to unit testing this project"""
         label = 'Testing'
-        stock = 'gtk-open'
+        stock_id = 'gtk-dialog-warning'
         __order__ = ['uses', 'command_base', 'command']
 
         class uses:
@@ -296,7 +296,7 @@ class ProjectDefinition(object):
     class gui:
         """Options relating to graphical user interfaces"""
         label = 'Gui'
-        stock_id = 'gtk-new'
+        stock_id = 'gtk-terminal'
         __order__ = ['uses', 'location']
 
         class uses:
