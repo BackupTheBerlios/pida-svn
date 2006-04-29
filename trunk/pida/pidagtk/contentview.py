@@ -417,7 +417,10 @@ class ExternalBook(object):
 
     def remove_uid(self, uid):
         self.remove_view(self._views[uid])
-        
+    
+    def raise_uid(self, uid):
+        self._windows[uid].present()
+    
     def cb_delete(self, win, event, view):
         self.remove_view(view)
 
