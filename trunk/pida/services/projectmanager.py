@@ -300,7 +300,7 @@ class ProjectManager(service.service):
             chooser.hide()
             fn = dialog.get_filename()
             chooser.destroy()
-            if response != gtk.RESPONSE_OK:
+            if resp != gtk.RESPONSE_ACCEPT:
                 return
             p = project.Project()
             if not fn.endswith('.pida'):
