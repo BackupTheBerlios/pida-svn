@@ -423,6 +423,8 @@ class ExternalBook(object):
     
     def cb_delete(self, win, event, view):
         self.remove_view(view)
+        view.service.view_closed(view)
+        view.destroy()
 
     def has_uid(self, uid):
         return uid in self._views
