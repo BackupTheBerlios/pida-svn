@@ -131,8 +131,7 @@ class TreeObserver(Tree, BaseMultiModelObserver):
     def remove_model(self, item):
         super(TreeObserver, self).remove_model(item)
         for row in self.model:
-            print row[1]
-            if row[1] is item:
+            if row[1].value is item:
                 self.model.remove(row.iter)
 
     def __model_notify__(self, model, attr, value):
@@ -163,7 +162,9 @@ class ComboObserver(gtk.ComboBox, BaseMultiModelObserver):
                 self._current = item
 
     def add_model(self, item):
+        super(ComboObserver, self).add_model(item)
         self._store.append([item.general__name, item])
+        #self.__model_notify__(item, 'general__name', item.general__name)
 
     def remove_model(self, item):
         for row in self._store:
@@ -171,9 +172,10 @@ class ComboObserver(gtk.ComboBox, BaseMultiModelObserver):
                 self._store.remove(row.iter)
 
     def __model_notify__(self, model, attr, value):
-        for i, (name, mod) in enumerate(self._store):
-            if mod is model:
-                self._store[i][0] = mod.general__name
+        if attr == 'general__name':
+            for i, (name, mod) in enumerate(self._store):
+                if mod is model:
+                    self._store[i][0] = mod.general__name
 
 
 class ActionSensitivityObserver(WidgetObserver):

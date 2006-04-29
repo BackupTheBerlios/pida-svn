@@ -215,7 +215,7 @@ class ProjectDefinition(object):
             """Whether this project uses building"""
             rtype = types.boolean
             label = 'Uses build'
-            default = True
+            default = False
 
         class command_base:
             """The build command"""
@@ -244,7 +244,7 @@ class ProjectDefinition(object):
             """Whether this project uses execution"""
             rtype = types.boolean
             label = 'Uses execution'
-            default = True
+            default = False
 
         class command_base:
             """The execution command"""
@@ -274,7 +274,7 @@ class ProjectDefinition(object):
             """Whether this project uses unit testing"""
             rtype = types.boolean
             label = 'Uses testing'
-            default = True
+            default = False
 
         class command_base:
             """The testing command"""
@@ -303,7 +303,7 @@ class ProjectDefinition(object):
             """Whether this project has graphical user interface files"""
             rtype = types.boolean
             label = 'Uses Gui'
-            default = True
+            default = False
 
         class location:
             """Gui file location"""

@@ -398,6 +398,7 @@ class ModelGroup(object):
         for obs in self._observers:
             if hasattr(obs, 'remove_model'):
                 obs.remove_model(model)
+        self.set_current(self._models[-1])
 
     def set_current(self, model, level=0):
         if self._current is not model:

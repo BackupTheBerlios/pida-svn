@@ -178,6 +178,8 @@ class ProjectManager(service.service):
         def _act(item):
             self.__current_project_activated()
         self.proj_group = model.ModelGroup(_act)
+        self.__projects_combo = self.proj_group.create_multi_observer(
+            views.ComboObserver)
         self.ini_watch = self.proj_group.create_single_observer(
             persistency.IniFileObserver)
         self.act_watch = self.proj_group.create_single_observer(
@@ -196,8 +198,6 @@ class ProjectManager(service.service):
         tb.insert(ti, i)
         tbox = gtk.HBox(spacing=6)
         ti.add(tbox)
-        self.__projects_combo = self.proj_group.create_multi_observer(
-            views.ComboObserver)
         tbox.pack_start(self.__projects_combo)
 
     def reset(self):
