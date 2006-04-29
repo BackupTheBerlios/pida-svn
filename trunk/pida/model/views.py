@@ -257,16 +257,14 @@ class PropertyPage(gtk.VBox, WidgetObserver):
         hb = gtk.HBox(spacing=12)
         vb.add(hb)
         hb.set_border_width(0)
-        if 0:#isinstance(widget, ProxyCheckButton):
+        if isinstance(widget, ProxyCheckButton):
             widget.set_label(label)
-            hb.pack_start(gtk.Label())
-            ltext = ' '
         else:
             ltext = label
-        l = gtk.Label(ltext)
-        l.set_alignment(0, 0.5)
-        hb.pack_start(l, expand=False)
-        sizer.add_widget(l)
+            l = gtk.Label(ltext)
+            l.set_alignment(0, 0.5)
+            hb.pack_start(l, expand=False)
+            sizer.add_widget(l)
         al = gtk.Alignment(0, 0.5, 1, 1)
         al.add(widget)
         hb.pack_start(al, expand=True)
