@@ -170,7 +170,7 @@ def format_docstring(doc):
 class ModelAttribute(object):
     """A model attribute."""
     def __init__(self, group, name, doc, rtype, default,
-                 label, sensitive_attr, dependents, fget):
+                 label, sensitive_attr, dependents, hidden, fget):
         self.group = group
         self.name = name
         self.doc = doc
@@ -180,6 +180,7 @@ class ModelAttribute(object):
         self.sensitive_attr = sensitive_attr
         self.dependents = dependents
         self.key = '%s__%s' % (self.group, self.name)
+        self.hidden = hidden
         self.fget = fget
 
     @classmethod
@@ -205,8 +206,12 @@ class ModelAttribute(object):
         else:
             default = definition.default
             fget = None
+        if hasattr(definition, 'hidden'):
+            hidden = definition.hidden
+        else:
+            hidden = False
         return cls(group, name, doc, rtype, default, label, sensitive_attr,
-                   dependents, fget)
+                   dependents, hidden, fget)
 
 
 class Model(object):
@@ -318,13 +323,17 @@ class BaseSingleModelObserver(BaseObserver):
         self._model = None
 
     def set_model(self, model):
+        if self._model is not None:
+            self._model.__model_unregister__(self,
+                self._model.__model_attrs_map__.keys())
         self._model = model
         if self.__model_attributes__ is None:
             ma = model.__model_attrs_map__.keys()
         else:
             ma = self.__model_attributes__
         model.__model_register__(self, ma)
-        model.__model_notify__(ma)
+        for attr in model.__model_attrs_map__.keys():
+            self.__model_notify__(model, attr, getattr(model, attr))
 
     def update_model(self, attr, value):
         self._model.__model_block__(self, [attr])
@@ -343,15 +352,19 @@ class BaseMultiModelObserver(BaseObserver):
     def add_model(self, model):
         model.__model_register__(self, self.__model_attributes__)
 
+    def remove_model(self, model):
+        model.__model_unregister__(self, self.__model_attributes__)
+
 
 class ModelGroup(object):
 
     __model_attributes__ = None
 
-    def __init__(self):
+    def __init__(self, current_callback=lambda *a: None):
         self._observers = []
         self._current = None
         self._models = []
+        self.current_callback = current_callback
 
     def create_multi_observer(self, obstype):
         obs = obstype(self.__model_attributes__, self.set_current)
@@ -380,10 +393,20 @@ class ModelGroup(object):
             if hasattr(obs, 'add_model'):
                 obs.add_model(model)
 
-    def set_current(self, model):
-        self._current = model
+    def remove_model(self, model):
+        self._models.remove(model)
         for obs in self._observers:
-            obs.set_model(model)
+            if hasattr(obs, 'remove_model'):
+                obs.remove_model(model)
+
+    def set_current(self, model, level=0):
+        if self._current is not model:
+            self._current = model
+            for obs in self._observers:
+                obs.set_model(model)
+            if level:
+                self.current_callback(model)
+            #model.__model_notify__()
 
     def __iter__(self):
         for m in self._models:

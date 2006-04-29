@@ -280,6 +280,7 @@ class FileBrowser(contentview.content_view):
     def browse(self, directory=None):
         if directory is None:
             directory = os.path.expanduser('~')
+        self.service.events.emit('directory_changed', directory=directory)
         if directory in self._recent:
             self._view.clear()
             for fsi in self._recent[directory].values():

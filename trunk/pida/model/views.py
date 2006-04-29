@@ -69,6 +69,11 @@ def get_widget_for_type(rtype):
         w = ProxyFileChooserButton('Select File')
         #w.set_action(gtk.FILE_CHOOSER_ACTION_SAVE)
         return w
+    elif rtype is types.readonlyfile:
+        w = ProxyFileChooserButton('Select File')
+        w.set_sensitive(False)
+        #w.set_action(gtk.FILE_CHOOSER_ACTION_SAVE)
+        return w
     elif rtype in [types.directory]:
         w = ProxyFileChooserButton(title='Select Directory')
         w.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
@@ -105,19 +110,30 @@ class TreeObserver(Tree, BaseMultiModelObserver):
         self.set_property('markup-format-string', '%(__model_markup__)s')
         BaseMultiModelObserver.__init__(self, model_attributes,
                                         current_callback)
+        self._current = None
         self.connect('clicked', self.cb_clicked)
 
     def cb_clicked(self, tree, item):
-        self.current_callback(item.value)
+        if self._current is not item.value:
+            self._current = item.value
+            self.current_callback(item.value)
 
     def set_model(self, item):
-        if not self.selected or self.selected.value is not item:
+        if not self._current or self._current is not item:
             self.set_selected(hash(item))
+            self._current = item
 
     def add_model(self, item):
         key = hash(item)
         super(TreeObserver, self).add_model(item)
         return self.add_item(item, key=key)
+
+    def remove_model(self, item):
+        super(TreeObserver, self).remove_model(item)
+        for row in self.model:
+            print row[1]
+            if row[1] is item:
+                self.model.remove(row.iter)
 
     def __model_notify__(self, model, attr, value):
         model.reset_markup()
@@ -138,7 +154,7 @@ class ComboObserver(gtk.ComboBox, BaseMultiModelObserver):
     def cb_clicked(self, box):
         item = self._store[self.get_active()][1]
         if item is not self._current:
-            self.current_callback(item)
+            self.current_callback(item, 1)
 
     def set_model(self, item):
         for i, (name, mod) in enumerate(self._store):
@@ -149,14 +165,30 @@ class ComboObserver(gtk.ComboBox, BaseMultiModelObserver):
     def add_model(self, item):
         self._store.append([item.general__name, item])
 
+    def remove_model(self, item):
+        for row in self._store:
+            if row[1] is item:
+                self._store.remove(row.iter)
+
     def __model_notify__(self, model, attr, value):
         for i, (name, mod) in enumerate(self._store):
             if mod is model:
                 self._store[i][0] = mod.general__name
 
 
+class ActionSensitivityObserver(WidgetObserver):
 
+    def add_widget(self, action, sensitive_attr):
+        self._widgets[sensitive_attr].add(action)
+        self._sensitive_widgets[sensitive_attr].add(action)
+        if self._model  is not None:
+            val = getattr(self._model, sensitive_attr) or False
+            action.set_sensitive(val)
 
+    def __model_notify__(self, model, attr, value):
+        for widget in self._sensitive_widgets[attr]:
+            val = getattr(self._model, attr) or False
+            widget.set_sensitive(val)
 
 class PropertyPage(gtk.VBox, WidgetObserver):
 
@@ -180,12 +212,13 @@ class PropertyPage(gtk.VBox, WidgetObserver):
         for group, doc, label, stock_id, attr_names in model.__model_groups__:
             self.add_page(group, label, stock_id, doc, attr_names)
         for attr in model.__model_attrs__:
-            widget = get_widget_for_type(attr.rtype)
-            self.pack_widget(widget, attr=attr.key,
+            if not attr.hidden:
+                widget = get_widget_for_type(attr.rtype)
+                self.pack_widget(widget, attr=attr.key,
                              label=attr.label, doc=attr.doc,
                              sensitive_attr=attr.sensitive_attr)
         self._nb.show_all()
-        self.set_model(model)
+        super(PropertyPage, self).set_model(model)
 
     def get_widget(self):
         return self._nb

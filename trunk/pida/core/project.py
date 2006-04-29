@@ -152,14 +152,17 @@ class ProjectDefinition(object):
         class filename:
             """The project file location."""
             label = 'Saved as'
-            rtype = types.file
-            default = ''
+            rtype = types.readonly
+
+            def fget(self):
+                return self.__model_ini_filename__
 
         class browse_directory:
             """Select a source directory for the project"""
-            rtype = types.directory
-            label = 'Last Browsed Directory'
+            rtype = types.readonly
+            label = 'Last Browsed'
             default = '/'
+            hidden = True
 
     class source:
         """Options relating to source code for the project"""

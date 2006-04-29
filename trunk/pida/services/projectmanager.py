@@ -175,9 +175,16 @@ class ProjectManager(service.service):
         self._editview = None
 
     def __init_model(self):
-        self.proj_group = model.ModelGroup()
+        def _act(item):
+            self.__current_project_activated()
+        self.proj_group = model.ModelGroup(_act)
         self.ini_watch = self.proj_group.create_single_observer(
             persistency.IniFileObserver)
+        self.act_watch = self.proj_group.create_single_observer(
+            views.ActionSensitivityObserver)
+        act = self.action_group.get_action('projectmanager+execute_project')
+        self.act_watch.add_widget(act, 'execution__uses')
+        #act.set_sensitive(self.__current_project.execution__uses)
 
     def __init_project_toolbar(self):
         tb = self.boss.call_command('window', 'get_ui_widget',
@@ -228,9 +235,10 @@ class ProjectManager(service.service):
                 hist.add(filename)
         f.close()
         for filename in hist:
-                p = project.Project()
-                persistency.load_model_from_ini(filename, p)
-                self.proj_group.add_model(p)
+            p = project.Project()
+            persistency.load_model_from_ini(filename, p)
+            p.__model_ini_filename__ = filename
+            self.proj_group.add_model(p)
         self.__write_history()
 
     def __write_history(self):
@@ -248,8 +256,6 @@ class ProjectManager(service.service):
     def __current_project_changed(self, project):
         if project is not self.__current_project:
             self.__current_project = project
-            act = self.action_group.get_action('projectmanager+execute_project')
-            act.set_sensitive(self.__current_project.execution__uses)
 
     def __current_project_activated(self):
         if self.__current_project is not None:
@@ -293,9 +299,12 @@ class ProjectManager(service.service):
         def response(dialog, resp):
             chooser.hide()
             p = project.Project()
-            p.general__filename = dialog.get_filename()
-            p.general__name = os.path.basename(p.general__filename).split('.')[0]
+            fn = dialog.get_filename()
+            if not fn.endswith('.pida'):
+                fn = '%s.pida' % fn
+            p.__model_ini_filename__ = fn
             self.proj_group.add_model(p)
+            p.general__name = os.path.basename(fn).split('.')[0]
             self.proj_group.set_current(p)
             self.__write_history()
             self.cmd_edit()
@@ -307,15 +316,14 @@ class ProjectManager(service.service):
     def cmd_add_project(self, project_file):
         p = project.Project()
         m = persistency.load_model_from_ini(project_file, p)
-        m.general__filename = project_file
+        m.__model_ini_filename__ = project_file
         self.proj_group.add_model(m)
         self.__write_history()
         #self.__update()
 
     def cmd_remove_project(self, project):
-        self.__history.remove(project.project_filename)
+        self.proj_group.remove_model(project)
         self.__write_history()
-        self.__update()
 
     def cmd_get_current_project(self):
         return self.__current_project
@@ -327,7 +335,7 @@ class ProjectManager(service.service):
         if filename is None:
             return None
         for project in self.projects:
-            if project.source_directory in filename:
+            if project.source__directory in filename:
                 return project
         return None
 

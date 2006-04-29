@@ -33,6 +33,9 @@ class directory(RegistryItem):
 class file(RegistryItem):
     """A file"""
 
+class readonlyfile(file):
+    """Read only file"""
+
 #class filemustexist(file):
 
 #    def validate(self, value):
