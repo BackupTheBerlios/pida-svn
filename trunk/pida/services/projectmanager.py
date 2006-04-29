@@ -298,8 +298,11 @@ class ProjectManager(service.service):
             pass
         def response(dialog, resp):
             chooser.hide()
-            p = project.Project()
             fn = dialog.get_filename()
+            chooser.destroy()
+            if response != gtk.RESPONSE_OK:
+                return
+            p = project.Project()
             if not fn.endswith('.pida'):
                 fn = '%s.pida' % fn
             p.__model_ini_filename__ = fn
@@ -308,7 +311,6 @@ class ProjectManager(service.service):
             self.proj_group.set_current(p)
             self.__write_history()
             self.cmd_edit()
-            chooser.destroy()
         chooser.connect('response', response)
         chooser.show_all()
 
