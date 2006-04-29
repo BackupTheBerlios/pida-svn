@@ -155,7 +155,7 @@ class ProjectManager(service.service):
 
     class ProjectEditor(defs.View):
         view_type = ProjectEditor
-        book_name = 'edit'
+        book_name = 'ext'
 
     # life cycle
     def init(self):
