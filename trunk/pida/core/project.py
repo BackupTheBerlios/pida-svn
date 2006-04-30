@@ -227,7 +227,7 @@ class ProjectDefinition(object):
         class command:
             """The build command as it will be executed"""
             rtype = types.readonly
-            label = 'Actual build command'
+            label = ''
             sensitive_attr = 'build__uses'
             dependents = ['build__command_base']
 
@@ -256,7 +256,7 @@ class ProjectDefinition(object):
         class command:
             """The execution command as it will be executed"""
             rtype = types.readonly
-            label = 'Actual build command'
+            label = ''
             sensitive_attr = 'execution__uses'
             dependents = ['execution__command_base']
 
@@ -286,7 +286,7 @@ class ProjectDefinition(object):
         class command:
             """The execution command as it will be executed"""
             rtype = types.readonly
-            label = 'Actual unit testing command'
+            label = ''
             sensitive_attr = 'testing__uses'
             dependents = ['testing__command_base']
 
