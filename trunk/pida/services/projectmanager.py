@@ -372,7 +372,7 @@ class ProjectManager(service.service):
     def act_commit_project(self, action):
         """Commit the current project to version control"""
         if self.__current_project is not None:
-            directory = self.__current_project.source_directory
+            directory = self.__current_project.source__directory
             self.boss.call_command('versioncontrol', 'commit',
                                    directory=directory)
 
@@ -381,7 +381,7 @@ class ProjectManager(service.service):
     def act_update_project(self, action):
         """Update the current project from version control"""
         if self.__current_project is not None:
-            directory = self.__current_project.source_directory
+            directory = self.__current_project.source__directory
             self.boss.call_command('versioncontrol', 'update',
                                 directory=directory)
 
