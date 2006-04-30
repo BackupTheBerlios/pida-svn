@@ -138,7 +138,7 @@ class terminal_manager(service.service):
         proj = self.boss.call_command('projectmanager',
                                       'get_current_project')
         if proj is not None:
-            directory = proj.source_directory
+            directory = proj.source__directory
         self.call('execute_shell', kwdict={'directory': directory})
         
 
