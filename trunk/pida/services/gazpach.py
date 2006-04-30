@@ -57,6 +57,8 @@ import pida.pidagtk.contentview as contentview
 
 from gazpacho.constants import STOCK_SIZEGROUP
 
+_ = lambda s: s
+
 class gazpacho_application(Application):
     
     def __init__(self, app_window, view):
@@ -111,6 +113,9 @@ class gazpacho_application(Application):
 
             # Project menu
             ('ProjectMenu', None, _('_Project')),
+            ('ProjectProperties', None, _('_Properties'), None,
+             _('Project properties'), self._project_properties_cb),
+
             # (projects..)
 
             # Debug menu
