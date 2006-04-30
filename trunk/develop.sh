@@ -37,4 +37,4 @@ fi
 )
 
 echo "Starting..."
-python "$PIDADIR/run/pida" $*
+python2.4 "$PIDADIR/run/pida" $*
