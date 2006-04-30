@@ -1,0 +1,2 @@
+#!/bin/bash
+glib-genmarshal "$1" "$2" > "$3"

@@ -1,0 +1,140 @@
+body {
+    background-color: #000033;
+    font-family: tahoma, arial, helvetica;
+    }
+
+h1 {
+    font-size: 1.4em;
+    font-weight: bold;
+    color: #900000;
+    border-bottom: 1px solid #c0c0c0;
+    }
+
+h2 {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #900000;
+    }
+
+a {
+    color: #900000;
+    border-bottom: 1px, dotted, #c0c0c0;
+}
+
+#main {
+    width: 620px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 2em;
+    background-color: #f0f0f0;
+    color: #000000;
+    }
+    
+#top {
+    background-color: #666699;
+    color: white;
+    text-align: center;
+
+}
+
+#middle {
+    margin-left: 1em;
+    margin-right: 1em;
+    font-size: 0.9em;
+}
+
+#bottom {
+    background-color: #666699;
+    color: white;
+    text-align: center;
+    padding-bottom: 1em;
+    padding-top: 1em;
+    font-size: 0.7em;
+}
+
+#banner {
+    
+    font-size: 1.6em;
+    font-weight: bold;
+    letter-spacing: 0.1em;
+    padding-top: 0.8em;
+}
+
+#logo {
+    font-style: italic;
+}
+
+
+ul.main-menu {
+    margin-top: 0.4em;
+    padding: 0em;
+}
+
+#table-of-contents {
+    font-size: 0.9em;
+}
+
+li.main-menu {
+    display: inline;
+    margin-left: 1.0em;
+    margin-right: 1.0em;
+    text-transform: lowercase;
+    font-weight: bold;
+}
+
+    
+a.main-menu {
+    text-decoration: None;
+    color: white;
+}
+
+a.main-menu:hover {
+    color: #900000;
+}
+
+div.trail {
+    font-size: 0.9em;
+}
+
+span.trail {
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    
+}
+
+pre.literal-block {
+    padding: 1em;
+    font-size: 0.9em;
+    border: 1px solid #c0c0c0;
+    background-color: #ffffff;
+}
+
+a#table-of-contents: {
+    font-size: 0.9em;
+    font-weight: bold;
+}
+
+.field, .field-name{
+    font-size: 0.8em;
+    color: #909090;
+    }
+    
+td.small-caption {
+    border: 1px solid #c0c0c0;
+    
+}
+
+div.bug-menu {
+    font-size: 0.8em;
+}
+
+#quicksearch {
+    font-size: 0.8em;
+    text-align: right;
+    width: 100%;
+    margin-right: 1em;
+}
+    
+
+
+
