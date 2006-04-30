@@ -165,8 +165,6 @@ class ProjectManager(service.service):
             'projects', 'projectlist.conf')
         self.__last_file = os.path.join(self.boss.pida_home,
             'projects', 'projectlast.conf')
-        if not os.path.exists(self.__history_file):
-            self.__write_history()
         self.__started = False
         self.__init_model()
         self.__read_history()
