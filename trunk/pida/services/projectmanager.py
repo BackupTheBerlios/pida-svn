@@ -266,7 +266,7 @@ class ProjectManager(service.service):
 
     # external interface
     def get_projects(self):
-        for project in self.__projects:
+        for project in self.proj_group:
             yield project
     projects = property(get_projects)
 

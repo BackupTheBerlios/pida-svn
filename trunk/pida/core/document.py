@@ -302,14 +302,14 @@ class document(base.pidacomponent):
 
     def get_project_name(self):
         if self.__project:
-            return self.__project.name
+            return self.__project.general__name
         else:
             return ''
     project_name = property(get_project_name)
 
     def get_project_relative_path(self):
         if self.__project:
-            return relpath(self.filename, self.__project.source_directory)
+            return relpath(self.filename, self.__project.source__directory)
         else:
             return os.path.join(self.directory_basename, '')
 
