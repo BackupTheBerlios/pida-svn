@@ -33,7 +33,8 @@ import pida.core.actions as actions
 import pida.pidagtk.contentview as contentview
 
 defs = service.definitions
-types = service.types
+
+from pida.model import attrtypes as types
 
 import pango
 
@@ -64,23 +65,12 @@ view_location_map = {'View Pane':'view',
                      'Quick Pane':'content',
                      'Detached':'ext'}
 
-class terminal_manager(service.service):
 
-    display_name = 'Terminals'
-
-    multi_view_type = terminal_view
-
-    class TerminalView(defs.View):
-        view_type = terminal_view
-        book_name = 'view'
-
-    def get_multi_view_book_type(self):
-        opt = self.opt('general', 'terminal_location')
-        return view_location_map[opt]
-    multi_view_book = property(get_multi_view_book_type)
-
+class TerminalConfig:
+    __order__ = ['general', 'shell', 'fonts_and_colours']
     class shell(defs.optiongroup):
         """Shell options."""
+        __order__ = ['command']
         class command(defs.option):
             """The command used for the shell."""
             default = os.environ['SHELL'] or 'bash'
@@ -88,6 +78,7 @@ class terminal_manager(service.service):
 
     class general(defs.optiongroup):
         """Terminal options."""
+        __order__ = ['terminal_type', 'terminal_location']
         class terminal_type(defs.option):
             """The default terminal type used."""
             default = 'Vte'
@@ -99,6 +90,7 @@ class terminal_manager(service.service):
 
     class fonts_and_colours(defs.optiongroup):
         """Fonts and colours for the terminal"""
+        __order__  = ['background_colour', 'foreground_colour', 'font']
         class background_colour(defs.option):
             """The background colour to be used"""
             default = '#000000'
@@ -111,6 +103,26 @@ class terminal_manager(service.service):
             """The font to be used in terminals"""
             default = 'Monospace 8'
             rtype = types.font
+
+    __markup__ = lambda self: 'Terminal Emulator'
+
+class terminal_manager(service.service):
+
+    display_name = 'Terminals'
+
+    config_definition = TerminalConfig
+
+    multi_view_type = terminal_view
+
+    class TerminalView(defs.View):
+        view_type = terminal_view
+        book_name = 'view'
+
+    def get_multi_view_book_type(self):
+        opt = self.opt('general', 'terminal_location')
+        return view_location_map[opt]
+    multi_view_book = property(get_multi_view_book_type)
+
 
     def cmd_execute(self, command_args=[], command_line='',
                     term_type=None, icon_name='terminal',

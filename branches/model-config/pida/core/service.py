@@ -41,6 +41,7 @@ import os
 from actions import split_function_name
 from pida.utils.servicetemplates import build_optiongroup_from_class
 from errors import CommandNotFoundError
+from pida.model import model, persistency
 
 class options_mixin(object):
     """Configuration options support."""
@@ -80,6 +81,42 @@ class options_mixin(object):
         
 
     opt = get_option
+
+class OptionsMixin(object):
+
+    __options_observer__ = persistency.IniFileObserver()
+
+    config_definition = None
+
+    def init(self):
+        if self.config_definition is not None:
+            self.__init()
+        else:
+            self.__options = None
+
+    def __init(self):
+        print self.NAME
+        self.__options = model.Model.__model_from_definition__(
+            self.config_definition)()
+        path = os.path.join(self.boss.pida_home, 'conf',
+                            '%s.conf' % self.NAME)
+        persistency.load_model_from_ini(path, self.__options)
+        self.__options.__model_ini_filename__
+        self.__options_observer__.add_model(self.__options)
+
+    def set_option(self, gn, on, val):
+        return model.property_evading_setattr(self.__options,
+            '%s__%s' % (gn, on), val)
+
+    def get_options(self):
+        return self.__options
+    
+    opts = property(get_options)
+    
+    def opt(self, gn, on):
+        self.log.warn('svc.opt is depracated')
+        return model.property_evading_getattr(self.__options,
+            '%s__%s' % (gn, on))
 
 
 class commands_mixin(object):
@@ -236,7 +273,7 @@ class project_type_mixin(object):
 
 from views import view_mixin
 
-service_base_classes =  [options_mixin,
+service_base_classes =  [OptionsMixin,
                          commands_mixin,
                          events_mixin,
                          bindings_mixin,

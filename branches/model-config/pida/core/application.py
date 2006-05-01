@@ -202,8 +202,8 @@ class environment(object):
     def override_configuration_system(self, services):
         if self.__editorname:
             svc = services.get('editormanager')
-            svc.set_option('general', 'editor_type', self.__editorname)
-            svc.options.save()
+            svc.set_option('general', 'type', self.__editorname)
+            #svc.options.save()
         if not self.opts.option:
             return
         for opt in self.opts.option:

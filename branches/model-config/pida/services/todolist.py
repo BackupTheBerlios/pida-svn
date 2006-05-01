@@ -33,7 +33,8 @@ import pida.pidagtk.contentview as contentview
 
 
 defs = service.definitions
-types = service.types
+
+from pida.model import attrtypes as types
 
 class todo_hint(object):
 
@@ -68,8 +69,32 @@ class todo_view(contentview.content_view):
     def cb_list_d_clicked(self, tree, item):
         self.service.boss.call_command('editormanager', 'goto_line',
                                         linenumber=item.value.linenumber)
-    
+
+
+class TodoConfig:
+    __order__ = ['todo_definition']
+    class todo_definition(defs.optiongroup):
+        """Options for the TODO viewer"""
+        __order__ = ['use_TODO', 'use_FIXME', 'additional_markers']
+        class use_TODO(defs.option):
+            """Whether the TODO search will use 'TODO' statements"""
+            rtype = types.boolean
+            default = True
+        class use_FIXME(defs.option):
+            """Whether the TODO search will use 'FIXME' statements"""
+            rtype = types.boolean
+            default = True
+        class additional_markers(defs.option):
+            """Additional markers that will be used for TODO searching. (comma separated list)"""
+            rtype = types.string
+            default = ''
+
+    def __markup__(self):
+        return 'Todo Viewer'
+
 class todo(service.service):
+    
+    config_definition = TodoConfig
     
     class TODO(defs.View):
         view_type = todo_view
@@ -83,20 +108,6 @@ class todo(service.service):
     plugin_view = property(get_plugin_view)
 
     display_name = 'TODO List'
-
-    class todo_definition(defs.optiongroup):
-        class use_TODO(defs.option):
-            """Whether the TODO search will use 'TODO' statements"""
-            rtype = types.boolean
-            default = True
-        class use_FIXME(defs.option):
-            """Whether the TODO search will use 'FIXME' statements"""
-            rtype = types.boolean
-            default = True
-        class additional_markers(defs.option):
-            """Additional markers that will be used for TODO searching. (comma separated list)"""
-            rtype = types.string
-            default = ''
 
     class todolist(defs.language_handler):
 
