@@ -39,8 +39,8 @@ import pida.pidagtk.contentview as contentview
 import pida.pidagtk.tree as tree
 
 defs = service.definitions
-types = service.types
 
+from pida.model import attrtypes as types
 
 class lib_list(tree.Tree):
 
@@ -114,22 +114,30 @@ class bookmark_view(contentview.content_view):
                                            url=book.path)
         else:
             self.service.log.info('Bad document book "%s"', book.name)
-        
+
+
+class LibraryOptions:
+    __order__ = ['book_locations']
+    class book_locations(defs.optiongroup):
+        """Locations of books in the file system."""
+        __order__ = ['use_gzipped_book_files']
+        class use_gzipped_book_files(defs.option):
+            """Whether to use devhelp.gz format books."""
+            rtype = types.boolean
+            default = True
+    __markup__ = lambda self: 'Documentation Library'
+
+
 
 class document_library(service.service):
 
     display_name = 'Documentation Library'
 
+    config_definition = LibraryOptions
+
     class Library(defs.View):
         view_type = bookmark_view
         book_name = 'plugin'
-
-    class book_locations(defs.optiongroup):
-        """Locations of books in the file system."""
-        class use_gzipped_book_files(defs.option):
-            """Whether to use devhelp.gz format books."""
-            rtype = types.boolean
-            default = True
 
     def init(self):
         self.get_action().set_active(False)

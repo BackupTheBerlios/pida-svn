@@ -33,7 +33,8 @@ import pida.pidagtk.contentview as contentview
 from pida.utils.gobjectlinereader import GobjectReader
 
 defs = service.definitions
-types = service.types
+
+from pida.model import attrtypes as types
 
 READER_PYFLAKES = 0
 READER_PYCHECKER = 1
@@ -196,12 +197,12 @@ class pyflake_view(contentview.content_view):
     def cb_started(self, reader):
         self.__list.clear()
 
-class pyflaker(service.service):
 
-    display_name = 'Python Error Checking'
-
+class PyflakeConfig:
+    __order__ = ['checkers']
     class checkers(defs.optiongroup):
         """Applications used to check python code."""
+        __order__ = ['pylint', 'pychecker', 'pyflakes']
         class pylint(defs.option):
             """Use Pylint to check."""
             rtype = types.boolean
@@ -214,6 +215,14 @@ class pyflaker(service.service):
             """Use Pyflakes to check."""
             rtype = types.boolean
             default = True
+    __markup__ = lambda self: 'Python Error Checking'
+
+
+class pyflaker(service.service):
+
+    display_name = 'Python Error Checking'
+
+    config_definition = PyflakeConfig
 
     class PyflakeView(defs.View):
         view_type = pyflake_view
