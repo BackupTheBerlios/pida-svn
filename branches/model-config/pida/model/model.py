@@ -355,6 +355,18 @@ class BaseMultiModelObserver(BaseObserver):
     def remove_model(self, model):
         model.__model_unregister__(self, self.__model_attributes__)
 
+class CallbackObserver(BaseSingleModelObserver):
+
+    def __init__(self, instance, prefix='cb'):
+        self.instance = instance
+        self.prefix = prefix
+        super(CallbackObserver, self).__init__()
+
+    def __model_notify__(self, model, attr, val):
+        fname = '%s_%s' % (self.prefix, attr)
+        if hasattr(self.instance, fname):
+            getattr(self.instance, fname)(val)
+
 
 class ModelGroup(object):
 

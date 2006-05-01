@@ -228,6 +228,7 @@ class PropertyPage(gtk.VBox, WidgetObserver):
                 self.pack_widget(widget, attr=attr.key,
                              label=attr.label, doc=attr.doc,
                              sensitive_attr=attr.sensitive_attr)
+        model.__model_notify__()
         self._nb.show_all()
 
     def get_widget(self):

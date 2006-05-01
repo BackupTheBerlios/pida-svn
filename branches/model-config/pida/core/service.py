@@ -84,7 +84,6 @@ class options_mixin(object):
 
 class OptionsMixin(object):
 
-    __options_observer__ = persistency.IniFileObserver()
 
     config_definition = None
 
@@ -102,7 +101,10 @@ class OptionsMixin(object):
                             '%s.conf' % self.NAME)
         persistency.load_model_from_ini(path, self.__options)
         self.__options.__model_ini_filename__
-        self.__options_observer__.add_model(self.__options)
+        self.__options_observer = persistency.IniFileObserver()
+        self.__options_callbacks = model.CallbackObserver(self)
+        self.__options_callbacks.set_model(self.__options)
+        self.__options_observer.add_model(self.__options)
 
     def set_option(self, gn, on, val):
         return model.property_evading_setattr(self.__options,
