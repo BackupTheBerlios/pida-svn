@@ -34,11 +34,13 @@ class Config:
     class general:
         """General editor options"""
         __order__ = ['type']
+        label = 'General Options'
         class type:
-            """Which editor pIDA will use."""
+            """Which editor PIDA will use."""
             rtype = types.stringlist('Vim', 'Vim external', 'Culebra',
                                      'Pscyntilla')
             default = 'Vim'
+            label = 'Editor type'
 
     def __markup__(self):
         return 'Editor'
