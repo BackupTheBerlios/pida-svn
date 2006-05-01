@@ -228,6 +228,7 @@ class PropertyPage(gtk.VBox, WidgetObserver):
                 self.pack_widget(widget, attr=attr.key,
                              label=attr.label, doc=attr.doc,
                              sensitive_attr=attr.sensitive_attr)
+        self._nb.set_show_tabs(self._nb.get_n_pages() - 1)
         model.__model_notify__()
         self._nb.show_all()
 
