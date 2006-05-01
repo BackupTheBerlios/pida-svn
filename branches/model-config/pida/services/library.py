@@ -121,10 +121,12 @@ class LibraryOptions:
     class book_locations(defs.optiongroup):
         """Locations of books in the file system."""
         __order__ = ['use_gzipped_book_files']
+        label = 'Library Files'
         class use_gzipped_book_files(defs.option):
             """Whether to use devhelp.gz format books."""
             rtype = types.boolean
             default = True
+            label = 'Use gzipped book files'
     __markup__ = lambda self: 'Documentation Library'
 
 
