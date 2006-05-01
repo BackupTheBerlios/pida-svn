@@ -70,21 +70,21 @@ view_location_map = {'View Pane':'view',
 class TerminalConfig:
     __order__ = ['general', 'shell', 'fonts_and_colours']
     class shell(defs.optiongroup):
-        """Shell options."""
+        """Options relating to the shell run in terminals"""
         __order__ = ['command']
         label = 'Shell Options'
         class command(defs.option):
-            """The command used for the shell."""
+            """The command used for the shell"""
             default = os.environ['SHELL'] or 'bash'
             rtype = types.string
             label = 'Shell command'
 
     class general(defs.optiongroup):
-        """Terminal options."""
+        """General options realting to the terminal"""
         __order__ = ['terminal_type', 'terminal_location']
         label = 'General Options'
         class terminal_type(defs.option):
-            """The default terminal type used."""
+            """The default terminal type used"""
             default = 'Vte'
             rtype = types.stringlist('Vte', 'Moo')
             label = 'Terminal Type'
@@ -95,7 +95,7 @@ class TerminalConfig:
             label = 'Terminal Location'
 
     class fonts_and_colours(defs.optiongroup):
-        """Fonts and colours for the terminal"""
+        """Font and colour options for the terminal emulator"""
         label = 'Fonts & Colours'
         __order__  = ['background_colour', 'foreground_colour', 'font']
         class background_colour(defs.option):
