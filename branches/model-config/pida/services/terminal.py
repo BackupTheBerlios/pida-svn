@@ -57,6 +57,7 @@ class terminal_view(contentview.content_view):
         terminal.connect_title(self.set_long_title)
         terminal.execute(command_args, **kw)
         self.grab_focus = terminal.widget.grab_focus
+        self.config = terminal.configure
 
     def cb_exited(self):
         self.close()
@@ -71,38 +72,47 @@ class TerminalConfig:
     class shell(defs.optiongroup):
         """Shell options."""
         __order__ = ['command']
+        label = 'Shell Options'
         class command(defs.option):
             """The command used for the shell."""
             default = os.environ['SHELL'] or 'bash'
             rtype = types.string
+            label = 'Shell command'
 
     class general(defs.optiongroup):
         """Terminal options."""
         __order__ = ['terminal_type', 'terminal_location']
+        label = 'General Options'
         class terminal_type(defs.option):
             """The default terminal type used."""
             default = 'Vte'
             rtype = types.stringlist('Vte', 'Moo')
+            label = 'Terminal Type'
         class terminal_location(defs.option):
-            """Where newly started terminals will appear by default"""
+            """The pane where newly started terminals will appear by default"""
             rtype = types.stringlist(*view_location_map.keys())
             default = 'View Pane'
+            label = 'Terminal Location'
 
     class fonts_and_colours(defs.optiongroup):
         """Fonts and colours for the terminal"""
+        label = 'Fonts & Colours'
         __order__  = ['background_colour', 'foreground_colour', 'font']
         class background_colour(defs.option):
             """The background colour to be used"""
             default = '#000000'
             rtype = types.color
+            label = 'Background colour'
         class foreground_colour(defs.option):
             """The background colour to be used"""
             default = '#c0c0c0'
             rtype = types.color
+            label = 'Foreground colour'
         class font(defs.option):
             """The font to be used in terminals"""
             default = 'Monospace 8'
             rtype = types.font
+            label = 'Font'
 
     __markup__ = lambda self: 'Terminal Emulator'
 
@@ -117,6 +127,28 @@ class terminal_manager(service.service):
     class TerminalView(defs.View):
         view_type = terminal_view
         book_name = 'view'
+
+    def init(self):
+        self.views = []
+
+    def cb_fonts_and_colours__foreground_colour(self, val):
+        self._update_view_config()
+
+    def cb_fonts_and_colours__background_colour(self, val):
+        self._update_view_config()
+
+    def cb_fonts_and_colours__font(self, val):
+        self._update_view_config()
+
+    views = []
+
+    def _update_view_config(self):
+        for view in self.views:
+            view.config(self.opts.fonts_and_colours__foreground_colour,
+                        self.opts.fonts_and_colours__background_colour,
+                        self.opts.fonts_and_colours__font)
+
+
 
     def get_multi_view_book_type(self):
         opt = self.opt('general', 'terminal_location')
@@ -136,6 +168,7 @@ class terminal_manager(service.service):
                                 short_title=short_title,
                                 **kwdict)
         self.show_view(view=view)
+        self.views.append(view)
 
     def cmd_execute_shell(self, term_type=None, kwdict={}):
         shellcommand = self.opt('shell', 'command')
@@ -152,7 +185,9 @@ class terminal_manager(service.service):
         if proj is not None:
             directory = proj.source__directory
         self.call('execute_shell', kwdict={'directory': directory})
-        
+    
+    def view_closed(self, view):
+        self.views.remove(view)
 
     def get_menu_definition(self):
         return """
