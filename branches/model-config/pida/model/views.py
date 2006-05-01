@@ -215,8 +215,10 @@ class PropertyPage(gtk.VBox, WidgetObserver):
         self.pack_start(self._nb)
 
     def set_model(self, model):
+        odm = dir(self._model) == dir(model)
+        super(PropertyPage, self).set_model(model)
+        if odm: return
         for page in xrange(self._nb.get_n_pages() - 1, -1, -1):
-            print page
             self._nb.remove_page(page)
         for group, doc, label, stock_id, attr_names in model.__model_groups__:
             self.add_page(group, label, stock_id, doc, attr_names)
@@ -227,7 +229,6 @@ class PropertyPage(gtk.VBox, WidgetObserver):
                              label=attr.label, doc=attr.doc,
                              sensitive_attr=attr.sensitive_attr)
         self._nb.show_all()
-        super(PropertyPage, self).set_model(model)
 
     def get_widget(self):
         return self._nb
