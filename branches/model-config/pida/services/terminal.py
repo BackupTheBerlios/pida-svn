@@ -61,7 +61,7 @@ class terminal_view(contentview.content_view):
 
     def cb_exited(self):
         self.close()
-        
+
 view_location_map = {'View Pane':'view',
                      'Quick Pane':'content',
                      'Detached':'ext'}
@@ -78,9 +78,8 @@ class TerminalConfig:
             default = os.environ['SHELL'] or 'bash'
             rtype = types.string
             label = 'Shell command'
-
     class general(defs.optiongroup):
-        """General options realting to the terminal"""
+        """General options relating to the terminal emulator"""
         __order__ = ['terminal_type', 'terminal_location']
         label = 'General Options'
         class terminal_type(defs.option):
@@ -93,7 +92,6 @@ class TerminalConfig:
             rtype = types.stringlist(*view_location_map.keys())
             default = 'View Pane'
             label = 'Terminal Location'
-
     class fonts_and_colours(defs.optiongroup):
         """Font and colour options for the terminal emulator"""
         label = 'Fonts & Colours'
@@ -113,16 +111,12 @@ class TerminalConfig:
             default = 'Monospace 8'
             rtype = types.font
             label = 'Font'
-
     __markup__ = lambda self: 'Terminal Emulator'
+
 
 class terminal_manager(service.service):
 
-    display_name = 'Terminals'
-
     config_definition = TerminalConfig
-
-    multi_view_type = terminal_view
 
     class TerminalView(defs.View):
         view_type = terminal_view
@@ -148,13 +142,10 @@ class terminal_manager(service.service):
                         self.opts.fonts_and_colours__background_colour,
                         self.opts.fonts_and_colours__font)
 
-
-
     def get_multi_view_book_type(self):
         opt = self.opt('general', 'terminal_location')
         return view_location_map[opt]
     multi_view_book = property(get_multi_view_book_type)
-
 
     def cmd_execute(self, command_args=[], command_line='',
                     term_type=None, icon_name='terminal',
@@ -185,7 +176,7 @@ class terminal_manager(service.service):
         if proj is not None:
             directory = proj.source__directory
         self.call('execute_shell', kwdict={'directory': directory})
-    
+
     def view_closed(self, view):
         self.views.remove(view)
 
@@ -298,7 +289,7 @@ class vte_terminal(pida_terminal):
             title = term.get_window_title()
             callback(title)
         self.__term.connect('window-title-changed', title_changed)
-        
+
 import re
 
 fre = re.compile(r'(/.+):([0-9]+):')
@@ -347,8 +338,6 @@ class moo_terminal(pida_terminal):
             menu.show_all()
             a.connect('activate', self.act_gotoline, filename, int(ln) - 1)
 
-
-        
     def cb_newline(self, t):    
         cursor_i = t.get_iter_at_cursor()
         line_n = cursor_i.row - 1
@@ -366,11 +355,11 @@ class moo_terminal(pida_terminal):
                 msl = t.get_iter_at_line_offset(line_n, match.start())
                 esl = t.get_iter_at_line_offset(line_n, match.end())
                 t.apply_tag(tag, msl, esl)
-        
+
     def act_gotoline(self, action, file, line):
         self.service.boss.call_command('buffermanager', 'open_file_line',
             filename=file, linenumber=line)
-        
+
     def get_line_at_click(self, x, y):
         pass
 
@@ -414,6 +403,7 @@ class moo_terminal(pida_terminal):
         def title_changed(term, title):
             callback(title)
         self.__term.connect('set-window-title', title_changed)
+
 
 class dumb_terminal(pida_terminal):
 
@@ -483,7 +473,6 @@ def make_terminal(terminal_type_name, **kw):
 
 
 class popen(object):
-    
     def __init__(self, cmdargs, callback, kwargs):
         self.__running = False
         self.__readbuf = []
