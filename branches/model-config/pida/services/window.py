@@ -44,6 +44,7 @@ class WindowConfig:
         """The layout options."""
         __order__ = ['sidebar_on_right', 'vertical_sidebar_split',
                       'small_toolbar', 'sidebar_width']
+        label = 'Window Layout'
         class sidebar_on_right(defs.option):
             """Whether the sidebar will appear on the right."""
             default = False
@@ -64,6 +65,7 @@ class WindowConfig:
     class window_size(defs.optiongroup):
         """The starting size of the pida window."""
         __order__ = ['width', 'height', 'save_on_shutdown']
+        label = 'Window Size'
         class width(defs.option):
             """The starting width in pixels."""
             default = 800
