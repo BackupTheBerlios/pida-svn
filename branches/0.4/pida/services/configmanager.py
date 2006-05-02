@@ -25,17 +25,31 @@ import gtk
 
 import pida.core.service as service
 from pida.core import actions
-import pida.pidagtk.configview as configview
+import pida.pidagtk.contentview as contentview
 
 defs = service.definitions
 
-class config_view(configview.config_view):
+from pida.model import model, views
+
+class config_view(contentview.content_view):
 
     ICON_NAME = 'gtk-preferences'
 
     SHORT_TITLE = 'Configuration'
 
     LONG_TITLE = 'PIDA configuration manager'
+
+    def init(self):
+        self._paned = gtk.HPaned()
+        self.widget.pack_start(self._paned)
+
+    def set_components(self, lister, pager):
+        self._lister = lister
+        self._pager = pager
+        self._paned.pack1(lister)
+        self._paned.pack2(pager)
+        self._paned.set_position(200)
+        self.show_all()
 
 class config_manager(service.service):
     
@@ -76,6 +90,61 @@ class config_manager(service.service):
                 </menubar>
                 """
 
-Service = config_manager
+class ConfigManager(service.service):
+
+    def init(self):
+        self._editview = None
+
+    def reset(self):
+        self.conf_group = model.ModelGroup()
+        for svc in self.boss.services:
+            if svc.opts is not None:
+                self.conf_group.add_model(svc.opts)
+
+    class ConfigView(defs.View):
+        view_type = config_view
+        book_name = 'ext'
+
+    def view_closed(self, view):
+        self._editview = None
+        self.conf_group.remove_observer(self._listobs)
+        self.conf_group.remove_observer(self._pageobs)
+
+    def cmd_edit(self):
+        if self._editview is None:
+            self._editview = self.create_view('ConfigView')
+            self.show_view(view=self._editview)
+            self._listobs = self.conf_group.create_multi_observer(
+                views.TreeObserver)
+            self._pageobs = self.conf_group.create_single_observer(
+                views.PropertyPage)
+            self._editview.set_components(self._listobs, self._pageobs)
+        self._editview.raise_page()
+
+
+    @actions.action(stock_id=gtk.STOCK_PREFERENCES, label=None,
+                    default_accel='<Shift><Control>k')
+    def act_configuration(self, action):
+        self.call('edit')
+
+    def get_menu_definition(self):
+        return  """
+                <menubar>
+                <menu name="base_file" action="base_file_menu">
+                </menu>
+                <menu name="base_edit" action="base_edit_menu">
+                    <placeholder name="PreferencesMenu">
+                        <separator />
+                        <menuitem name="confedit" action="configmanager+configuration" />
+                    </placeholder>
+                </menu>
+                <menu name="base_project" action="base_project_menu">
+                </menu>
+                <menu name="base_tools" action="base_tools_menu">
+                </menu>
+                </menubar>
+                """
+
+Service = ConfigManager
 
     

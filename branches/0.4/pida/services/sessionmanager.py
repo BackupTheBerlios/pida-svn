@@ -27,7 +27,7 @@ import gtk
 import gobject
 
 from pida.core import service
-from pida.core.service import types
+from pida.model import attrtypes as types
 from pida.core.actions import action
 from pida.core.service import definitions as defs
 
@@ -45,12 +45,12 @@ def save_documents_to_file(documents, filename):
             f.write('%s\n' % doc.filename)
     f.close()
 
-class SessionManager(service.service):
-
-    display_name = 'Session Management'
-
+class SessionConfig:
+    __order__ = ['sessions']
     class sessions(defs.optiongroup):
         """Session management."""
+        __order__ = ['automatically_load_last_session',
+                     'start_with_new_file']
         class automatically_load_last_session(defs.option):
             """Whether the session will be reloaded from closing PIDA."""
             rtype = types.boolean
@@ -60,6 +60,16 @@ class SessionManager(service.service):
                specified on the command-line on by a session."""
             rtype = types.boolean
             default = True
+    
+    def __markup__(self):
+        return 'Session Manager'
+
+
+class SessionManager(service.service):
+
+    display_name = 'Session Management'
+
+    config_definition = SessionConfig
 
     def init(self):
         self.__session_loaded = False

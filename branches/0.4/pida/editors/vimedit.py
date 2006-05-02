@@ -33,12 +33,44 @@ import pida.utils.vim.vimembed as vimembed
 import pida.utils.vim.vimeditor as vimeditor
 
 defs = service.definitions
-types = service.types
+
+from pida.model import attrtypes as types
+
+class VimEmbedConfig:
+    __order__ = ['vim_command', 'vim_events', 'display']
+    class vim_command(defs.optiongroup):
+        """Vim command options."""
+        __order__ = ['use_cream']
+        class use_cream(defs.option):
+            rtype = types.boolean
+            default = False
+
+    class vim_events(defs.optiongroup):
+        """How PIDA will react to events from Vim."""
+        __order__ = ['shutdown_with_vim']
+        class shutdown_with_vim(defs.option):
+            rtype = types.boolean
+            default = False
+
+    class display(defs.optiongroup):
+        """Vim display options"""
+        __order__ = ['colour_scheme', 'hide_vim_menu']
+        class colour_scheme(defs.option):
+            """The colour scheme to use in vim (Empty will be ignored)."""
+            rtype = types.string
+            default = ''
+        class hide_vim_menu(defs.option):
+            """Whether the vim menu will be hidden."""
+            rtype = types.boolean
+            default = False
+    __markup__ = lambda self: 'Vim Embedded'
 
 
 class vim_embedded_editor(vimeditor.vim_editor, service.service):
 
     display_name = 'Embedded Vim'
+
+    config_definition = VimEmbedConfig
 
     class Vim(defs.View):
         view_type = vimembed.vim_embed
@@ -48,18 +80,6 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
         self.__srv = None
         self.__view = None
         vimeditor.vim_editor.init(self)
-
-    class vim_command(defs.optiongroup):
-        """Vim command options."""
-        class use_cream(defs.option):
-            rtype = types.boolean
-            default = False
-
-    class vim_events(defs.optiongroup):
-        """How PIDA will react to events from Vim."""
-        class shutdown_with_vim(defs.option):
-            rtype = types.boolean
-            default = False
 
     def get_server(self):
         """Return our only server."""

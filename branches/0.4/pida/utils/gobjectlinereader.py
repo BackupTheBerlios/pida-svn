@@ -128,7 +128,6 @@ class GobjectReader(_GobjectReader):
         for chunk in data.split("\n"):
             chunk = chunk.strip()
             if len(chunk) > 0:
-                print repr(chunk)
                 self._received(chunk)
         
     def on_started(self, proc, pid):

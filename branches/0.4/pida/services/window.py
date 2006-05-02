@@ -33,17 +33,18 @@ import pida.core.service as service
 from pida.pidagtk.contentview import ContentManager, create_pida_icon
 
 
-types = service.types
+from pida.model import attrtypes as types
 defs = service.definitions
 
 
-class WindowManager(service.service):
-    """Class to control the main window."""
+class WindowConfig:
 
-    display_name = 'View'
-
+    __order__ = ['layout', 'window_size', 'toolbar_and_menubar']
     class layout(defs.optiongroup):
         """The layout options."""
+        __order__ = ['sidebar_on_right', 'vertical_sidebar_split',
+                      'small_toolbar', 'sidebar_width']
+        label = 'Window Layout'
         class sidebar_on_right(defs.option):
             """Whether the sidebar will appear on the right."""
             default = False
@@ -63,6 +64,8 @@ class WindowManager(service.service):
 
     class window_size(defs.optiongroup):
         """The starting size of the pida window."""
+        __order__ = ['width', 'height', 'save_on_shutdown']
+        label = 'Window Size'
         class width(defs.option):
             """The starting width in pixels."""
             default = 800
@@ -75,9 +78,11 @@ class WindowManager(service.service):
             """Whether the size will be saved on shutdown."""
             default = True
             rtype = types.boolean
-            
+
     class toolbar_and_menubar(defs.optiongroup):
         """Options relating to the toolbar and main menu bar."""
+        __order__ = ['toolbar_visible', 'menubar_visible', 'sidebar_visible',
+                     'viewpan_visible']
         class toolbar_visible(defs.option):
             """Whether the toolbar will start visible."""
             rtype = types.boolean
@@ -90,8 +95,23 @@ class WindowManager(service.service):
             """Whether the sidebar will start visible."""
             rtype = types.boolean
             default = True
+        class viewpan_visible(defs.option):
+            """Whether the view pan will be visible."""
+            rtype = types.boolean
+            default = True
+            label = 'Show View Pane'
+
+    def __markup__(self):
+        return 'Window and view'
+
+class WindowManager(service.service):
+    """Class to control the main window."""
+
+    display_name = 'View'
+
+    config_definition = WindowConfig
     
-    def init(self):
+    def init(self, *args, **kw):
         self.__acels = gtk.AccelGroup()
         self._create_uim()
 
@@ -103,38 +123,70 @@ class WindowManager(service.service):
 
     def reset(self):
         """Display the window."""
-        if self.opt('layout', 'small_toolbar'):
+        self._create_window()
+        self.toolbar.set_style(gtk.TOOLBAR_ICONS)
+        self.opts.__model_notify__()
+
+    toolbar = None
+    menubar = None
+
+    def cb_layout__small_toolbar(self, val):
+        if self.toolbar is None: return
+        if val:
             size = gtk.ICON_SIZE_SMALL_TOOLBAR
         else:
             size = gtk.ICON_SIZE_LARGE_TOOLBAR
-        tbact = self.action_group.get_action('window+toggle_toolbar')
-        tbact.set_active(self.opt('toolbar_and_menubar',
-                                      'toolbar_visible'))
-        menact = self.action_group.get_action('window+toggle_menubar')
-        menact.set_active(self.opt('toolbar_and_menubar',
-                                       'menubar_visible'))
-        sidact = self.action_group.get_action('window+toggle_sidebar')
-        sidact.set_active(self.opt('toolbar_and_menubar',
-                                       'sidebar_visible'))
-        panact = self.action_group.get_action('window+toggle_viewpan')
-        panact.set_active(True)
-        self._show_menubar()
-        self._show_toolbar()
-        self._create_window()
         self.toolbar.set_icon_size(size)
-        self.toolbar.set_style(gtk.TOOLBAR_ICONS)
+
+    def cb_toolbar_and_menubar__toolbar_visible(self, val):
+        if self.toolbar is None: return
+        if val:
+            self.toolbar.show_all()
+        else:
+            self.toolbar.hide_all()
+        act = self.action_group.get_action('window+toggle_toolbar')
+        if act.get_active() != val:
+            act.set_active(val)
+
+    def cb_toolbar_and_menubar__menubar_visible(self, val):
+        if self.menubar is None: return
+        if val:
+            self.menubar.show_all()
+        else:
+            self.menubar.hide_all()
+        act = self.action_group.get_action('window+toggle_menubar')
+        if act.get_active() != val:
+            act.set_active(val)
+
+    def cb_toolbar_and_menubar__sidebar_visible(self, val):
+        if self.menubar is None: return
+        if val:
+            self.show_sidebar()
+        else:
+            self.hide_sidebar()
+        act = self.action_group.get_action('window+toggle_sidebar')
+        if act.get_active() != val:
+            act.set_active(val)
+
+    def cb_toolbar_and_menubar__viewpan_visible(self, val):
+        if self.menubar is None: return
+        if val:
+            self.show_viewpan()
+        else:
+            self.hide_viewpan()
+        act = self.action_group.get_action('window+toggle_viewpan')
+        if act.get_active() != val:
+            act.set_active(val)
 
     def stop(self):
-        if self.opt('window_size', 'save_on_shutdown'):
+        if self.opts.window_size__save_on_shutdown:
             w, h = self.__window.get_size()
             self.set_option('window_size', 'width', w)
             self.set_option('window_size', 'height', h)
-            self.options.save()
+            #self.options.save()
 
     def cmd_show_window(self):
         self.__window.show_all()
-        self._show_menubar()
-        self._show_toolbar()
 
     def cmd_update_action_groups(self):
         self.__uim.ensure_update()
@@ -243,7 +295,6 @@ class WindowManager(service.service):
     def act_toggle_toolbar(self, action):
         self.set_option('toolbar_and_menubar', 'toolbar_visible',
                         action.get_active())
-        self._show_toolbar()
 
     @actions.action(
         type=actions.TYPE_TOGGLE,
@@ -253,7 +304,6 @@ class WindowManager(service.service):
     def act_toggle_menubar(self, action):
         self.set_option('toolbar_and_menubar', 'menubar_visible',
                         action.get_active())
-        self._show_menubar()
 
     @actions.action(
         type=actions.TYPE_TOGGLE,
@@ -261,10 +311,6 @@ class WindowManager(service.service):
         label='Sidebar'
     )
     def act_toggle_sidebar(self, action):
-        if action.get_active():
-            self.show_sidebar()
-        else:
-            self.hide_sidebar()
         self.set_option('toolbar_and_menubar', 'sidebar_visible',
                         action.get_active())
 
@@ -274,23 +320,9 @@ class WindowManager(service.service):
         label='Pane Viewer'
     )
     def act_toggle_viewpan(self, action):
-        if action.get_active():
-            self.show_viewpan()
-        else:
-            self.hide_viewpan()
+        self.opts.toolbar_and_menubar__viewpan_visible = action.get_active()
 
-    def _show_toolbar(self):
-        if self.opt('toolbar_and_menubar', 'toolbar_visible'):
-            self.toolbar.show_all()
-        else:
-            self.toolbar.hide_all()
 
-    def _show_menubar(self):
-        if self.opt('toolbar_and_menubar', 'menubar_visible'):
-            self.menubar.show_all()
-        else:
-            self.menubar.hide_all()
-    
     def _bind_views(self):
         self._cm = ContentManager()
         self.contentview = self._cm.create_book('content')
@@ -302,8 +334,6 @@ class WindowManager(service.service):
         def _s():
             self.contentview.set_current_page(0)
         gtk.idle_add(_s)
-        self.menubar = self.__uim.get_toplevels(gtk.UI_MANAGER_MENUBAR)[0]
-        self.toolbar = self.__uim.get_toplevels(gtk.UI_MANAGER_TOOLBAR)[0]
 
     def _bind_pluginviews(self):
         for service in self.boss.services:
@@ -330,11 +360,11 @@ class WindowManager(service.service):
         self.__mainbox.pack_start(self.__toolbox, expand=False)
 
     def _pack_panes(self):
-        sidebar_on_right = self.opt('layout', 'sidebar_on_right')
+        sidebar_on_right = self.opts.layout__sidebar_on_right
         self.__sidebar = p0 = shiftpaned.SidebarPaned(gtk.HPaned,
                                                     sidebar_on_right)
         self.__mainbox.pack_start(p0)
-        sidebar_width = self.opt('layout', 'sidebar_width')
+        sidebar_width = self.opts.layout__sidebar_width
         sidebar = self._pack_sidebar()
         if sidebar_on_right:
             main_pos = 800 - sidebar_width
@@ -350,11 +380,11 @@ class WindowManager(service.service):
         p0.set_position(main_pos)
         p1.pack_main(self.editorview, resize=True)
         p1.pack_sub(self.bookview, resize=False)
-        h = self.opt('window_size', 'height')
+        h = self.opts.window_size__height
         p1.set_position(h - 200)
 
     def _pack_sidebar(self):
-        sidebar_horiz = self.opt('layout', 'vertical_sidebar_split')
+        sidebar_horiz = self.opts.layout__vertical_sidebar_split
         if sidebar_horiz:
             box = gtk.HPaned()
         else:
@@ -373,8 +403,8 @@ class WindowManager(service.service):
             self.__window.add_accel_group(self.__acels)
             self._connect_drag_events()
             self.__window.add(self.__mainbox)
-            w = self.opt('window_size', 'width')
-            h = self.opt('window_size', 'height')
+            w = self.opts.window_size__width
+            h = self.opts.window_size__height
             self.__window.resize(w, h)
             self.__window.set_icon(create_pida_icon())
 
@@ -451,6 +481,8 @@ class WindowManager(service.service):
         self.call('register_action_group',
                     actiongroup=ag,
                     uidefinition=menudef)
+        self.menubar = self.__uim.get_toplevels(gtk.UI_MANAGER_MENUBAR)[0]
+        self.toolbar = self.__uim.get_toplevels(gtk.UI_MANAGER_TOOLBAR)[0]
         self.__started = False
 
     def _debug_uim(self):

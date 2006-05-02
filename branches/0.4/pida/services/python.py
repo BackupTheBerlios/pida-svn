@@ -30,13 +30,14 @@ import pida.core.actions as actions
 from pida.core import service
 
 defs = service.definitions
-types = service.types
 
+from pida.model import attrtypes as types
 
-class python(service.service):
-
+class PythonConfig:
+    __order__ = ['python_execution']
     class python_execution(defs.optiongroup):
         """Options pertaining to python execution"""
+        __order__ = ['python_executable', 'python_shell']
         class python_executable(defs.option):
             """The command to call when executing python scripts."""
             rtype = types.string
@@ -45,6 +46,13 @@ class python(service.service):
             """The command to call when executing a python shell."""
             rtype = types.string
             default = 'python'
+
+    __markup__ = lambda self: 'Python'
+
+
+class python(service.service):
+
+    config_definition = PythonConfig
 
     def cmd_execute_shell(self):
         py = self.opt('python_execution', 'python_shell')

@@ -42,7 +42,7 @@ import gtk
 
 import pida.core.actions as actions
 
-types = service.types
+from pida.model import attrtypes as types
 defs = service.definitions
 
 table = range(0,128) * 2
@@ -212,34 +212,49 @@ class GrepView(contentview.content_view):
     def cb_activated(self, entry):
         self.service.grep_start()
 
-class Grepper(service.service):
-
-    class GrepView(defs.View):
-        view_type = GrepView
-        book_name = 'view'
-
-    display_name = 'Grep Search'
-
+class GrepConfig:
+    __order__  = ['default_options', 'results']
     class default_options(defs.optiongroup):
         """Options that the search will start with by default."""
+        __order__ = ['start_detailed', 'recursive_search',
+                     'ignore_version_control_directories']
+        label = 'Default Search Options'
         class start_detailed(defs.option):
             """Whether the detailed search options will start expanded."""
+            label = 'Start with details visible'
             rtype = types.boolean
             default = False
         class recursive_search(defs.option):
             """Whether the search will be recursive by default."""
             rtype = types.boolean
             default = True
+            label = 'Recursive search'
         class ignore_version_control_directories(defs.option):
             """Whether version control directories will be ignored by default."""
             rtype = types.boolean
             default = True
+            label = 'Ignore version control directories'
     class results(defs.optiongroup):
         """Options relating to search results."""
+        __order__ = ['maximum_results']
+        label = 'Result Options'
         class maximum_results(defs.option):
             """The maximum number of search results."""
+            label = 'Maximum number of results'
             rtype = types.intrange(5, 5000, 5)
             default = 500
+
+    __markup__ = lambda self: 'Text Searcher'
+
+class Grepper(service.service):
+
+    config_definition = GrepConfig
+
+    class GrepView(defs.View):
+        view_type = GrepView
+        book_name = 'view'
+
+    display_name = 'Grep Search'
 
     def grep_start(self):
         opts = self.single_view.get_options()

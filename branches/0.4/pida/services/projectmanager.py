@@ -165,6 +165,8 @@ class ProjectManager(service.service):
             'projects', 'projectlist.conf')
         self.__last_file = os.path.join(self.boss.pida_home,
             'projects', 'projectlast.conf')
+        if not os.path.exists(self.__history_file):
+            self.__write_history()
         self.__started = False
         self.__init_model()
         self.__read_history()
@@ -225,10 +227,7 @@ class ProjectManager(service.service):
         entry.set_editable(False)
 
     def __read_history(self):
-        try:
-            f = open(self.__history_file, 'r')
-        except (IOError, OSError):
-            return
+        f = open(self.__history_file, 'r')
         hist = set()
         for filename in f:
             filename = filename.strip()
