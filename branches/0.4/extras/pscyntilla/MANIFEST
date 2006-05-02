@@ -1,0 +1,7 @@
+README
+setup.py
+src/gtkscintilla.c
+src/gtkscintilla_signals.c
+src/marshallers.c
+src/pyscintilla.c
+src/scintillamodule.c

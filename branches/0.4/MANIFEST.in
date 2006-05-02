@@ -1,0 +1,13 @@
+
+include AUTHORS
+include CONTRIBUTORS
+include README
+include CHANGELOG
+include COPYING
+include setup.py
+include develop.sh
+recursive-include pida *.py
+recursive-include rat *.py
+recursive-include pida/data *
+recursive-include extras *
+recursive-include docs *
