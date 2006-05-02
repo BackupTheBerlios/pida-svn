@@ -75,19 +75,23 @@ class TodoConfig:
     __order__ = ['todo_definition']
     class todo_definition(defs.optiongroup):
         """Options for the TODO viewer"""
+        label = 'Definition of a "TODO"'
         __order__ = ['use_TODO', 'use_FIXME', 'additional_markers']
         class use_TODO(defs.option):
             """Whether the TODO search will use 'TODO' statements"""
             rtype = types.boolean
             default = True
+            label = 'use the string "TODO"'
         class use_FIXME(defs.option):
             """Whether the TODO search will use 'FIXME' statements"""
             rtype = types.boolean
             default = True
+            label = 'use the string "FIXME"'
         class additional_markers(defs.option):
             """Additional markers that will be used for TODO searching. (comma separated list)"""
             rtype = types.string
             default = ''
+            label = 'Additional markers'
 
     def __markup__(self):
         return 'Todo Viewer'
