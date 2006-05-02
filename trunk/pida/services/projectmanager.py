@@ -225,7 +225,10 @@ class ProjectManager(service.service):
         entry.set_editable(False)
 
     def __read_history(self):
-        f = open(self.__history_file, 'r')
+        try:
+            f = open(self.__history_file, 'r')
+        except (IOError, OSError):
+            return
         hist = set()
         for filename in f:
             filename = filename.strip()
