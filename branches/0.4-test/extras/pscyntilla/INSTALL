@@ -1,0 +1,47 @@
+Last update: Nov 12th 2004
+
+To build and install Pscyntilla from source distribution
+--------------------------------------------------------
+
+Download latest version of Scintilla from <http://www.scintilla.org>
+Currently tested version is 167.
+
+Unpack the downloaded archive in the current directory. 
+This will create direcory "scintilla"
+
+To compile install it just run::
+
+    python setup.py install
+
+You will need the usual Gtk+ development files installed.
+
+How to cross compile
+--------------------
+
+Cross compilling requires a bit of bootstrapping. First you need to
+install:
+
+Python[1], Gtk+ runtime (devel version)[2] and PyGtk[3] for windows.
+Install them and copy the python directory to your location, in
+this example we'll use `~/win32`::
+
+    cp -a /mnt/windows/Python24 ~/opt/win32
+
+Now copy the *contents* inside Gtk+ onto the same directory::
+
+    cp -a /mnt/windows/Gtk/* ~/opt/win32/
+
+Now you can move two missing files onto the correct path,
+    
+    cp /mnt/windows/Python24/Lib/pkgconfig/* ~/opt/win32/lib/pkgconfig/
+    
+Finally you have to edit **every** `.pc` file under
+`~/opt/win32/lib/pkgconfig` and change the `prefix` to::
+
+    prefix=/home/MYUSERNAME/win32
+
+Finally you just need to run::
+    
+    python setup.py crosscompile
+    
+   

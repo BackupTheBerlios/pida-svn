@@ -1,0 +1,47 @@
+<?xml version="1.0" standalone="no"?> <!--*- mode: xml -*-->
+<!DOCTYPE glade-interface SYSTEM "http://gazpacho.sicem.biz/gazpacho-0.1.dtd">
+<glade-interface>
+    <widget class="GtkWindow" id="window2">
+        <property name="border_width">45</property>
+        <property name="default_height">250</property>
+        <property name="default_width">440</property>
+        <signal handler="on_window2__set_focus_child" name="set-focus-child" after="False"/>
+        <signal handler="on_window2__move_focus" name="move-focus" after="False"/>
+        <signal handler="window2_keys_changed" name="keys-changed" after="False"/>
+        <signal handler="window2_activate_focus" name="activate-focus" after="False"/>
+        <signal handler="on_window2__remove" name="remove" after="False"/>
+        <signal handler="on_window2__check_resize" name="check-resize" after="False"/>
+        <signal handler="on_window2__add" name="add" after="False"/>
+        <signal handler="ad" name="activate-default" after="False"/>
+        <signal handler="on_window2__frame_event" name="frame-event" after="False"/>
+        <child>
+            <widget class="GtkVBox" id="pida_view">
+                <property name="visible">True</property>
+                <child>
+                    <widget class="GtkLabel" id="label1">
+                        <property name="label" context="yes" translatable="yes">You are the human stone</property>
+                        <property name="visible">True</property>
+                    </widget>
+                </child>
+                <child>
+                    <widget class="GtkButton" id="foo_but">
+                        <property name="is_focus">True</property>
+                        <property name="label" context="yes" translatable="yes">foo</property>
+                        <property name="visible">True</property>
+                        <signal handler="foo_click" name="activate" after="False"/>
+                        <signal handler="on_foo_but__clicked" name="clicked" after="False"/>
+                    </widget>
+                    <packing>
+                        <property name="position">1</property>
+                    </packing>
+                </child>
+                <child>
+                    <widget class="pida+pidagtk+tree+Tree" id="pidatree1"/>
+                    <packing>
+                        <property name="position">2</property>
+                    </packing>
+                </child>
+            </widget>
+        </child>
+    </widget>
+</glade-interface>
