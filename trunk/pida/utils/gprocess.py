@@ -1,4 +1,3 @@
-import threading
 import subprocess
 import sys
 import gobject
@@ -21,18 +20,6 @@ def read_all_iter(buff, block_size=1024):
 
 def read_all(sock, block_size=1024):
     return "".join(read_all_iter(sock, block_size))
-
-class BufferConsumer(threading.Thread):
-    def __init__(self, buff, callback, block_size=1024):
-        self.buff = buff
-        self.callback = callback
-        self.block_size = block_size
-        threading.Thread.__init__(self)
-
-    def run(self):
-        for chunk in read_all_iter(self.buff, self.block_size):
-            self.callback(chunk)
-        self.buff.close()
 
 
 class AbstractGProcess(gobject.GObject):
@@ -66,29 +53,26 @@ class AbstractGProcess(gobject.GObject):
     def do_finished(self, pid):
         self.proc = None
 
-class ThreadedProcess(AbstractGProcess):
-    polling_time = 10
+class PolledProcess(AbstractGProcess):
+    polling_time = 50
     
     def start(self):
         self.proc = subprocess.Popen(
             self.args,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            stderr=subprocess.PIPE,
+            
         )
-        BufferConsumer(self.proc.stdout, self.on_stdout_read).start()
-        BufferConsumer(self.proc.stderr, self.on_stderr_read).start()
         self.emit("started", self.proc.pid)
         gobject.timeout_add(self.polling_time, self.on_tick)
     
-    def on_stdout_read(self, data):
-        gobject.idle_add(lambda: self.emit("stdout-data", data))
-
-    def on_stderr_read(self, data):
-        gobject.idle_add(lambda: self.emit("stderr-data", data))
-
     def on_tick(self):
         val = self.proc.poll()
         if val is not None:
+            # TODO: make this smoother, data should be read in
+            # chunks in order to avoid flooding the UI with info
+            self.emit("stdout-data", self.proc.stdout.read())
+            self.emit("stderr-data", self.proc.stderr.read())
             self.emit("finished", val)
 
         return val is None
@@ -99,7 +83,7 @@ class SelectProcess(AbstractGProcess):
         self.proc = subprocess.Popen(
             self.args,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            stderr=subprocess.PIPE,
         )
         
         gobject.io_add_watch(self.proc.stdout, gobject.IO_IN, self.on_buff_read, "stdout-data")
@@ -128,8 +112,8 @@ if __name__ == '__main__':
         print err,
         gtk.main_quit()
 
-    gproc = GProcess
-    #gproc = ThreadedProcess
+    #gproc = GProcess
+    gproc = PolledProcess
 
 
     proc = gproc(sys.argv[1:])
