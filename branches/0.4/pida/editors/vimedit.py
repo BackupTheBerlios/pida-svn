@@ -42,6 +42,7 @@ class VimEmbedConfig:
         """Vim command options."""
         __order__ = ['use_cream']
         class use_cream(defs.option):
+            """Whether Cream for Vim will be used"""
             rtype = types.boolean
             default = False
 
@@ -49,6 +50,7 @@ class VimEmbedConfig:
         """How PIDA will react to events from Vim."""
         __order__ = ['shutdown_with_vim']
         class shutdown_with_vim(defs.option):
+            """Whether to shutdown pida with Vim"""
             rtype = types.boolean
             default = False
 
