@@ -99,7 +99,8 @@ class FileSystemItem(object):
         self.path = self.key = path
         self.name = os.path.basename(path)
         self.isdir = os.path.isdir(path)
-        self.status = None
+        self.status = STATE_NORMAL
+        self.statused = False
         self.isnotdir = not self.isdir
         self.mt = None
         self.icon = None
@@ -268,6 +269,11 @@ class FileBrowser(contentview.content_view):
             for f in self._files.values():
                 f.status = 2
                 f.reset_markup()
+        else:
+            for f in self._files.values():
+                if not f.statused:
+                    f.status = 0
+                    f.reset_markup()
         self.cwd = args[-1]
         self._recent[self.cwd] = self._files
         self.long_title = self.cwd
@@ -302,11 +308,13 @@ class FileBrowser(contentview.content_view):
             if path in self._files:
                 f = self._files[path]
                 f.status = status
+                f.statused = True
                 f.reset_markup()
             else:
                 f = FileSystemItem(path)
                 self._files[path] = f
                 f.status = status
+                f.statused = True
                 self._view.add_item(f)
         
     def cb_click(self, tv, item):
