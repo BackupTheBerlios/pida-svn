@@ -90,6 +90,8 @@ letters = {
             STATE_MAX: '+'
             }
 
+busy_cursor = gtk.gdk.Cursor(gtk.gdk.WATCH)
+normal_cursor = gtk.gdk.Cursor(gtk.gdk.LEFT_PTR)
 
 class FileSystemItem(object):
 
@@ -232,6 +234,7 @@ class FileBrowser(contentview.content_view):
             self.long_title = self.cwd
         else:
             self._no_statuses = False
+            self.cwd = directory
             self._reader.run(directory)
 
     def browse_up(self):
@@ -251,10 +254,16 @@ class FileBrowser(contentview.content_view):
             self.browse(self.cwd)
          
     def cb_started(self, reader):
+        w = self.service.boss.get_main_window().window
+        if w is not None:
+            w.set_cursor(busy_cursor)
         self._files = {}
         self._view.clear()
 
     def cb_finished(self, reader, args):
+        w = self.service.boss.get_main_window().window
+        if w is not None:
+            w.set_cursor(normal_cursor)
         if self._no_statuses:
             for f in self._files.values():
                 f.status = 2

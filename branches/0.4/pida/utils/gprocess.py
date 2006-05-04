@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import os
 import gobject
 
 __all__ = ("SelectProcess", "ThreadedProcess", "GProcess")
@@ -11,16 +12,18 @@ def gsignature(*args, **kwargs):
 
 def read_all_iter(buff, block_size=1024):
     """Auxiliar function that reads all data it cans"""
-    chunk = buff.read(block_size)
+    chunk = read_some(buff, block_size)
     yield chunk
-    
+    #return chunk 
     while len(chunk) == block_size:
-        chunk = buff.read(block_size)
+        chunk = read_some(buff, block_size)
         yield chunk
 
 def read_all(sock, block_size=1024):
     return "".join(read_all_iter(sock, block_size))
 
+def read_some(buff, block_size=1024):
+    return os.read(buff.fileno(), block_size)
 
 class AbstractGProcess(gobject.GObject):
     __gsignals__ = {
@@ -94,12 +97,17 @@ class SelectProcess(AbstractGProcess):
         self.emit("started", self.proc.pid)
 
     def on_buff_read(self, fd, cond, signame):
-        self.emit(signame, read_all(fd))
+        data = read_some(fd)
+        self.emit(signame, data)
 
     def on_finished(self, pid, condition):
-        self.emit("finished", condition / 256)
-        gobject.source_remove(self._out)
-        gobject.source_remove(self._err)
+        def _delayed_stop():
+            gobject.source_remove(self._out)
+            gobject.source_remove(self._err)
+            self.emit('stdout-data', read_all(self.proc.stdout))
+            self.emit('stderr-data', read_all(self.proc.stderr))
+            self.emit("finished", condition / 256)
+        gobject.idle_add(_delayed_stop)
 
 if sys.platform == "win32":
     GProcess = PolledProcess
