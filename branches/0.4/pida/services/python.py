@@ -182,6 +182,8 @@ class python(service.service):
 
     def bnd_buffermanager_document_changed(self, document):
         self._document = document
+        if document.is_new:
+            return
         self._exact.set_visible(document.filename.endswith('py'))
 
     def get_menu_definition(self):
