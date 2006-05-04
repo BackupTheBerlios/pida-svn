@@ -262,8 +262,6 @@ class PropertyPage(gtk.VBox, WidgetObserver):
     def create_labelled_widget(self, widget, sizer, vsizer, label, doc):
         if label is None:
             label = widget.get_property('model-attribute')
-        if doc is None:
-            doc = 'No documentation'
         vb = gtk.EventBox()
         vb.set_border_width(6)
         hb = gtk.HBox(spacing=12)
@@ -281,7 +279,9 @@ class PropertyPage(gtk.VBox, WidgetObserver):
         al.add(widget)
         hb.pack_start(al, expand=True)
         #vb.pack_start(self.create_doc_label(doc), expand=False)
-        self._tips.set_tip(vb, doc)
+        # Only set the tooltip when the doc was set
+        if doc is not None:
+            self._tips.set_tip(vb, doc)
         vsizer.add_widget(vb)
         return vb
 
@@ -296,10 +296,14 @@ class PropertyPage(gtk.VBox, WidgetObserver):
         l.set_alignment(0, 0.5)
         l.set_markup(SECTION_TITLE % escape(title))
         vb.pack_start(l, expand=False)
-        l = gtk.Label()
-        l.set_alignment(0, 0.5)
-        l.set_markup(SECTION_DESCRIPTION % escape(desc))
-        vb.pack_start(l, expand=False)
+        
+        # Only add a description label when there is one
+        if desc is not None:
+            l = gtk.Label()
+            l.set_alignment(0, 0.5)
+            l.set_markup(SECTION_DESCRIPTION % escape(desc))
+            vb.pack_start(l, expand=False)
+        
         hb.set_border_width(6)
         return hb
 

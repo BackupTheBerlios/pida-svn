@@ -141,7 +141,12 @@ def get_groups(definition):
             label = group.label
         else:
             label = name
-        doc = format_docstring(group.__doc__)
+
+        if group.__doc__ is None:
+            doc = None
+        else:
+            doc = format_docstring(group.__doc__)
+            
         G = (name, doc, label, stock_id, L)
         for attr in get_defintion_attrs(group):
             a = ModelAttribute.from_definition(group.__name__, attr)
@@ -165,6 +170,7 @@ def add_attr_to_class(classdict, attr):
     classdict[attr.key] = property(fget, fset)
 
 def format_docstring(doc):
+    assert doc is not None
     return doc.replace('\n', ' ').strip()
 
 class ModelAttribute(object):
@@ -186,7 +192,12 @@ class ModelAttribute(object):
     @classmethod
     def from_definition(cls, group, definition):
         name = definition.__name__
-        doc = format_docstring(definition.__doc__)
+
+        if definition.__doc__ is None:
+            doc = None
+        else:
+            doc = format_docstring(definition.__doc__)
+            
         rtype = definition.rtype
         if hasattr(definition, 'label'):
             label = definition.label

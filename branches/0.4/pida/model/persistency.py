@@ -48,7 +48,8 @@ class IniFileObserver(BaseMultiModelObserver):
                 if attr.fget is not None:
                     continue
                 f.write('# %s\n' % attr.name)
-                f.write('# %s\n' % attr.doc.replace('\n', ' ').strip())
+                if attr.doc is not None:
+                    f.write('# %s\n' % attr.doc.replace('\n', ' ').strip())
                 f.write('# default value = %s\n' % attr.default)
                 val = attr.rtype.serialize(getattr(model, attrname))
                 f.write('%s = %s\n\n' % (attr.name, val))

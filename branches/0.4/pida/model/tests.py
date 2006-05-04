@@ -13,7 +13,7 @@ from model import property_evading_setattr, get_defintion_attrs, get_groups,\
 
 class Blah:
     """A fake schema"""
-    __order__ = ['meh', 'feh']
+    __order__ = ['meh', 'feh', 'nodocs']
     class meh:
         """a mew mew fake schema"""
         __order__ = ['foo', 'blah']
@@ -48,6 +48,16 @@ class Blah:
             default = 'gah'
             sensitive_attr = 'feh__ouch'
             dependents = ['feh__ouch']
+            
+    class nodocs:
+        # this field is obligatory too
+        __order__ = "lazy",
+        
+        class lazy:
+            rtype = types.string
+            
+            # default is obligatory
+            default = ""
 
     class _notme:
         pass
@@ -102,6 +112,7 @@ class test_model_parse_schema(unittest.TestCase):
 
     def test_a_toplevel(self):
         tops = [c for c in get_defintion_attrs(self.mdef)]
+        self.assertEqual(tops.pop(), self.mdef.nodocs)
         self.assertEqual(tops.pop(), self.mdef.feh)
         self.assertEqual(tops.pop(), self.mdef.meh)
         self.assertEqual(tops, [])
@@ -158,7 +169,7 @@ class test_parse_groups(unittest.TestCase):
         self.n2, self.d2, self.l2, self.s2, self.a2  = self.groups[1]
 
     def test_a_getgroups(self):
-        self.assertEqual(len(self.groups), 2)
+        self.assertEqual(len(self.groups), 3)
 
     def test_b_name(self):
         self.assertEqual(self.n1, 'meh')
@@ -195,7 +206,8 @@ class test_model_class(unittest.TestCase):
         self.assertEqual(self.a1.__model_attrs_map__,
                          BlahModel.__model_attrs_map__)
         self.assertEqual(set(self.a1.__model_attrs_map__.keys()),
-            set(['meh__foo', 'meh__blah', 'feh__ouch', 'feh__gah']))
+            set(['meh__foo', 'meh__blah', 'feh__ouch', 'feh__gah',
+                 'nodocs__lazy']))
 
     def test_c_original_model(self):
         self.assert_(not hasattr(Model, '__model_attrs__'))
@@ -211,7 +223,7 @@ class test_model_class(unittest.TestCase):
         self.assert_(hasattr(self.a1, '__model_groups__'))
         self.assertEqual(self.a1.__model_groups__,
                          BlahModel.__model_groups__)
-        self.assertEqual(len(self.a1.__model_groups__), 2)
+        self.assertEqual(len(self.a1.__model_groups__), 3)
 
     def test_f_observers(self):
         for attr in self.a1.__model_attrs_map__:
