@@ -286,8 +286,7 @@ service_base_classes =  [OptionsMixin,
                          view_mixin]
 
 
-binding_base_classes = [document_type_mixin,
-                        language_type_mixin]
+binding_base_classes = [document_type_mixin]
 
 
 class service_type(type):

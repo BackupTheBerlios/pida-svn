@@ -385,11 +385,6 @@ class Buffermanager(service):
         self.__disable_all_handlers([document.handler])
         document.handler.action_group.set_sensitive(True)
         document.handler.action_group.set_visible(True)
-        if document.is_new:
-            self.boss.call_command('languagetypes', 'hide_all_handlers')
-        else:
-            self.boss.call_command('languagetypes', 'show_handlers',
-                                   document=document)
         self.boss.call_command('window', 'update_action_groups')
         if (self.plugin_view.bufferview.get_selected_key()
                 != document.unique_id):
