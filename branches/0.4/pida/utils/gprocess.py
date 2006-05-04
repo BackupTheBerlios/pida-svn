@@ -10,7 +10,7 @@ def gsignature(*args, **kwargs):
     return_type = kwargs.pop("return_type", gobject.TYPE_NONE)
     return (run_when, return_type, args)
 
-def read_all_iter(buff, block_size=1024):
+def read_all_iter(buff, block_size=2048):
     """Auxiliar function that reads all data it cans"""
     chunk = read_some(buff, block_size)
     yield chunk
@@ -19,10 +19,10 @@ def read_all_iter(buff, block_size=1024):
         chunk = read_some(buff, block_size)
         yield chunk
 
-def read_all(sock, block_size=1024):
+def read_all(sock, block_size=2048):
     return "".join(read_all_iter(sock, block_size))
 
-def read_some(buff, block_size=1024):
+def read_some(buff, block_size=2048):
     return os.read(buff.fileno(), block_size)
 
 class AbstractGProcess(gobject.GObject):
@@ -107,7 +107,8 @@ class SelectProcess(AbstractGProcess):
             self.emit('stdout-data', read_all(self.proc.stdout))
             self.emit('stderr-data', read_all(self.proc.stderr))
             self.emit("finished", condition / 256)
-        gobject.idle_add(_delayed_stop)
+        _delayed_stop()
+        #gobject.idle_add(_delayed_stop)
 
 if sys.platform == "win32":
     GProcess = PolledProcess
