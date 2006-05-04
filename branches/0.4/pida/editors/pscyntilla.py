@@ -79,9 +79,9 @@ from pida.pidagtk import contentview
 from pida.core import actions
 from pida.core import service
 from pida.utils.pscyntilla import Pscyntilla
-
+from pida.model import attrtypes as types
 defs = service.definitions
-types = service.types
+#types = service.types
 
 
 
@@ -110,7 +110,7 @@ class ScintillaView(contentview.content_view):
         opt = self.service.opt
         # font
         self.editor.set_font(
-                *self._font_and_size(opt('font', 'font')))
+                *self._font_and_size(opt('font', 'editor_font')))
         # indenting options
         use_tabs = opt('indenting', 'use_tabs')
         self.editor.set_use_tabs(use_tabs)
@@ -159,24 +159,19 @@ class ScintillaView(contentview.content_view):
             self.service._sensitise_actions()
 
 
-
-class ScintillaEditor(service.service):    
-
-    display_name = 'Pscyntilla Text Editor'
-
-    class EditorView(defs.View):
-        book_name = 'edit'
-        view_type = ScintillaView
+class ScintillaConf:    
+    __markup__ = lambda self: "Scintilla Editor"
 
     class font(defs.optiongroup):
         """The font used in the editor"""
-        class font(defs.option):
+        class editor_font(defs.option):
             """The font used in the editor"""
             rtype = types.font
             default = 'Monospace 12'
-
+            
     class indenting(defs.optiongroup):
         """Indenting options"""
+        
         class use_tabs(defs.option):
             """Use tabs for indenting"""
             rtype = types.boolean
@@ -189,7 +184,7 @@ class ScintillaEditor(service.service):
             """With of space indents, if not using tabs."""
             rtype = types.intrange(1, 16, 1)
             default = 4
-
+    
     class line_numbers(defs.optiongroup):
         """Options relating to line numbers and the line number margin."""
         class show_line_numbers(defs.option):
@@ -207,6 +202,7 @@ class ScintillaEditor(service.service):
 
     class colors(defs.optiongroup):
         """Options for colours."""
+        
         class use_dark_theme(defs.option):
             """Use a dark scheme"""
             rtype = types.boolean
@@ -214,13 +210,17 @@ class ScintillaEditor(service.service):
 
     class folding(defs.optiongroup):
         """Options relating to code folding"""
+        
         class use_folding(defs.option):
+            """Use folding"""
             rtype = types.boolean
             default = True
         class marker_size(defs.option):
+            """Marker size"""
             rtype = types.intrange(8, 32, 1)
             default = 14
         class marker_background(defs.option):
+            """Marker Background"""
             rtype = types.color
             default = '#e0e0e0'
         class marker_foreground(defs.option):
@@ -229,6 +229,7 @@ class ScintillaEditor(service.service):
 
     class caret(defs.optiongroup):
         """Options relating to the caret and selection"""
+                     
         class caret_colour(defs.option):
             """The colour of the caret."""
             default = '#000000'
@@ -260,10 +261,15 @@ class ScintillaEditor(service.service):
             """The color of the edge line"""
             rtype = types.color
             default = '#909090'
-        
 
+class ScintillaEditor(service.service):    
 
-        
+    display_name = 'Pscyntilla Text Editor'
+    config_definition = ScintillaConf
+
+    class EditorView(defs.View):
+        book_name = 'edit'
+        view_type = ScintillaView
         
     def init(self):
         self._documents = {}
