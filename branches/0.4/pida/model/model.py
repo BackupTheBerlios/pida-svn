@@ -103,6 +103,8 @@ etc.
 '''
 
 from string import Template
+from types import ClassType
+import inspect
 
 def property_evading_setattr(obj, attr, val):
     """Set an attribute, but use the property first if available."""
@@ -123,7 +125,16 @@ def property_evading_getattr(obj, attr):
 
 def get_defintion_attrs(definition):
     """Generate the inner classes of a model defenition."""
-    for name in definition.__order__:
+    try:
+        attrs = definition.__order__
+    except AttributeError:
+        get_classes = lambda obj: type(obj) == type or \
+                                  type(obj) == ClassType
+
+        attrs = [name for name, obj in \
+                    inspect.getmembers(definition, get_classes)]
+        
+    for name in attrs:
         if not name.startswith('_'):
             attr = getattr(definition, name)
             yield attr

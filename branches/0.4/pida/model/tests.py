@@ -11,6 +11,29 @@ from model import property_evading_setattr, get_defintion_attrs, get_groups,\
                   BaseSingleModelObserver, BaseMultiModelObserver
 
 
+class LazySchema:
+    class a_group:
+        class key1:
+            rtype = types.string
+            default = "innit?"
+
+        class key2:
+            rtype = types.string
+            default = "isit"
+
+    class b_group:
+        __order__ = ["key1"]
+
+        class key1:
+            rtype = types.string
+            default = "oh yeah!"
+
+        class key2:
+            rtype = types.string
+            default = "cmon!"
+
+    __markup__ = lambda self: "whatevah"
+
 class Blah:
     """A fake schema"""
     __order__ = ['meh', 'feh', 'nodocs']
@@ -50,14 +73,22 @@ class Blah:
             dependents = ['feh__ouch']
             
     class nodocs:
-        # this field is obligatory too
-        __order__ = "lazy",
-        
         class lazy:
             rtype = types.string
-            
             # default is obligatory
             default = ""
+            
+        class zlazy(object):
+            rtype = types.string
+            default = "something else"
+        
+        class another_lazy(lazy):
+            rtype = types.integer
+            default = 1
+
+            ignore_me_too = 100
+
+        ignore_me = "yes you do"
 
     class _notme:
         pass
@@ -76,6 +107,7 @@ class BlahBlah(object):
     g = property(get_g, set_g)
 
 BlahModel = Model.__model_from_definition__(Blah)
+LazySchemaModel = Model.__model_from_definition__(LazySchema)
 
 class MockSingleObserver(BaseSingleModelObserver):
 
@@ -195,6 +227,7 @@ class test_model_class(unittest.TestCase):
 
     def setUp(self):
         self.a1 = BlahModel()
+        self.a2 = LazySchemaModel()
 
     def test_a_attrs(self):
         self.assert_(hasattr(BlahModel, '__model_attrs__'))
@@ -207,7 +240,10 @@ class test_model_class(unittest.TestCase):
                          BlahModel.__model_attrs_map__)
         self.assertEqual(set(self.a1.__model_attrs_map__.keys()),
             set(['meh__foo', 'meh__blah', 'feh__ouch', 'feh__gah',
-                 'nodocs__lazy']))
+                 'nodocs__lazy', 'nodocs__zlazy',
+                 'nodocs__another_lazy']))
+        self.assertEqual(set(self.a2.__model_attrs_map__.keys()),
+            set(['a_group__key1', 'a_group__key2', 'b_group__key1']))
 
     def test_c_original_model(self):
         self.assert_(not hasattr(Model, '__model_attrs__'))
