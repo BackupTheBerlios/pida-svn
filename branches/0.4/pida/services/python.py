@@ -171,7 +171,7 @@ class python(service.service):
 
     def act_execute_current_file(self, action):
         """Runs the current python script"""
-        if self._document is not None:
+        if self._document is not None and not self.document.is_new:
             self.service.call('execute_file',
                               filename=self._document.filename)
 

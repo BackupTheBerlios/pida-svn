@@ -107,6 +107,8 @@ class PythonBrowser(service.service):
 
     def load_document(self, document):
         self.__document = document
+        if document.is_new:
+            return
         root_node = pythonparser.get_nodes_from_string(document.string)
         self.__view.set_source_nodes(root_node)
         if root_node:

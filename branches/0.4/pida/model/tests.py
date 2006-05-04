@@ -243,8 +243,9 @@ class test_model_setting(unittest.TestCase):
         self.assertEqual(self.a1.feh__gah, 'hag')
 
     def test_set_fget_attr(self):
-        self.a1.meh__blah = 'yes'
-        self.assertEqual(self.a1.meh__blah, 'no')
+        def _assign(val):
+            self.a1.meh__blah = val
+        self.assertRaises(AttributeError, _assign, 'no')
 
 class test_observer(unittest.TestCase):
 
@@ -351,7 +352,7 @@ class test_observer(unittest.TestCase):
         self.o2.notify = self.notify
         self.o2.set_model(a1)
         for a in newma:
-            self.assert_((self.o2, a1, a) not in self._n)
+            self.assert_((self.o2, a1, a) in self._n)
         for a in self.ma:
             self.assert_((self.o2, a1, a) in self._n)
         self.assertEqual(self._n[(self.o2, a1, 'feh__gah')], 'gah')
@@ -431,8 +432,6 @@ class test_observer(unittest.TestCase):
         self.o2.set_model(a1)
         a1.meh__foo = 100
         self.assertEqual(self._n[(self.o1, a1, 'meh__foo')], 100)
-        self.assertRaises(KeyError,
-            lambda *a: self._n[(self.o2, a1, 'meh__foo')], 100)
 
     def test_s_two_observers_update(self):
         a1 = BlahModel()
@@ -501,7 +500,6 @@ class test_ini(unittest.TestCase):
         self.assertEqual(self.a1.meh__foo, a1.meh__foo)
 
     def test_b_no_save_fget(self):
-        self.a1.meh__blah = '100'
         a1 = BlahModel()
         load_model_from_ini(self.s1, a1)
         self.assertEqual(self.a1.meh__blah, a1.meh__blah)

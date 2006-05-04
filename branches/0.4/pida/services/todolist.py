@@ -116,6 +116,8 @@ class todo(service.service):
 
     def load_document(self, document):
         self.__document = document
+        if document.is_new:
+            return
         messages = self.cmd_check(lines=document.lines)
         self._view.set_messages(messages)
 
