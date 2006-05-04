@@ -457,6 +457,8 @@ class WindowManager(service.service):
                         <separator />
                     </menu>
                     <menu name="base_view" action="base_view_menu">
+                        <placeholder name="TopViewMenu" />
+                        <separator />
                         <placeholder name="ViewMenu" />
                         <separator />
                     </menu>

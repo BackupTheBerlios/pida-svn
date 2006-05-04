@@ -491,7 +491,7 @@ class paste_manager(service.service):
                   </menu>
                   
                     <menu name="base_view" action="base_view_menu" >
-                        <placeholder name="ViewMenu">
+                        <placeholder name="TopViewMenu">
                             <menuitem name="viewpaste" action="pastemanager+view_history" />
                         </placeholder>
                     </menu>

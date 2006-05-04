@@ -201,7 +201,7 @@ class document_library(service.service):
         return """
                 <menubar>
                 <menu name="base_view" action="base_view_menu" >
-                    <placeholder name="ViewMenu">
+                    <placeholder name="TopViewMenu">
                         <menuitem action="library+documentation_library" />
                     </placeholder>
                 </menu>
