@@ -163,6 +163,12 @@ class todo(service.service):
                 </menubar>
                """
 
+    def bnd_buffermanager_document_changed(self, document):
+        self.load_document(document)
+
+    def bnd_buffermanager_document_modified(self, document):
+        self.load_document(document)
+
     def __get_markers(self):
         if self.opt('todo_definition', 'use_TODO'):
             yield 'TODO'
