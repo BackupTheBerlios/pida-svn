@@ -31,7 +31,7 @@ from kiwiutils import gsignal, gproperty
 import gprocess
 
 
-class _GobjectReader(gobject.GObject):
+class GobjectReader(gobject.GObject):
     """Read from a sub process."""
 
     gsignal('started')
@@ -46,76 +46,40 @@ class _GobjectReader(gobject.GObject):
         self.__watch = None
         self.procs = []
         self.pid = None
-        super(_GobjectReader, self).__init__()
+        super(GobjectReader, self).__init__()
+
+    # public interface
 
     def run(self, *args):
+        """Run a process by adding it to the queue.
+
+        Start executing the queue if it is the only task.
+        @var *args: command line arguments to be executed
+        """
         self.procs.append(args)
         if len(self.procs) == 1:
-            self._run()
+            self._run_if_queue()
 
-    def stop(self):
-        if self.__watch is not None:
-            gobject.source_remove(self.__watch)
-        if not self.pid:
-            return
-        try:
-            os.kill(self.pid, 15)
-        except:
-            try:
-                os.kill(self.pid, 9)
-            except:
-                pass
-
-    def _run(self):
-        qlen = len(self.procs)
-        if not qlen:
-            return
-        self.emit('started')
-        self._run_process(self.procs[0])
-    
-    def _next_process(self):
-        def _f():
-            args = self.procs.pop(0)
-            self.emit('finished', args)
-            self._run()
-        gobject.idle_add(_f)
-    
-    def _received(self, data):
-        self.emit('data', data)
-
-    def _run_process(self, args):
-        p = subprocess.Popen(args, stdout=subprocess.PIPE)
-        self.__watch = gobject.io_add_watch(p.stdout,
-                       gobject.IO_IN, self.on_read)
-        gobject.io_add_watch(p.stdout.fileno(), gobject.IO_HUP, self.on_hup)
-        self.pid = p.pid
-
-    def on_read(self, fd, cond):
-        d = fd.readline().strip()
-        self._received(d)
-        return True
-
-    def on_hup(self, fd, cond):
-        def _f():
-            gobject.source_remove(self.__watch)
-        gobject.idle_add(_f)
-        self._next_process()
-        
-class GobjectReader(_GobjectReader):
-    """Read from a sub process."""
-    
     def stop(self):
         if self.proc is not None:
             self.proc.stop()
 
-    def _run_process(self, args):
+    # private interface
+
+    def _run_if_queue(self):
+        if len(self.procs):
+            self.emit('started')
+            self._spawn_process(self.procs[0])
+
+    def _spawn_process(self, args):
         self.data = ""
         self.proc = proc = gprocess.GProcess(args)
         proc.connect("stdout-data", self.on_received)
         proc.connect("finished", self.on_finished)
         proc.connect("started", self.on_started)
         proc.start()
-    
+
+    # signal callbacks
 
     def on_received(self, proc, data):
         self.data += data
@@ -124,17 +88,20 @@ class GobjectReader(_GobjectReader):
         except ValueError:
             # in this case there is no EOL, we just need to try again
             return
-        
         for chunk in data.split("\n"):
             chunk = chunk.strip()
             if len(chunk) > 0:
-                self._received(chunk)
-        
+                self.emit('data', chunk)
+
     def on_started(self, proc, pid):
         self.pid = pid
+        self.emit('started')
 
     def on_finished(self, proc, retcode):
-        self._next_process()
+        args = self.procs.pop(0)
+        self.emit('finished', args)
+        self._run_if_queue()
+
 
 class PkgresourcesReader(GobjectReader):
 
@@ -148,7 +115,7 @@ class PkgresourcesReader(GobjectReader):
     def run(self, *args):
         args = ['python', self.scriptpath] + list(args)
         super(PkgresourcesReader, self).run(*args)
-        
+
 gobject.type_register(GobjectReader)
 
 class Subprocesslist(tree.Tree):

@@ -91,63 +91,6 @@ letters = {
             }
 
 
-class GtkReader(gobject.GObject):
-    """Read status results from a sub process."""
-
-    gsignal('started')
-
-    gsignal('finished', str)
-
-    gsignal('plain-data', str)
-
-    gsignal('status-data', str)
-
-    def __init__(self, scriptpath):
-        self.__dirq = []
-        self.scriptpath = scriptpath
-        self.current_directory = None
-        gobject.GObject.__init__(self)
-
-    def ls(self, directory):
-        self.__dirq.append(directory)
-        if len(self.__dirq) == 1:
-            self._ls()
-
-    def _ls(self):
-        qlen = len(self.__dirq)
-        if not qlen:
-            return
-        self.emit('started')
-        p = subprocess.Popen(['python', self.scriptpath, self.__dirq[0]],
-                 stdout=subprocess.PIPE)
-        self.__watch = gobject.io_add_watch(p.stdout,
-                       gobject.IO_IN, self.cb_read)
-        gobject.io_add_watch(p.stdout.fileno(), gobject.IO_HUP, self.cb_hup)
-
-    def _received(self, d):
-        typ, data = d.split(' ', 1)
-        if typ == '<p>':
-            sig = 'plain-data'
-        else:
-            sig = 'status-data'
-        self.emit(sig, data)
-
-    def cb_read(self, fd, cond):
-        d = fd.readline().strip()
-        self._received(d)
-        return True
-
-    def cb_hup(self, fd, cond):
-        def _f():
-            gobject.source_remove(self.__watch)
-            self.current_directory = self.__dirq.pop(0)
-            self.emit('finished', self.current_directory)
-            self._ls()
-        gobject.idle_add(_f)
-
-gobject.type_register(GtkReader)
-
-
 class FileSystemItem(object):
 
     def __init__(self, path):
