@@ -169,48 +169,45 @@ class python(service.service):
             </toolbar>
             """
 
-
-    class python_executor(defs.language_handler):
-        file_name_globs = ['*.py']
-
-        first_line_globs = ['*/bin/python']
-
-        def init(self):
-            self.__document = None
-            self.__cached = self.cached = {}
-
-        def load_document(self, document):
-            self.__document = document
-
-        def act_execute_current_file(self, action):
-            """Runs the current python script"""
+    def act_execute_current_file(self, action):
+        """Runs the current python script"""
+        if self._document is not None:
             self.service.call('execute_file',
-                              filename=self.__document.filename)
+                              filename=self._document.filename)
 
-        def get_menu_definition(self):
-            return """
-                <menubar>
-                <menu name="base_python" action="base_python_menu">
-                <menuitem name="expyfile" action="python+language+execute_current_file" />
-                </menu>
-                </menubar>
-                <toolbar>
-                <placeholder name="OpenFileToolbar">
-                </placeholder>
-                <placeholder name="SaveFileToolbar">
-                </placeholder>
-                <placeholder name="EditToolbar">
-                </placeholder>
-                <placeholder name="ProjectToolbar">
-                <separator />
-                <toolitem name="runpy" action="python+language+execute_current_file"/>
-                <separator />
-                </placeholder>
-                <placeholder name="VcToolbar">
-                </placeholder>
-                <placeholder name="ToolsToolbar">
-                </placeholder>
-                </toolbar>
-                """
+    def reset(self):
+        self._exact = self.action_group.get_action(
+            'python+execute_current_file')
+        self._exact.set_visible(False)
+
+    def bnd_buffermanager_document_changed(self, document):
+        self._document = document
+        self._exact.set_visible(document.filename.endswith('py'))
+
+    def get_menu_definition(self):
+        return """
+            <menubar>
+            <menu name="base_python" action="base_python_menu">
+            <menuitem name="expyfile" action="python+execute_current_file" />
+            </menu>
+            </menubar>
+            <toolbar>
+            <placeholder name="OpenFileToolbar">
+            </placeholder>
+            <placeholder name="SaveFileToolbar">
+            </placeholder>
+            <placeholder name="EditToolbar">
+            </placeholder>
+            <placeholder name="ProjectToolbar">
+            <separator />
+            <toolitem name="runpy" action="python+execute_current_file"/>
+            <separator />
+            </placeholder>
+            <placeholder name="VcToolbar">
+            </placeholder>
+            <placeholder name="ToolsToolbar">
+            </placeholder>
+            </toolbar>
+            """
 
 Service = python

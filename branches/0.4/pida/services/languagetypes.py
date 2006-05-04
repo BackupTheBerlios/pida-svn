@@ -118,6 +118,7 @@ class language_types(service.service):
         self.show_view(view=view)
 
     def cmd_register_language_handler(self, handler_type):
+        print handler_type
         handler = handler_type(handler_type.service)
         handler.action_group.set_visible(False)
         self.boss.call_command('window', 'register_action_group',
