@@ -41,6 +41,8 @@ class VimEmbedConfig:
     class vim_command(defs.optiongroup):
         """Vim command options."""
         __order__ = ['use_cream']
+        label = "Commands"
+        
         class use_cream(defs.option):
             """Whether Cream for Vim will be used"""
             rtype = types.boolean
@@ -49,21 +51,27 @@ class VimEmbedConfig:
     class vim_events(defs.optiongroup):
         """How PIDA will react to events from Vim."""
         __order__ = ['shutdown_with_vim']
+        label = "Events"
+        
         class shutdown_with_vim(defs.option):
             """Whether to shutdown pida with Vim"""
+            label = "Quit Pida when Vim quits"
             rtype = types.boolean
             default = False
 
     class display(defs.optiongroup):
         """Vim display options"""
         __order__ = ['colour_scheme', 'hide_vim_menu']
+        label = "Display"
         class colour_scheme(defs.option):
             """The colour scheme to use in vim (Empty will be ignored)."""
             rtype = types.string
+            label = "Color scheme:"
             default = ''
         class hide_vim_menu(defs.option):
             """Whether the vim menu will be hidden."""
             rtype = types.boolean
+            label = "Hide Vim menu"
             default = False
     __markup__ = lambda self: 'Vim Embedded'
 
