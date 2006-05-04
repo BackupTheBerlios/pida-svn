@@ -55,7 +55,7 @@ class AbstractGProcess(gobject.GObject):
 
 class PolledProcess(AbstractGProcess):
     polling_time = 50
-    
+
     def start(self):
         self.proc = subprocess.Popen(
             self.args,
@@ -65,7 +65,7 @@ class PolledProcess(AbstractGProcess):
         )
         self.emit("started", self.proc.pid)
         gobject.timeout_add(self.polling_time, self.on_tick)
-    
+
     def on_tick(self):
         val = self.proc.poll()
         if val is not None:
@@ -85,23 +85,27 @@ class SelectProcess(AbstractGProcess):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-        
-        gobject.io_add_watch(self.proc.stdout, gobject.IO_IN, self.on_buff_read, "stdout-data")
-        gobject.io_add_watch(self.proc.stderr, gobject.IO_IN, self.on_buff_read, "stderr-data")
+
+        self._out = gobject.io_add_watch(self.proc.stdout,
+            gobject.IO_IN, self.on_buff_read, "stdout-data")
+        self._err = gobject.io_add_watch(self.proc.stderr,
+            gobject.IO_IN, self.on_buff_read, "stderr-data")
         gobject.child_watch_add(self.proc.pid, self.on_finished)
         self.emit("started", self.proc.pid)
 
     def on_buff_read(self, fd, cond, signame):
         self.emit(signame, read_all(fd))
-    
+
     def on_finished(self, pid, condition):
         self.emit("finished", condition / 256)
+        gobject.source_remove(self._out)
+        gobject.source_remove(self._err)
 
 if sys.platform == "win32":
-    GProcess = ThreadedProcess
+    GProcess = PolledProcess
 else:
     GProcess = SelectProcess
-    
+
 if __name__ == '__main__':
     import gtk
 
