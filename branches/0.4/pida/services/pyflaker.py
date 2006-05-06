@@ -30,7 +30,7 @@ import pida.core.service as service
 import pida.core.actions as actions
 from pida.utils.kiwiutils import gsignal
 import pida.pidagtk.contentview as contentview
-from pida.utils.gobjectlinereader import GobjectReader
+from pida.utils.glinereader import GobjectReader
 
 defs = service.definitions
 

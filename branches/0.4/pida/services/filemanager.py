@@ -45,7 +45,7 @@ import pida.pidagtk.icons as icons
 import pida.core.service as service
 import pida.core.actions as actions
 from pida.utils.kiwiutils import gsignal
-import pida.utils.gobjectlinereader as glr
+import pida.utils.glinereader as glr
 import pida.pidagtk.contentview as contentview
 
 mime_icons = {}
