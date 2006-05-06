@@ -108,13 +108,12 @@ class ScintillaView(contentview.content_view):
         
     def optionize(self):
         opt = self.service.opt
-        
         options = self.service.options
         editor = self.editor
         
         # font
         font_and_size = self._font_and_size(options.font.editor_font)
-        self.editor.set_font(*font_and_size)
+        editor.set_font(*font_and_size)
         
         # indenting options
         indenting = options.indenting
@@ -133,12 +132,14 @@ class ScintillaView(contentview.content_view):
         
         # line numbers
         line_numbers = options.line_numbers
-        editor.set_linenumber_margin_colours(
-            background=line_numbers.background,
-            foreground=line_numbers.foreground)
+
+        bg = line_numbers.background
+        fg = line_numbers.foreground
+        editor.set_linenumber_margin_colours(background=bg, foreground=fg)
             
         editor.set_linenumbers_visible(line_numbers.show_line_numbers)
         
+        # color options
         if options.colors.use_dark_theme:
             editor.use_dark_theme()
         else:
@@ -146,18 +147,20 @@ class ScintillaView(contentview.content_view):
             
         # caret and selection
         caret = options.caret
-        self.editor.set_caret_colour(opt(car, 'caret_colour'))
-        self.editor.set_caret_line_visible(
-            opt(car, 'highlight_current_line'),
-            opt(car, 'current_line_color'))
-        self.editor.set_selection_color(
-            opt(car, 'selection_color'))
+        
+        editor.set_caret_colour(caret.caret_colour)
+        
+        color = caret.current_line_color
+        highlight = caret.highlight_current_line
+        editor.set_caret_line_visible(highlight, color)
+        
+        editor.set_selection_color(caret.selection_color)
+        
         # edge column
-        el = 'edge_line'
-        self.editor.set_edge_column_visible(
-            opt(el, 'show_edge_line'),
-            opt(el, 'position'),
-            opt(el, 'color'))
+        edge_line = options.edge_line
+        editor.set_edge_column_visible(edge_line.show_edge_line,
+                                       edge_line.position,
+                                       edge_line.color)
 
     def _font_and_size(self, fontdesc):
         name, size = fontdesc.rsplit(' ', 1)
