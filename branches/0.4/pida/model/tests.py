@@ -6,9 +6,10 @@ import unittest
 
 import attrtypes as types
 from persistency import load_model_from_ini, IniFileObserver
-from model import property_evading_setattr, get_defintion_attrs, get_groups,\
-                  ModelAttribute, Model, ModelGroup,\
-                  BaseSingleModelObserver, BaseMultiModelObserver
+from model import (property_evading_setattr, get_defintion_attrs, get_groups,
+                   ModelAttribute, Model, ModelGroup,
+                   BaseSingleModelObserver, BaseMultiModelObserver,
+                   MatchObserver)
 
 
 class LazySchema:
@@ -295,6 +296,95 @@ class test_model_setting(unittest.TestCase):
             self.a1.meh__blah = val
         self.assertRaises(AttributeError, _assign, 'no')
 
+class test_match_observer(unittest.TestCase):
+    def setUp(self):
+        self.vals = []
+        
+    def on_foo(self, attr, value):
+        self.vals.append((attr, value))
+    
+    def test_simple_match(self):
+        vals = self.vals
+        a1 = BlahModel()
+        obs = MatchObserver()
+        obs.set_model(a1)
+        obs.connect("meh__foo", self.on_foo)
+        
+        a1.meh__foo = 100
+        self.assertEqual(vals, [("meh__foo", 100)])
+
+        a1.feh__gah = "coiso"
+        self.assertEqual(vals, [("meh__foo", 100)])
+        
+    def test_glob(self):
+        vals = self.vals
+        a1 = BlahModel()
+        obs = MatchObserver()
+        obs.set_model(a1)
+        obs.connect("*", self.on_foo)
+        
+        a1.meh__foo = 100
+        self.assertEqual(vals, [("meh__foo", 100)])
+
+        a1.feh__gah = "coiso"
+        self.assertEqual(vals, [("meh__foo", 100), ("feh__gah", "coiso")])
+        
+    def test_all_matcher(self):
+        vals = self.vals
+        a1 = BlahModel()
+        obs = MatchObserver()
+        obs.set_model(a1)
+        obs.register(lambda attr: True, self.on_foo)
+        
+        a1.meh__foo = 100
+        self.assertEqual(vals, [("meh__foo", 100)])
+
+        a1.feh__gah = "coiso"
+        self.assertEqual(vals, [("meh__foo", 100), ("feh__gah", "coiso")])
+
+    def test_nill_matcher(self):
+        vals = self.vals
+        a1 = BlahModel()
+        obs = MatchObserver()
+        obs.set_model(a1)
+        obs.register(lambda attr: False, self.on_foo)
+        
+        a1.meh__foo = 100
+        self.assertEqual(vals, [])
+
+        a1.feh__gah = "coiso"
+        self.assertEqual(vals, [])
+
+    def test_registration(self):
+        vals = self.vals
+        a1 = BlahModel()
+        obs = MatchObserver()
+        obs.set_model(a1)
+        subs = obs.register(lambda attr: True, self.on_foo)
+        
+        a1.meh__foo = 100
+        self.assertEqual(vals, [("meh__foo", 100)])
+
+        obs.unregister(subs)
+        a1.feh__gah = "coiso"
+        self.assertEqual(vals, [("meh__foo", 100)])
+
+    def test_connection(self):
+        vals = self.vals
+        a1 = BlahModel()
+        obs = MatchObserver()
+        obs.set_model(a1)
+        subs = obs.connect("*", self.on_foo)
+        
+        a1.meh__foo = 100
+        self.assertEqual(vals, [("meh__foo", 100)])
+
+        obs.unregister(subs)
+        a1.feh__gah = "coiso"
+        self.assertEqual(vals, [("meh__foo", 100)])
+
+
+
 class test_observer(unittest.TestCase):
 
     def setUp(self):
@@ -305,6 +395,7 @@ class test_observer(unittest.TestCase):
         self.o3 = MockMultiObserver()
         self.o4 = MockMultiObserver(model_attributes=ma,
                         current_callback=self.set_current)
+
 
     def set_current(self, item):
         self.current = item

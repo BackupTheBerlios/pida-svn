@@ -102,9 +102,11 @@ obj2 = MyModel()
 etc.
 '''
 
+import inspect
+import fnmatch
+
 from string import Template
 from types import ClassType
-import inspect
 
 def property_evading_setattr(obj, attr, val):
     """Set an attribute, but use the property first if available."""
@@ -389,6 +391,42 @@ class CallbackObserver(BaseSingleModelObserver):
         if hasattr(self.instance, fname):
             getattr(self.instance, fname)(val)
 
+class MatchObserver(BaseSingleModelObserver):
+    """
+    This type of observer uses a matcher function to figure out if
+    it wants to be notified for a certain state change. The matcher
+    function must accept a single argument, the attribute.
+    
+    It uses callable objects to be notified, they have this format:
+    callback(attr, val)
+    """
+    def __init__(self):
+        self.observers = {}
+        super(MatchObserver, self).__init__()
+        self.id = 0
+        
+    def register(self, matcher, callback):
+        """When you register you get a registration id you can
+        then use to unregister the callback from this observer"""
+        
+        self.observers[self.id] = (matcher, callback)
+        current_id = self.id
+        self.id += 1
+        return current_id
+
+    def unregister(self, register_id):
+        del self.observers[register_id]
+        
+    def connect(self, pattern, callback):
+        """Uses glob style strings to match the attribute name"""
+        matcher = lambda attr: fnmatch.fnmatchcase(attr, pattern)
+        return self.register(matcher, callback)
+        
+    def __model_notify__(self, model, attr, val):
+        for matcher, callback in self.observers.values():
+            if matcher(attr):
+                callback(attr, val)
+
 
 class ModelGroup(object):
 
@@ -444,7 +482,6 @@ class ModelGroup(object):
             #model.__model_notify__()
 
     def __iter__(self):
-        for m in self._models:
-            yield m
+        return iter(self._models)
 
 
