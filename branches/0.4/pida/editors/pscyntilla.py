@@ -108,34 +108,44 @@ class ScintillaView(contentview.content_view):
         
     def optionize(self):
         opt = self.service.opt
+        
+        options = self.service.options
+        editor = self.editor
+        
         # font
-        self.editor.set_font(
-                *self._font_and_size(opt('font', 'editor_font')))
+        font_and_size = self._font_and_size(options.font.editor_font)
+        self.editor.set_font(*font_and_size)
+        
         # indenting options
-        use_tabs = opt('indenting', 'use_tabs')
-        self.editor.set_use_tabs(use_tabs)
-        self.editor.set_tab_width(opt('indenting', 'tab_width'))
-        if not use_tabs:
-            self.editor.set_spaceindent_width(
-                opt('indenting', 'space_indent_width'))
+        indenting = options.indenting
+        editor.set_use_tabs(indenting.use_tabs)
+        editor.set_tab_width(indenting.tab_width)
+        if not indenting.use_tabs:
+            editor.set_spaceindent_width(indenting.space_indent_width)
+            
         # folding options
-        self.editor.use_folding(
-            opt('folding', 'use_folding'), width=opt('folding', 'marker_size'))
-        self.editor.set_foldmargin_colours(
-            back=opt('folding', 'marker_background'),
-            fore=opt('folding', 'marker_foreground'))
+        folding = options.folding
+        width = folding.marker_size
+        editor.use_folding(folding.use_folding, width=width)
+        back = folding.marker_background
+        fore = folding.marker_foreground
+        editor.set_foldmargin_colours(back=back, fore=fore)
+        
         # line numbers
-        self.editor.set_linenumber_margin_colours(
-            background=opt('line_numbers', 'background'),
-            foreground=opt('line_numbers', 'foreground'))
-        self.editor.set_linenumbers_visible(
-            opt('line_numbers', 'show_line_numbers'))
-        if opt('colors', 'use_dark_theme'):
-            self.editor.use_dark_theme()
+        line_numbers = options.line_numbers
+        editor.set_linenumber_margin_colours(
+            background=line_numbers.background,
+            foreground=line_numbers.foreground)
+            
+        editor.set_linenumbers_visible(line_numbers.show_line_numbers)
+        
+        if options.colors.use_dark_theme:
+            editor.use_dark_theme()
         else:
-            self.editor.use_light_theme()
+            editor.use_light_theme()
+            
         # caret and selection
-        car = 'caret'
+        caret = options.caret
         self.editor.set_caret_colour(opt(car, 'caret_colour'))
         self.editor.set_caret_line_visible(
             opt(car, 'highlight_current_line'),
