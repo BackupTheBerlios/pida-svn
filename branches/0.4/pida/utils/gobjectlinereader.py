@@ -46,6 +46,7 @@ class GobjectReader(gobject.GObject):
         self.__watch = None
         self.procs = []
         self.pid = None
+        self.proc = None
         super(GobjectReader, self).__init__()
 
     # public interface
@@ -101,6 +102,8 @@ class GobjectReader(gobject.GObject):
         args = self.procs.pop(0)
         self.emit('finished', args)
         self._run_if_queue()
+        # Make sure proc is cleared when finished
+        self.proc = None
 
 
 class PkgresourcesReader(GobjectReader):
