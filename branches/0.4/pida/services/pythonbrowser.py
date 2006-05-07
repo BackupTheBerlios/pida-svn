@@ -67,6 +67,8 @@ class python_source_view(contentview.content_view):
         self.__nodes.connect('double-clicked', self.cb_source_clicked)
 
     def set_source_nodes(self, root_node):
+        # TODO: if the root_node has *alot* of elements this will be
+        # TODO: slow, we need to split it in chunks
         exp_paths = []
         e_paths = []
         def f(row, path):
@@ -109,8 +111,6 @@ class PythonBrowser(service.service):
 
     def _update_node(self, root_node):
         self.__view.set_source_nodes(root_node)
-        if root_node:
-            self.__view.set_source_nodes(root_node)
     
     def load_document(self, document):
         if self.__view is None:
@@ -123,7 +123,8 @@ class PythonBrowser(service.service):
         def new_thread():
             root_node = pythonparser.get_nodes_from_string(document.string)
             # important: ui code must be done inside main loop
-            gobject.idle_add(self._update_node, root_node)
+            if root_node is not None:
+                gobject.idle_add(self._update_node, root_node)
             
         thread.start_new_thread(new_thread, ())
 
