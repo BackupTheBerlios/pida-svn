@@ -55,7 +55,7 @@ class python(service.service):
     config_definition = PythonConfig
 
     def cmd_execute_shell(self):
-        py = self.opt('python_execution', 'python_shell')
+        py = self.opts.python_execution__python_shell
         command_args=[py]
         self.boss.call_command('terminal', 'execute',
                                command_args=command_args,
@@ -63,7 +63,7 @@ class python(service.service):
                                short_title='Python Shell')
 
     def cmd_execute_file(self, filename):
-        py = self.opt('python_execution', 'python_executable')
+        py = self.opts.python_execution__python_executable
         command_args=[py, filename]
         directory = os.path.dirname(filename)
         self.boss.call_command('terminal', 'execute',

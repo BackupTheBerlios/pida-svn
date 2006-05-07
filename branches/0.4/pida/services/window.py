@@ -548,7 +548,7 @@ class WindowManager(service.service):
                """
 
     def get_sidebar_on_right(self):
-        return self.opt('layout', 'sidebar_on_right')
+        return self.opts.layout__sidebar_on_right
     
     def show_sidebar(self):
         self.__sidebar.show_sub()

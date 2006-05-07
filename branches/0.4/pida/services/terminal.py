@@ -46,12 +46,11 @@ class terminal_view(contentview.content_view):
         terminal, kw = make_terminal(term_type, **kw)
         self.widget.pack_start(terminal.widget)
         self.set_long_title(' '.join(command_args))
-        terminal.configure(self.service.opt('fonts_and_colours',
-                                            'foreground_colour'),
-                           self.service.opt('fonts_and_colours',
-                                            'background_colour'),
-                           self.service.opt('fonts_and_colours',
-                                            'font'))
+        opts = self.service.options.fonts_and_colours
+        
+        terminal.configure(opts.foreground_colour, opts.background_colour,
+                           opts.font)
+
         terminal.service = self.service
         terminal.connect_child_exit(self.cb_exited)
         terminal.connect_title(self.set_long_title)
@@ -143,7 +142,7 @@ class terminal_manager(service.service):
                         self.opts.fonts_and_colours__font)
 
     def get_multi_view_book_type(self):
-        opt = self.opt('general', 'terminal_location')
+        opt = self.opts.general__terminal_location
         return view_location_map[opt]
     multi_view_book = property(get_multi_view_book_type)
 
@@ -151,7 +150,7 @@ class terminal_manager(service.service):
                     term_type=None, icon_name='terminal',
                     short_title='Terminal', kwdict={}):
         if term_type == None:
-            term_type = self.opt('general', 'terminal_type').lower()
+            term_type = self.opts.general__terminal_type.lower()
         view = self.create_view('TerminalView',
                                 term_type=term_type,
                                 command_args=command_args,
@@ -162,8 +161,8 @@ class terminal_manager(service.service):
         self.views.append(view)
 
     def cmd_execute_shell(self, term_type=None, kwdict={}):
-        shellcommand = self.opt('shell', 'command')
-        self.call('execute', command_args=[shellcommand],
+        shellcommand = self.opts.shell__command
+        self.cmd_execute(command_args=[shellcommand],
                   term_type=term_type, kwdict=kwdict)
 
     @actions.action(stock_id='gtk-terminal',
@@ -175,7 +174,7 @@ class terminal_manager(service.service):
                                       'get_current_project')
         if proj is not None:
             directory = proj.source__directory
-        self.call('execute_shell', kwdict={'directory': directory})
+        self.cmd_execute_shell(kwdict={'directory': directory})
 
     def view_closed(self, view):
         self.views.remove(view)

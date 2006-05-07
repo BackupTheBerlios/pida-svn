@@ -126,11 +126,6 @@ class OptionsMixin(object):
     
     opts = property(get_options)
     
-    def opt(self, gn, on):
-        self.log.warn('svc.opt is depracated')
-        return model.property_evading_getattr(self.__options,
-            '%s__%s' % (gn, on))
-
 
 class commands_mixin(object):
     """Command support."""

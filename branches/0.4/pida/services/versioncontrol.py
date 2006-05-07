@@ -131,7 +131,7 @@ class version_control(service.service):
             del self.__cached_vcs[workdir]
 
     def cmd_statuses(self, directory):
-        if self.opt('meld_integration', 'use_meld_for_statuses'):
+        if self.opts.meld_integration__use_meld_for_statuses:
             self.boss.call_command('meldembed', 'browse',
                                     directory=directory)
         else:
@@ -149,7 +149,7 @@ class version_control(service.service):
                 self.log.info('"%s" is not version controlled', directory)
 
     def cmd_diff_file(self, filename):
-        if self.opt('meld_integration', 'use_meld_for_diff'):
+        if self.opts.meld_integration__use_meld_for_diff:
             self.boss.call_command('meldembed', 'diff',
                                     filename=filename)
         else:

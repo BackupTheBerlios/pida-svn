@@ -163,7 +163,9 @@ class document_library(service.service):
         dirs = [pida_directory, '/usr/share/gtk-doc/html',
                                 '/usr/share/devhelp/books',
                                 os.path.expanduser('~/.devhelp/books')]
-        use_gzip = self.opt('book_locations', 'use_gzipped_book_files')
+        
+        use_gzip = self.opts.book_locations__use_gzipped_book_files
+        
         def _fetch(directory):
             if os.path.exists(directory):
                 for name in os.listdir(directory):
@@ -172,8 +174,8 @@ class document_library(service.service):
                         load_book = book(path, use_gzip)
                         #if hasattr(load_book, 'bookmarks'):
                         self.books.append(load_book)
-        for directory in dirs:
-            _fetch(directory)
+        
+        [_fetch(directory) for directory in dirs]
 
     @actions.action(type=actions.TYPE_TOGGLE,
                     stock_id='gtk-library',

@@ -78,17 +78,17 @@ class TodoConfig:
         """Options for the TODO viewer"""
         label = 'Definition of a "TODO"'
         __order__ = ['use_TODO', 'use_FIXME', 'additional_markers']
-        class use_TODO(defs.option):
+        class use_TODO:
             """Whether the TODO search will use 'TODO' statements"""
             rtype = types.boolean
             default = True
             label = 'use the string "TODO"'
-        class use_FIXME(defs.option):
+        class use_FIXME:
             """Whether the TODO search will use 'FIXME' statements"""
             rtype = types.boolean
             default = True
             label = 'use the string "FIXME"'
-        class additional_markers(defs.option):
+        class additional_markers:
             """Additional markers that will be used for TODO searching. (comma separated list)"""
             rtype = types.string
             default = ''
@@ -172,11 +172,11 @@ class todo(service.service):
         self.load_document(document)
 
     def __get_markers(self):
-        if self.opt('todo_definition', 'use_TODO'):
+        if self.opts.todo_definition__use_TODO:
             yield 'TODO'
-        if self.opt('todo_definition', 'use_FIXME'):
+        if self.opts.todo_definition__use_FIXME:
             yield 'FIXME'
-        for s in self.opt('todo_definition', 'additional_markers').split(','):
+        for s in self.opts.todo_definition__additional_markers.split(','):
             marker = s.strip()
             if marker:
                 yield marker

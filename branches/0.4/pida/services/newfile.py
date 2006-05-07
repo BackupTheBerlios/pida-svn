@@ -84,7 +84,7 @@ class new_file(service.service):
                                mkdir=False):
         if directory is None:
             directory = os.getcwd()
-            if self.opt('locations', 'start_in_current_project_directory'):
+            if self.opts.locations__start_in_current_project_directory:
                 proj = self.boss.call_command('projectmanager',
                                               'get_current_project')
                 if proj is not None:
@@ -119,7 +119,7 @@ class new_file(service.service):
         except AttributeError:
             pass
         chooser.connect('response', self.cb_response)
-        if self.opt('locations', 'use_project_directories_as_shortcuts'):
+        if self.opts.locations__use_project_directories_as_shortcuts:
             for directory in self.__create_project_links():
                 chooser.add_shortcut_folder(directory)
         options = new_file_options()

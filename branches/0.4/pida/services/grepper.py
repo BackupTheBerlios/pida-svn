@@ -279,9 +279,13 @@ class Grepper(service.service):
 
     def cmd_find_interactive(self, directories=None, ignorevcs=None,
                              recursive=None):
+        
+        opts = self.options.default_options
         view = self.create_view('GrepView')
-        self.show_view(view=view)
         options = GrepOptions()
+
+        self.show_view(view=view)
+
         if directories is None:
             proj = self.boss.call_command('projectmanager',
                                           'get_current_project')
@@ -292,19 +296,16 @@ class Grepper(service.service):
         else:
             options.directories = directories
         if ignorevcs is None:
-            options.ignorevcs = self.opt(
-                'default_options', 'ignore_version_control_directories')
+            options.ignorevcs = opts.ignore_version_control_directories
         else:
             options.ignorevcs = ignorevcs
         if recursive is None:
-            options.recursive = self.opt(
-                'default_options', 'recursive_search')
+            options.recursive = opts.recursive_search
         else:
             options.recursive = recursive
-        options.maxresults = self.opt('results', 'maximum_results')
+        options.maxresults = self.opts.results__maximum_results
         self.single_view.from_options(options)
-        self.single_view.set_details_expanded(self.opt(
-           'default_options', 'start_detailed'))
+        self.single_view.set_details_expanded(opts.start_detailed)
 
     def cmd_find(self, path, pattern):
         pass
