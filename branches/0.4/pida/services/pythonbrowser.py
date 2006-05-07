@@ -134,6 +134,7 @@ class PythonBrowser(service.service):
         else:
             if self.__view is not None:
                 self.close_view(self.__view)
+            self.__view = None
 
     def bnd_buffermanager_document_changed(self, document):
         self.load_document(document)
