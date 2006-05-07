@@ -132,9 +132,12 @@ class Pscyntilla(gobject.GObject):
         if italic is not None:
             self._sc.style_set_italic(number, italic)
 
-    def set_font(self, fontname, size):
-        self.set_style(scintilla.STYLE_DEFAULT, font=fontname, size=size)
-
+    def set_font_name(self, font_name):
+        self.set_style(scintilla.STYLE_DEFAULT, font=font_name)
+    
+    def set_font_size(self, font_size):
+        self.set_style(scintilla.STYLE_DEFAULT, size=font_size)
+    
     def set_linenumber_margin_colours(self, foreground, background):
         self.set_style(scintilla.STYLE_LINENUMBER, fore=foreground,
                         back=background)

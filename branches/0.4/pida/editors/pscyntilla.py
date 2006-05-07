@@ -81,9 +81,12 @@ from pida.core import service
 from pida.utils.pscyntilla import Pscyntilla
 from pida.model import attrtypes as types
 defs = service.definitions
-#types = service.types
 
-
+def parse_fontdesc(fontdesc):
+    """Returns the name and size"""
+    name, size = fontdesc.rsplit(' ', 1)
+    size = int(size)
+    return name, size
 
 class ScintillaView(contentview.content_view):
 
@@ -105,15 +108,19 @@ class ScintillaView(contentview.content_view):
     def cb_save_point_left(self, editor, *args):
         self.service._save_act.set_sensitive(True)
         self.service._revert_act.set_sensitive(True)
-        
+    
     def optionize(self):
+        """Loads the user options"""
         opt = self.service.opt
+        opts = self.service.opts
         options = self.service.options
         editor = self.editor
         
         # font
-        font_and_size = self._font_and_size(options.font.editor_font)
-        editor.set_font(*font_and_size)
+        font = options.font
+        print opts.font__size, opts.font__name, opts.font__font
+        editor.set_font_size(opts.font__size)
+        editor.set_font_name(opts.font__name)
         
         # indenting options
         indenting = options.indenting
@@ -177,11 +184,28 @@ class ScintillaConf:
 
     class font(defs.optiongroup):
         """The font used in the editor"""
-        class editor_font(defs.option):
+        class font:
             """The font used in the editor"""
             rtype = types.font
+            label = "Font:"
             default = 'Monospace 12'
+        
+        class name:
+            rtype = types.readonly
+            hidden = True
+            dependents = ("font__font",)
+
+            def fget(self):
+                return self.font__font.rsplit(" ", 1)[0]
+        
+        class size:
+            rtype = types.readonly
+            hidden = True
+            dependents = ("font__font",)
             
+            def fget(self):
+                return int(self.font__font.rsplit(" ", 1)[1])
+                
     class indenting(defs.optiongroup):
         """Indenting options"""
         
@@ -275,6 +299,29 @@ class ScintillaConf:
             rtype = types.color
             default = '#909090'
 
+class DispatchMethod:
+    def __init__(self, elements, attr):
+        self.__elements = elements
+        self.__attr = attr
+    
+    def __call__(self, *args, **kwargs):
+        views = self.__elements
+        attr = self.__attr
+        return [getattr(view.editor, attr)(*args, **kwargs) for view in views]
+    
+    def __repr__(self):
+        return "<foreach %r>.%s()" % (self.__elements, self.__attr)
+
+class Dispatcher:
+    def __init__(self, elements):
+        self.__elements = elements
+    
+    def __getattr__(self, attr):
+        return DispatchMethod(self.__elements, attr)
+    
+    def __repr__(self):
+        return "<foreach %r>" % self.__elements
+
 class ScintillaEditor(service.service):    
 
     display_name = 'Pscyntilla Text Editor'
@@ -283,16 +330,46 @@ class ScintillaEditor(service.service):
     class EditorView(defs.View):
         book_name = 'edit'
         view_type = ScintillaView
-        
+    
+    _views = {}
+    
     def init(self):
         self._documents = {}
         self._views = {}
         self._current = None
     
+    views = property(lambda self: self._views.itervalues())
+    
+    foreach_editor = property(lambda self: Dispatcher(self.views))
+    
     def reset(self):
         self._bind_document_actions()
         for view in self._views.values():
             view.optionize()
+    
+    def cb_colors__use_dark_theme(self, use_dark_theme):
+        if use_dark_theme:
+            
+            self.foreach_editor.use_dark_theme()
+        else:
+            self.foreach_editor.use_light_theme()
+
+    def cb_font__size(self, size):
+        self.foreach_editor.set_font_size(size)
+    
+    def cb_font__name(self, name):
+        self.foreach_editor.set_font_name(name)
+    
+    def cb_indenting__use_tabs(self, use_tabs):
+        self.foreach_editor.set_use_tabs(use_tabs)
+
+    def cb_indenting__tab_width(self, tab_width):
+        self.foreach_editor.set_tab_width(tab_width)
+    
+    def cb_indenting__space_indent_width(self, space_indent_width):
+        if self.opts.indenting__use_tabs:
+            editors = self.foreach_editor
+            editors.set_spaceindent_width(space_indent_width)
     
     def cmd_start(self):
         self.get_service('editormanager').events.emit('started')
