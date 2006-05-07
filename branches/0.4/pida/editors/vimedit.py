@@ -98,7 +98,7 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
 
     def vim_start(self):
         self.__view = self.create_view('Vim')
-        if self.opt('vim_command', 'use_cream'):
+        if self.opts.vim_command__use_cream:
             command = 'cream'
         else:
             command = 'gvim'
@@ -118,7 +118,7 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
             self.get_service('editormanager').events.emit('started')
 
     def after_shutdown(self, server):
-        if self.opt('vim_events', 'shutdown_with_vim'):
+        if self.opts.vim_events__shutdown_with_vim:
             self.boss.stop()
         else:
             self.restart()
