@@ -106,6 +106,9 @@ class PythonBrowser(service.service):
         self._visact.set_active(True)
 
     def load_document(self, document):
+        if self.__view is None:
+            return
+            
         self.__document = document
         if document.is_new:
             return
