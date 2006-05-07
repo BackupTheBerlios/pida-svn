@@ -21,8 +21,9 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import threading
+import thread
 
+import gobject
 import pida.core.actions as actions
 
 # pida core import(s)
@@ -87,6 +88,7 @@ class python_source_view(contentview.content_view):
         self.service.boss.call_command('editormanager', 'goto_line',
                                         linenumber=item.value.linenumber)
 
+
 class PythonBrowser(service.service):
 
     class PythonBrowser(defs.View):
@@ -105,6 +107,11 @@ class PythonBrowser(service.service):
             'pythonbrowser+python_browser')
         self._visact.set_active(True)
 
+    def _update_node(self, root_node):
+        self.__view.set_source_nodes(root_node)
+        if root_node:
+            self.__view.set_source_nodes(root_node)
+    
     def load_document(self, document):
         if self.__view is None:
             return
@@ -112,11 +119,13 @@ class PythonBrowser(service.service):
         self.__document = document
         if document.is_new:
             return
-        root_node = pythonparser.get_nodes_from_string(document.string)
-        self.__view.set_source_nodes(root_node)
-        if root_node:
-            self.__view.set_source_nodes(root_node)
-
+        
+        def new_thread():
+            root_node = pythonparser.get_nodes_from_string(document.string)
+            # important: ui code must be done inside main loop
+            gobject.idle_add(self._update_node, root_node)
+            
+        thread.start_new_thread(new_thread, ())
 
     @actions.action(type=actions.TYPE_TOGGLE,
                     stock_id='gtk-library',
