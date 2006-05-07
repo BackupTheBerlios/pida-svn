@@ -181,9 +181,8 @@ class WindowManager(service.service):
     def stop(self):
         if self.opts.window_size__save_on_shutdown:
             w, h = self.__window.get_size()
-            self.set_option('window_size', 'width', w)
-            self.set_option('window_size', 'height', h)
-            #self.options.save()
+            self.opts.window_size__width = w
+            self.opts.window_size__height = h
 
     def cmd_show_window(self):
         self.__window.show_all()
@@ -293,8 +292,7 @@ class WindowManager(service.service):
         label='Too_lbar'
         )
     def act_toggle_toolbar(self, action):
-        self.set_option('toolbar_and_menubar', 'toolbar_visible',
-                        action.get_active())
+        self.opts.toolbar_and_menubar__toolbar_visible = action.get_active()
 
     @actions.action(
         type=actions.TYPE_TOGGLE,
@@ -302,8 +300,7 @@ class WindowManager(service.service):
         label='Menubar'
         )
     def act_toggle_menubar(self, action):
-        self.set_option('toolbar_and_menubar', 'menubar_visible',
-                        action.get_active())
+        self.opts.toolbar_and_menubar__menubar_visible = action.get_active()
 
     @actions.action(
         type=actions.TYPE_TOGGLE,
@@ -311,8 +308,7 @@ class WindowManager(service.service):
         label='Sidebar'
     )
     def act_toggle_sidebar(self, action):
-        self.set_option('toolbar_and_menubar', 'sidebar_visible',
-                        action.get_active())
+        self.opts.toolbar_and_menubar__sidebar_visible = action.get_active()
 
     @actions.action(
         type=actions.TYPE_TOGGLE,

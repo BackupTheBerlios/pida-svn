@@ -111,7 +111,6 @@ class ScintillaView(contentview.content_view):
     
     def optionize(self):
         """Loads the user options"""
-        opt = self.service.opt
         opts = self.service.opts
         options = self.service.options
         editor = self.editor

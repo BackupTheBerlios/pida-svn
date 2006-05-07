@@ -116,10 +116,8 @@ class OptionsMixin(object):
         
         # Add a mapper for syntatic sugar
         self.options = OptionsMapper(self.opts)
-
-    def set_option(self, gn, on, val):
-        return model.property_evading_setattr(self.__options,
-            '%s__%s' % (gn, on), val)
+    
+    options = OptionsMapper
 
     def get_options(self):
         return self.__options
