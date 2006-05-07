@@ -43,8 +43,7 @@ from pida.utils.servicetemplates import build_optiongroup_from_class
 from errors import CommandNotFoundError
 from pida.model import model, persistency
 
-
-class GroupMapper:
+class OptionGroupMapper:
     """
     Each GroupMapper maps every key to an attribute, so when
     you do::
@@ -53,30 +52,34 @@ class GroupMapper:
     
     You are actually retreiving the 'foo' key on the 'group1' group.
     """
-    
-    def __init__(self, getter, group):
-        self.__get = getter
+ 
+    def __init__(self, opts, group):
+        self.__opts = opts
         self.__group = group
-    
+ 
     def __getattr__(self, attr):
-        return self.__get(self.__group, attr)
-    
-    def __repr__(self):
-        return "<RegistryGroup %r>" % self.__group
+        optname = '%s__%s' % (self.__group, attr)
+        return model.property_evading_getattr(self.__opts, optname)
 
-class RegistryMapper:
+    def __repr__(self):
+        return "%r.%s" % (self.__opts, self.__group)
+
+
+class OptionsMapper:
     """
     Syntatic sugar which makes navigating through options
     more natural.
-    Each attribute maps to a group name, this returns a GroupMapper.
+    Each attribute maps to a group name, this returns a OptionGroupMapper.
     """
-    
-    def __init__(self, getter):
-        self.__getter = getter
-    
-    def __getattr__(self, attr):
-        return GroupMapper(self.__getter, attr)
-
+    def __init__(self, opts):
+        self.__opts = opts
+ 
+    def __getattr__(self, group):
+        return OptionGroupMapper(self.__opts, group)
+        
+    def __repr__(self):
+        return "<OptionsMapper %r>" % self.__opts
+      
 class OptionsMixin(object):
 
 
@@ -91,8 +94,10 @@ class OptionsMixin(object):
     def __init(self):
         # Get the schema
         schema = self.config_definition
+        
         # Generate the model from the schema
         model_factory = model.Model.__model_from_definition__(schema)
+        
         # Create an instance so we can use it here
         self.__options = model_factory()
         
@@ -100,9 +105,6 @@ class OptionsMixin(object):
         conf_file = '%s.conf' % self.NAME
         path = os.path.join(self.boss.pida_home, 'conf', conf_file)
         persistency.load_model_from_ini(path, self.__options)
-        
-        # XXX: why is this here? -- tiago
-        self.__options.__model_ini_filename__
         
         # Observe the file for changes
         self.__options_observer = persistency.IniFileObserver()
@@ -113,7 +115,7 @@ class OptionsMixin(object):
         self.__options_callbacks.set_model(self.__options)
         
         # Add a mapper for syntatic sugar
-        self.options = RegistryMapper(self.opt)
+        self.options = OptionsMapper(self.opts)
 
     def set_option(self, gn, on, val):
         return model.property_evading_setattr(self.__options,
