@@ -339,7 +339,53 @@ class document(base.pidacomponent):
     
     newfile_index = property(get_newfile_index)
         
+class DocumentCache(object):
+    
+    def __init__(self, result_call):
+        self._get_result = result_call
+        self._cache = {}
+        
+    def get_result(self, document):
+        try:
+            result, mtime = self._cache[document.unique_id]
+        except KeyError:
+            result = mtime = None
+        if document.stat.m_time != mtime:
+            result = self._get_result(document)
+            mtime = document.stat.m_time
+            self._cache[document.unique_id] = (result, mtime)
+        return result
+        
 
+import unittest
+
+class DocumentCacheTest(unittest.TestCase):
+
+    def setUp(self):
+        self.calls = 0
+        def call(doc):
+            self.calls += 1
+            return 1
+        self.cache = DocumentCache(call)
+        class MockD:
+            class stat:
+                m_time = 1
+            unique_id = 1
+        self.doc = MockD()
+
+    def test_get(self):
+        self.assertEqual(self.calls, 0)
+        self.assertEqual(self.cache.get_result(self.doc), 1)
+        self.assertEqual(self.calls, 1)
+        self.assertEqual(self.cache.get_result(self.doc), 1)
+        self.assertEqual(self.calls, 1)
+        self.doc.stat.m_time = 2
+        self.assertEqual(self.cache.get_result(self.doc), 1)
+        self.assertEqual(self.calls, 2)
+
+def test():
+    unittest.main()
+    
         
 class realfile_document(document):
     """Real file"""
