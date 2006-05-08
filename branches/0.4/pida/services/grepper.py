@@ -289,8 +289,9 @@ class Grepper(service.service):
         if directories is None:
             proj = self.boss.call_command('projectmanager',
                                           'get_current_project')
+
             if proj is not None:
-                options.directories = [proj.source_directory]
+                options.directories = [proj.source__directory]
             else:
                 options.directories = [os.getcwd()]
         else:
