@@ -164,6 +164,7 @@ class todo(service.service):
         else:
             if self._view is not None:
                 self.close_view(self._view)
+            self._view = None
 
     def view_closed(self, view):
         self._view = None
@@ -182,10 +183,12 @@ class todo(service.service):
                """
 
     def bnd_buffermanager_document_changed(self, document):
-        self.load_document(document)
+        if self._view is not None:
+            self.load_document(document)
 
     def bnd_buffermanager_document_modified(self, document):
-        self.load_document(document)
+        if self._view is not None:
+            self.load_document(document)
 
     def __get_markers(self):
         if self.opts.todo_definition__use_TODO:
