@@ -95,6 +95,8 @@ class ScintillaView(contentview.content_view):
 
     def init(self):
         self.editor = Pscyntilla()
+        # TODO: need a better way to do this:
+        self.editor.service = self.service
         self.widget.pack_start(self.editor._sc)
         self.optionize()
         self.editor._sc.connect('modified', self.cb_modified)

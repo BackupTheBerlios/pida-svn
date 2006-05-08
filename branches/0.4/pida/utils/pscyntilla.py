@@ -201,6 +201,8 @@ class Pscyntilla(gobject.GObject):
         fd.write(self._sc.get_text())
         fd.close()
         self._sc.set_save_point()
+        self.service.boss.call_command('buffermanager',
+            'reset_current_document')
 
     def load_fd(self, fd):
         for line in fd:
