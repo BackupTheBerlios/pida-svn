@@ -50,33 +50,39 @@ class document_handler(actions.action_handler):
     def view_document(self, document):
         pass
 
-def relpath(target, base=os.curdir):
+def relpath(target, basepath=os.curdir):
     """
-    Return a relative path to the target from either the current dir or an optional base dir.
-    Base can be a directory specified either as absolute or relative to current dir.
+    Return a relative path to the target from either the current dir or an
+    optional base dir. Base can be a directory specified either as absolute
+    or relative to current dir.
     """
 
     if not os.path.exists(target):
         raise OSError, 'Target does not exist: '+target
 
-    if not os.path.isdir(base):
-        raise OSError, 'Base is not a directory or does not exist: '+base
+    if not os.path.isdir(basepath):
+        raise OSError, 'Base is not a directory or does not exist: '+basepath
 
-    base_list = (os.path.abspath(base)).split(os.sep)
+    base_list = (os.path.abspath(basepath)).split(os.sep)
     target_list = (os.path.abspath(target)).split(os.sep)
 
-    # On the windows platform the target may be on a completely different drive from the base.
-    if os.name in ['nt','dos','os2'] and base_list[0] <> target_list[0]:
-        raise OSError, 'Target is on a different drive to base. Target: '+target_list[0].upper()+', base: '+base_list[0].upper()
+    # On the windows platform the target may be on a completely different
+    # drive from the base.
+    if os.name in ['nt', 'dos', 'os2'] and base_list[0] != target_list[0]:
+        msg = 'Target is on a different drive to base. Target: %s, base: %s'
+        msg %= (target_list[0].upper(), base_list[0].upper())
+        raise OSError(msg)
 
     # Starting from the filepath root, work out how much of the filepath is
     # shared by base and target.
     for i in range(min(len(base_list), len(target_list))):
-        if base_list[i] <> target_list[i]: break
+        if base_list[i] != target_list[i]:
+            break
     else:
-        # If we broke out of the loop, i is pointing to the first differing path elements.
-        # If we didn't break out of the loop, i is pointing to identical path elements.
-        # Increment i so that in all cases it points to the first differing path elements.
+        # If we broke out of the loop, i is pointing to the first differing
+        # path elements. If we didn't break out of the loop, i is pointing to
+        # identical path elements. Increment i so that in all cases it points
+        # to the first differing path elements.
         i+=1
 
     rel_list = [os.pardir] * (len(base_list)-i) + target_list[i:-1]
@@ -96,7 +102,8 @@ class document(base.pidacomponent):
 
     markup_prefix = ''
     markup_directory_color = '#0000c0'
-    markup_attributes = ['project_name', 'project_relative_path', 'basename', 'directory_colour']
+    markup_attributes = ['project_name', 'project_relative_path', 'basename',
+                         'directory_colour']
     markup_string = ('<span color="#600060">'
                      '%(project_name)s</span><tt>:</tt>'
                      '<span color="%(directory_colour)s">'
@@ -161,7 +168,9 @@ class document(base.pidacomponent):
         try:
             try:
                 stream = open(self.__filename, "rb")
-                self.__encoding = self.__detect_encoding(stream, self.__filename, self.__mimetype)
+                fname = self.__filename
+                mime = self.__mimetype
+                self.__encoding = self.__detect_encoding(stream, fname, mime)
                 stream.seek(0)
                 stream = codecs.EncodedFile(stream, self.__encoding)
                 self.__lines = list(stream)
@@ -173,6 +182,7 @@ class document(base.pidacomponent):
             self.__encoding = None
             self.__lines = None
             self.__string = None
+            raise
             # Also warn the log about it
             self.log.warn('failed to open file %s', self.filename)
             
