@@ -22,14 +22,13 @@
 #SOFTWARE.
 
 import textwrap
-
 import gobject
+import gtk
 
-import pida.pidagtk.tree as tree
-import pida.core.service as service
-import pida.core.actions as actions
+from pida.pidagtk import  tree
+from pida.core import service, actions
 from pida.utils.kiwiutils import gsignal
-import pida.pidagtk.contentview as contentview
+from pida.pidagtk import contentview
 from pida.utils.glinereader import GobjectReader
 
 defs = service.definitions
@@ -48,8 +47,6 @@ READER_NAMES = {
     READER_ERROR: '<b><span color="#903030">E</span></b>'
     }
 
-import gtk
-import gobject
 
 class Message(object):
 
@@ -92,7 +89,7 @@ class ErrorReader(gobject.GObject):
             self.run_lint(filename)
         if READER_PYCHECKER in readers:
             self.run_checker(filename)
-
+        
     def run_flakes(self, filename):
         try:
             self._readers[READER_PYFLAKES].run('pyflakes', filename)
@@ -143,6 +140,8 @@ class pyflake_view(contentview.content_view):
 
     LONG_TITLE = 'Python errors'
     SHORT_TITLE = 'Py Errors'
+    
+    last_check = None
 
     def init(self):
         refbut = gtk.ToolButton(stock_id=gtk.STOCK_REFRESH)
@@ -169,8 +168,18 @@ class pyflake_view(contentview.content_view):
         self._reader.connect('data', self.cb_message)
         self._reader.connect('started', self.cb_started)
 
-    def check(self, filename, uncache=False):
+    
+    def _check_later(self, filename):
         self._reader.run(filename, self.get_active_readers())
+        self.last_check = None
+        
+    def check(self, filename, uncache=False):
+        # The check method is made async
+        # If the check later was not called yet then cancel it
+        if self.last_check is not None:
+            # cancels the idle registration
+            gobject.source_remove(self.last_check)
+        self.last_check = gobject.idle_add(self._check_later, filename)
 
     def get_active_readers(self):
         readers = []
@@ -244,16 +253,15 @@ class pyflaker(service.service):
         else:
             if self.__view is not None:
                 self.__view.close()
+            self.__view = None
 
     def cmd_check_current_document(self):
-        if self.__view is None:
-            return
         if self._currentdocument is None:
             self.__view.error('There is no current file.')
         elif not self._currentdocument.filename.endswith('.py'):
             self.__view.error('Current file is not a python file.')
         else:
-            self.call('check', document=self._currentdocument)
+            self.cmd_check(document=self._currentdocument)
 
     def cmd_check(self, document, uncache=False):
         if self.__view is None:
@@ -288,10 +296,6 @@ class pyflaker(service.service):
                     </menu>
                 </menubar>
                """
-
-def checkPath(filename):
-    return check(file(filename).read(), filename)
-
 
 Service = pyflaker
 
