@@ -22,7 +22,8 @@
 #SOFTWARE.
 
 # system import(s)
-import threading
+import thread
+import gobject
 
 # pida core import(s)
 import pida.core.service as service
@@ -107,6 +108,7 @@ class todo(service.service):
 
     def init(self):
         self._view = None
+        self.counter = 0
 
     display_name = 'TODO List'
 
@@ -114,13 +116,27 @@ class todo(service.service):
         self._visact = self.action_group.get_action('todolist+todo_viewer')
         self._visact.set_active(True)
 
+    def _set_messages(self, args):
+        counter, messages = args
+        if self.counter != counter:
+            return
+        self._view.set_messages(messages)
+
     def load_document(self, document):
         self.__document = document
         if document.is_new:
             return
-        messages = self.cmd_check(lines=document.lines)
-        self._view.set_messages(messages)
-
+        
+        # Update the counter that identifies this thread
+        self.counter += 1
+        
+        def new_thread(counter):
+            messages = self.cmd_check(lines=document.lines)
+            # important: ui stuff must be done inside main loop
+            gobject.idle_add(self._set_messages, (counter, messages))
+        
+        thread.start_new_thread(new_thread, (self.counter,))
+        
     def cmd_check(self, lines):
         """Check the given lines for TODO messages."""
         messages = []
