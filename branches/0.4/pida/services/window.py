@@ -185,6 +185,8 @@ class WindowManager(service.service):
             self.opts.window_size__height = h
 
     def cmd_show_window(self):
+        # TODO: try to optimize this, maybe show_all is not optimized
+        # TODO: and explicit show()s make it faster
         self.__window.show_all()
 
     def cmd_update_action_groups(self):
@@ -269,10 +271,10 @@ class WindowManager(service.service):
             title = 'New File %s' % document.newfile_index
         else:
             title = document.filename
-        self.call('set_title', title=title)
+        self.cmd_set_title(title)
 
     def bnd_editormanager_started(self):
-        self.call('show_window')
+        self.cmd_show_window()
 
     @actions.action(label='Next View',
                     default_accel='<Alt>Up')
