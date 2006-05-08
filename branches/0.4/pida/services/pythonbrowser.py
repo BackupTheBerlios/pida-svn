@@ -99,6 +99,7 @@ class PythonBrowser(service.service):
 
     def init(self):
         self.__view = None
+        self.counter = 0
 
     def get_plugin_view(self):
         return self.__view
@@ -109,7 +110,13 @@ class PythonBrowser(service.service):
             'pythonbrowser+python_browser')
         self._visact.set_active(True)
 
-    def _update_node(self, root_node):
+    def _update_node(self, args):
+        counter, root_node = args
+        # Here we test if the thread id is the one we're expecting
+        # if it's not just discard it silentely
+        if self.counter != counter:
+            return
+            
         self.__view.set_source_nodes(root_node)
     
     def load_document(self, document):
@@ -120,13 +127,18 @@ class PythonBrowser(service.service):
         if document.is_new:
             return
         
-        def new_thread():
+        # This counter is used so that no out-of sync trees get feed into
+        # the main loop. This way if the finished thread is the one we're
+        # waiting for.
+        self.counter += 1
+        
+        def new_thread(counter):
             root_node = pythonparser.get_nodes_from_string(document.string)
             # important: ui code must be done inside main loop
             if root_node is not None:
-                gobject.idle_add(self._update_node, root_node)
+                gobject.idle_add(self._update_node, (counter, root_node))
             
-        thread.start_new_thread(new_thread, ())
+        thread.start_new_thread(new_thread, (self.counter,))
 
     @actions.action(type=actions.TYPE_TOGGLE,
                     stock_id='gtk-library',
