@@ -224,7 +224,7 @@ class document(base.pidacomponent):
     string = property(__get_string)
         
     def __get_stat(self):
-        return self.__stat
+        return self.__load_stat()
 
     stat = property(__get_stat)
 
@@ -350,10 +350,10 @@ class DocumentCache(object):
             result, mtime = self._cache[document.unique_id]
         except KeyError:
             result = mtime = None
-        if document.stat.m_time != mtime:
+        docmtime = document.stat.st_mtime
+        if docmtime != mtime:
             result = self._get_result(document)
-            mtime = document.stat.m_time
-            self._cache[document.unique_id] = (result, mtime)
+            self._cache[document.unique_id] = (result, docmtime)
         return result
         
 
