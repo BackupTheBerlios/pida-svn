@@ -152,6 +152,8 @@ class document(base.pidacomponent):
         
         if self.__encoding is not None:
             # Loading was already found, we're done
+            assert self.__string is not None
+            assert self.__lines is not None
             return
         
         # lines and string depend on encoding
@@ -192,11 +194,10 @@ class document(base.pidacomponent):
 
     def __iter__(self):
         self.__load()
-        for line in self.__lines:
-            yield line
+        return iter(self.__lines)
 
     def get_lines(self):
-        return [line for line in self]
+        return self.__iter__()
 
     lines = property(get_lines)
 
