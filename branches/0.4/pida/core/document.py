@@ -157,11 +157,12 @@ class document(base.pidacomponent):
         if self.__mimetype is None:
             self.__mimetype = self.__load_mimetype()
         
-        if self.__encoding is not None:
+        #if self.__encoding is not None:
             # Loading was already found, we're done
-            assert self.__string is not None
-            assert self.__lines is not None
-            return
+        #AA we like to load again!!
+            #assert self.__string is not None
+            #assert self.__lines is not None
+            #return
         
         # lines and string depend on encoding
             
@@ -224,7 +225,8 @@ class document(base.pidacomponent):
     string = property(__get_string)
         
     def __get_stat(self):
-        return self.__load_stat()
+        self.__stat = self.__load_stat()
+        return self.__stat
 
     stat = property(__get_stat)
 
