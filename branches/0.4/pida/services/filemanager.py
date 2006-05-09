@@ -148,11 +148,12 @@ import pida.utils.vc as vc
 
 class StatusLister(object):
 
-    def __init__(self, view, counter, counter_check):
+    def __init__(self, view, counter, counter_check, show_hidden):
         self.counter = counter
         self._view = view
         self._results = {}
         self._no_statuses = False
+        self.show_hidden = show_hidden
         self.check_counter = counter_check
     
     def add_item(self, path, status):
@@ -193,6 +194,8 @@ class StatusLister(object):
     
     def plain_ls(self, directory):
         for name in os.listdir(directory):
+            if not self.show_hidden and name.startswith('.'):
+                continue
             self.add_item(os.path.join(directory, name), STATE_NORMAL)
     
     def status_ls(self, directory):
@@ -202,6 +205,8 @@ class StatusLister(object):
         else:
             statuses = vcdir.listdir(directory)
             for status in statuses:
+                if not self.show_hidden and status.path.startswith('.'):
+                    continue
                 item = self.add_item(status.path, status.state)
                 if item:
                     item.statused = True
@@ -257,17 +262,23 @@ class FileBrowser(contentview.content_view):
         self._toolbar.set_style(gtk.TOOLBAR_ICONS)
 
     def create_actions(self):
+        self._tips = gtk.Tooltips()
         self._homeact = gtk.Action('Home', 'Home',
                                    'Browse the project root', 'gtk-project')
         self.add_action_to_toolbar(self._homeact)
         self._homeact.connect('activate', self.cb_act_home)
-        self._upact = gtk.Action('Up', 'Up', 'go up', gtk.STOCK_GO_UP)
+        self._upact = gtk.Action('Up', 'Up',
+            'Browse the parent directory', gtk.STOCK_GO_UP)
         self.add_action_to_toolbar(self._upact)
         self._upact.connect('activate', self.cb_act_up)
         self._refreshact = gtk.Action('Refresh', 'Refresh',
             'Refresh the directory', gtk.STOCK_REFRESH)
         self.add_action_to_toolbar(self._refreshact)
         self._refreshact.connect('activate', self.cb_act_refresh)
+        self._hidden_act = gtk.ToggleAction('ShowHidden', 'ShowHidden',
+            'Show the hidden files', 'gtk-hidden')
+        self._hidden_act.connect('toggled', self.cb_show_hidden)
+        self.add_action_to_toolbar(self._hidden_act)
         self._newfileact = gtk.Action('New', 'New',
                             'Create a new file here', gtk.STOCK_NEW)
         self.add_action_to_toolbar(self._newfileact)
@@ -290,6 +301,8 @@ class FileBrowser(contentview.content_view):
     def add_action_to_toolbar(self, action):
         toolitem = action.create_tool_item()
         self._toolbar.add(toolitem)
+        toolitem.set_tooltip(self._tips, action.props.tooltip)
+        return toolitem
     
     def create_tree(self):
         self._view = FileTree()
@@ -307,7 +320,8 @@ class FileBrowser(contentview.content_view):
             directory = os.path.expanduser('~')
         self.service.events.emit('directory_changed', directory=directory)
         self.counter = self.counter + 1
-        lister = StatusLister(self._view, self.counter, self.check_counter)
+        lister = StatusLister(self._view, self.counter, self.check_counter,
+                              self.get_show_hidden())
         self._view.clear()
         self.cwd = directory
         lister.list(directory)
@@ -344,6 +358,12 @@ class FileBrowser(contentview.content_view):
             self.service.call('browse', directory=project_root)
         else:
             self.service.log.info('there is no project to go to its root')
+
+    def cb_show_hidden(self, action):
+        self.refresh()
+    
+    def get_show_hidden(self):
+        return self._hidden_act.get_active()
 
     def cb_act_new_file(self, action):
         self.service.boss.call_command('newfile', 'create_interactive',
