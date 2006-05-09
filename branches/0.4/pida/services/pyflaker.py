@@ -21,7 +21,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import compiler, sys, textwrap, thread
+import compiler, sys, textwrap, threading
 import gtk, gobject
 
 from pida.pidagtk import tree
@@ -124,7 +124,7 @@ class pyflaker(service.service):
         def new_thread(counter):
             result = self._cache.get_result(document)
             gobject.idle_add(self._update_node, (counter, result))
-        thread.start_new_thread(new_thread, (self.counter,))
+        threading.Thread(target=new_thread, args=(self.counter,)).start()
 
     def _check(self, document):
         code_string = document.string
