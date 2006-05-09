@@ -22,6 +22,7 @@
 #SOFTWARE.
 
 import base
+import time
 
 class event(base.pidacomponent):
 
@@ -50,7 +51,7 @@ class event(base.pidacomponent):
         self.__events[event_name] = []
         def event_source (*args, **kwargs):
             for callback in self.__events[event_name]:
-                callback (*args, **kwargs)
+                callback(*args, **kwargs)
         return event_source
     
     def create_events (self, event_names, event_sources = None):
@@ -78,7 +79,12 @@ class event(base.pidacomponent):
 
     def emit(self, event_name, **kw):
         for callback in self.__events.get(event_name):
+            # TODO: remove this after profilling is done 
+            current_time = time.time()
             callback(**kw)
+            elapsed = time.time() - current_time
+            if elapsed >= 0.001:
+                print "%s: %f -- %r" % (event_name, elapsed, callback)
 
     def get(self, event_name):
         return self.__events[event_name]
