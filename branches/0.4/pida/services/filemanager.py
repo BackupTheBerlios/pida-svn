@@ -205,7 +205,7 @@ class StatusLister(object):
         else:
             statuses = vcdir.listdir(directory)
             for status in statuses:
-                if not self.show_hidden and status.path.startswith('.'):
+                if not self.show_hidden and status.name.startswith('.'):
                     continue
                 item = self.add_item(status.path, status.state)
                 if item:
