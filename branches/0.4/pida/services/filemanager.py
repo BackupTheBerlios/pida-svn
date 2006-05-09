@@ -281,7 +281,7 @@ class FileBrowser(contentview.content_view):
         self.add_action_to_toolbar(self._hidden_act)
         self._newfileact = gtk.Action('New', 'New',
                             'Create a new file here', gtk.STOCK_NEW)
-        self.add_action_to_toolbar(self._newfileact)
+        #self.add_action_to_toolbar(self._newfileact)
         self._newfileact.connect('activate', self.cb_act_new_file)
         self._newdiract = gtk.Action('NewDir', 'New Directory',
                             'Create a new directory here', 'gtk-directory')
