@@ -21,7 +21,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import thread
+import threading
 
 import gobject
 import pida.core.actions as actions
@@ -138,7 +138,7 @@ class PythonBrowser(service.service):
             if root_node is not None:
                 gobject.idle_add(self._update_node, (counter, root_node))
             
-        thread.start_new_thread(new_thread, (self.counter,))
+        threading.Thread(target=new_thread, args=(self.counter,)).start()
 
     @actions.action(type=actions.TYPE_TOGGLE,
                     stock_id='gtk-library',

@@ -22,7 +22,7 @@
 #SOFTWARE.
 
 # system import(s)
-import thread
+import threading
 import gobject
 
 # pida core import(s)
@@ -135,7 +135,7 @@ class todo(service.service):
             # important: ui stuff must be done inside main loop
             gobject.idle_add(self._set_messages, (counter, messages))
         
-        thread.start_new_thread(new_thread, (self.counter,))
+        threading.Thread(target=new_thread, args=(self.counter,)).start()
         
     def cmd_check(self, lines):
         """Check the given lines for TODO messages."""
