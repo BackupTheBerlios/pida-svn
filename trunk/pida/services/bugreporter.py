@@ -37,11 +37,13 @@ class BugReporter(service.service):
         opts, args = lplib.fake_opts(product='pida')
         dlg = gtkgui.ReportWindow(opts)
         def on_response(dlg, response):
+            def on_finished(results):
+                dlg.hide()
+                gobject.timeout_add(1000, dlg.destroy)
             if response == gtk.RESPONSE_ACCEPT:
-                def on_finished(results):
-                    dlg.hide()
-                    gobject.timeout_add(1000, dlg.destroy)
-                dlg._reporter.report(on_finished)    
+                dlg._reporter.report(on_finished)  
+            else:
+                on_finished(None)
         dlg.connect('response', on_response)    
         dlg.show_all()
     
