@@ -273,7 +273,9 @@ class ProjectManager(service.service):
     # bidings
     def bnd_filemanager_directory_changed(self, directory):
         if self.__current_project is not None:
-            self.__current_project.general__browse_directory = directory
+            def set_directory(directory):
+                self.__current_project.general__browse_directory = directory
+            gobject.idle_add(set_directory, directory)
 
     #commands
 
