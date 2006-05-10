@@ -24,12 +24,19 @@
 
 import bzr, cvs, darcs, mercurial, monotone, svn, tla, _null
 
-_plugins = [bzr, cvs, darcs, mercurial, monotone, svn, tla]
+_plugins = [svn, cvs, bzr, darcs, mercurial, monotone, tla]
+
+location_cache = {}
 
 def Vc(location):
-    for plugin in _plugins:
-        try:
-            return plugin.Vc(location)
-        except ValueError:
-            pass
-    return _null.Vc(location)
+    try:
+        return location_cache[location]
+    except KeyError:
+        for plugin in _plugins:
+            try:
+                p = location_cache[location] = plugin.Vc(location)
+                return p
+            except ValueError:
+                pass
+        p = location_cache[location] = _null.Vc(location)
+        return p

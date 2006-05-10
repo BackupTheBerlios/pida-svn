@@ -102,7 +102,11 @@ obj2 = MyModel()
 etc.
 '''
 
+import inspect
+import fnmatch
+
 from string import Template
+from types import ClassType
 
 def property_evading_setattr(obj, attr, val):
     """Set an attribute, but use the property first if available."""
@@ -123,7 +127,16 @@ def property_evading_getattr(obj, attr):
 
 def get_defintion_attrs(definition):
     """Generate the inner classes of a model defenition."""
-    for name in definition.__order__:
+    try:
+        attrs = definition.__order__
+    except AttributeError:
+        get_classes = lambda obj: type(obj) == type or \
+                                  type(obj) == ClassType
+
+        attrs = [name for name, obj in \
+                    inspect.getmembers(definition, get_classes)]
+        
+    for name in attrs:
         if not name.startswith('_'):
             attr = getattr(definition, name)
             yield attr
@@ -141,7 +154,12 @@ def get_groups(definition):
             label = group.label
         else:
             label = name
-        doc = format_docstring(group.__doc__)
+
+        if group.__doc__ is None:
+            doc = None
+        else:
+            doc = format_docstring(group.__doc__)
+            
         G = (name, doc, label, stock_id, L)
         for attr in get_defintion_attrs(group):
             a = ModelAttribute.from_definition(group.__name__, attr)
@@ -165,6 +183,7 @@ def add_attr_to_class(classdict, attr):
     classdict[attr.key] = property(fget, fset)
 
 def format_docstring(doc):
+    assert doc is not None
     return doc.replace('\n', ' ').strip()
 
 class ModelAttribute(object):
@@ -186,7 +205,12 @@ class ModelAttribute(object):
     @classmethod
     def from_definition(cls, group, definition):
         name = definition.__name__
-        doc = format_docstring(definition.__doc__)
+
+        if definition.__doc__ is None:
+            doc = None
+        else:
+            doc = format_docstring(definition.__doc__)
+            
         rtype = definition.rtype
         if hasattr(definition, 'label'):
             label = definition.label
@@ -355,6 +379,54 @@ class BaseMultiModelObserver(BaseObserver):
     def remove_model(self, model):
         model.__model_unregister__(self, self.__model_attributes__)
 
+class CallbackObserver(BaseSingleModelObserver):
+
+    def __init__(self, instance, prefix='cb'):
+        self.instance = instance
+        self.prefix = prefix
+        super(CallbackObserver, self).__init__()
+
+    def __model_notify__(self, model, attr, val):
+        fname = '%s_%s' % (self.prefix, attr)
+        if hasattr(self.instance, fname):
+            getattr(self.instance, fname)(val)
+
+class MatchObserver(BaseSingleModelObserver):
+    """
+    This type of observer uses a matcher function to figure out if
+    it wants to be notified for a certain state change. The matcher
+    function must accept a single argument, the attribute.
+    
+    It uses callable objects to be notified, they have this format:
+    callback(attr, val)
+    """
+    def __init__(self):
+        self.observers = {}
+        super(MatchObserver, self).__init__()
+        self.id = 0
+        
+    def register(self, matcher, callback):
+        """When you register you get a registration id you can
+        then use to unregister the callback from this observer"""
+        
+        self.observers[self.id] = (matcher, callback)
+        current_id = self.id
+        self.id += 1
+        return current_id
+
+    def unregister(self, register_id):
+        del self.observers[register_id]
+        
+    def connect(self, pattern, callback):
+        """Uses glob style strings to match the attribute name"""
+        matcher = lambda attr: fnmatch.fnmatchcase(attr, pattern)
+        return self.register(matcher, callback)
+        
+    def __model_notify__(self, model, attr, val):
+        for matcher, callback in self.observers.values():
+            if matcher(attr):
+                callback(attr, val)
+
 
 class ModelGroup(object):
 
@@ -398,8 +470,7 @@ class ModelGroup(object):
         for obs in self._observers:
             if hasattr(obs, 'remove_model'):
                 obs.remove_model(model)
-        if len(self._models):
-            self.set_current(self._models[-1])
+        self.set_current(self._models[-1])
 
     def set_current(self, model, level=0):
         if self._current is not model:
@@ -411,7 +482,6 @@ class ModelGroup(object):
             #model.__model_notify__()
 
     def __iter__(self):
-        for m in self._models:
-            yield m
+        return iter(self._models)
 
 

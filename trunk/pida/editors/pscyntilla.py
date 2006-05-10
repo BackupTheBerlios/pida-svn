@@ -79,11 +79,14 @@ from pida.pidagtk import contentview
 from pida.core import actions
 from pida.core import service
 from pida.utils.pscyntilla import Pscyntilla
-
+from pida.model import attrtypes as types
 defs = service.definitions
-types = service.types
 
-
+def parse_fontdesc(fontdesc):
+    """Returns the name and size"""
+    name, size = fontdesc.rsplit(' ', 1)
+    size = int(size)
+    return name, size
 
 class ScintillaView(contentview.content_view):
 
@@ -92,6 +95,8 @@ class ScintillaView(contentview.content_view):
 
     def init(self):
         self.editor = Pscyntilla()
+        # TODO: need a better way to do this:
+        self.editor.service = self.service
         self.widget.pack_start(self.editor._sc)
         self.optionize()
         self.editor._sc.connect('modified', self.cb_modified)
@@ -105,49 +110,65 @@ class ScintillaView(contentview.content_view):
     def cb_save_point_left(self, editor, *args):
         self.service._save_act.set_sensitive(True)
         self.service._revert_act.set_sensitive(True)
-        
+    
     def optionize(self):
-        opt = self.service.opt
+        """Loads the user options"""
+        opts = self.service.opts
+        options = self.service.options
+        editor = self.editor
+        
         # font
-        self.editor.set_font(
-                *self._font_and_size(opt('font', 'font')))
+        font = options.font
+        print opts.font__size, opts.font__name, opts.font__font
+        editor.set_font_size(opts.font__size)
+        editor.set_font_name(opts.font__name)
+        
         # indenting options
-        use_tabs = opt('indenting', 'use_tabs')
-        self.editor.set_use_tabs(use_tabs)
-        self.editor.set_tab_width(opt('indenting', 'tab_width'))
-        if not use_tabs:
-            self.editor.set_spaceindent_width(
-                opt('indenting', 'space_indent_width'))
+        indenting = options.indenting
+        editor.set_use_tabs(indenting.use_tabs)
+        editor.set_tab_width(indenting.tab_width)
+        if not indenting.use_tabs:
+            editor.set_spaceindent_width(indenting.space_indent_width)
+            
         # folding options
-        self.editor.use_folding(
-            opt('folding', 'use_folding'), width=opt('folding', 'marker_size'))
-        self.editor.set_foldmargin_colours(
-            back=opt('folding', 'marker_background'),
-            fore=opt('folding', 'marker_foreground'))
+        folding = options.folding
+        width = folding.marker_size
+        editor.use_folding(folding.use_folding, width=width)
+        back = folding.marker_background
+        fore = folding.marker_foreground
+        editor.set_foldmargin_colours(back=back, fore=fore)
+        
         # line numbers
-        self.editor.set_linenumber_margin_colours(
-            background=opt('line_numbers', 'background'),
-            foreground=opt('line_numbers', 'foreground'))
-        self.editor.set_linenumbers_visible(
-            opt('line_numbers', 'show_line_numbers'))
-        if opt('colors', 'use_dark_theme'):
-            self.editor.use_dark_theme()
+        line_numbers = options.line_numbers
+
+        bg = line_numbers.background
+        fg = line_numbers.foreground
+        editor.set_linenumber_margin_colours(background=bg, foreground=fg)
+            
+        editor.set_linenumbers_visible(line_numbers.show_line_numbers)
+        
+        # color options
+        if options.colors.use_dark_theme:
+            editor.use_dark_theme()
         else:
-            self.editor.use_light_theme()
+            editor.use_light_theme()
+            
         # caret and selection
-        car = 'caret'
-        self.editor.set_caret_colour(opt(car, 'caret_colour'))
-        self.editor.set_caret_line_visible(
-            opt(car, 'highlight_current_line'),
-            opt(car, 'current_line_color'))
-        self.editor.set_selection_color(
-            opt(car, 'selection_color'))
+        caret = options.caret
+        
+        editor.set_caret_colour(caret.caret_colour)
+        
+        color = caret.current_line_color
+        highlight = caret.highlight_current_line
+        editor.set_caret_line_visible(highlight, color)
+        
+        editor.set_selection_color(caret.selection_color)
+        
         # edge column
-        el = 'edge_line'
-        self.editor.set_edge_column_visible(
-            opt(el, 'show_edge_line'),
-            opt(el, 'position'),
-            opt(el, 'color'))
+        edge_line = options.edge_line
+        editor.set_edge_column_visible(edge_line.show_edge_line,
+                                       edge_line.position,
+                                       edge_line.color)
 
     def _font_and_size(self, fontdesc):
         name, size = fontdesc.rsplit(' ', 1)
@@ -159,24 +180,36 @@ class ScintillaView(contentview.content_view):
             self.service._sensitise_actions()
 
 
-
-class ScintillaEditor(service.service):    
-
-    display_name = 'Pscyntilla Text Editor'
-
-    class EditorView(defs.View):
-        book_name = 'edit'
-        view_type = ScintillaView
+class ScintillaConf:    
+    __markup__ = lambda self: "Scintilla Editor"
 
     class font(defs.optiongroup):
         """The font used in the editor"""
-        class font(defs.option):
+        class font:
             """The font used in the editor"""
             rtype = types.font
+            label = "Font:"
             default = 'Monospace 12'
+        
+        class name:
+            rtype = types.readonly
+            hidden = True
+            dependents = ("font__font",)
 
+            def fget(self):
+                return self.font__font.rsplit(" ", 1)[0]
+        
+        class size:
+            rtype = types.readonly
+            hidden = True
+            dependents = ("font__font",)
+            
+            def fget(self):
+                return int(self.font__font.rsplit(" ", 1)[1])
+                
     class indenting(defs.optiongroup):
         """Indenting options"""
+        
         class use_tabs(defs.option):
             """Use tabs for indenting"""
             rtype = types.boolean
@@ -189,7 +222,7 @@ class ScintillaEditor(service.service):
             """With of space indents, if not using tabs."""
             rtype = types.intrange(1, 16, 1)
             default = 4
-
+    
     class line_numbers(defs.optiongroup):
         """Options relating to line numbers and the line number margin."""
         class show_line_numbers(defs.option):
@@ -207,6 +240,7 @@ class ScintillaEditor(service.service):
 
     class colors(defs.optiongroup):
         """Options for colours."""
+        
         class use_dark_theme(defs.option):
             """Use a dark scheme"""
             rtype = types.boolean
@@ -214,13 +248,17 @@ class ScintillaEditor(service.service):
 
     class folding(defs.optiongroup):
         """Options relating to code folding"""
+        
         class use_folding(defs.option):
+            """Use folding"""
             rtype = types.boolean
             default = True
         class marker_size(defs.option):
+            """Marker size"""
             rtype = types.intrange(8, 32, 1)
             default = 14
         class marker_background(defs.option):
+            """Marker Background"""
             rtype = types.color
             default = '#e0e0e0'
         class marker_foreground(defs.option):
@@ -229,6 +267,7 @@ class ScintillaEditor(service.service):
 
     class caret(defs.optiongroup):
         """Options relating to the caret and selection"""
+                     
         class caret_colour(defs.option):
             """The colour of the caret."""
             default = '#000000'
@@ -260,20 +299,78 @@ class ScintillaEditor(service.service):
             """The color of the edge line"""
             rtype = types.color
             default = '#909090'
-        
 
+class DispatchMethod:
+    def __init__(self, elements, attr):
+        self.__elements = elements
+        self.__attr = attr
+    
+    def __call__(self, *args, **kwargs):
+        views = self.__elements
+        attr = self.__attr
+        return [getattr(view.editor, attr)(*args, **kwargs) for view in views]
+    
+    def __repr__(self):
+        return "<foreach %r>.%s()" % (self.__elements, self.__attr)
 
-        
-        
+class Dispatcher:
+    def __init__(self, elements):
+        self.__elements = elements
+    
+    def __getattr__(self, attr):
+        return DispatchMethod(self.__elements, attr)
+    
+    def __repr__(self):
+        return "<foreach %r>" % self.__elements
+
+class ScintillaEditor(service.service):    
+
+    display_name = 'Pscyntilla Text Editor'
+    config_definition = ScintillaConf
+
+    class EditorView(defs.View):
+        book_name = 'edit'
+        view_type = ScintillaView
+    
+    _views = {}
+    
     def init(self):
         self._documents = {}
         self._views = {}
         self._current = None
     
+    views = property(lambda self: self._views.itervalues())
+    
+    foreach_editor = property(lambda self: Dispatcher(self.views))
+    
     def reset(self):
         self._bind_document_actions()
         for view in self._views.values():
             view.optionize()
+    
+    def cb_colors__use_dark_theme(self, use_dark_theme):
+        if use_dark_theme:
+            
+            self.foreach_editor.use_dark_theme()
+        else:
+            self.foreach_editor.use_light_theme()
+
+    def cb_font__size(self, size):
+        self.foreach_editor.set_font_size(size)
+    
+    def cb_font__name(self, name):
+        self.foreach_editor.set_font_name(name)
+    
+    def cb_indenting__use_tabs(self, use_tabs):
+        self.foreach_editor.set_use_tabs(use_tabs)
+
+    def cb_indenting__tab_width(self, tab_width):
+        self.foreach_editor.set_tab_width(tab_width)
+    
+    def cb_indenting__space_indent_width(self, space_indent_width):
+        if self.opts.indenting__use_tabs:
+            editors = self.foreach_editor
+            editors.set_spaceindent_width(space_indent_width)
     
     def cmd_start(self):
         self.get_service('editormanager').events.emit('started')

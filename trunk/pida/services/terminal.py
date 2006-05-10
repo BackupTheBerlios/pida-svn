@@ -33,7 +33,8 @@ import pida.core.actions as actions
 import pida.pidagtk.contentview as contentview
 
 defs = service.definitions
-types = service.types
+
+from pida.model import attrtypes as types
 
 import pango
 
@@ -45,78 +46,111 @@ class terminal_view(contentview.content_view):
         terminal, kw = make_terminal(term_type, **kw)
         self.widget.pack_start(terminal.widget)
         self.set_long_title(' '.join(command_args))
-        terminal.configure(self.service.opt('fonts_and_colours',
-                                            'foreground_colour'),
-                           self.service.opt('fonts_and_colours',
-                                            'background_colour'),
-                           self.service.opt('fonts_and_colours',
-                                            'font'))
+        opts = self.service.options.fonts_and_colours
+        
+        terminal.configure(opts.foreground_colour, opts.background_colour,
+                           opts.font)
+
         terminal.service = self.service
         terminal.connect_child_exit(self.cb_exited)
         terminal.connect_title(self.set_long_title)
         terminal.execute(command_args, **kw)
         self.grab_focus = terminal.widget.grab_focus
+        self.config = terminal.configure
 
     def cb_exited(self):
         self.close()
-        
+
 view_location_map = {'View Pane':'view',
                      'Quick Pane':'content',
                      'Detached':'ext'}
 
+
+class TerminalConfig:
+    __order__ = ['general', 'shell', 'fonts_and_colours']
+    class shell(defs.optiongroup):
+        """Options relating to the shell run in terminals"""
+        __order__ = ['command']
+        label = 'Shell Options'
+        class command(defs.option):
+            """The command used for the shell"""
+            default = os.environ['SHELL'] or 'bash'
+            rtype = types.string
+            label = 'Shell command'
+    class general(defs.optiongroup):
+        """General options relating to the terminal emulator"""
+        __order__ = ['terminal_type', 'terminal_location']
+        label = 'General Options'
+        class terminal_type(defs.option):
+            """The default terminal type used"""
+            default = 'Vte'
+            rtype = types.stringlist('Vte', 'Moo')
+            label = 'Terminal Type'
+        class terminal_location(defs.option):
+            """The pane where newly started terminals will appear by default"""
+            rtype = types.stringlist(*view_location_map.keys())
+            default = 'View Pane'
+            label = 'Terminal Location'
+    class fonts_and_colours(defs.optiongroup):
+        """Font and colour options for the terminal emulator"""
+        label = 'Fonts & Colours'
+        __order__  = ['background_colour', 'foreground_colour', 'font']
+        class background_colour(defs.option):
+            """The background colour to be used"""
+            default = '#000000'
+            rtype = types.color
+            label = 'Background colour'
+        class foreground_colour(defs.option):
+            """The background colour to be used"""
+            default = '#c0c0c0'
+            rtype = types.color
+            label = 'Foreground colour'
+        class font(defs.option):
+            """The font to be used in terminals"""
+            default = 'Monospace 8'
+            rtype = types.font
+            label = 'Font'
+    __markup__ = lambda self: 'Terminal Emulator'
+
+
 class terminal_manager(service.service):
 
-    display_name = 'Terminals'
-
-    multi_view_type = terminal_view
+    config_definition = TerminalConfig
 
     class TerminalView(defs.View):
         view_type = terminal_view
         book_name = 'view'
 
+    def init(self):
+        self.views = []
+
+    def cb_fonts_and_colours__foreground_colour(self, val):
+        self._update_view_config()
+
+    def cb_fonts_and_colours__background_colour(self, val):
+        self._update_view_config()
+
+    def cb_fonts_and_colours__font(self, val):
+        self._update_view_config()
+
+    views = []
+
+    def _update_view_config(self):
+        for view in self.views:
+            view.config(self.opts.fonts_and_colours__foreground_colour,
+                        self.opts.fonts_and_colours__background_colour,
+                        self.opts.fonts_and_colours__font)
+
     def get_multi_view_book_type(self):
-        opt = self.opt('general', 'terminal_location')
+        opt = self.opts.general__terminal_location
         return view_location_map[opt]
     multi_view_book = property(get_multi_view_book_type)
-
-    class shell(defs.optiongroup):
-        """Shell options."""
-        class command(defs.option):
-            """The command used for the shell."""
-            default = os.environ['SHELL'] or 'bash'
-            rtype = types.string
-
-    class general(defs.optiongroup):
-        """Terminal options."""
-        class terminal_type(defs.option):
-            """The default terminal type used."""
-            default = 'Vte'
-            rtype = types.stringlist('Vte', 'Moo')
-        class terminal_location(defs.option):
-            """Where newly started terminals will appear by default"""
-            rtype = types.stringlist(*view_location_map.keys())
-            default = 'View Pane'
-
-    class fonts_and_colours(defs.optiongroup):
-        """Fonts and colours for the terminal"""
-        class background_colour(defs.option):
-            """The background colour to be used"""
-            default = '#000000'
-            rtype = types.color
-        class foreground_colour(defs.option):
-            """The background colour to be used"""
-            default = '#c0c0c0'
-            rtype = types.color
-        class font(defs.option):
-            """The font to be used in terminals"""
-            default = 'Monospace 8'
-            rtype = types.font
 
     def cmd_execute(self, command_args=[], command_line='',
                     term_type=None, icon_name='terminal',
                     short_title='Terminal', kwdict={}):
         if term_type == None:
-            term_type = self.opt('general', 'terminal_type').lower()
+            term_type = self.opts.general__terminal_type.lower()
         view = self.create_view('TerminalView',
                                 term_type=term_type,
                                 command_args=command_args,
@@ -124,10 +158,11 @@ class terminal_manager(service.service):
                                 short_title=short_title,
                                 **kwdict)
         self.show_view(view=view)
+        self.views.append(view)
 
     def cmd_execute_shell(self, term_type=None, kwdict={}):
-        shellcommand = self.opt('shell', 'command')
-        self.call('execute', command_args=[shellcommand],
+        shellcommand = self.opts.shell__command
+        self.cmd_execute(command_args=[shellcommand],
                   term_type=term_type, kwdict=kwdict)
 
     @actions.action(stock_id='gtk-terminal',
@@ -139,8 +174,10 @@ class terminal_manager(service.service):
                                       'get_current_project')
         if proj is not None:
             directory = proj.source__directory
-        self.call('execute_shell', kwdict={'directory': directory})
-        
+        self.cmd_execute_shell(kwdict={'directory': directory})
+
+    def view_closed(self, view):
+        self.views.remove(view)
 
     def get_menu_definition(self):
         return """
@@ -251,7 +288,7 @@ class vte_terminal(pida_terminal):
             title = term.get_window_title()
             callback(title)
         self.__term.connect('window-title-changed', title_changed)
-        
+
 import re
 
 fre = re.compile(r'(/.+):([0-9]+):')
@@ -300,8 +337,6 @@ class moo_terminal(pida_terminal):
             menu.show_all()
             a.connect('activate', self.act_gotoline, filename, int(ln) - 1)
 
-
-        
     def cb_newline(self, t):    
         cursor_i = t.get_iter_at_cursor()
         line_n = cursor_i.row - 1
@@ -319,11 +354,11 @@ class moo_terminal(pida_terminal):
                 msl = t.get_iter_at_line_offset(line_n, match.start())
                 esl = t.get_iter_at_line_offset(line_n, match.end())
                 t.apply_tag(tag, msl, esl)
-        
+
     def act_gotoline(self, action, file, line):
         self.service.boss.call_command('buffermanager', 'open_file_line',
             filename=file, linenumber=line)
-        
+
     def get_line_at_click(self, x, y):
         pass
 
@@ -367,6 +402,7 @@ class moo_terminal(pida_terminal):
         def title_changed(term, title):
             callback(title)
         self.__term.connect('set-window-title', title_changed)
+
 
 class dumb_terminal(pida_terminal):
 
@@ -436,7 +472,6 @@ def make_terminal(terminal_type_name, **kw):
 
 
 class popen(object):
-    
     def __init__(self, cmdargs, callback, kwargs):
         self.__running = False
         self.__readbuf = []

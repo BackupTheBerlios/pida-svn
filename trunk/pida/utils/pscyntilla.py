@@ -5,6 +5,11 @@ from keyword import kwlist
 import gobject
 import gtk
 
+# !
+import sre
+seps = r'[.\W]'
+word_re = sre.compile(r'(\w+)$')
+
 class Scintilla(scintilla.Scintilla):
 
     def get_text(self):
@@ -23,7 +28,6 @@ class Pscyntilla(gobject.GObject):
         self._sc = Scintilla()
         self._setup()
         self.filename = None
-        
 
     def _setup(self):
         self._setup_margins()
@@ -132,9 +136,12 @@ class Pscyntilla(gobject.GObject):
         if italic is not None:
             self._sc.style_set_italic(number, italic)
 
-    def set_font(self, fontname, size):
-        self.set_style(scintilla.STYLE_DEFAULT, font=fontname, size=size)
-
+    def set_font_name(self, font_name):
+        self.set_style(scintilla.STYLE_DEFAULT, font=font_name)
+    
+    def set_font_size(self, font_size):
+        self.set_style(scintilla.STYLE_DEFAULT, size=font_size)
+    
     def set_linenumber_margin_colours(self, foreground, background):
         self.set_style(scintilla.STYLE_LINENUMBER, fore=foreground,
                         back=background)
@@ -194,6 +201,8 @@ class Pscyntilla(gobject.GObject):
         fd.write(self._sc.get_text())
         fd.close()
         self._sc.set_save_point()
+        self.service.boss.call_command('buffermanager',
+            'reset_current_document')
 
     def load_fd(self, fd):
         for line in fd:
@@ -220,7 +229,21 @@ class Pscyntilla(gobject.GObject):
         for i in self.get_toplevel_fold_headers():
             if not self._sc.get_fold_expanded(i):
                 self._sc.toggle_fold(i)
-   
+
+    def auto_complete(self):
+        pos =  self._sc.get_current_pos()
+        wpos = self._sc.word_start_position(pos, True)
+        linepos, line = self._sc.get_cur_line()
+        word = line[linepos - (pos - wpos):linepos]
+        if word:
+            pattern = sre.compile(r'\W(%s.+?)\W' % word)
+            text = self._sc.get_text()
+            words = set(pattern.findall(text))
+            self._sc.auto_c_set_choose_single(True)
+            self._sc.auto_c_set_drop_rest_of_word(True)
+            self._sc.auto_c_show(len(word), ' '.join(sorted(list(words))))
+
+
     def cb_margin_click(self, ed, mod, pos, margin):
         if margin == 2:
             if mod == 1:
@@ -238,8 +261,10 @@ class Pscyntilla(gobject.GObject):
             i = self._sc.line_from_position(self._sc.get_current_pos())
             self._sc.toggle_fold(i)
         elif args == (83, 2):
-            self.save()
             #TODO: emit a saved event
+            self.save()
+        elif args == (78, 2): # ctrl-n
+            self.auto_complete()
 
     def cb_char(self, scint, ch):
         if ch in [10, 13]:

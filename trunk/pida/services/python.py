@@ -30,13 +30,14 @@ import pida.core.actions as actions
 from pida.core import service
 
 defs = service.definitions
-types = service.types
 
+from pida.model import attrtypes as types
 
-class python(service.service):
-
+class PythonConfig:
+    __order__ = ['python_execution']
     class python_execution(defs.optiongroup):
         """Options pertaining to python execution"""
+        __order__ = ['python_executable', 'python_shell']
         class python_executable(defs.option):
             """The command to call when executing python scripts."""
             rtype = types.string
@@ -46,8 +47,15 @@ class python(service.service):
             rtype = types.string
             default = 'python'
 
+    __markup__ = lambda self: 'Python'
+
+
+class python(service.service):
+
+    config_definition = PythonConfig
+
     def cmd_execute_shell(self):
-        py = self.opt('python_execution', 'python_shell')
+        py = self.opts.python_execution__python_shell
         command_args=[py]
         self.boss.call_command('terminal', 'execute',
                                command_args=command_args,
@@ -55,7 +63,7 @@ class python(service.service):
                                short_title='Python Shell')
 
     def cmd_execute_file(self, filename):
-        py = self.opt('python_execution', 'python_executable')
+        py = self.opts.python_execution__python_executable
         command_args=[py, filename]
         directory = os.path.dirname(filename)
         self.boss.call_command('terminal', 'execute',
@@ -161,48 +169,46 @@ class python(service.service):
             </toolbar>
             """
 
+    def act_execute_current_file(self, action):
+        """Runs the current python script"""
+        if self._document is not None and not self._document.is_new:
+            self.cmd_execute_file(filename=self._document.filename)
 
-    class python_executor(defs.language_handler):
-        file_name_globs = ['*.py']
+    def reset(self):
+        self._exact = self.action_group.get_action(
+            'python+execute_current_file')
+        self._exact.set_visible(False)
 
-        first_line_globs = ['*/bin/python']
+    def bnd_buffermanager_document_changed(self, document):
+        self._document = document
+        if document.is_new:
+            return
+        self._exact.set_visible(document.filename.endswith('py'))
 
-        def init(self):
-            self.__document = None
-            self.__cached = self.cached = {}
-
-        def load_document(self, document):
-            self.__document = document
-
-        def act_execute_current_file(self, action):
-            """Runs the current python script"""
-            self.service.call('execute_file',
-                              filename=self.__document.filename)
-
-        def get_menu_definition(self):
-            return """
-                <menubar>
-                <menu name="base_python" action="base_python_menu">
-                <menuitem name="expyfile" action="python+language+execute_current_file" />
-                </menu>
-                </menubar>
-                <toolbar>
-                <placeholder name="OpenFileToolbar">
-                </placeholder>
-                <placeholder name="SaveFileToolbar">
-                </placeholder>
-                <placeholder name="EditToolbar">
-                </placeholder>
-                <placeholder name="ProjectToolbar">
-                <separator />
-                <toolitem name="runpy" action="python+language+execute_current_file"/>
-                <separator />
-                </placeholder>
-                <placeholder name="VcToolbar">
-                </placeholder>
-                <placeholder name="ToolsToolbar">
-                </placeholder>
-                </toolbar>
-                """
+    def get_menu_definition(self):
+        return """
+            <menubar>
+            <menu name="base_python" action="base_python_menu">
+            <menuitem name="expyfile" action="python+execute_current_file" />
+            </menu>
+            </menubar>
+            <toolbar>
+            <placeholder name="OpenFileToolbar">
+            </placeholder>
+            <placeholder name="SaveFileToolbar">
+            </placeholder>
+            <placeholder name="EditToolbar">
+            </placeholder>
+            <placeholder name="ProjectToolbar">
+            <separator />
+            <toolitem name="runpy" action="python+execute_current_file"/>
+            <separator />
+            </placeholder>
+            <placeholder name="VcToolbar">
+            </placeholder>
+            <placeholder name="ToolsToolbar">
+            </placeholder>
+            </toolbar>
+            """
 
 Service = python

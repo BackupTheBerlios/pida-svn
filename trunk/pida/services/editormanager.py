@@ -27,11 +27,29 @@ from pida.core import service
 from pida.core.errors import *
 
 defs = service.definitions
-types = service.types
+
+from pida.model import attrtypes as types
+class Config:
+    __order__ = ['general']
+    class general:
+        """General editor options"""
+        __order__ = ['type']
+        label = 'General Options'
+        class type:
+            """Which editor PIDA will use."""
+            rtype = types.stringlist('Vim', 'Vim external', 'Culebra',
+                                     'Pscyntilla')
+            default = 'Vim'
+            label = 'Editor type'
+
+    def __markup__(self):
+        return 'Editor'
 
 class editor_manager(service.service):
 
     display_name = 'Editor'
+
+    config_definition = Config
 
     def init(self):
         self.__editor = None
@@ -112,7 +130,9 @@ class editor_manager(service.service):
     def get_editor_name(self):
         # XXX: there should be a key, value tupple, so this
         # XXX: checking could be made unexistant. see ticket #101
-        editor_name = self.opt('general', 'editor_type')
+        editor_name = self.opts.general__type
+        print self.opts
+        print editor_name
         if editor_name == 'Vim':
             editor = 'vimedit'
         elif editor_name == 'Moo':

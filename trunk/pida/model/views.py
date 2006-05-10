@@ -4,6 +4,7 @@ from cgi import escape
 
 import gtk
 import gobject
+from kiwi.ui.gadgets import gdk_color_to_string
 from kiwi.ui.widgets.entry import ProxyEntry
 from kiwi.ui.widgets.label import ProxyLabel
 from kiwi.ui.widgets.combo import ProxyComboBox
@@ -34,6 +35,15 @@ class FormattedLabel(ProxyLabel):
     def update(self, data):
         self.set_markup(self.format_string % data)
 
+class CleverProxyColorButton(ProxyColorButton):
+
+    def update(self, val):
+        col = gtk.gdk.color_parse(val)
+        super(CleverProxyColorButton, self).update(col)
+
+    def read(self):
+        col = super(CleverProxyColorButton, self).read()
+        return gdk_color_to_string(col)
 
 class WidgetObserver(BaseSingleModelObserver):
 
@@ -81,7 +91,7 @@ def get_widget_for_type(rtype):
     elif rtype is types.font:
         return ProxyFontButton()
     elif rtype is types.color:
-        return ProxyColorButton()
+        return CleverProxyColorButton()
     elif rtype is types.integer:
         w = ProxySpinButton()
         return w
@@ -205,11 +215,10 @@ class PropertyPage(gtk.VBox, WidgetObserver):
         self.pack_start(self._nb)
 
     def set_model(self, model):
-        oldmod = dir(self._model)
+        odm = dir(self._model) == dir(model)
         super(PropertyPage, self).set_model(model)
-        if oldmod == dir(self._model):
-            return
-        for page in xrange(self._nb.get_n_pages()):
+        if odm: return
+        for page in xrange(self._nb.get_n_pages() - 1, -1, -1):
             self._nb.remove_page(page)
         for group, doc, label, stock_id, attr_names in model.__model_groups__:
             self.add_page(group, label, stock_id, doc, attr_names)
@@ -219,8 +228,9 @@ class PropertyPage(gtk.VBox, WidgetObserver):
                 self.pack_widget(widget, attr=attr.key,
                              label=attr.label, doc=attr.doc,
                              sensitive_attr=attr.sensitive_attr)
+        self._nb.set_show_tabs(self._nb.get_n_pages() - 1)
+        model.__model_notify__()
         self._nb.show_all()
-        super(PropertyPage, self).set_model(model)
 
     def get_widget(self):
         return self._nb
@@ -252,8 +262,6 @@ class PropertyPage(gtk.VBox, WidgetObserver):
     def create_labelled_widget(self, widget, sizer, vsizer, label, doc):
         if label is None:
             label = widget.get_property('model-attribute')
-        if doc is None:
-            doc = 'No documentation'
         vb = gtk.EventBox()
         vb.set_border_width(6)
         hb = gtk.HBox(spacing=12)
@@ -271,7 +279,9 @@ class PropertyPage(gtk.VBox, WidgetObserver):
         al.add(widget)
         hb.pack_start(al, expand=True)
         #vb.pack_start(self.create_doc_label(doc), expand=False)
-        self._tips.set_tip(vb, doc)
+        # Only set the tooltip when the doc was set
+        if doc is not None:
+            self._tips.set_tip(vb, doc)
         vsizer.add_widget(vb)
         return vb
 
@@ -286,10 +296,14 @@ class PropertyPage(gtk.VBox, WidgetObserver):
         l.set_alignment(0, 0.5)
         l.set_markup(SECTION_TITLE % escape(title))
         vb.pack_start(l, expand=False)
-        l = gtk.Label()
-        l.set_alignment(0, 0.5)
-        l.set_markup(SECTION_DESCRIPTION % escape(desc))
-        vb.pack_start(l, expand=False)
+        
+        # Only add a description label when there is one
+        if desc is not None:
+            l = gtk.Label()
+            l.set_alignment(0, 0.5)
+            l.set_markup(SECTION_DESCRIPTION % escape(desc))
+            vb.pack_start(l, expand=False)
+        
         hb.set_border_width(6)
         return hb
 

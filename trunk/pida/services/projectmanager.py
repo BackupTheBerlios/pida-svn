@@ -167,6 +167,8 @@ class ProjectManager(service.service):
             'projects', 'projectlast.conf')
         self.__started = False
         self.__init_model()
+        if not os.path.exists(self.__history_file):
+            self.__write_history()
         self.__read_history()
         self.create_view('ProjectView')
         self.__init_project_toolbar()
@@ -225,10 +227,7 @@ class ProjectManager(service.service):
         entry.set_editable(False)
 
     def __read_history(self):
-        try:
-            f = open(self.__history_file, 'r')
-        except (IOError, OSError):
-            return
+        f = open(self.__history_file, 'r')
         hist = set()
         for filename in f:
             filename = filename.strip()

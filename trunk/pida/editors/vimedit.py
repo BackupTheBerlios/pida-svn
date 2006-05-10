@@ -33,12 +33,54 @@ import pida.utils.vim.vimembed as vimembed
 import pida.utils.vim.vimeditor as vimeditor
 
 defs = service.definitions
-types = service.types
+
+from pida.model import attrtypes as types
+
+class VimEmbedConfig:
+    __order__ = ['vim_command', 'vim_events', 'display']
+    class vim_command(defs.optiongroup):
+        """Vim command options."""
+        __order__ = ['use_cream']
+        label = "Commands"
+        
+        class use_cream(defs.option):
+            """Whether Cream for Vim will be used"""
+            rtype = types.boolean
+            default = False
+
+    class vim_events(defs.optiongroup):
+        """How PIDA will react to events from Vim."""
+        __order__ = ['shutdown_with_vim']
+        label = "Events"
+        
+        class shutdown_with_vim(defs.option):
+            """Whether to shutdown pida with Vim"""
+            label = "Quit Pida when Vim quits"
+            rtype = types.boolean
+            default = False
+
+    class display(defs.optiongroup):
+        """Vim display options"""
+        __order__ = ['colour_scheme', 'hide_vim_menu']
+        label = "Display"
+        class colour_scheme(defs.option):
+            """The colour scheme to use in vim (Empty will be ignored)."""
+            rtype = types.string
+            label = "Color scheme:"
+            default = ''
+        class hide_vim_menu(defs.option):
+            """Whether the vim menu will be hidden."""
+            rtype = types.boolean
+            label = "Hide Vim menu"
+            default = False
+    __markup__ = lambda self: 'Vim Embedded'
 
 
 class vim_embedded_editor(vimeditor.vim_editor, service.service):
 
     display_name = 'Embedded Vim'
+
+    config_definition = VimEmbedConfig
 
     class Vim(defs.View):
         view_type = vimembed.vim_embed
@@ -49,18 +91,6 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
         self.__view = None
         vimeditor.vim_editor.init(self)
 
-    class vim_command(defs.optiongroup):
-        """Vim command options."""
-        class use_cream(defs.option):
-            rtype = types.boolean
-            default = False
-
-    class vim_events(defs.optiongroup):
-        """How PIDA will react to events from Vim."""
-        class shutdown_with_vim(defs.option):
-            rtype = types.boolean
-            default = False
-
     def get_server(self):
         """Return our only server."""
         return self.__srv
@@ -68,7 +98,7 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
 
     def vim_start(self):
         self.__view = self.create_view('Vim')
-        if self.opt('vim_command', 'use_cream'):
+        if self.opts.vim_command__use_cream:
             command = 'cream'
         else:
             command = 'gvim'
@@ -88,7 +118,7 @@ class vim_embedded_editor(vimeditor.vim_editor, service.service):
             self.get_service('editormanager').events.emit('started')
 
     def after_shutdown(self, server):
-        if self.opt('vim_events', 'shutdown_with_vim'):
+        if self.opts.vim_events__shutdown_with_vim:
             self.boss.stop()
         else:
             self.restart()

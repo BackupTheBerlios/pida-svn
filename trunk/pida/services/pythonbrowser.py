@@ -23,6 +23,7 @@
 
 import threading
 
+import gobject
 import pida.core.actions as actions
 
 # pida core import(s)
@@ -52,8 +53,8 @@ class python_source_view(contentview.content_view):
 
     ICON_NAME = 'gtk-sourcetree'
 
-    HAS_CONTROL_BOX = False
-    LONG_TITLE = 'python source browser'
+    HAS_CONTROL_BOX = True
+    LONG_TITLE = 'Python source browser'
     SHORT_TITLE = 'Source'
 
     def init(self):
@@ -66,6 +67,8 @@ class python_source_view(contentview.content_view):
         self.__nodes.connect('double-clicked', self.cb_source_clicked)
 
     def set_source_nodes(self, root_node):
+        # TODO: if the root_node has *alot* of elements this will be
+        # TODO: slow, we need to split it in chunks
         exp_paths = []
         e_paths = []
         def f(row, path):
@@ -87,6 +90,7 @@ class python_source_view(contentview.content_view):
         self.service.boss.call_command('editormanager', 'goto_line',
                                         linenumber=item.value.linenumber)
 
+
 class PythonBrowser(service.service):
 
     class PythonBrowser(defs.View):
@@ -94,44 +98,84 @@ class PythonBrowser(service.service):
         book_name = 'plugin'
 
     def init(self):
-        self.__view = self.create_view('PythonBrowser')
+        self.__view = None
+        self.counter = 0
 
     def get_plugin_view(self):
         return self.__view
     plugin_view = property(get_plugin_view)
 
-    class python_browser(defs.language_handler):
-        file_name_globs = ['*.py']
+    def reset(self):
+        self._visact = self.action_group.get_action(
+            'pythonbrowser+python_browser')
+        self._visact.set_active(True)
 
-        first_line_globs = ['*/bin/python']
+    def _update_node(self, args):
+        counter, root_node = args
+        # Here we test if the thread id is the one we're expecting
+        # if it's not just discard it silentely
+        if self.counter != counter:
+            return
+            
+        self.__view.set_source_nodes(root_node)
+    
+    def load_document(self, document):
+        if self.__view is None:
+            return
+            
+        self.__document = document
+        if document.is_new:
+            return
+        
+        # This counter is used so that no out-of sync trees get feed into
+        # the main loop. This way if the finished thread is the one we're
+        # waiting for.
+        self.counter += 1
+        
+        def new_thread(counter):
+            root_node = pythonparser.get_nodes_from_string(document.string)
+            # important: ui code must be done inside main loop
+            if root_node is not None:
+                gobject.idle_add(self._update_node, (counter, root_node))
+            
+        threading.Thread(target=new_thread, args=(self.counter,)).start()
 
-        def init(self):
-            self.__document = None
-            self.__cached = self.cached = {}
+    @actions.action(type=actions.TYPE_TOGGLE,
+                    stock_id='gtk-library',
+                    label='Python Browser')
+    def act_python_browser(self, action):
+        """View the documentation library."""
+        self.set_view_visible(action.get_active())
 
-        def load_document(self, document):
-            self.__document = document
-            root_node = None
-            if document.unique_id in self.__cached:
-                root_node, mod = self.__cached[document.unique_id]
-                if mod != document.stat.st_mtime:
-                    root_node = None
-            def load():
-                root_node = pythonparser.\
-                    get_nodes_from_string(document.string)
-                self.service.plugin_view.set_source_nodes(root_node)
-                self.__cached[document.unique_id] = (root_node,
-                               document.stat.st_mtime)
-            if not root_node:
-                load()
-                #t = threading.Thread(target=load)
-                #t.run()
-            else:
-                self.service.plugin_view.set_source_nodes(root_node)
+    def set_view_visible(self, visibility):
+        if visibility:
+            if self.__view is None:
+                self.__view = self.create_view('PythonBrowser')
+                self.show_view(view=self.__view)
+            self.__view.raise_page()
+        else:
+            if self.__view is not None:
+                self.close_view(self.__view)
+            self.__view = None
+
+    def bnd_buffermanager_document_changed(self, document):
+        self.load_document(document)
 
     def bnd_buffermanager_document_modified(self, document):
-        self.uncache(document)
+        self.load_document(document)
 
+    def view_closed(self, view):
+        self.__view = None
+        self._visact.set_active(False)
+
+    def get_menu_definition(self):
+        return """
+            <menubar>
+            <menu name="base_python" action="base_python_menu">
+            <menuitem name="viewpybrowse" action="pythonbrowser+python_browser" />
+            </menu>
+            </menubar>
+            """
 
 Service = PythonBrowser
 

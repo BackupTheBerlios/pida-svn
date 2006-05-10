@@ -6,14 +6,38 @@ import unittest
 
 import attrtypes as types
 from persistency import load_model_from_ini, IniFileObserver
-from model import property_evading_setattr, get_defintion_attrs, get_groups,\
-                  ModelAttribute, Model, ModelGroup,\
-                  BaseSingleModelObserver, BaseMultiModelObserver
+from model import (property_evading_setattr, get_defintion_attrs, get_groups,
+                   ModelAttribute, Model, ModelGroup,
+                   BaseSingleModelObserver, BaseMultiModelObserver,
+                   MatchObserver)
 
+
+class LazySchema:
+    class a_group:
+        class key1:
+            rtype = types.string
+            default = "innit?"
+
+        class key2:
+            rtype = types.string
+            default = "isit"
+
+    class b_group:
+        __order__ = ["key1"]
+
+        class key1:
+            rtype = types.string
+            default = "oh yeah!"
+
+        class key2:
+            rtype = types.string
+            default = "cmon!"
+
+    __markup__ = lambda self: "whatevah"
 
 class Blah:
     """A fake schema"""
-    __order__ = ['meh', 'feh']
+    __order__ = ['meh', 'feh', 'nodocs']
     class meh:
         """a mew mew fake schema"""
         __order__ = ['foo', 'blah']
@@ -48,6 +72,24 @@ class Blah:
             default = 'gah'
             sensitive_attr = 'feh__ouch'
             dependents = ['feh__ouch']
+            
+    class nodocs:
+        class lazy:
+            rtype = types.string
+            # default is obligatory
+            default = ""
+            
+        class zlazy(object):
+            rtype = types.string
+            default = "something else"
+        
+        class another_lazy(lazy):
+            rtype = types.integer
+            default = 1
+
+            ignore_me_too = 100
+
+        ignore_me = "yes you do"
 
     class _notme:
         pass
@@ -66,6 +108,7 @@ class BlahBlah(object):
     g = property(get_g, set_g)
 
 BlahModel = Model.__model_from_definition__(Blah)
+LazySchemaModel = Model.__model_from_definition__(LazySchema)
 
 class MockSingleObserver(BaseSingleModelObserver):
 
@@ -102,6 +145,7 @@ class test_model_parse_schema(unittest.TestCase):
 
     def test_a_toplevel(self):
         tops = [c for c in get_defintion_attrs(self.mdef)]
+        self.assertEqual(tops.pop(), self.mdef.nodocs)
         self.assertEqual(tops.pop(), self.mdef.feh)
         self.assertEqual(tops.pop(), self.mdef.meh)
         self.assertEqual(tops, [])
@@ -158,7 +202,7 @@ class test_parse_groups(unittest.TestCase):
         self.n2, self.d2, self.l2, self.s2, self.a2  = self.groups[1]
 
     def test_a_getgroups(self):
-        self.assertEqual(len(self.groups), 2)
+        self.assertEqual(len(self.groups), 3)
 
     def test_b_name(self):
         self.assertEqual(self.n1, 'meh')
@@ -184,6 +228,7 @@ class test_model_class(unittest.TestCase):
 
     def setUp(self):
         self.a1 = BlahModel()
+        self.a2 = LazySchemaModel()
 
     def test_a_attrs(self):
         self.assert_(hasattr(BlahModel, '__model_attrs__'))
@@ -195,7 +240,11 @@ class test_model_class(unittest.TestCase):
         self.assertEqual(self.a1.__model_attrs_map__,
                          BlahModel.__model_attrs_map__)
         self.assertEqual(set(self.a1.__model_attrs_map__.keys()),
-            set(['meh__foo', 'meh__blah', 'feh__ouch', 'feh__gah']))
+            set(['meh__foo', 'meh__blah', 'feh__ouch', 'feh__gah',
+                 'nodocs__lazy', 'nodocs__zlazy',
+                 'nodocs__another_lazy']))
+        self.assertEqual(set(self.a2.__model_attrs_map__.keys()),
+            set(['a_group__key1', 'a_group__key2', 'b_group__key1']))
 
     def test_c_original_model(self):
         self.assert_(not hasattr(Model, '__model_attrs__'))
@@ -211,7 +260,7 @@ class test_model_class(unittest.TestCase):
         self.assert_(hasattr(self.a1, '__model_groups__'))
         self.assertEqual(self.a1.__model_groups__,
                          BlahModel.__model_groups__)
-        self.assertEqual(len(self.a1.__model_groups__), 2)
+        self.assertEqual(len(self.a1.__model_groups__), 3)
 
     def test_f_observers(self):
         for attr in self.a1.__model_attrs_map__:
@@ -243,8 +292,98 @@ class test_model_setting(unittest.TestCase):
         self.assertEqual(self.a1.feh__gah, 'hag')
 
     def test_set_fget_attr(self):
-        self.a1.meh__blah = 'yes'
-        self.assertEqual(self.a1.meh__blah, 'no')
+        def _assign(val):
+            self.a1.meh__blah = val
+        self.assertRaises(AttributeError, _assign, 'no')
+
+class test_match_observer(unittest.TestCase):
+    def setUp(self):
+        self.vals = []
+        
+    def on_foo(self, attr, value):
+        self.vals.append((attr, value))
+    
+    def test_simple_match(self):
+        vals = self.vals
+        a1 = BlahModel()
+        obs = MatchObserver()
+        obs.set_model(a1)
+        obs.connect("meh__foo", self.on_foo)
+        
+        a1.meh__foo = 100
+        self.assertEqual(vals, [("meh__foo", 100)])
+
+        a1.feh__gah = "coiso"
+        self.assertEqual(vals, [("meh__foo", 100)])
+        
+    def test_glob(self):
+        vals = self.vals
+        a1 = BlahModel()
+        obs = MatchObserver()
+        obs.set_model(a1)
+        obs.connect("*", self.on_foo)
+        
+        a1.meh__foo = 100
+        self.assertEqual(vals, [("meh__foo", 100)])
+
+        a1.feh__gah = "coiso"
+        self.assertEqual(vals, [("meh__foo", 100), ("feh__gah", "coiso")])
+        
+    def test_all_matcher(self):
+        vals = self.vals
+        a1 = BlahModel()
+        obs = MatchObserver()
+        obs.set_model(a1)
+        obs.register(lambda attr: True, self.on_foo)
+        
+        a1.meh__foo = 100
+        self.assertEqual(vals, [("meh__foo", 100)])
+
+        a1.feh__gah = "coiso"
+        self.assertEqual(vals, [("meh__foo", 100), ("feh__gah", "coiso")])
+
+    def test_nill_matcher(self):
+        vals = self.vals
+        a1 = BlahModel()
+        obs = MatchObserver()
+        obs.set_model(a1)
+        obs.register(lambda attr: False, self.on_foo)
+        
+        a1.meh__foo = 100
+        self.assertEqual(vals, [])
+
+        a1.feh__gah = "coiso"
+        self.assertEqual(vals, [])
+
+    def test_registration(self):
+        vals = self.vals
+        a1 = BlahModel()
+        obs = MatchObserver()
+        obs.set_model(a1)
+        subs = obs.register(lambda attr: True, self.on_foo)
+        
+        a1.meh__foo = 100
+        self.assertEqual(vals, [("meh__foo", 100)])
+
+        obs.unregister(subs)
+        a1.feh__gah = "coiso"
+        self.assertEqual(vals, [("meh__foo", 100)])
+
+    def test_connection(self):
+        vals = self.vals
+        a1 = BlahModel()
+        obs = MatchObserver()
+        obs.set_model(a1)
+        subs = obs.connect("*", self.on_foo)
+        
+        a1.meh__foo = 100
+        self.assertEqual(vals, [("meh__foo", 100)])
+
+        obs.unregister(subs)
+        a1.feh__gah = "coiso"
+        self.assertEqual(vals, [("meh__foo", 100)])
+
+
 
 class test_observer(unittest.TestCase):
 
@@ -256,6 +395,7 @@ class test_observer(unittest.TestCase):
         self.o3 = MockMultiObserver()
         self.o4 = MockMultiObserver(model_attributes=ma,
                         current_callback=self.set_current)
+
 
     def set_current(self, item):
         self.current = item
@@ -351,7 +491,7 @@ class test_observer(unittest.TestCase):
         self.o2.notify = self.notify
         self.o2.set_model(a1)
         for a in newma:
-            self.assert_((self.o2, a1, a) not in self._n)
+            self.assert_((self.o2, a1, a) in self._n)
         for a in self.ma:
             self.assert_((self.o2, a1, a) in self._n)
         self.assertEqual(self._n[(self.o2, a1, 'feh__gah')], 'gah')
@@ -431,8 +571,6 @@ class test_observer(unittest.TestCase):
         self.o2.set_model(a1)
         a1.meh__foo = 100
         self.assertEqual(self._n[(self.o1, a1, 'meh__foo')], 100)
-        self.assertRaises(KeyError,
-            lambda *a: self._n[(self.o2, a1, 'meh__foo')], 100)
 
     def test_s_two_observers_update(self):
         a1 = BlahModel()
@@ -501,7 +639,6 @@ class test_ini(unittest.TestCase):
         self.assertEqual(self.a1.meh__foo, a1.meh__foo)
 
     def test_b_no_save_fget(self):
-        self.a1.meh__blah = '100'
         a1 = BlahModel()
         load_model_from_ini(self.s1, a1)
         self.assertEqual(self.a1.meh__blah, a1.meh__blah)

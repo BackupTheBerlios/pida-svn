@@ -32,7 +32,8 @@ from pida.core import service
 from pida.utils.culebra import edit, sensitive, common, interfaces
 
 defs = service.definitions
-types = service.types
+
+from pida.model import attrtypes as types
 
 #temporary
 C = gtk.gdk.CONTROL_MASK
@@ -112,22 +113,17 @@ class CulebraView(contentview.content_view):
     def cb_keypress(self, widg, event):
         key, mod = event.keyval, event.state
         return self.service.received_key(key, mod)
-        
 
-class culebra_editor(service.service):
-
-    display_name = 'Culebra Text Editor'
-
-    class Culebra(defs.View):
-        view_type = CulebraView
-        book_name = 'edit'
-    
+class CulebraConfig:
+    __order__ = ['general']
     class general(defs.optiongroup):
+        """Options for the culebra text editor"""
+        __order__ = ['background_color', 'font', 'font_color']
         class background_color(defs.option):
             """Change the background color"""
             default = "#FFFFFF"
             rtype = types.color
-        
+
         class font(defs.option):
             """Change the font used in Culebra."""
             rtype = types.font
@@ -137,7 +133,21 @@ class culebra_editor(service.service):
             """Change the font color"""
             default = "#000000"
             rtype = types.color
-            
+
+    def __markup__(self):
+        return 'Culebra text editor'
+
+
+class culebra_editor(service.service):
+
+    display_name = 'Culebra Text Editor'
+
+    config_definition = CulebraConfig
+
+    class Culebra(defs.View):
+        view_type = CulebraView
+        book_name = 'edit'
+    
     ############
     # Service related methods
     def init(self):

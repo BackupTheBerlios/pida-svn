@@ -35,8 +35,7 @@ selected file system item. This context menu contains the "Open With" menu.
 
 import os
 import mimetypes
-import subprocess
-
+import threading
 import gtk
 import gobject
 
@@ -45,7 +44,6 @@ import pida.pidagtk.icons as icons
 import pida.core.service as service
 import pida.core.actions as actions
 from pida.utils.kiwiutils import gsignal
-import pida.utils.gobjectlinereader as glr
 import pida.pidagtk.contentview as contentview
 
 mime_icons = {}
@@ -90,63 +88,8 @@ letters = {
             STATE_MAX: '+'
             }
 
-
-class GtkReader(gobject.GObject):
-    """Read status results from a sub process."""
-
-    gsignal('started')
-
-    gsignal('finished', str)
-
-    gsignal('plain-data', str)
-
-    gsignal('status-data', str)
-
-    def __init__(self, scriptpath):
-        self.__dirq = []
-        self.scriptpath = scriptpath
-        self.current_directory = None
-        gobject.GObject.__init__(self)
-
-    def ls(self, directory):
-        self.__dirq.append(directory)
-        if len(self.__dirq) == 1:
-            self._ls()
-
-    def _ls(self):
-        qlen = len(self.__dirq)
-        if not qlen:
-            return
-        self.emit('started')
-        p = subprocess.Popen(['python', self.scriptpath, self.__dirq[0]],
-                 stdout=subprocess.PIPE)
-        self.__watch = gobject.io_add_watch(p.stdout,
-                       gobject.IO_IN, self.cb_read)
-        gobject.io_add_watch(p.stdout.fileno(), gobject.IO_HUP, self.cb_hup)
-
-    def _received(self, d):
-        typ, data = d.split(' ', 1)
-        if typ == '<p>':
-            sig = 'plain-data'
-        else:
-            sig = 'status-data'
-        self.emit(sig, data)
-
-    def cb_read(self, fd, cond):
-        d = fd.readline().strip()
-        self._received(d)
-        return True
-
-    def cb_hup(self, fd, cond):
-        def _f():
-            gobject.source_remove(self.__watch)
-            self.current_directory = self.__dirq.pop(0)
-            self.emit('finished', self.current_directory)
-            self._ls()
-        gobject.idle_add(_f)
-
-gobject.type_register(GtkReader)
-
+busy_cursor = gtk.gdk.Cursor(gtk.gdk.WATCH)
+normal_cursor = gtk.gdk.Cursor(gtk.gdk.LEFT_PTR)
 
 class FileSystemItem(object):
 
@@ -154,7 +97,8 @@ class FileSystemItem(object):
         self.path = self.key = path
         self.name = os.path.basename(path)
         self.isdir = os.path.isdir(path)
-        self.status = None
+        self.status = STATE_NORMAL
+        self.statused = False
         self.isnotdir = not self.isdir
         self.mt = None
         self.icon = None
@@ -199,6 +143,97 @@ class FileTree(tree.IconTree):
 
     SORT_CONTROLS = True
 
+import pida.utils.vc as vc
+
+
+class StatusLister(object):
+
+    def __init__(self, view, counter, counter_check, show_hidden):
+        self.counter = counter
+        self._view = view
+        self._results = {}
+        self._no_statuses = False
+        self.show_hidden = show_hidden
+        self.check_counter = counter_check
+    
+    def add_item(self, path, status):
+        if not self.check_counter(self.counter):
+            return
+        try:
+            fsi = self._results[path]
+            fsi.status = status
+            self.reset_item(fsi) 
+        except KeyError:
+            fsi = FileSystemItem(path)
+            fsi.status = status
+            fsi.statused = False
+            self._results[path] = fsi
+            self.add_view_item(fsi)
+        return fsi
+        
+    def list(self, directory):
+        self._busy()
+        pt = threading.Thread(target=self.plain_ls, args=(directory,))
+        st = threading.Thread(target=self.status_ls, args=(directory,))
+        pt.start()
+        st.start()
+        def _finish(pt, st):
+            pt.join()
+            st.join()
+            self.finished()
+            self._unbusy()
+        threading.Thread(target=_finish, args=(pt, st)).start()
+    
+    def _busy(self):
+        if self._view.view.window:
+            self._view.view.window.set_cursor(busy_cursor)
+            
+    def _unbusy(self):
+        if self._view.view.window:
+            self._view.view.window.set_cursor(normal_cursor)
+    
+    def plain_ls(self, directory):
+        for name in os.listdir(directory):
+            if not self.show_hidden and name.startswith('.'):
+                continue
+            self.add_item(os.path.join(directory, name), STATE_NORMAL)
+    
+    def status_ls(self, directory):
+        vcdir = vc.Vc(directory)
+        if vcdir.NAME == 'Null':
+            self._no_statuses = True
+        else:
+            statuses = vcdir.listdir(directory)
+            for status in statuses:
+                if not self.show_hidden and status.name.startswith('.'):
+                    continue
+                item = self.add_item(status.path, status.state)
+                if item:
+                    item.statused = True
+
+    def finished(self):
+        if not self.check_counter(self.counter):
+            return
+        if not self._no_statuses:
+            for res in self._results.values():
+                if not res.statused:
+                    res.status = STATE_IGNORED
+                    self.reset_item(res)
+        # need to scroll for some bizarre reason
+        def scroll():
+            self._view.view.scroll_to_cell((0,))
+        gobject.idle_add(scroll)
+        
+    def reset_item(self, item):
+        def _reset_item():
+            item.reset_markup()
+        gobject.idle_add(_reset_item)
+
+    def add_view_item(self, item):
+        def _add_item():
+            self._view.add_item(item)
+        gobject.idle_add(_add_item)
+
 
 class FileBrowser(contentview.content_view):
 
@@ -214,18 +249,11 @@ class FileBrowser(contentview.content_view):
 
     def init(self, scriptpath):
         gobject.GObject.__init__(self)
-        self._reader = glr.PkgresourcesReader('ls.py')
-        self._reader.connect('started', self.cb_started)
-        self._reader.connect('finished', self.cb_finished)
-        self._reader.connect('data', self.cb_data)
-        self._files = {}
-        self._recent = {}
-        self._visrect = None
-        self._no_statuses = False
         self.cwd = None
         self.create_toolbar()
         self.create_actions()
         self.create_tree()
+        self.counter = 0
 
     def create_toolbar(self):
         self._toolbar= gtk.Toolbar()
@@ -234,20 +262,26 @@ class FileBrowser(contentview.content_view):
         self._toolbar.set_style(gtk.TOOLBAR_ICONS)
 
     def create_actions(self):
+        self._tips = gtk.Tooltips()
         self._homeact = gtk.Action('Home', 'Home',
                                    'Browse the project root', 'gtk-project')
         self.add_action_to_toolbar(self._homeact)
         self._homeact.connect('activate', self.cb_act_home)
-        self._upact = gtk.Action('Up', 'Up', 'go up', gtk.STOCK_GO_UP)
+        self._upact = gtk.Action('Up', 'Up',
+            'Browse the parent directory', gtk.STOCK_GO_UP)
         self.add_action_to_toolbar(self._upact)
         self._upact.connect('activate', self.cb_act_up)
         self._refreshact = gtk.Action('Refresh', 'Refresh',
             'Refresh the directory', gtk.STOCK_REFRESH)
         self.add_action_to_toolbar(self._refreshact)
         self._refreshact.connect('activate', self.cb_act_refresh)
+        self._hidden_act = gtk.ToggleAction('ShowHidden', 'ShowHidden',
+            'Show the hidden files', 'gtk-hidden')
+        self._hidden_act.connect('toggled', self.cb_show_hidden)
+        self.add_action_to_toolbar(self._hidden_act)
         self._newfileact = gtk.Action('New', 'New',
                             'Create a new file here', gtk.STOCK_NEW)
-        self.add_action_to_toolbar(self._newfileact)
+        #self.add_action_to_toolbar(self._newfileact)
         self._newfileact.connect('activate', self.cb_act_new_file)
         self._newdiract = gtk.Action('NewDir', 'New Directory',
                             'Create a new directory here', 'gtk-directory')
@@ -267,29 +301,30 @@ class FileBrowser(contentview.content_view):
     def add_action_to_toolbar(self, action):
         toolitem = action.create_tool_item()
         self._toolbar.add(toolitem)
+        toolitem.set_tooltip(self._tips, action.props.tooltip)
+        return toolitem
     
     def create_tree(self):
         self._view = FileTree()
         self._view.set_property('markup-format-string', '%(markup)s')
-        self._view.connect('clicked', self.cb_click)
         self._view.connect('double-clicked', self.cb_double_click)
         self._view.connect('right-clicked', self.cb_right_click)
         self.widget.pack_start(self._view)
         return self._view
 
+    def check_counter(self, counter):
+        return counter == self.counter
+
     def browse(self, directory=None):
         if directory is None:
             directory = os.path.expanduser('~')
         self.service.events.emit('directory_changed', directory=directory)
-        if directory in self._recent:
-            self._view.clear()
-            for fsi in self._recent[directory].values():
-                self._view.add_item(fsi)
-            self.cwd = directory
-            self.long_title = self.cwd
-        else:
-            self._no_statuses = False
-            self._reader.run(directory)
+        self.counter = self.counter + 1
+        lister = StatusLister(self._view, self.counter, self.check_counter,
+                              self.get_show_hidden())
+        self._view.clear()
+        self.cwd = directory
+        lister.list(directory)
 
     def browse_up(self):
         directory = self.cwd
@@ -297,68 +332,10 @@ class FileBrowser(contentview.content_view):
             parent = os.path.dirname(directory)
             self.browse(parent)
    
-    def forget(self, directory):
-        if directory in self._recent:
-            del self._recent[directory]
-
     def refresh(self):
         if self.cwd is not None:
-            self.forget(self.cwd)
             self._visrect = self._view.view.get_visible_rect()
             self.browse(self.cwd)
-         
-    def cb_started(self, reader):
-        self._files = {}
-        self._view.clear()
-
-    def cb_finished(self, reader, args):
-        if self._no_statuses:
-            for f in self._files.values():
-                f.status = 2
-                f.reset_markup()
-        self.cwd = args[-1]
-        self._recent[self.cwd] = self._files
-        self.long_title = self.cwd
-        if self._visrect is not None:
-            self._view.view.scroll_to_point(self._visrect.x, self._visrect.y)
-            self._visrect = None
-        
-
-    def cb_data(self, reader, data):
-        typ, data = data.split(' ', 1)
-        if typ == '<p>':
-            sig = self.cb_plain_data
-        else:
-            sig = self.cb_status_data
-        sig(reader, data)
-
-    def cb_plain_data(self, reader, path):
-        if path not in self._files:
-            fsi = FileSystemItem(path)
-            self._files[path] = fsi
-            self._view.add_item(fsi)
-
-    def cb_status_data(self, reader, path):
-        status, path = path.split(' ', 1)
-        if status == '<s>':
-            self._no_statuses = True
-        else:
-            try:
-                status = int(status)
-            except:
-                return
-            if path in self._files:
-                f = self._files[path]
-                f.status = status
-                f.reset_markup()
-            else:
-                f = FileSystemItem(path)
-                self._files[path] = f
-                f.status = status
-                self._view.add_item(f)
-        
-    def cb_click(self, tv, item):
-        pass
 
     def cb_double_click(self, tv, item):
         fsi = item.value
@@ -381,6 +358,12 @@ class FileBrowser(contentview.content_view):
             self.service.call('browse', directory=project_root)
         else:
             self.service.log.info('there is no project to go to its root')
+
+    def cb_show_hidden(self, action):
+        self.refresh()
+    
+    def get_show_hidden(self):
+        return self._hidden_act.get_active()
 
     def cb_act_new_file(self, action):
         self.service.boss.call_command('newfile', 'create_interactive',
@@ -425,6 +408,7 @@ class FileBrowser(contentview.content_view):
             self._popup_file(fsi.path, event)
 
 gobject.type_register(FileBrowser)
+
 
 class file_manager(service.service):
 

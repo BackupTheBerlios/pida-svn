@@ -165,10 +165,10 @@ class vim_editor(object):
             gobject.timeout_add(200, load)
 
     def reset(self):
-        colorscheme = self.opt('display', 'colour_scheme')
+        colorscheme = self.opts.display__colour_scheme
         if colorscheme:
             self.__cw.set_colorscheme(self.server, colorscheme)
-        if self.opt('display', 'hide_vim_menu'):
+        if self.opts.display__hide_vim_menu:
             self.__cw.set_menu_visible(self.server, False)
             #self.__load_shortcuts()
 

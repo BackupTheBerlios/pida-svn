@@ -33,7 +33,8 @@ import pida.pidagtk.contentview as contentview
 import pida.utils.vc as vc
 
 defs = service.definitions
-types = service.types
+
+from pida.model import attrtypes as types
 
 class CommitView(contentview.content_view):
 
@@ -77,16 +78,11 @@ class CommitView(contentview.content_view):
         s = self._text.get_buffer().get_start_iter()
         return self._text.get_buffer().get_text(s, e)
 
-class version_control(service.service):
-
-    display_name = 'Version Control Integration'
-
-    class CommitMessage(defs.View):
-        view_type = CommitView
-        book_name = 'view'
-
+class VCConfig:
+    __order__ = ['meld_integration']
     class meld_integration(defs.optiongroup):
         """How much meld will be used."""
+        __order__ = ['use_meld_for_statuses', 'use_meld_for_diff']
         class use_meld_for_statuses(defs.option):
             """Whether Meld will be used for file listings."""
             rtype = types.boolean
@@ -95,6 +91,19 @@ class version_control(service.service):
             """Whether Meld (visual diff) will be used for file diffs."""
             rtype = types.boolean
             default = False
+
+    __markup__ = lambda self: 'Version Control'
+
+
+class version_control(service.service):
+
+    display_name = 'Version Control Integration'
+
+    config_definition = VCConfig
+
+    class CommitMessage(defs.View):
+        view_type = CommitView
+        book_name = 'view'
 
     def init(self):
         self.__currentfile = None
@@ -122,7 +131,7 @@ class version_control(service.service):
             del self.__cached_vcs[workdir]
 
     def cmd_statuses(self, directory):
-        if self.opt('meld_integration', 'use_meld_for_statuses'):
+        if self.opts.meld_integration__use_meld_for_statuses:
             self.boss.call_command('meldembed', 'browse',
                                     directory=directory)
         else:
@@ -140,7 +149,7 @@ class version_control(service.service):
                 self.log.info('"%s" is not version controlled', directory)
 
     def cmd_diff_file(self, filename):
-        if self.opt('meld_integration', 'use_meld_for_diff'):
+        if self.opts.meld_integration__use_meld_for_diff:
             self.boss.call_command('meldembed', 'diff',
                                     filename=filename)
         else:
