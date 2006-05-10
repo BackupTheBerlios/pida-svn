@@ -7,15 +7,17 @@ ROOT_URL = 'https://staging.launchpad.net/'
 
 
 def fake_opts(root_url=ROOT_URL,
-              product='', show_product=False, title='', no_gui=False):
+              product='', show_product=False, title='', no_gui=False,
+              comment=''):
     class Opts:
         pass
     o = Opts()
     o.root_url = root_url
     o.product = product
-    o.show_product = product
+    o.show_product = show_product
     o.title = title
     o.no_gui = no_gui
+    o.comment = comment
     return o, []
 
 

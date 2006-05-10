@@ -70,6 +70,8 @@ class ReportWidget(gtk.VBox):
         self.pack_start(self.pulser, expand = False)
         self.baseurl.set_text(opts.root_url)
         self.product.set_text(opts.product)
+        buf = self.comment.get_buffer()
+        buf.insert(buf.get_start_iter(), opts.comment)
         self.title.set_text(opts.title)
         self.email, self.password = launchpadlib.get_local_config()
         self._pulsing = False
@@ -86,7 +88,7 @@ class ReportWidget(gtk.VBox):
         self._pulsing = False
         self.pulser.hide()
     
-    def report(self):
+    def report(self, finished_callback=lambda r: None):
         if self.email is None:
             self.get_pass()
         if self.email is None:
@@ -101,12 +103,10 @@ class ReportWidget(gtk.VBox):
                     product,
                     self.title.get_text(), 
                     buf.get_text(buf.get_start_iter(), buf.get_end_iter()))
-            def show_results():
-                print results
-            gobject.idle_add(show_results)
             gobject.idle_add(self.stop_pulsing)
+            gobject.idle_add(finished_callback, results)
         threading.Thread(target=report).start()
-        
+    
     def get_pass(self):
         pass_dlg = PasswordDialog()
         def pass_response(dlg, resp):
@@ -132,19 +132,22 @@ class ReportWindow(gtk.Dialog):
         self._reporter = ReportWidget(opts)
         self.vbox.pack_start(self._reporter)
         self.resize(400, 300)
-        self.connect('response', self.on_response)
         gobject.idle_add(self._reporter.title.grab_focus)
-    def on_response(self, dlg, response):
-        if response == gtk.RESPONSE_ACCEPT:
-            self._reporter.report()
-        else:
-            gtk.main_quit()
+    
 
 
 
 def gui_report(opts):
     w = ReportWindow(opts)
     w.show_all()
+    def on_response(dlg, response):
+        def on_finished(results):
+            gtk.main_quit()
+        if response == gtk.RESPONSE_ACCEPT:
+            dlg._reporter.report(on_finished)
+        else:
+            on_finshed()
+    w.connect('response', on_response)    
     gtk.main()
     
     
