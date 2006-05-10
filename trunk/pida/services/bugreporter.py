@@ -25,7 +25,7 @@ import gtk, gobject
 
 import pida.core.service as service
 
-from pida.utils.launchpad_reporter import lplib, gtkgui
+from pida.utils.launchpadder import lplib, gtkgui
 
 defs = service.definitions
 
