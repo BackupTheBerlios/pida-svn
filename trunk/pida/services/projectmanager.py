@@ -21,21 +21,17 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import pida.pidagtk.tree as tree
-import pida.pidagtk.configview as configview
-import pida.pidagtk.contentview as contentview
+import os
+
+import gobject, gtk
+
+from pida.pidagtk import tree, contentview
+from pida.core import service, actions, project
 from pida.model import model, views, persistency
-import pida.core.registry as registry
-import pida.core.service as service
-import pida.core.actions as actions
-import pida.core.project as project
-types = service.types
+
 defs = service.definitions
 
-import gtk
-import os
-import gobject
-import os.path
+
 
 class Project(object):
 
@@ -44,6 +40,8 @@ class Project(object):
     environment = None
     vcs = None
     vcsname = None
+
+
 
 class ProjectTreeItem(tree.TreeItem):
 
@@ -57,6 +55,8 @@ class ProjectTreeItem(tree.TreeItem):
             '%s</span>') % (self.value.name, vcs, wd)
         return b
     markup = property(__get_markup)
+
+
 
 class ProjectTree(views.TreeObserver):
 
@@ -73,6 +73,7 @@ class ProjectTree(views.TreeObserver):
             project.key = project.name
             self.add_item(project, key=project.name)
         self.view.set_expander_column(self.view.get_column(1))
+
 
 
 class project_view(contentview.content_view):
@@ -95,7 +96,6 @@ class project_view(contentview.content_view):
         self.proj_list.connect('right-clicked',
             self.cb_list_right_clicked)
         self.widget.pack_start(self.proj_list)
-
 
     def get_selected(self):
         return self.proj_list.selected
@@ -131,6 +131,7 @@ class project_view(contentview.content_view):
         return self.__projectlist.selected_iter
 
 
+
 class ProjectEditor(contentview.content_view):
 
     def init(self):
@@ -142,6 +143,7 @@ class ProjectEditor(contentview.content_view):
         b.pack2(self.pp)
         b.set_position(200)
         self.widget.pack_start(b)
+
 
 
 class ProjectManager(service.service):
