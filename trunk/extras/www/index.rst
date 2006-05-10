@@ -13,7 +13,7 @@ Home
 PIDA is an integrated development environment.
 
 **Why should I use PIDA?**
-PIDA has  number of unique features, such as
+PIDA has a number of unique features, such as
 
 * Embedding Vim or any editor
 * Using any version control system

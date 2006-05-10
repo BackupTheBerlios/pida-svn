@@ -332,7 +332,7 @@ class Home(Directory):
     def _load_items(self):
         for module in CONF.get('modules', 'dirs').split(','):
             yield Directory(self, module, self)
-        yield Link('http://tracos.org/pida/report/', 'bugs')
+        yield Link('https://launchpad.net/products/pida/+bugs', 'bugs')
         
     #def get_output_path(self):
     #    return os.path.join(self.output_root, 'index.html')
