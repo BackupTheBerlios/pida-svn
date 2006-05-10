@@ -3,7 +3,7 @@
 import urllib, urllib2, cookielib, os, getpass
 
 
-ROOT_URL = 'https://staging.launchpad.net/'
+ROOT_URL = 'https://launchpad.net/'
 
 
 def fake_opts(root_url=ROOT_URL,
