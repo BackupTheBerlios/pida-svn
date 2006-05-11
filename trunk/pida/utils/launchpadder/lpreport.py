@@ -39,7 +39,7 @@ changed by the user""")
         help = """Read the comment text from stdin (overrides -c)""")
     parser.add_option('-n', '--no-gui', dest='no_gui',
         action='store_true',
-        help="""Run in console (non-GUI mode""")
+        help="""Run in console (non-GUI mode)""")
     parser.add_option('-S', '--show-product', dest='show_product',
         action='store_true',
         help="""Show the product option (GUI only). The default behaviour
