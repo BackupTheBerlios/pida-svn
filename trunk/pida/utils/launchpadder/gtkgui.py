@@ -146,7 +146,7 @@ def gui_report(opts):
         if response == gtk.RESPONSE_ACCEPT:
             dlg._reporter.report(on_finished)
         else:
-            on_finshed()
+            on_finished(None)
     w.connect('response', on_response)    
     gtk.main()
     

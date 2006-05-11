@@ -34,10 +34,13 @@ changed by the user""")
 console reports, where it will be the actual value.
 For GUI reports, it is the prefilled name and can be
 changed by the user""")
+    parser.add_option('-s', '--stdin-comment', dest='stdin_comment',
+        action='store_true',
+        help = """Read the comment text from stdin (overrides -c)""")
     parser.add_option('-n', '--no-gui', dest='no_gui',
         action='store_true',
         help="""Run in console (non-GUI mode""")
-    parser.add_option('-s', '--show-product', dest='show_product',
+    parser.add_option('-S', '--show-product', dest='show_product',
         action='store_true',
         help="""Show the product option (GUI only). The default behaviour
 without this option is to show the product field if it has
@@ -45,7 +48,10 @@ not been priveded on the command line.""")
     opts, args = parser.parse_args()
     opts.product = opts.product or ''
     opts.title = opts.title or ''
+    opts.comment = opts.comment or ''
     opts.root_url = opts.root_url or launchpadlib.ROOT_URL
+    if opts.stdin_comment:
+        opts.comment = sys.stdin.read()
     if not opts.product:
         opts.show_product = True
     if opts.no_gui:
