@@ -17,7 +17,7 @@ def label_widget(widget, label):
     label = gtk.Label(label)
     label.set_alignment(0, 0.5)
     vb.pack_start(label, expand=False)
-    exp = isinstance(widget, gtk.TextView)
+    exp = isinstance(widget, gtk.ScrolledWindow)
     vb.pack_start(widget, expand=exp)
     return vb
 
@@ -61,7 +61,10 @@ class ReportWidget(gtk.VBox):
         self.title = gtk.Entry()
         self.pack_start(label_widget(self.title, 'Title'), False)
         self.comment = gtk.TextView()
-        self.pack_start(label_widget(self.comment, 'Comment'), True)
+        sw = gtk.ScrolledWindow()
+        sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        sw.add(self.comment)
+        self.pack_start(label_widget(sw, 'Comment'))
         self.pack_start(exp, expand=False)
         self.baseurl = gtk.Entry()
         vb.pack_start(label_widget(self.baseurl, 'Launchpad URL'), False)
