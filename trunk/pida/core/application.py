@@ -84,6 +84,7 @@ except ImportError:
 try:
     import pida.core.boss as boss
     import pida.pidagtk.debugwindow as debugwindow
+    import pida.model.model as model
 except ImportError:
     die_gui('PIDA could not import itself.')
 
@@ -202,8 +203,7 @@ class environment(object):
     def override_configuration_system(self, services):
         if self.__editorname:
             svc = services.get('editormanager')
-            svc.set_option('general', 'type', self.__editorname)
-            #svc.options.save()
+            svc.opts.general__type = self.__editorname
         if not self.opts.option:
             return
         for opt in self.opts.option:
@@ -215,9 +215,12 @@ class environment(object):
                         service, group, option = parts
                         try:
                             svc = services.get(service)
-                            svc.options.get(group).get(option).load(value)
+                            optname = '%s__%s' % (group, option)
+                            model.property_evading_setattr(svc.opts,
+                                optname, value)
                         except:
-                            pass
+                            print ('failed to set an option %s %s' %
+                                    (service, group, option))
 
     def override_editor_option(self, editorname):
         self.__editorname = editorname
