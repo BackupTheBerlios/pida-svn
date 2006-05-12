@@ -1,7 +1,9 @@
 
 import threading, optparse
 
-import gtk, gobject
+import gtk
+import gobject
+import urllib2
 gtk.threads_init()
 
 import lplib as launchpadlib
@@ -100,14 +102,21 @@ class ReportWidget(gtk.VBox):
         self.start_pulsing()
         def report():
             product = 'products/%s/' % self.product.get_text()
-            results = launchpadlib.report(
-                    self.baseurl.get_text(),
-                    self.email, self.password,
-                    product,
-                    self.title.get_text(), 
-                    buf.get_text(buf.get_start_iter(), buf.get_end_iter()))
+            
+            try:
+                results = launchpadlib.report(
+                        self.baseurl.get_text(),
+                        self.email, self.password,
+                        product,
+                        self.title.get_text(),
+                        buf.get_text(buf.get_start_iter(), buf.get_end_iter()))
+
+            except urllib2.HTTPError, err:
+                results = None
+                
             gobject.idle_add(self.stop_pulsing)
             gobject.idle_add(finished_callback, results)
+
         threading.Thread(target=report).start()
     
     def get_pass(self):
@@ -130,27 +139,59 @@ class ReportWindow(gtk.Dialog):
         super(ReportWindow, self).__init__('Launchpad Bug Report',
             parent = None,
             flags = 0,
-            buttons = (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+            buttons = (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                       gtk.STOCK_OK, gtk.RESPONSE_OK))
         self._reporter = ReportWidget(opts)
         self.vbox.pack_start(self._reporter)
         self.resize(400, 300)
         gobject.idle_add(self._reporter.title.grab_focus)
     
+import rat.hig
 
+class GuiReport:
+    def __init__(self, opts):
+        self.opts = opts
+    
+    def set_command_sensitive(self, sensitive):
+        self.w.set_response_sensitive(gtk.RESPONSE_OK, sensitive)
+        self.w._reporter.set_sensitive(sensitive)
+        
+    def on_err_response(self, dlg, response):
+        dlg.destroy()
+        self.set_command_sensitive(True)
+        
+    def on_report_finished(self, results):
+        if results is None:
+            title = "Could not report error"
+            msg = ("There was an error "
+                   "comunicating with the server. Please verify your "
+                   "username and password.")
+            
+            dlg = rat.hig.error(title, msg, parent = self.w, run=False,
+                                flags=gtk.DIALOG_DESTROY_WITH_PARENT)
+            dlg.show()
+            dlg.connect("response", self.on_err_response)
+            
+            #self.w.show_all()
+        else:
+            gtk.main_quit()
+    
+    def on_report_window_response(self, dlg, response):
+        if response == gtk.RESPONSE_OK:
+            self.set_command_sensitive(False)
+            dlg._reporter.report(self.on_report_finished)
+        else:
+            gtk.main_quit()
 
+    def start(self):
+        self.w = w = ReportWindow(self.opts)
+        w.show_all()
+        w.connect('response', self.on_report_window_response)
 
 def gui_report(opts):
-    w = ReportWindow(opts)
-    w.show_all()
-    def on_response(dlg, response):
-        def on_finished(results):
-            gtk.main_quit()
-        if response == gtk.RESPONSE_ACCEPT:
-            dlg._reporter.report(on_finished)
-        else:
-            on_finished(None)
-    w.connect('response', on_response)    
+    gobject.idle_add(GuiReport(opts).start)
+    gtk.threads_enter()
     gtk.main()
+    gtk.threads_leave()
     
     
