@@ -24,7 +24,6 @@ class view_mixin(object):
         return view
 
     def show_view(self, unique_id=None, view=None):
-        print self.NAME
         if view is None:
             if unique_id is None:
                 raise KeyError('Need either view, or unique_id')
