@@ -334,17 +334,9 @@ class WindowManager(service.service):
         gtk.idle_add(_s)
 
     def _bind_pluginviews(self):
-        for service in self.boss.services:
-            if service.NAME in ['buffermanager']:
-                service.show_view(view=service.plugin_view)
-            elif service.NAME == 'filemanager':
-                service.show_view(view=service.plugin_view)
-            elif service.NAME == 'projectmanager':
-                service.show_view(view=service.plugin_view)
-            #elif service.plugin_view is not None:
-            #    self.show_view(view=service.plugin_view)
-            #elif service.plugin_view_type is not None:
-            #    self.pluginview.append_page(service.plugin_view)
+        for service in ['buffermanager', 'filemanager', 'projectmanager']:
+            svc = self.boss.get_service(service)
+            svc.show_view(view=svc.plugin_view)
 
     def _pack(self):
         self.__mainbox = gtk.VBox()

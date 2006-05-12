@@ -175,11 +175,11 @@ class Buffermanager(service):
     def init(self):
         self.__currentdocument = None
         self.__documents = {}
+        self.plugin_view = self.create_view('BufferView')
 
     def bind(self):
         self.action_group.get_action('buffermanager+close_buffer'
                                      ).set_sensitive(False)
-        self.plugin_view = self.create_view('BufferView')
 
     # External interface
 
