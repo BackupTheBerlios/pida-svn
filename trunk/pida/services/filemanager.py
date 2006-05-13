@@ -100,6 +100,9 @@ class FileSystemItem(object):
         self.status = STATE_NORMAL
         self.statused = False
         self.isnotdir = not self.isdir
+        self.extension = self.name.rsplit('.')[-1]
+        if self.extension == self.name:
+            self.extension = ''
         self.mt = None
         self.icon = None
 
@@ -139,7 +142,8 @@ class FileTree(tree.IconTree):
     
     SORT_AVAILABLE = [('Directories first', 'isnotdir'),
                     ('File name', 'name'),
-                    ('Version status', 'status')]
+                    ('Version Control status', 'status'),
+                    ('File Extension', 'extension')]
 
     SORT_CONTROLS = True
 
