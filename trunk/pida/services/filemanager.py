@@ -162,8 +162,11 @@ class StatusLister(object):
         self.show_hidden = show_hidden
         self.check_counter = counter_check
         # this is one of the leetest things I ever did
-        p = glob.re.compile('|'.join(map(glob.fnmatch.translate, hidden_globs)))
-        self.hidden_globs = p
+        if hidden_globs:
+            p = glob.re.compile('|'.join(map(glob.fnmatch.translate, hidden_globs)))
+            self.hidden_globs = p
+        else:
+            self.hidden_globs = None
 
     
     def add_item(self, path, status):
@@ -248,6 +251,8 @@ class StatusLister(object):
         else:
             if name.startswith('.'):
                 return True
+            elif self.hidden_globs is None:
+                return False
             else:
                 return self.hidden_globs.match(name)
 
