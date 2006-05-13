@@ -33,7 +33,7 @@ an additional context menu for various actions that can be performed on the
 selected file system item. This context menu contains the "Open With" menu.
 """
 
-import os
+import os, glob
 import mimetypes
 import threading
 import gtk
@@ -43,6 +43,7 @@ import pida.pidagtk.tree as tree
 import pida.pidagtk.icons as icons
 import pida.core.service as service
 import pida.core.actions as actions
+from pida.model import attrtypes as types
 from pida.utils.kiwiutils import gsignal
 import pida.pidagtk.contentview as contentview
 
@@ -152,13 +153,18 @@ import pida.utils.vc as vc
 
 class StatusLister(object):
 
-    def __init__(self, view, counter, counter_check, show_hidden):
+    def __init__(self, view, counter, counter_check, show_hidden,
+                       hidden_globs):
         self.counter = counter
         self._view = view
         self._results = {}
         self._no_statuses = False
         self.show_hidden = show_hidden
         self.check_counter = counter_check
+        # this is one of the leetest things I ever did
+        p = glob.re.compile('|'.join(map(glob.fnmatch.translate, hidden_globs)))
+        self.hidden_globs = p
+
     
     def add_item(self, path, status):
         if not self.check_counter(self.counter):
@@ -198,8 +204,7 @@ class StatusLister(object):
     
     def plain_ls(self, directory):
         for name in os.listdir(directory):
-            if not self.show_hidden and name.startswith('.'):
-                continue
+            if self.is_hidden(name): continue
             self.add_item(os.path.join(directory, name), STATE_NORMAL)
     
     def status_ls(self, directory):
@@ -209,8 +214,7 @@ class StatusLister(object):
         else:
             statuses = vcdir.listdir(directory)
             for status in statuses:
-                if not self.show_hidden and status.name.startswith('.'):
-                    continue
+                if self.is_hidden(status.name): continue
                 item = self.add_item(status.path, status.state)
                 if item:
                     item.statused = True
@@ -238,6 +242,14 @@ class StatusLister(object):
             self._view.add_item(item)
         gobject.idle_add(_add_item)
 
+    def is_hidden(self, name):
+        if self.show_hidden:
+            return False
+        else:
+            if name.startswith('.'):
+                return True
+            else:
+                return self.hidden_globs.match(name)
 
 class FileBrowser(contentview.content_view):
 
@@ -325,7 +337,7 @@ class FileBrowser(contentview.content_view):
         self.service.events.emit('directory_changed', directory=directory)
         self.counter = self.counter + 1
         lister = StatusLister(self._view, self.counter, self.check_counter,
-                              self.get_show_hidden())
+                              self.get_show_hidden(), self.get_hidden_mask())
         self._view.clear()
         self.cwd = directory
         lister.list(directory)
@@ -368,6 +380,11 @@ class FileBrowser(contentview.content_view):
     
     def get_show_hidden(self):
         return self._hidden_act.get_active()
+    
+    def get_hidden_mask(self):
+        mask = self.service.opts.hidden__mask
+        globs = [s for s in mask.split(';') if s]
+        return globs
 
     def cb_act_new_file(self, action):
         self.service.boss.call_command('newfile', 'create_interactive',
@@ -413,8 +430,20 @@ class FileBrowser(contentview.content_view):
 
 gobject.type_register(FileBrowser)
 
+class FileManagerOptions:
+
+    class hidden:
+        """Options relating to hidden files"""
+        label = 'Hidden Files'
+        class mask:
+            label = 'Hidden file mask (; separated)'
+            rtype = types.string
+            default = ''
+    __markup__ = lambda self: 'File Browser'
 
 class file_manager(service.service):
+
+    config_definition = FileManagerOptions
 
     class FileBrowser(defs.View):
         view_type = FileBrowser
