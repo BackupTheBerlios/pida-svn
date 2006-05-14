@@ -76,8 +76,8 @@ class Pscyntilla(gobject.GObject):
             self._sc.set_caret_line_back(self._sc_colour(colour))
 
     def set_edge_column_visible(self, visible, size, color):
-        # XXX: visible is not used, why?
-        self._sc.set_edge_mode(scintilla.EDGE_LINE)
+        self._sc.set_edge_mode((visible and scintilla.EDGE_LINE) or 
+            scintilla.EDGE_NONE)
         self._sc.set_edge_column(size)
         self._sc.set_edge_colour(self._sc_colour(color))
 
