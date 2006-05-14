@@ -51,15 +51,18 @@ class SessionConfig:
         """Session management."""
         __order__ = ['automatically_load_last_session',
                      'start_with_new_file']
+        label = 'Sessions'
         class automatically_load_last_session(defs.option):
             """Whether the session will be reloaded from closing PIDA."""
             rtype = types.boolean
             default = True
+            label = 'Automatically load last session'
         class start_with_new_file(defs.option):
             """Whether a new file will be opened on startup if none other is
                specified on the command-line on by a session."""
             rtype = types.boolean
             default = True
+            label = 'Start PIDA with a new file'
     
     def __markup__(self):
         return 'Session Manager'
