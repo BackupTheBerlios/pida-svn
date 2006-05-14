@@ -187,8 +187,8 @@ class ProjectManager(service.service):
         self.act_watch = self.proj_group.create_single_observer(
             views.ActionSensitivityObserver)
         act = self.action_group.get_action('projectmanager+execute_project')
+        act.set_sensitive(False)
         self.act_watch.add_widget(act, 'execution__uses')
-        #act.set_sensitive(self.__current_project.execution__uses)
 
     def __init_project_toolbar(self):
         tb = self.boss.call_command('window', 'get_ui_widget',
