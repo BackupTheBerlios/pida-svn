@@ -36,8 +36,6 @@ defs = service.definitions
 
 from pida.model import attrtypes as types
 
-import pango
-
 class terminal_view(contentview.content_view):
 
     SHORT_TITLE = 'Terminal'
@@ -124,6 +122,20 @@ class terminal_manager(service.service):
     def init(self):
         self.views = []
 
+    def bind(self):
+        fmanager = self.boss.get_service("filemanager")
+        self._termact = gtk.Action('Terminal', 'Terminal',
+                            'Open a terminal in this directory',
+                            'gtk-terminal')
+        self._termact.connect('activate', self.on_act_terminal)
+
+        fmanager.cmd_register_toolbar_action(self._termact)
+        
+
+    def on_act_terminal(self, action):
+        cwd = self.boss.call_command('filemanager', 'get_current_directory')
+        self.cmd_execute_shell(kwdict={'directory': cwd})
+        
     def cb_fonts_and_colours__foreground_colour(self, val):
         self._update_view_config()
 

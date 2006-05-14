@@ -33,19 +33,18 @@ an additional context menu for various actions that can be performed on the
 selected file system item. This context menu contains the "Open With" menu.
 """
 
-import os, glob
+import os
+import fnmatch
+import re
 import mimetypes
 import threading
 import gtk
 import gobject
 
-import pida.pidagtk.tree as tree
-import pida.pidagtk.icons as icons
-import pida.core.service as service
-import pida.core.actions as actions
+from pida.pidagtk import icons, tree, contentview
+from pida.core import service, actions, plugins
 from pida.model import attrtypes as types
 from pida.utils.kiwiutils import gsignal
-import pida.pidagtk.contentview as contentview
 
 mime_icons = {}
 dir_icon = icons.icons.get('gtk-directory')
@@ -150,7 +149,6 @@ class FileTree(tree.IconTree):
 
 import pida.utils.vc as vc
 
-
 class StatusLister(object):
 
     def __init__(self, view, counter, counter_check, show_hidden,
@@ -162,9 +160,12 @@ class StatusLister(object):
         self.show_hidden = show_hidden
         self.check_counter = counter_check
         # this is one of the leetest things I ever did
-        if hidden_globs:
-            p = glob.re.compile('|'.join(map(glob.fnmatch.translate, hidden_globs)))
-            self.hidden_globs = p
+        if len(hidden_globs) > 0:
+            # convert globs to regular expressions
+            entries = [fnmatch.translate(entry) for entry in hidden_globs]
+            # Join the list of regular expressions into a single one
+            pattern = '|'.join(entries)
+            self.hidden_globs = re.compile(pattern)
         else:
             self.hidden_globs = None
 
@@ -216,6 +217,7 @@ class StatusLister(object):
             self._no_statuses = True
         else:
             statuses = vcdir.listdir(directory)
+
             for status in statuses:
                 if self.is_hidden(status.name): continue
                 item = self.add_item(status.path, status.state)
@@ -268,14 +270,17 @@ class FileBrowser(contentview.content_view):
     HAS_TITLE = False
     HAS_CONTROL_BOX = False
 
-    def init(self, scriptpath):
+    def init(self, registry):
         gobject.GObject.__init__(self)
+        self.registry = registry
         self.cwd = None
+        self.counter = 0
+        
+    def create_ui(self):
         self.create_toolbar()
         self.create_actions()
         self.create_tree()
-        self.counter = 0
-
+    
     def create_toolbar(self):
         self._toolbar= gtk.Toolbar()
         self.widget.pack_start(self._toolbar, expand=False)
@@ -284,6 +289,7 @@ class FileBrowser(contentview.content_view):
 
     def create_actions(self):
         self._tips = gtk.Tooltips()
+        
         self._homeact = gtk.Action('Home', 'Home',
                                    'Browse the project root', 'gtk-project')
         self.add_action_to_toolbar(self._homeact)
@@ -308,16 +314,16 @@ class FileBrowser(contentview.content_view):
                             'Create a new directory here', 'gtk-directory')
         self.add_action_to_toolbar(self._newdiract)
         self._newdiract.connect('activate', self.cb_act_new_dir)
-        self._termact = gtk.Action('Terminal', 'Terminal',
-                            'Open a terminal in this directory',
-                            'gtk-terminal')
-        self.add_action_to_toolbar(self._termact)
-        self._termact.connect('activate', self.cb_act_terminal)
+        
+        # TODO: move this onto 'grepper' service
         self._searchact = gtk.Action('Search', 'Search',
                             'Search files for text',
                             'gtk-searchtool')
         self.add_action_to_toolbar(self._searchact)
         self._searchact.connect('activate', self.cb_act_search)
+
+        for action in self.registry.get_features("toolbar_action"):
+            self.add_action_to_toolbar(action)
 
     def add_action_to_toolbar(self, action):
         toolitem = action.create_tool_item()
@@ -459,9 +465,14 @@ class file_manager(service.service):
 
     def init(self):
         self.__content = None
-        self.plugin_view = self.create_view('FileBrowser', scriptpath=None)
+        self.registry = plugins.Registry()
+        self.plugin_view = self.create_view('FileBrowser', registry=self.registry)
         self.plugin_view.connect('file-activated',
                                   self.cb_single_view_file_activated)
+
+
+    def reset(self):
+        self.plugin_view.create_ui()
 
     @actions.action(
     default_accel='<Control><Shift>f',
@@ -474,6 +485,9 @@ class file_manager(service.service):
         """Open the current file in the editor."""
         self.boss.call_command('buffermanager', 'open_file',
                                filename=self.plugin_view.selected)
+
+    def cmd_register_toolbar_action(self, action):
+        self.registry.register_plugin(instance=action, features=("toolbar_action",))
 
     def cmd_browse(self, directory=None):
         if directory is None:
