@@ -131,13 +131,17 @@ class pyflaker(service.service):
         filename = document.filename
         try:
             tree = compiler.parse(code_string)
-        except (SyntaxError, IndentationError):
+        except (SyntaxError, IndentationError), e:
+            msg = e
+            msg.name = e.__class__.__name__
             value = sys.exc_info()[1]
             (lineno, offset, line) = value[1][1:]
             if line.endswith("\n"):
                 line = line[:-1]
-            print >> sys.stderr, line
-            print >> sys.stderr, " " * (offset-2), "^"
+            msg.lineno = lineno
+            msg.message_args = (line,)
+            msg.message = '<tt>%%s</tt>\n<tt>%s^</tt>' % (' ' * (offset - 2))
+            return [msg]
         else:
             w = pyflakes.Checker(tree, filename)
             return w.messages
