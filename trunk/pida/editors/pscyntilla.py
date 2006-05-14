@@ -76,7 +76,7 @@ from gtk import gdk
 import gtk
 
 from pida.pidagtk import contentview
-from pida.core import actions
+from pida.core import actions, errors
 from pida.core import service
 from pida.utils.pscyntilla import Pscyntilla
 from pida.model import attrtypes as types
@@ -377,7 +377,11 @@ class ScintillaEditor(service.service):
 
     def cmd_edit(self, document=None):
         if document.unique_id not in self._views:
-            self._load_document(document)
+            try:
+                self._load_document(document)
+            except TypeError:
+                raise errors.BadDocument('Pscyntilla cannot open this file. '
+                                         'Is it binary?')
         self._view_document(document)
 
     def cmd_save(self):

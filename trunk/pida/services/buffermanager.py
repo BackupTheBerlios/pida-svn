@@ -26,11 +26,12 @@
 import gtk
 import gobject
 
-from pida.core import actions
+from pida.core import actions, errors
 from pida.pidagtk.tree import Tree
 from pida.pidagtk.contentview import content_view
 from pida.core.service import service, definitions as defs
 
+from rat import hig
 
 class BufferTree(Tree):
     """Widget for the buffer list"""
@@ -199,14 +200,19 @@ class Buffermanager(service):
             if document is None:
                 try:
                     document = self.__open_file(filename)
-                except:
+                except errors.BadDocument, e:
+                    document = None
+                    if not quiet:
+                        hig.error("Error opening file",
+                                   e.args[0], run = True,
+                                   title='Error opening file')
+                except Exception:
                     if not quiet:
                         raise
-                    else:
-                        document = None
                 if document is not None:
                     self.__add_document(document)
-            self.__view_document(document)
+            if document is not None:
+                self.__view_document(document)
 
     def cmd_new_file(self):
         document = self.__new_file()
