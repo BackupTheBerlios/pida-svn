@@ -386,6 +386,9 @@ class ScintillaEditor(service.service):
 
     def cmd_save(self):
         self._current.editor.save()
+    
+    def cmd_revert(self):
+        self._current.editor.revert()
    
     def cmd_save_as(self, filename):
         self._current.editor.filename = filename

@@ -184,6 +184,11 @@ class Pscyntilla(gobject.GObject):
 
     def redo(self):
         self._sc.redo()
+    
+    def revert(self):
+        if self.filename is not None:
+            self._sc.clear_all()
+            self.load_file(self.filename)
 
     def can_undo(self):
         return self._sc.can_undo()

@@ -98,7 +98,8 @@ class document_type_handler(service.service):
             """Save As the document"""
             self.service.boss.call_command('buffermanager', 'save_as')
 
-        @actions.action(stock_id=gtk.STOCK_REVERT_TO_SAVED, label=None)
+        @actions.action(stock_id=gtk.STOCK_REVERT_TO_SAVED,
+            label='Reload saved')
         def act_revert(self, action):
             """Reverts a document"""
             self.service.boss.call_command('editormanager', 'revert')
