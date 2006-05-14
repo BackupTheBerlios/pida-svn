@@ -38,7 +38,7 @@ import pida.core.registry as registry
 import pida.core.service as service
 import pida.core.actions as actions
 
-types = service.types
+from pida.model import attrtypes as types
 defs = service.definitions
 
 
@@ -68,15 +68,24 @@ class paste_editor_view(gladeview.glade_view):
         self.__title_entry = self.get_widget('post_title_entry')
         self.__nickname_entry = self.get_widget('post_name_entry')
         self.__title_entry.set_text('') # TODO: Use options
-        self.__nickname_entry.set_text('') # TODO: Use options
+        self.__nickname_entry.set_text(self.service.opts.default__name) # TODO: Use options
         self.__text_entry = self.get_widget('post_text_entry')
         self.grab_focus = self.__text_entry.grab_focus
+        pbin = pastebin.BINS['rafb.net']()
+        self.set_paste_bin(pbin)
 
     def set_paste_bin(self, pbin):
         '''Sets a pastebin to the view in order to get informations'''
         self.__pastebin = pbin
         self.__pack_combos()
         self.__pack_inputs()
+        syntopt = self.service.opts.default__language
+        if syntopt:
+            for i, row in enumerate(self._syntax_combo.get_model()):
+                if row[0] == syntopt:
+                    self._syntax_combo.set_active(i)
+                    break
+        
 
     def set_name(self, name):
         self.__nickname_entry.set_text(name)
@@ -99,6 +108,7 @@ class paste_editor_view(gladeview.glade_view):
 
             for option in self.__pastebin.OPTIONS.keys():
                 # XXX: this is bad for translators
+                # and my head
                 label = gtk.Label(option + ":")
                 label.set_alignment(0.0, 0.5)
                 label.show()
@@ -117,6 +127,9 @@ class paste_editor_view(gladeview.glade_view):
                 span.pack_start(opt, False, False)
                 table.attach(span, 1, 2, row, row + 1, gtk.FILL, 0)
                 row += 1
+                # horrible hack, sorry
+                if option == 'Syntax':
+                    self._syntax_combo = opt
             
         if row == 0:
             lbl = gtk.Label()
@@ -162,7 +175,12 @@ class paste_editor_view(gladeview.glade_view):
     def on_post_button__clicked(self,but):
         '''Post the paste'''
         self.__pastebin.set_title(self.__title_entry.get_text())
-        self.__pastebin.set_name(self.__nickname_entry.get_text())
+        name = self.__nickname_entry.get_text()
+        self.service.opts.default__name = name
+        lang = self._syntax_combo.get_active_text()
+        self.service.opts.default__language = lang
+
+        self.__pastebin.set_name(name)
         self.__pastebin.set_pass('') ## TODO: USE OPTIONS
         self.__pastebin.set_text(self.__text_entry.get_buffer().get_text(
                     self.__text_entry.get_buffer().get_start_iter(),
@@ -335,10 +353,27 @@ class paste_history_view(contentview.content_view):
 
     def stop_pulse(self):
         self.__pulse_bar.stop_pulse()
-        
+
+class PasteConfig:
+    class default:
+        """Default options used when pasting"""
+        label = 'Default Options'
+        class name:
+            """The default name used"""
+            rtype = types.string
+            default = 'PIDA'
+            label = 'Name'
+        class language:
+            """The default language for syntax highlighting"""
+            rtype = types.string
+            default = 'Python'
+            label = 'Language'
+    __markup__ = lambda self: 'Pastebin Integration'
 
 class paste_manager(service.service):
     """Service that manages the pastes and the pastebins"""
+
+    config_definition = PasteConfig
 
     class PasteHistory(defs.View):
         view_type = paste_history_view

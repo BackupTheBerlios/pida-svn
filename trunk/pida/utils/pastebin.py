@@ -413,4 +413,6 @@ BINS = {'#pida pastebin':pida_paste_bin,
         'rafb.net':rafb_paste_bin,
         'lisp.org paste':lisp_paste_bin,
         'husk.org paste':husk_paste_bin,}
+# actually...
+BINS = {'rafb.net':rafb_paste_bin}
 
