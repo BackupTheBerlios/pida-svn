@@ -21,20 +21,14 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-import threading
-
-import gobject
-import pida.core.actions as actions
-
 # pida core import(s)
-from pida.core import service
+from pida.core import service, actions
 
 # pida gtk import(s)
-import pida.pidagtk.contentview as contentview
-import pida.pidagtk.tree as tree
+from pida.pidagtk import contentview, tree
 
 # pida utils import(s)
-import pida.utils.pythonparser as pythonparser
+from pida.utils import pythonparser, gthreads
 
 if not pythonparser.is_bike_installed():
     raise Exception('Bike is not installed')
@@ -99,7 +93,7 @@ class PythonBrowser(service.service):
 
     def init(self):
         self.__view = None
-        self.counter = 0
+        self.parse_node = gthreads.AsyncTask(self._parse_node, self._update_node)
         self._currentdocument = None
 
 
@@ -112,14 +106,12 @@ class PythonBrowser(service.service):
             'pythonbrowser+python_browser')
         self._visact.set_active(True)
 
-    def _update_node(self, args):
-        counter, root_node = args
-        # Here we test if the thread id is the one we're expecting
-        # if it's not just discard it silentely
-        if self.counter != counter:
-            return
-            
-        self.__view.set_source_nodes(root_node)
+    def _parse_node(self, document):
+        return (pythonparser.get_nodes_from_string(document.string),)
+        
+    def _update_node(self, root_node):
+        if self.__view is not None:
+            self.__view.set_source_nodes(root_node)
     
     def load_document(self, document):
         self._currentdocument = document
@@ -127,21 +119,11 @@ class PythonBrowser(service.service):
             return
             
         self.__document = document
+        
         if document.is_new:
             return
         
-        # This counter is used so that no out-of sync trees get feed into
-        # the main loop. This way if the finished thread is the one we're
-        # waiting for.
-        self.counter += 1
-        
-        def new_thread(counter):
-            root_node = pythonparser.get_nodes_from_string(document.string)
-            # important: ui code must be done inside main loop
-            if root_node is not None:
-                gobject.idle_add(self._update_node, (counter, root_node))
-            
-        threading.Thread(target=new_thread, args=(self.counter,)).start()
+        self.parse_node.start(document)
 
     @actions.action(type=actions.TYPE_TOGGLE,
                     stock_id='gtk-library',

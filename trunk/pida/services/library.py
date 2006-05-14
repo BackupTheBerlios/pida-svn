@@ -25,24 +25,22 @@ import os
 import gzip
 import tempfile
 import threading
-
-import xml.sax
-import xml.dom.minidom as minidom
-xml.sax.handler.feature_external_pes = False
-
 import gtk
 import gobject
+import xml.sax
+import xml.dom.minidom as minidom
 
-import pida.core.service as service
-import pida.core.actions as actions
-import pida.pidagtk.contentview as contentview
-import pida.pidagtk.tree as tree
+xml.sax.handler.feature_external_pes = False
+
+from pida.core import service, actions
+from pida.pidagtk import tree, contentview
+from pida.utils.gthreads import GeneratorTask
+from pida.model import attrtypes as types
 
 defs = service.definitions
 
-from pida.model import attrtypes as types
 
-class lib_list(tree.Tree):
+class LibraryList(tree.Tree):
 
     SORT_LIST = ['title']
 
@@ -59,13 +57,13 @@ class bookmark_view(contentview.content_view):
         pane = gtk.Notebook()
         self.widget.pack_start(pane)
         pane.set_tab_pos(gtk.POS_TOP)
-        self.__list = lib_list()
+        self.list = LibraryList()
         label = gtk.Label('Books')
         #label.set_angle(90)
-        pane.append_page(self.__list, tab_label=label)
-        self.__list.connect('clicked', self.cb_booklist_clicked)
-        self.__list.connect('double-clicked', self.cb_contents_clicked)
-        self.__list.set_property('markup_format_string',
+        pane.append_page(self.list, tab_label=label)
+        self.list.connect('clicked', self.cb_booklist_clicked)
+        self.list.connect('double-clicked', self.cb_contents_clicked)
+        self.list.set_property('markup_format_string',
                                  '%(title)s')
         self.__contents = tree.Tree()
         label = gtk.Label('Contents')
@@ -76,26 +74,23 @@ class bookmark_view(contentview.content_view):
         self.__contents.connect('double-clicked', self.cb_contents_clicked)
         self.long_title = 'Loading books...'
         self.paned = pane
+        add_item = self.list.add_item
+        self._load_books_task = GeneratorTask(self._load_books, add_item)
 
     def load_books(self, books):
-        threading.Thread(target=self._load_books, args=(books,)).start()
+        self._load_books_task.start(books)
         
     def _load_books(self, books):
-        for book in books:
-            self.book_found(book)
-        self.books_done()
-
-    def book_found(self, item):
-        if item.bookmarks is None:
-            item.load()
-        if item.bookmarks is not None:
-            gobject.idle_add(self.__add_list_item, item)
-
-    def __add_list_item(self, item):
-        self.__list.add_item(item)
-        return False
-
-    def books_done(self):
+        for item in books:
+            if item.bookmarks is None:
+                item.load()
+                
+            if item.bookmarks is not None:
+                yield item
+        
+        gobject.idle_add(self.on_finished)
+    
+    def on_finished(self):
         self.long_title = 'Documentation library'
 
     def set_contents(self, book):
