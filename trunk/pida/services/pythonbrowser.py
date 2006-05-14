@@ -100,6 +100,8 @@ class PythonBrowser(service.service):
     def init(self):
         self.__view = None
         self.counter = 0
+        self._currentdocument = None
+
 
     def get_plugin_view(self):
         return self.__view
@@ -120,6 +122,7 @@ class PythonBrowser(service.service):
         self.__view.set_source_nodes(root_node)
     
     def load_document(self, document):
+        self._currentdocument = document
         if self.__view is None:
             return
             
@@ -153,6 +156,8 @@ class PythonBrowser(service.service):
                 self.__view = self.create_view('PythonBrowser')
                 self.show_view(view=self.__view)
             self.__view.raise_page()
+            if self._currentdocument is not None:
+                self.load_document(self._currentdocument)
         else:
             if self.__view is not None:
                 self.close_view(self.__view)

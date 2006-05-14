@@ -109,6 +109,7 @@ class todo(service.service):
     def init(self):
         self._view = None
         self.counter = 0
+        self._currentdocument = None
 
     display_name = 'TODO List'
 
@@ -123,6 +124,7 @@ class todo(service.service):
         self._view.set_messages(messages)
 
     def load_document(self, document):
+        self._currentdocument = document
         self.__document = document
         if document.is_new:
             return
@@ -161,6 +163,8 @@ class todo(service.service):
                 self._view = self.create_view('TODO')
                 self.show_view(view=self._view)
             self._view.raise_page()
+            if self._currentdocument is not None:
+                self.load_document(self._currentdocument)
         else:
             if self._view is not None:
                 self.close_view(self._view)
