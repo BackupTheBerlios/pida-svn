@@ -35,17 +35,21 @@ class BugReporter(service.service):
 
     def cmd_view(self):
         opts, args = lplib.fake_opts(product='pida')
-        dlg = gtkgui.ReportWindow(opts)
-        def on_response(dlg, response):
-            def on_finished(results):
-                dlg.hide()
-                gobject.timeout_add(1000, dlg.destroy)
-            if response == gtk.RESPONSE_ACCEPT:
-                dlg._reporter.report(on_finished)  
-            else:
-                on_finished(None)
-        dlg.connect('response', on_response)    
-        dlg.show_all()
+        #dlg = gtkgui.ReportWindow(opts)
+        #def on_response(dlg, response):
+        #    def on_finished(results):
+        #        dlg.hide()
+        #        gobject.timeout_add(1000, dlg.destroy)
+        #    print response == gtk.RESPONSE_ACCEPT
+        #    print response == gtk.RESPONSE_OK
+        #    if response == gtk.RESPONSE_ACCEPT:
+        #        dlg._reporter.report(on_finished)  
+        #    else:
+        #        on_finished(None)
+        #dlg.connect('response', on_response)    
+        #dlg.show_all()
+        dlg = gtkgui.GuiReport(opts, do_quit=False)
+        dlg.start()
     
     def act_report_bug(self, action):
         self.call('view')

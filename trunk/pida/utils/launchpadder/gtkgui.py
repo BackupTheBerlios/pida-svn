@@ -149,8 +149,9 @@ class ReportWindow(gtk.Dialog):
 import rat.hig
 
 class GuiReport:
-    def __init__(self, opts):
+    def __init__(self, opts, do_quit=True):
         self.opts = opts
+        self.do_quit = do_quit
     
     def set_command_sensitive(self, sensitive):
         self.w.set_response_sensitive(gtk.RESPONSE_OK, sensitive)
@@ -171,16 +172,18 @@ class GuiReport:
                                 flags=gtk.DIALOG_DESTROY_WITH_PARENT)
             dlg.show()
             dlg.connect("response", self.on_err_response)
-            
-            #self.w.show_all()
-        else:
-            gtk.main_quit()
+        self.stop()
     
     def on_report_window_response(self, dlg, response):
         if response == gtk.RESPONSE_OK:
             self.set_command_sensitive(False)
             dlg._reporter.report(self.on_report_finished)
         else:
+            self.stop()
+    
+    def stop(self):
+        self.w.destroy()
+        if self.do_quit:
             gtk.main_quit()
 
     def start(self):
