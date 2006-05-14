@@ -439,7 +439,7 @@ class Registry:
             del self.ext_points[holder_id]
         
         for holder_id, ext_pnt in entry.extends.iteritems():
-            self.ext_points[holder_id].remove(ext_point, plugin)
+            self.ext_points[holder_id].remove(ext_pnt, plugin)
 
         del self.plugins[plugin]
         
