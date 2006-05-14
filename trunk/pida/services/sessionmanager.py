@@ -40,7 +40,7 @@ def get_documents_from_file(filename):
 
 def save_documents_to_file(documents, filename):
     f = open(filename, 'w')
-    for doc in documents.values():
+    for doc in documents:
         if not doc.is_new:
             f.write('%s\n' % doc.filename)
     f.close()
@@ -132,8 +132,10 @@ class SessionManager(service.service):
         fdialog.run()
 
     def cmd_save_session(self, session_filename):
+        # a copy to sort
         docs = self.boss.call_command('buffermanager',
-                                      'get_documents')
+                                      'get_documents').values()
+        docs.sort(lambda x, y: cmp(x.unique_id, y.unique_id))
         save_documents_to_file(docs, session_filename)
 
     def cmd_load_session(self, session_filename):
