@@ -222,7 +222,6 @@ class ScintillaConf:
             rtype = types.intrange(1, 16, 1)
             default = 4
             label = 'Tab width'
-            sensitive_attr = 'indenting__use_tabs'
         
         class space_indent_width(defs.option):
             """With of space indents, if not using tabs."""
