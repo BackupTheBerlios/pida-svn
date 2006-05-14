@@ -130,7 +130,7 @@ class DebugWindow(gtk.Dialog):
             st = ('PIDA tried to find a service that is not loaded'
                   '. Most likely this is due to a missing dependency'
                   '. Please check the file:\n\n'
-                  '<tt>~/.pida/logs/pida.log</tt>')
+                  '<tt>~/.pida/log/pida.log</tt>')
             if svcname in ['window', 'buffermanager', 'contexts',
                          'editormanager']:
                 st = ('%s\n\n<span color="#c03030">'
