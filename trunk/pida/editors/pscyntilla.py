@@ -231,10 +231,12 @@ class ScintillaConf:
             """The line number margin background colour"""
             rtype = types.color
             default = '#e0e0e0'
+            sensitive_attr = 'line_numbers__show_line_numbers'
         class foreground(defs.option):
             """The line number margin foreground colour"""
             rtype = types.color
             default = '#a0a0a0'
+            sensitive_attr = 'line_numbers__show_line_numbers'
 
     class colors(defs.optiongroup):
         """Options for colours."""
@@ -255,13 +257,16 @@ class ScintillaConf:
             """Marker size"""
             rtype = types.intrange(8, 32, 1)
             default = 14
+            sensitive_attr = 'folding__use_folding'
         class marker_background(defs.option):
             """Marker Background"""
             rtype = types.color
             default = '#e0e0e0'
+            sensitive_attr = 'folding__use_folding'
         class marker_foreground(defs.option):
             rtype = types.color
             default = '#a0a0a0'
+            sensitive_attr = 'folding__use_folding'
 
     class caret(defs.optiongroup):
         """Options relating to the caret and selection"""
@@ -278,6 +283,7 @@ class ScintillaConf:
             """The color that will be used to highligh the current line"""
             default = '#f0f0f0'
             rtype = types.color
+            sensitive_attr = 'caret__highlight_current_line'
         class selection_color(defs.option):
             """The background colour of the selection."""
             default = '#fefe90'
@@ -397,6 +403,23 @@ class ScintillaEditor(service.service):
         self.foreach_editor.set_linenumber_margin_colours(
             background=color, foreground=fg)
     
+       # folding options
+    def cb_folding__use_folding(self, use):
+        width = self.opts.folding__marker_size
+        self.foreach_editor.use_folding(use, width)
+    
+    def cb_folding__marker_size(self, size):
+        use = self.opts.folding__use_folding
+        self.foreach_editor.use_folding(use, width=size)
+        
+    def cb_folding__marker_background(self, back):
+        fore = self.opts.folding__marker_foreground
+        self.foreach_editor.set_foldmargin_colours(back=back, fore=fore)
+    
+    def cb_folding__marker_foreground(self, fore):
+        back = self.opts.folding__marker_background
+        self.foreach_editor.set_foldmargin_colours(back=back, fore=fore)
+        
     def cmd_start(self):
         self.get_service('editormanager').events.emit('started')
 
