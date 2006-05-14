@@ -357,7 +357,7 @@ class paste_history_view(contentview.content_view):
 class PasteConfig:
     class default:
         """Default options used when pasting"""
-        label = 'Default Options'
+        label = 'Default Pasting Options'
         class name:
             """The default name used"""
             rtype = types.string
