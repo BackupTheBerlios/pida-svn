@@ -109,31 +109,18 @@ class DebugWindow(gtk.Dialog):
         self._textview.set_cursor_visible(False)
         sw.add(self._textview)
         self._textview.show()
-        
         br = gtk.VBox()
         br.pack_start(sw)
         self.notebook.append_page(br, tab_label=gtk.Label("Exception"))
-        
-        
-        
-        
         self.notebook.show_all()
 
     def show_bug_report(self):
-        opts, args = lplib.fake_opts(product='pida')
-        dlg = gtkgui.ReportWindow(opts)
-        def on_response(dlg, response):
-            def on_finished(results):
-                dlg.hide()
-                gobject.timeout_add(1000, dlg.destroy)
-                gobject.timeout_add(1000, self.destroy)
-            if response == gtk.RESPONSE_ACCEPT:
-                dlg._reporter.report(on_finished)  
-            else:
-                on_finished(None)
-        dlg.connect('response', on_response)
-        self.hide() 
-        gobject.idle_add(dlg.show_all)
+        tbtext = self._buffer.get_text(self._buffer.get_start_iter(),
+                                       self._buffer.get_end_iter())
+        opts, args = lplib.fake_opts(product='pida', comment=tbtext)
+        dlg = gtkgui.GuiReport(opts, do_quit=False)
+        self.destroy()
+        dlg.start()
         
 
     def show_exception(self, exctype, value, tb):
