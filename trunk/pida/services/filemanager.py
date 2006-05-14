@@ -250,13 +250,14 @@ class StatusLister(object):
     def is_hidden(self, name):
         if self.show_hidden:
             return False
-        else:
-            if name.startswith('.'):
-                return True
-            elif self.hidden_globs is None:
-                return False
-            else:
-                return self.hidden_globs.match(name)
+        
+        elif name.startswith('.'):
+            return True
+        
+        elif self.hidden_globs is not None:
+            return self.hidden_globs.match(name)
+        
+        return False
 
 class FileBrowser(contentview.content_view):
 
