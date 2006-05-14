@@ -23,7 +23,7 @@
 
 import os
 
-import gtk
+import gtk, gobject
 
 from rat import shiftpaned
 
@@ -126,6 +126,8 @@ class WindowManager(service.service):
         self._create_window()
         self.toolbar.set_style(gtk.TOOLBAR_ICONS)
         self.opts.__model_notify__()
+        self.action_group.get_action('window+toggle_sidebar').set_active(True)
+        self.action_group.get_action('window+toggle_viewpan').set_active(True)
 
     toolbar = None
     menubar = None
@@ -158,7 +160,8 @@ class WindowManager(service.service):
         if act.get_active() != val:
             act.set_active(val)
 
-    def cb_toolbar_and_menubar__sidebar_visible(self, val):
+    # not used, left for tiago
+    def _cb_toolbar_and_menubar__sidebar_visible(self, val):
         if self.menubar is None: return
         if val:
             self.show_sidebar()
@@ -168,7 +171,8 @@ class WindowManager(service.service):
         if act.get_active() != val:
             act.set_active(val)
 
-    def cb_toolbar_and_menubar__viewpan_visible(self, val):
+    # not used, left for tiago
+    def _cb_toolbar_and_menubar__viewpan_visible(self, val):
         if self.menubar is None: return
         if val:
             self.show_viewpan()
@@ -177,6 +181,12 @@ class WindowManager(service.service):
         act = self.action_group.get_action('window+toggle_viewpan')
         if act.get_active() != val:
             act.set_active(val)
+
+    def reset_gui(self):
+        def set_gui():
+            self.cb_toolbar_and_menubar__sidebar_visible(
+                self.opts.toolbar_and_menubar__sidebar_visible)
+        gobject.idle_add(set_gui)
 
     def stop(self):
         if self.opts.window_size__save_on_shutdown:
@@ -310,7 +320,11 @@ class WindowManager(service.service):
         label='Sidebar'
     )
     def act_toggle_sidebar(self, action):
-        self.opts.toolbar_and_menubar__sidebar_visible = action.get_active()
+        if action.get_active():
+            self.show_sidebar()
+        else:
+            self.hide_sidebar()
+        #self.opts.toolbar_and_menubar__sidebar_visible = action.get_active()
 
     @actions.action(
         type=actions.TYPE_TOGGLE,
@@ -318,7 +332,11 @@ class WindowManager(service.service):
         label='Pane Viewer'
     )
     def act_toggle_viewpan(self, action):
-        self.opts.toolbar_and_menubar__viewpan_visible = action.get_active()
+        if action.get_active():
+            self.show_viewpan()
+        else:
+            self.hide_viewpan()
+        #self.opts.toolbar_and_menubar__viewpan_visible = action.get_active()
 
 
     def _bind_views(self):
