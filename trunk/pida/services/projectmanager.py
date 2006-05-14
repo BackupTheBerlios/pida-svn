@@ -392,6 +392,7 @@ class ProjectManager(service.service):
     @actions.action(stock_id='gtk-project',
                     default_accel='<Shift><Control>x')
     def act_execute_project(self, action):
+        if self.__current_project is None: return
         com = self.__current_project.execution__command
         """Execute the current project."""
         shell_cmd = 'sh'
