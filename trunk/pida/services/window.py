@@ -49,18 +49,22 @@ class WindowConfig:
             """Whether the sidebar will appear on the right."""
             default = False
             rtype = types.boolean
+            label = 'Sidebar on right'
         class vertical_sidebar_split(defs.option):
             """Whether the main sidebar componens will be split by a vertical separator"""
             rtype = types.boolean
             default = False
+            label = 'Vertical sidebar split'
         class small_toolbar(defs.option):
             """Whether the toolbar will be displayed with small buttons."""
             rtype = types.boolean
             default = False
+            label = 'Small toolbar'
         class sidebar_width(defs.option):
             """The width of the sidebar."""
             default = 200
             rtype = types.intrange(75, 1800, 25)
+            hidden = True
 
     class window_size(defs.optiongroup):
         """The starting size of the pida window."""
@@ -70,36 +74,44 @@ class WindowConfig:
             """The starting width in pixels."""
             default = 800
             rtype = types.intrange(0, 2800, 25)
+            label = 'Width'
         class height(defs.option):
             """The starting height in pixels."""
             default = 600
             rtype = types.intrange(0, 2800, 25)
+            label = 'Height'
         class save_on_shutdown(defs.option):
             """Whether the size will be saved on shutdown."""
             default = True
             rtype = types.boolean
+            label = 'Save size across sessions'
 
     class toolbar_and_menubar(defs.optiongroup):
         """Options relating to the toolbar and main menu bar."""
         __order__ = ['toolbar_visible', 'menubar_visible', 'sidebar_visible',
                      'viewpan_visible']
+        label = 'Toolbar and menu bar'
         class toolbar_visible(defs.option):
             """Whether the toolbar will start visible."""
             rtype = types.boolean
             default = True
+            label = 'Toolbar visible'
         class menubar_visible(defs.option):
             """Whether the menubar will start visible."""
             rtype = types.boolean
             default = True
+            label = 'Menubar visible'
         class sidebar_visible(defs.option):
             """Whether the sidebar will start visible."""
             rtype = types.boolean
             default = True
+            hidden = True
         class viewpan_visible(defs.option):
             """Whether the view pan will be visible."""
             rtype = types.boolean
             default = True
             label = 'Show View Pane'
+            hidden = True
 
     def __markup__(self):
         return 'Window and view'

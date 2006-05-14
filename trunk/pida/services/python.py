@@ -36,16 +36,19 @@ from pida.model import attrtypes as types
 class PythonConfig:
     __order__ = ['python_execution']
     class python_execution(defs.optiongroup):
+        label = 'Python Execution'
         """Options pertaining to python execution"""
         __order__ = ['python_executable', 'python_shell']
         class python_executable(defs.option):
             """The command to call when executing python scripts."""
             rtype = types.string
             default = 'python'
+            label = 'Python executable'
         class python_shell(defs.option):
             """The command to call when executing a python shell."""
             rtype = types.string
             default = 'python'
+            label = 'Python shell executable'
 
     __markup__ = lambda self: 'Python'
 
