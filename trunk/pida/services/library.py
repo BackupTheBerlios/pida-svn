@@ -46,7 +46,6 @@ class lib_list(tree.Tree):
 
     SORT_LIST = ['title']
 
-
 class bookmark_view(contentview.content_view):
 
     ICON_NAME = 'library'
@@ -78,8 +77,19 @@ class bookmark_view(contentview.content_view):
         self.long_title = 'Loading books...'
         self.paned = pane
 
-    def book_found(self, book):
-        gobject.idle_add(self.__add_list_item, book)
+    def load_books(self, books):
+        threading.Thread(target=self._load_books, args=(books,)).start()
+        
+    def _load_books(self, books):
+        for book in books:
+            self.book_found(book)
+        self.books_done()
+
+    def book_found(self, item):
+        if item.bookmarks is None:
+            item.load()
+        if item.bookmarks is not None:
+            gobject.idle_add(self.__add_list_item, item)
 
     def __add_list_item(self, item):
         self.__list.add_item(item)
@@ -144,16 +154,13 @@ class document_library(service.service):
     def init(self):
         self.get_action().set_active(False)
         self.books = []
+        # TODO: we need a way to warn the view we're not done yet
         self.fetch()
         self.__view = None
 
     def fetch_thread(self):
         t = threading.Thread(target=self.fetch_books)
         t.start()
-
-    def fetch_forklet(self):
-        gforklet.fork_generator(self.fetch_books(), [],
-                                self.single_view.book_found)
 
     def fetch(self):
         self.fetch_thread()
@@ -184,9 +191,7 @@ class document_library(service.service):
         """View the documentation library."""
         if action.get_active():
             self.__view = self.create_view('Library')
-            for book in self.books:
-                self.__view.book_found(book)
-            self.__view.books_done()
+            self.__view.load_books(self.books)
             self.show_view(view=self.__view)
         else:
             if self.__view is not None:
@@ -234,6 +239,9 @@ class book(object):
             self.short_load()
         except (OSError, IOError):
             pass
+
+    def has_load(self):
+        return self.bookmarks is not None
 
     def short_load(self):
         config_path = None
