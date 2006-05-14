@@ -136,7 +136,9 @@ class TreeObserver(Tree, BaseMultiModelObserver):
     def add_model(self, item):
         key = hash(item)
         super(TreeObserver, self).add_model(item)
-        return self.add_item(item, key=key)
+        ite = self.add_item(item, key=key)
+        self.set_selected(key)
+        return ite
 
     def remove_model(self, item):
         super(TreeObserver, self).remove_model(item)
@@ -158,6 +160,8 @@ class ComboObserver(gtk.ComboBox, BaseMultiModelObserver):
         BaseMultiModelObserver.__init__(self, model_attributes,
                                         current_callback)
         self._current = None
+        self.set_no_show_all(True)        
+        self.hide()
         self.connect('changed', self.cb_clicked)
 
     def cb_clicked(self, box):
@@ -173,13 +177,15 @@ class ComboObserver(gtk.ComboBox, BaseMultiModelObserver):
 
     def add_model(self, item):
         super(ComboObserver, self).add_model(item)
-        self._store.append([item.general__name, item])
-        #self.__model_notify__(item, 'general__name', item.general__name)
+        ite = self._store.append([item.general__name, item])
+        self.show()
 
     def remove_model(self, item):
         for row in self._store:
             if row[1] is item:
                 self._store.remove(row.iter)
+        if not len(self._store):
+            self.hide()
 
     def __model_notify__(self, model, attr, value):
         if attr == 'general__name':
