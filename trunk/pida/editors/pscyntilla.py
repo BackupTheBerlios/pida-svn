@@ -183,6 +183,7 @@ class ScintillaConf:
 
     class font(defs.optiongroup):
         """The font used in the editor"""
+        label = 'Font'
         class font:
             """The font used in the editor"""
             rtype = types.font
@@ -200,6 +201,7 @@ class ScintillaConf:
         class size:
             rtype = types.readonly
             hidden = True
+            label = 'Size'
             dependents = ("font__font",)
             
             def fget(self):
@@ -207,102 +209,130 @@ class ScintillaConf:
                 
     class indenting(defs.optiongroup):
         """Indenting options"""
-        
+        label = 'Indenting'
+        __order__ = ['use_tabs', 'space_indent_width', 'tab_width']
         class use_tabs(defs.option):
             """Use tabs for indenting"""
             rtype = types.boolean
             default = False
+            label = 'Use tabs'
+        
         class tab_width(defs.option):
             """Width of tabs"""
             rtype = types.intrange(1, 16, 1)
             default = 4
+            label = 'Tab width'
+            sensitive_attr = 'indenting__use_tabs'
+        
         class space_indent_width(defs.option):
             """With of space indents, if not using tabs."""
             rtype = types.intrange(1, 16, 1)
             default = 4
+            label = 'Number of spaces per indent'
+        
     
     class line_numbers(defs.optiongroup):
         """Options relating to line numbers and the line number margin."""
+        label = 'Line numbers'
         class show_line_numbers(defs.option):
             """Whether line numbers will be shown."""
             rtype = types.boolean
             default = True
+            label = 'Show line numbers'
         class background(defs.option):
             """The line number margin background colour"""
             rtype = types.color
             default = '#e0e0e0'
             sensitive_attr = 'line_numbers__show_line_numbers'
+            label = 'Background colour'
         class foreground(defs.option):
             """The line number margin foreground colour"""
             rtype = types.color
             default = '#a0a0a0'
             sensitive_attr = 'line_numbers__show_line_numbers'
+            label = 'Foreground colour'
 
     class colors(defs.optiongroup):
         """Options for colours."""
-        
+        label = 'Colours'
         class use_dark_theme(defs.option):
             """Use a dark scheme"""
             rtype = types.boolean
             default = False
+            label = 'use a dark theme'
+            
 
     class folding(defs.optiongroup):
         """Options relating to code folding"""
-        
+        label = 'Folding'
         class use_folding(defs.option):
             """Use folding"""
             rtype = types.boolean
             default = True
+            label = 'Use Folding'
         class marker_size(defs.option):
             """Marker size"""
             rtype = types.intrange(8, 32, 1)
             default = 14
             sensitive_attr = 'folding__use_folding'
+            label = 'Fold margin width'
         class marker_background(defs.option):
             """Marker Background"""
             rtype = types.color
             default = '#e0e0e0'
             sensitive_attr = 'folding__use_folding'
+            label = 'Fold margin background colour'
         class marker_foreground(defs.option):
             rtype = types.color
             default = '#a0a0a0'
             sensitive_attr = 'folding__use_folding'
+            label = 'Fold margin foreground colour'
 
     class caret(defs.optiongroup):
         """Options relating to the caret and selection"""
-                     
+        label = 'Caret'
         class caret_colour(defs.option):
             """The colour of the caret."""
             default = '#000000'
             rtype = types.color
+            label = 'Caret colour'
         class highlight_current_line(defs.option):
             """Whether the current line will e highlighted"""
             default = True
             rtype = types.boolean
+            label = 'Highlight current line'
         class current_line_color(defs.option):
             """The color that will be used to highligh the current line"""
             default = '#f0f0f0'
             rtype = types.color
             sensitive_attr = 'caret__highlight_current_line'
+            label = 'Current line colour'
         class selection_color(defs.option):
             """The background colour of the selection."""
             default = '#fefe90'
             rtype = types.color
+            label = 'Selection colour'
 
     class edge_line(defs.optiongroup):
         """The line that appears at a set column width"""
+        label = 'Edge'
         class show_edge_line(defs.option):
             """Whether the edge line will be shown."""
             rtype = types.boolean
             default = True
+            label = 'Show edge marker line'
         class position(defs.option):
             """The character position of the line"""
             rtype = types.intrange(0, 240, 1)
             default = 78
+            sensitive_attr = 'edge_line__show_edge_line'
+            label = 'Edge marker position'
         class color(defs.option):
             """The color of the edge line"""
             rtype = types.color
             default = '#909090'
+            sensitive_attr = 'edge_line__show_edge_line'
+            label = 'Edge marker colour'
 
 class DispatchMethod:
     def __init__(self, elements, attr):
@@ -403,7 +433,7 @@ class ScintillaEditor(service.service):
         self.foreach_editor.set_linenumber_margin_colours(
             background=color, foreground=fg)
     
-       # folding options
+    # folding options
     def cb_folding__use_folding(self, use):
         width = self.opts.folding__marker_size
         self.foreach_editor.use_folding(use, width)
@@ -419,6 +449,22 @@ class ScintillaEditor(service.service):
     def cb_folding__marker_foreground(self, fore):
         back = self.opts.folding__marker_background
         self.foreach_editor.set_foldmargin_colours(back=back, fore=fore)
+      
+    # edge column options
+    def cb_edge_line__show_edge_line(self, show):
+        self._config_edge_line()
+        
+    def cb_edge_line__position(self, position):
+        self._config_edge_line()
+
+    def cb_edge_line__color(self, color):
+        self._config_edge_line()
+    
+    def _config_edge_line(self):
+        self.foreach_editor.set_edge_column_visible(
+            self.opts.edge_line__show_edge_line,
+            self.opts.edge_line__position,
+            self.opts.edge_line__color)
         
     def cmd_start(self):
         self.get_service('editormanager').events.emit('started')
