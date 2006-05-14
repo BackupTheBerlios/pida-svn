@@ -355,6 +355,20 @@ class ScintillaEditor(service.service):
         else:
             self.foreach_editor.use_light_theme()
 
+    def cb_caret__caret_colour(self, color):
+        self.foreach_editor.set_caret_colour(color)
+        
+    def cb_caret__selection_color(self, color):
+        self.foreach_editor.set_selection_color(color)
+
+    def cb_caret__current_line_color(self, color):
+        high = self.opts.caret__highlight_current_line
+        self.foreach_editor.set_caret_line_visible(high, color)
+
+    def cb_caret__highlight_current_line(self, high):
+        color = self.opts.caret__current_line_color
+        self.foreach_editor.set_caret_line_visible(high, color)
+
     def cb_font__size(self, size):
         self.foreach_editor.set_font_size(size)
     
