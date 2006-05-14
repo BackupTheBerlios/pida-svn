@@ -140,11 +140,9 @@ class ScintillaView(contentview.content_view):
         
         # line numbers
         line_numbers = options.line_numbers
-
         bg = line_numbers.background
         fg = line_numbers.foreground
         editor.set_linenumber_margin_colours(background=bg, foreground=fg)
-            
         editor.set_linenumbers_visible(line_numbers.show_line_numbers)
         
         # color options
@@ -385,6 +383,19 @@ class ScintillaEditor(service.service):
         if self.opts.indenting__use_tabs:
             editors = self.foreach_editor
             editors.set_spaceindent_width(space_indent_width)
+    
+    def cb_line_numbers__show_line_numbers(self, show):
+        self.foreach_editor.set_linenumbers_visible(show)
+    
+    def cb_line_numbers__foreground(self, color):
+        bg = self.opts.line_numbers__background
+        self.foreach_editor.set_linenumber_margin_colours(
+            background=bg, foreground=color)
+    
+    def cb_line_numbers__background(self, color):
+        fg = self.opts.line_numbers__foreground
+        self.foreach_editor.set_linenumber_margin_colours(
+            background=color, foreground=fg)
     
     def cmd_start(self):
         self.get_service('editormanager').events.emit('started')
