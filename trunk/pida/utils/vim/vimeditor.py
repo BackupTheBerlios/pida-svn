@@ -22,6 +22,7 @@
 #SOFTWARE.
 
 import os
+import gobject
 
 import pida.core.service as service
 from pida.core import errors
@@ -135,34 +136,7 @@ class vim_editor(object):
         self.__cw.save_as(self.server, filename)
 
     def cmd_goto_line(self, linenumber):
-        self.__cw.goto_line(self.server, linenumber)
-
-    def __load_shortcuts(self):
-        for mapc in ['n']:
-            if self.__old_shortcuts[mapc].setdefault(self.server, []):
-                for sc in self.__old_shortcuts[mapc][self.server]:
-                    self.__cw.send_ex(self.server, UNMAP_COM % (mapc, sc))
-            self.__old_shortcuts[mapc][self.server] = []
-            #l = self.options.get('shortcut-leader').value
-            globalkpsopts = self.boss.option_group('keyboardshortcuts')
-            globalkps = []
-            for opt in globalkpsopts:
-                vals = opt.value().split()
-                if len(vals) == 2:
-                    mod, k = vals
-                v = '<lt>%s-%s>' % (mod, k)
-                globalkps.append((v, '''Async_event("globalkp,%s")''' %
-                                  opt.value().replace('\\', '\\\\')))
-            def load():
-                for c, command in globalkps:
-                    try:
-                        #c = self.options.get(name).value()
-                        sc = ''.join([l, c])
-                        self.__old_shortcuts[mapc][self.server].append(sc)
-                        self.__cw.send_ex(self.server, NMAP_COM % (mapc, c, command))
-                    except errors.BadRegistryKeyError:
-                        pass
-            gobject.timeout_add(200, load)
+        self.__cw.goto_line(self.server, linenumber + 1)
 
     def reset(self):
         colorscheme = self.opts.display__colour_scheme

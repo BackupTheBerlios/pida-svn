@@ -28,7 +28,6 @@ import gobject
 import pida.core.service as service
 
 # pida utils import(s)
-import pida.utils.vim.vimcom as vimcom
 import pida.utils.vim.vimembed as vimembed
 import pida.utils.vim.vimeditor as vimeditor
 
