@@ -99,7 +99,7 @@ class version_control(service.service):
 
     display_name = 'Version Control Integration'
 
-    config_definition = VCConfig
+    config_definition = None
 
     class CommitMessage(defs.View):
         view_type = CommitView
@@ -131,6 +131,7 @@ class version_control(service.service):
             del self.__cached_vcs[workdir]
 
     def cmd_statuses(self, directory):
+        return
         if self.opts.meld_integration__use_meld_for_statuses:
             self.boss.call_command('meldembed', 'browse',
                                     directory=directory)
@@ -149,7 +150,7 @@ class version_control(service.service):
                 self.log.info('"%s" is not version controlled', directory)
 
     def cmd_diff_file(self, filename):
-        if self.opts.meld_integration__use_meld_for_diff:
+        if 0:#self.opts.meld_integration__use_meld_for_diff:
             self.boss.call_command('meldembed', 'diff',
                                     filename=filename)
         else:
