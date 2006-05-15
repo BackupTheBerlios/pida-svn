@@ -203,16 +203,16 @@ class ProjectManager(service.service):
         tbox.pack_start(self.__projects_combo)
 
     def reset(self):
-        if not self.__started:
-            self.__started = True
-            if os.path.exists(self.__last_file):
-                f = open(self.__last_file, 'r')
-                name = f.read().strip()
-                f.close()
-                for proj in self.proj_group:
-                    if proj.general__name == name:
-                        self.proj_group.set_current(proj)
-                        self.__current_project_activated()
+        self.__started = True
+        if os.path.exists(self.__last_file):
+            f = open(self.__last_file, 'r')
+            name = f.read().strip()
+            f.close()
+            for proj in self.proj_group:
+                if proj.general__name == name:
+                    self.proj_group.set_current(proj)
+                    self.__current_project_changed(proj)
+                    self.__current_project_activated()
 
     def stop(self):
         if self.__current_project is not None:
