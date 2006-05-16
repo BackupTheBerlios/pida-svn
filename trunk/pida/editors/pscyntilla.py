@@ -78,7 +78,7 @@ import gtk
 from pida.pidagtk import contentview
 from pida.core import actions, errors
 from pida.core import service
-from pida.utils.pscyntilla import Pscyntilla
+from pida.utils.pscyntilla import Pscyntilla, THEMES
 from pida.model import attrtypes as types
 defs = service.definitions
 
@@ -150,10 +150,7 @@ class ScintillaView(contentview.content_view):
                                        edge_line.position)
         
         # color options
-        if options.colors.use_dark_theme:
-            editor.use_dark_theme()
-        else:
-            editor.use_light_theme()
+        editor.set_color_schema(THEMES[options.colors.scheme])
             
 
     def _font_and_size(self, fontdesc):
@@ -229,12 +226,12 @@ class ScintillaConf:
     class colors(defs.optiongroup):
         """Options for colours."""
         label = 'Theme'
-        class use_dark_theme(defs.option):
-            """Use a dark scheme"""
-            rtype = types.boolean
-            default = False
-            label = 'use a dark theme'
-            
+   
+        class scheme:
+            """The Color scheme that will be used"""
+            rtype = types.stringlist(*THEMES.keys())
+            default = 'Light'
+            label = 'Color scheme'
 
     class folding(defs.optiongroup):
         """Options relating to code folding"""
@@ -327,12 +324,9 @@ class ScintillaEditor(service.service):
         for view in self._views.values():
             view.optionize()
     
-    def cb_colors__use_dark_theme(self, use_dark_theme):
-        if use_dark_theme:
-            self.foreach_editor.use_dark_theme()
-        else:
-            self.foreach_editor.use_light_theme()
-
+    def cb_colors__scheme(self, scheme):
+        self.foreach_editor.set_color_schema(THEMES[scheme])
+    
     def cb_caret__highlight_current_line(self, high):
         self.foreach_editor.set_currentline_visible(high)
 

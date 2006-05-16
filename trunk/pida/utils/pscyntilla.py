@@ -429,6 +429,9 @@ class Pscyntilla(gobject.GObject):
         self.set_style(11, fore='#000000')
         self.set_style(12, fore='#0000a0')
 
+    def set_color_schema(self, schema):
+        update_style_from_schema(self, COLOR_SCHEMA, schema)
+
 
 COLOR_SCHEMA = {
     "base": (0, 11, 12),
@@ -471,6 +474,8 @@ DARK = {
     "caret": dict(fore='#ff0000', back='#222244'),
     "selection": dict(back='#333355')
 }
+
+THEMES = dict(Dark=DARK, Light=NATIVE)
 
 def update_style_from_schema(sci, schema, style):
     base = style["base"]
