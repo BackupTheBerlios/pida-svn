@@ -134,18 +134,20 @@ class ScintillaView(contentview.content_view):
         folding = options.folding
         width = folding.marker_size
         editor.use_folding(folding.use_folding, width=width)
-        # fone in the theme
-        #back = folding.marker_background
-        #fore = folding.marker_foreground
-        #editor.set_foldmargin_colours(back=back, fore=fore)
         
         # line numbers
         line_numbers = options.line_numbers
-        # done in the theme
-        #bg = line_numbers.background
-        #fg = line_numbers.foreground
-        #editor.set_linenumber_margin_colours(background=bg, foreground=fg)
         editor.set_linenumbers_visible(line_numbers.show_line_numbers)
+
+        # caret and currentline
+        caret = options.caret
+        highlight = caret.highlight_current_line
+        editor.set_currentline_visible(highlight)
+
+        # edge column
+        edge_line = options.edge_line
+        editor.set_edge_column_visible(edge_line.show_edge_line,
+                                       edge_line.position)
         
         # color options
         if options.colors.use_dark_theme:
@@ -153,24 +155,6 @@ class ScintillaView(contentview.content_view):
         else:
             editor.use_light_theme()
             
-        # caret and selection
-        caret = options.caret
-        
-        # in the schema
-        #editor.set_caret_colour(caret.caret_colour)
-        
-        #color = caret.current_line_color
-        # schema
-        #editor.set_caret_line_visible(highlight, color)
-        highlight = caret.highlight_current_line
-        editor.set_currentline_visible(highlight)
-        
-        #editor.set_selection_color(caret.selection_color)
-        
-        # edge column
-        edge_line = options.edge_line
-        editor.set_edge_column_visible(edge_line.show_edge_line,
-                                       edge_line.position)
 
     def _font_and_size(self, fontdesc):
         name, size = fontdesc.rsplit(' ', 1)
@@ -232,7 +216,6 @@ class ScintillaConf:
             rtype = types.intrange(1, 16, 1)
             default = 4
             label = 'Number of spaces per indent'
-        
     
     class line_numbers(defs.optiongroup):
         """Options relating to line numbers and the line number margin."""
@@ -242,24 +225,10 @@ class ScintillaConf:
             rtype = types.boolean
             default = True
             label = 'Show line numbers'
-        class background(defs.option):
-            """The line number margin background colour"""
-            rtype = types.color
-            default = '#e0e0e0'
-            sensitive_attr = 'line_numbers__show_line_numbers'
-            label = 'Background colour'
-            hidden = True
-        class foreground(defs.option):
-            """The line number margin foreground colour"""
-            rtype = types.color
-            default = '#a0a0a0'
-            sensitive_attr = 'line_numbers__show_line_numbers'
-            label = 'Foreground colour'
-            hidden = True
 
     class colors(defs.optiongroup):
         """Options for colours."""
-        label = 'Colours'
+        label = 'Theme'
         class use_dark_theme(defs.option):
             """Use a dark scheme"""
             rtype = types.boolean
@@ -281,47 +250,18 @@ class ScintillaConf:
             default = 14
             sensitive_attr = 'folding__use_folding'
             label = 'Fold margin width'
-        class marker_background(defs.option):
-            """Marker Background"""
-            rtype = types.color
-            default = '#e0e0e0'
-            sensitive_attr = 'folding__use_folding'
-            label = 'Fold margin background colour'
-            hidden = True
-        class marker_foreground(defs.option):
-            rtype = types.color
-            default = '#a0a0a0'
-            sensitive_attr = 'folding__use_folding'
-            label = 'Fold margin foreground colour'
-            hidden = True
+      
 
     class caret(defs.optiongroup):
         """Options relating to the caret and selection"""
         label = 'Caret'
-        class caret_colour(defs.option):
-            """The colour of the caret."""
-            default = '#000000'
-            rtype = types.color
-            label = 'Caret colour'
-            hidden = True
+    
         class highlight_current_line(defs.option):
             """Whether the current line will e highlighted"""
             default = True
             rtype = types.boolean
             label = 'Highlight current line'
-        class current_line_color(defs.option):
-            """The color that will be used to highligh the current line"""
-            default = '#f0f0f0'
-            rtype = types.color
-            sensitive_attr = 'caret__highlight_current_line'
-            label = 'Current line colour'
-            hidden = True
-        class selection_color(defs.option):
-            """The background colour of the selection."""
-            default = '#fefe90'
-            rtype = types.color
-            label = 'Selection colour'
-            hidden = True
+   
 
     class edge_line(defs.optiongroup):
         """The line that appears at a set column width"""
@@ -337,13 +277,7 @@ class ScintillaConf:
             default = 78
             sensitive_attr = 'edge_line__show_edge_line'
             label = 'Edge marker position'
-        class color(defs.option):
-            """The color of the edge line"""
-            rtype = types.color
-            default = '#909090'
-            sensitive_attr = 'edge_line__show_edge_line'
-            label = 'Edge marker colour'
-            hidden = True
+     
 
 class DispatchMethod:
     def __init__(self, elements, attr):
@@ -395,20 +329,9 @@ class ScintillaEditor(service.service):
     
     def cb_colors__use_dark_theme(self, use_dark_theme):
         if use_dark_theme:
-            
             self.foreach_editor.use_dark_theme()
         else:
             self.foreach_editor.use_light_theme()
-
-    def _cb_caret__caret_colour(self, color):
-        self.foreach_editor.set_caret_colour(color)
-        
-    def _cb_caret__selection_color(self, color):
-        self.foreach_editor.set_selection_color(color)
-
-    def _cb_caret__current_line_color(self, color):
-        high = self.opts.caret__highlight_current_line
-        self.foreach_editor.set_caret_line_visible(high, color)
 
     def cb_caret__highlight_current_line(self, high):
         self.foreach_editor.set_currentline_visible(high)
@@ -433,19 +356,6 @@ class ScintillaEditor(service.service):
     def cb_line_numbers__show_line_numbers(self, show):
         self.foreach_editor.set_linenumbers_visible(show)
     
-    
-    # not used
-    def _cb_line_numbers__foreground(self, color):
-        bg = self.opts.line_numbers__background
-        self.foreach_editor.set_linenumber_margin_colours(
-            background=bg, foreground=color)
-    
-    # not used
-    def _cb_line_numbers__background(self, color):
-        fg = self.opts.line_numbers__foreground
-        self.foreach_editor.set_linenumber_margin_colours(
-            background=color, foreground=fg)
-    
     # folding options
     def cb_folding__use_folding(self, use):
         width = self.opts.folding__marker_size
@@ -459,20 +369,12 @@ class ScintillaEditor(service.service):
     def _cb_folding__marker_background(self, back):
         fore = self.opts.folding__marker_foreground
         self.foreach_editor.set_foldmargin_colours(back=back, fore=fore)
-    
-    # not used
-    def _cb_folding__marker_foreground(self, fore):
-        back = self.opts.folding__marker_background
-        self.foreach_editor.set_foldmargin_colours(back=back, fore=fore)
       
     # edge column options
     def cb_edge_line__show_edge_line(self, show):
         self._config_edge_line()
         
     def cb_edge_line__position(self, position):
-        self._config_edge_line()
-
-    def _cb_edge_line__color(self, color):
         self._config_edge_line()
     
     def _config_edge_line(self):
