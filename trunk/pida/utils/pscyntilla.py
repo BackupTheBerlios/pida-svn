@@ -157,10 +157,12 @@ class Pscyntilla(gobject.GObject):
     def set_currentline_color(self, color):
         self._sc.set_caret_line_back(self._sc_colour(color))
 
-    def set_edge_column_visible(self, visible, size, color):
+    def set_edge_column_visible(self, visible, size):
         self._sc.set_edge_mode((visible and scintilla.EDGE_LINE) or 
             scintilla.EDGE_NONE)
         self._sc.set_edge_column(size)
+    
+    def set_edge_color(self, color):
         self._sc.set_edge_colour(self._sc_colour(color))
 
     def set_use_tabs(self, use_tabs):
@@ -476,6 +478,7 @@ def update_style_from_schema(sci, schema, style):
     caret = style['caret']
     select = style['selection']
     sci.set_background_color(base["back"])
+    sci.set_edge_color(comm['fore'])
     sci.set_caret_colour(caret.get('fore', base['fore']))
     sci.set_currentline_color(caret['back'])
     sci.set_selection_color(select['back'])

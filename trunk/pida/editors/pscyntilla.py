@@ -170,8 +170,7 @@ class ScintillaView(contentview.content_view):
         # edge column
         edge_line = options.edge_line
         editor.set_edge_column_visible(edge_line.show_edge_line,
-                                       edge_line.position,
-                                       edge_line.color)
+                                       edge_line.position)
 
     def _font_and_size(self, fontdesc):
         name, size = fontdesc.rsplit(' ', 1)
@@ -344,6 +343,7 @@ class ScintillaConf:
             default = '#909090'
             sensitive_attr = 'edge_line__show_edge_line'
             label = 'Edge marker colour'
+            hidden = True
 
 class DispatchMethod:
     def __init__(self, elements, attr):
@@ -472,14 +472,13 @@ class ScintillaEditor(service.service):
     def cb_edge_line__position(self, position):
         self._config_edge_line()
 
-    def cb_edge_line__color(self, color):
+    def _cb_edge_line__color(self, color):
         self._config_edge_line()
     
     def _config_edge_line(self):
         self.foreach_editor.set_edge_column_visible(
             self.opts.edge_line__show_edge_line,
-            self.opts.edge_line__position,
-            self.opts.edge_line__color)
+            self.opts.edge_line__position)
         
     def cmd_start(self):
         self.get_service('editormanager').events.emit('started')
