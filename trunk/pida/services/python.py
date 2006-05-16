@@ -78,14 +78,7 @@ class python(service.service):
         """Start an interactive python shell."""
         self.call('execute_shell')
 
-    def get_menu_definition(self):
-        return """
-                <menubar>
-                <menu name="base_python" action="base_python_menu">
-                <menuitem name="pyshell" action="python+python_shell" />
-                </menu>
-                </menubar>
-               """
+  
 
     class python(defs.project_type):
         project_type_name = 'python'
@@ -142,35 +135,6 @@ class python(service.service):
                     command_args=[shell_cmd, projfile], icon_name='run')
             else:
                 self.service.log.info('project has not set an executable')
-        
-        def get_menu_definition(self):
-            return """
-            <menubar>
-            <menu name="base_project" action="base_project_menu">
-            <separator />
-            <placeholder name="ProjectExtras">
-            <menuitem name="expyproj" action="python+project+project_execute" />
-            <separator />
-            </placeholder>
-            </menu>
-            </menubar>
-            <toolbar>
-            <placeholder name="OpenFileToolbar">
-            </placeholder>
-            <placeholder name="SaveFileToolbar">
-            </placeholder>
-            <placeholder name="EditToolbar">
-            </placeholder>
-            <placeholder name="ProjectToolbar">
-            <separator />
-            <toolitem name="runproj" action="python+project+project_execute" />
-            </placeholder>
-            <placeholder name="VcToolbar">
-            </placeholder>
-            <placeholder name="ToolsToolbar">
-            </placeholder>
-            </toolbar>
-            """
 
     def act_execute_current_file(self, action):
         """Runs the current python script"""
@@ -192,6 +156,7 @@ class python(service.service):
         return """
             <menubar>
             <menu name="base_python" action="base_python_menu">
+            <menuitem name="pyshell" action="python+python_shell" />
             <menuitem name="expyfile" action="python+execute_current_file" />
             </menu>
             </menubar>
