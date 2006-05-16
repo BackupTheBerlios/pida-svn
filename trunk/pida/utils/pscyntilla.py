@@ -448,13 +448,13 @@ COLOR_SCHEMA = {
 NATIVE = {
     "base": dict(fore="#000000", back='#fafafa'),
     "comments": dict(fore="#999999", italic=True),
-    "numbers": dict(fore="#3677a9"),
-    "multi line strings": dict(fore='#a0a000'),
-    "strings": dict(fore="#ed9d13"),
-    "keywords": dict(fore="#6ab825", bold=True),
-    "class names": dict(fore="#900000", bold=True),
-    "symbols": dict(fore="#909090"),
-    "function names": dict(fore="#447fcf"),
+    "numbers": dict(fore="#009000"),
+    "multi line strings": dict(fore='#909000'),
+    "strings": dict(fore="#900090"),
+    "keywords": dict(fore="#000090", bold=True),
+    "class names": dict(fore="#009090", bold=True),
+    "symbols": dict(fore="#000000"),
+    "function names": dict(fore="#900000"),
     "caret": dict(fore='#000000', back='#f0f0f0'),
     "selection": dict(back='#f0f0a0')
 }
@@ -487,9 +487,39 @@ DGREEN = {
     "selection": dict(back='#335533')
 }
 
+ALI_THEME = {
+    "base": dict(fore='#f0f0f0', back='#000033'),
+    "comments": dict(fore='#a0a0a0'),
+    "numbers": dict(fore='#f060f0'),
+    "strings": dict(fore='#c0c0ff'),
+    "multi line strings": dict(fore="#c09090"),
+    "keywords": dict(fore='#f0c0a0'),
+    "symbols": dict(fore='#f09000'),
+    "class names": dict(fore='#ffff90', bold=True),
+    "function names": dict(fore='#90ff90', bold=True),
+    "caret": dict(fore='#ff0000', back='#222244'),
+    "selection": dict(back='#333355')
+}
+
+TIAGO_THEME = {
+    "base": dict(fore="#000000", back='#fafafa'),
+    "comments": dict(fore="#999999", italic=True),
+    "numbers": dict(fore="#3677a9"),
+    "multi line strings": dict(fore='#a0a000'),
+    "strings": dict(fore="#ed9d13"),
+    "keywords": dict(fore="#6ab825", bold=True),
+    "class names": dict(fore="#900000", bold=True),
+    "symbols": dict(fore="#909090"),
+    "function names": dict(fore="#447fcf"),
+    "caret": dict(fore='#000000', back='#f0f0f0'),
+    "selection": dict(back='#f0f0a0')
+}
+
 THEMES = {'Dark': DARK,
           'Light': NATIVE,
-          'Dark Green': DGREEN}
+          'Dark Green': DGREEN,
+          'Tiago': TIAGO_THEME,
+          'Ali Special': ALI_THEME}
 
 def update_style_from_schema(sci, schema, style):
     base = style["base"]
