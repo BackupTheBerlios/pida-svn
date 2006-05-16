@@ -451,10 +451,10 @@ DARK = {
     "numbers": dict(fore='#00f000'),
     "strings": dict(fore='#a0a000'),
     "multi line strings": dict(fore="#ed9d13"),
-    "keywords": dict(fore='#6060fa'),
+    "keywords": dict(fore='#9090ff'),
     "symbols": dict(fore='#00f0f0'),
-    "class names": dict(fore='#00f000', bold=True),
-    "function names": dict(fore='#f0a000', bold=True),
+    "class names": dict(fore='#90ff90', bold=True),
+    "function names": dict(fore='#90ff90', bold=True),
     "current line": dict(back='#292929'),
 }
 
