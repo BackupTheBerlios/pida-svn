@@ -151,6 +151,12 @@ class Pscyntilla(gobject.GObject):
         if colour is not None:
             self._sc.set_caret_line_back(self._sc_colour(colour))
 
+    def set_currentline_visible(self, visible):
+        self._sc.set_caret_line_visible(visible)
+
+    def set_currentline_color(self, color):
+        self._sc.set_caret_line_back(self._sc_colour(color))
+
     def set_edge_column_visible(self, visible, size, color):
         self._sc.set_edge_mode((visible and scintilla.EDGE_LINE) or 
             scintilla.EDGE_NONE)
@@ -393,6 +399,8 @@ class Pscyntilla(gobject.GObject):
         self.set_style(12, fore='#a0a0a0')
 
     def use_light_theme(self):
+        update_style_from_schema(self, COLOR_SCHEMA, NATIVE)
+        return
         self.set_background_color('#fafafa')
         # base
         self.set_style(0, fore='#000000')
@@ -433,16 +441,18 @@ COLOR_SCHEMA = {
 }
 
 NATIVE = {
-    "base": dict(fore="#f2f2f2", back='#000033'),
+    "base": dict(fore="#000000", back='#fafafa'),
     "comments": dict(fore="#999999", italic=True),
     "numbers": dict(fore="#3677a9"),
     "multi line strings": dict(fore='#a0a000'),
     "strings": dict(fore="#ed9d13"),
     "keywords": dict(fore="#6ab825", bold=True),
-    "class names": dict(fore="#bbbbbb", bold=True),
-    "symbols": dict(fore="#dddddd"),
+    "class names": dict(fore="#900000", bold=True),
+    "symbols": dict(fore="#909090"),
     "function names": dict(fore="#447fcf"),
     "current line": dict(back='#292929'),
+    "caret": dict(fore='#000000', back='#f0f0f0'),
+    "selection": dict(back='#f0f0a0')
 }
 
 DARK = {
@@ -456,13 +466,19 @@ DARK = {
     "class names": dict(fore='#90ff90', bold=True),
     "function names": dict(fore='#90ff90', bold=True),
     "current line": dict(back='#303030'),
+    "caret": dict(fore='#ff0000', back='#222244'),
+    "selection": dict(back='#333355')
 }
 
 def update_style_from_schema(sci, schema, style):
     base = style["base"]
     comm = style["comments"]
+    caret = style['caret']
+    select = style['selection']
     sci.set_background_color(base["back"])
-    sci.set_caret_colour(base["fore"])
+    sci.set_caret_colour(caret.get('fore', base['fore']))
+    sci.set_currentline_color(caret['back'])
+    sci.set_selection_color(select['back'])
     sci.set_foldmargin_colours(comm["fore"], comm.get("back", base["back"]))
     sci.set_linenumber_margin_colours(comm["fore"], comm.get("back", base["back"]))
     for key, vals in schema.iteritems():

@@ -156,13 +156,16 @@ class ScintillaView(contentview.content_view):
         # caret and selection
         caret = options.caret
         
-        editor.set_caret_colour(caret.caret_colour)
+        # in the schema
+        #editor.set_caret_colour(caret.caret_colour)
         
-        color = caret.current_line_color
+        #color = caret.current_line_color
+        # schema
+        #editor.set_caret_line_visible(highlight, color)
         highlight = caret.highlight_current_line
-        editor.set_caret_line_visible(highlight, color)
+        editor.set_currentline_visible(highlight)
         
-        editor.set_selection_color(caret.selection_color)
+        #editor.set_selection_color(caret.selection_color)
         
         # edge column
         edge_line = options.edge_line
@@ -301,6 +304,7 @@ class ScintillaConf:
             default = '#000000'
             rtype = types.color
             label = 'Caret colour'
+            hidden = True
         class highlight_current_line(defs.option):
             """Whether the current line will e highlighted"""
             default = True
@@ -312,11 +316,13 @@ class ScintillaConf:
             rtype = types.color
             sensitive_attr = 'caret__highlight_current_line'
             label = 'Current line colour'
+            hidden = True
         class selection_color(defs.option):
             """The background colour of the selection."""
             default = '#fefe90'
             rtype = types.color
             label = 'Selection colour'
+            hidden = True
 
     class edge_line(defs.optiongroup):
         """The line that appears at a set column width"""
@@ -394,19 +400,18 @@ class ScintillaEditor(service.service):
         else:
             self.foreach_editor.use_light_theme()
 
-    def cb_caret__caret_colour(self, color):
+    def _cb_caret__caret_colour(self, color):
         self.foreach_editor.set_caret_colour(color)
         
-    def cb_caret__selection_color(self, color):
+    def _cb_caret__selection_color(self, color):
         self.foreach_editor.set_selection_color(color)
 
-    def cb_caret__current_line_color(self, color):
+    def _cb_caret__current_line_color(self, color):
         high = self.opts.caret__highlight_current_line
         self.foreach_editor.set_caret_line_visible(high, color)
 
     def cb_caret__highlight_current_line(self, high):
-        color = self.opts.caret__current_line_color
-        self.foreach_editor.set_caret_line_visible(high, color)
+        self.foreach_editor.set_currentline_visible(high)
 
     def cb_font__size(self, size):
         self.foreach_editor.set_font_size(size)
