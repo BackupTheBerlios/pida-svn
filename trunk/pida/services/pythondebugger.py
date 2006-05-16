@@ -22,6 +22,10 @@ class ParentDelegate(kiwiviews.PythonSlaveDelegate):
 
 class DebugView(contentview.content_view):
 
+    ICON_NAME = 'gtk-debug'
+    
+    SHORT_TITLE = 'Debugger'
+
     HAS_CONTROL_BOX = True
     
     LONG_TITLE = 'Python Debugger'
@@ -114,6 +118,7 @@ class Debugger(service.service):
     
         else:
             self._view.raise_page()
+        self._view.long_title = 'Debugging: %s' % filename
         self._view.app.launch(filename)
     
     def goto_source(self, filename, linenumber):
@@ -123,9 +128,12 @@ class Debugger(service.service):
         gobject.idle_add(goto)
     
     def view_closed(self, view):
-        self._view = None
-        for act in self._docacts.values():
-            act.set_visible(False)
+        self.act_stop(None)
+        def finish():
+            self._view = None
+            for act in self._docacts.values():
+                act.set_visible(False)
+        gobject.idle_add(finish)
     
     def get_menu_definition(self):
         return """
