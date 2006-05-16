@@ -5,6 +5,81 @@ from keyword import kwlist
 import gobject
 import gtk
 
+LEXERS = {
+    "application/x-sh": "bash",
+    "application/x-ruby": "ruby",
+    "text/css": "css",
+    "text/html": "html",
+    "text/x-ada": "ada",
+    "text/x-asm": "asm",
+    "text/x-basic": "basic",
+    "text/x-c++src": "cpp",
+    "text/x-c++hdr": "cpp",
+    "text/x-csrc": "cpp",
+    "text/x-chdr": "cpp",
+    "text/x-eiffel": "eiffel",
+    "text/x-forth-source": "forth",
+    "text/x-forth-script": "forth",
+    "text/x-fortran": "fortran",
+    "text/x-haskell": "haskell",
+    "text/x-java": "java",
+    "text/x-pascal": "pascal",
+    "text/x-perl": "perl",
+    "text/x-python": "python",
+    "text/x-ruby": "ruby",
+    "text/x-scheme": "lisp",
+    "text/x-sh": "bash",
+    "text/x-sql": "sql",
+    "text/x-tex": ".tex",
+    # made by me
+    "text/x-ocaml": "caml",
+    "text/x-apache-conf": "conf",
+    "text/x-yaml": "yaml",
+}
+# TODO: move this onto documents? this is relevant to scintila, since
+# it makes sure the needed mimetypes are installed
+# see also: http://projects.edgewall.com/trac/browser/tags/trac-0.8.4/trac/Mimeview.py
+# and http://projects.edgewall.com/trac/browser/trunk/trac/mimeview/enscript.py
+MIMETYPES = (
+    ("text/x-ada", ".ada"),
+    ("text/x-asm", ".asm"),
+    ("text/x-sh", ".sh"),
+    ("text/x-basic", ".bas"),
+    ("text/x-csrc", ".c"),
+    ("text/x-chdr", ".h"),
+    ("text/x-c++src", ".cpp"),
+    ("text/x-c++src", ".cxx"),
+    ("text/x-c++hdr", ".h"),
+    ("text/css", ".css"),
+    ("text/x-scheme", ".scm"),
+    ("text/x-haskell", ".hs"),
+    ("text/x-sql", ".sql"),
+    ("text/x-python", ".py"),
+    ("text/x-python", ".pyw"),
+    ("text/x-pascal", ".pas"),
+    ("text/x-eiffel", ".e"),
+    ("text/x-forth-source", ".fs"),
+    ("text/x-forth-script", ".fth"),
+    ("text/x-forth-script", ".4th"),
+    ("text/x-fortran", ".f"),
+    ("text/x-fortran", ".f77"),
+    ("text/x-fortran", ".f90"),
+    ("text/x-fortran", ".for"),
+    ("text/x-fortran", ".f95"),
+    ("text/x-fortran", ".fpp"),
+    ("text/x-fortran", ".ftn"),
+    ("text/x-perl", ".pl"),
+    ("text/x-ruby", ".rb"),
+    ("text/x-tex", ".tex"),
+    # this was created by me in order for it to be picked up later
+    ("text/x-ocaml", ".ml"),
+    ("text/x-apache-conf", ".conf"),
+    ("text/x-lua", ".lua"),
+    ("text/x-yaml", ".yml"),
+)
+for key, val in MIMETYPES:
+    mimetypes.add_type(key, val)
+
 # !
 import sre
 seps = r'[.\W]'
@@ -157,11 +232,15 @@ class Pscyntilla(gobject.GObject):
         self.filename = filename
         f = open(filename, 'r')
         mimetype, n = mimetypes.guess_type(filename)
-        if mimetype:
-            ftype = mimetype.split('/')[-1].split('-')[-1]
+        
+        try:
+            ftype = LEXERS[mimetype]
             self._sc.set_lexer_language(ftype)
             if ftype == 'python':
                 self._sc.set_key_words(0, ' '.join(kwlist))
+                
+        except KeyError:
+            pass
         self.load_fd(f)
         self._sc.set_code_page(scintilla.SC_CP_UTF8)
         self._sc.empty_undo_buffer()
@@ -337,4 +416,32 @@ class Pscyntilla(gobject.GObject):
         self.set_style(11, fore='#000000')
         self.set_style(12, fore='#0000a0')
 
+
+COLOR_SCHEMA = {
+    "base": (0, 11, 12),
+    "comments": (1,),
+    "numbers": (2,),
+    "strings": (3, 4, 7),
+    "keywords": (5, 6),
+    "class names": (8,),
+    "symbols": (10,),
+    "function names": (9,)
+}
+
+NATIVE = {
+    "base": dict(fore="#f2f2f2"),
+    "comments": dict(fore="#999999", italic=True),
+    "numbers": dict(fore="#3677a9"),
+    "strings": dict(fore="#ed9d13"),
+    "keywords": dict(fore="#6ab825", bold=True),
+    "class names": dict(fore="#bbbbbb", bold=True),
+    "symbols": dict(fore="#dddddd"),
+    "function names": dict(fore="#447fcf"),
+}
+
+def update_style_from_schema(sci, schema, style):
+    for key, vals in schema.iteritems():
+        for style_id in vals:
+            curr_style = style[key]
+            sci.set_style(style_id, **curr_style)
 
