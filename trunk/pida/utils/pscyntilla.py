@@ -490,7 +490,7 @@ DGREEN = {
 ALI_THEME = {
     "base": dict(fore='#f0f0f0', back='#000033'),
     "comments": dict(fore='#a0a0a0'),
-    "numbers": dict(fore='#f060f0'),
+    "numbers": dict(fore='#00f000'),
     "strings": dict(fore='#c0c0ff'),
     "multi line strings": dict(fore="#c09090"),
     "keywords": dict(fore='#f0c0a0'),
