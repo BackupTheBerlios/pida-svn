@@ -134,15 +134,17 @@ class ScintillaView(contentview.content_view):
         folding = options.folding
         width = folding.marker_size
         editor.use_folding(folding.use_folding, width=width)
-        back = folding.marker_background
-        fore = folding.marker_foreground
-        editor.set_foldmargin_colours(back=back, fore=fore)
+        # fone in the theme
+        #back = folding.marker_background
+        #fore = folding.marker_foreground
+        #editor.set_foldmargin_colours(back=back, fore=fore)
         
         # line numbers
         line_numbers = options.line_numbers
-        bg = line_numbers.background
-        fg = line_numbers.foreground
-        editor.set_linenumber_margin_colours(background=bg, foreground=fg)
+        # done in the theme
+        #bg = line_numbers.background
+        #fg = line_numbers.foreground
+        #editor.set_linenumber_margin_colours(background=bg, foreground=fg)
         editor.set_linenumbers_visible(line_numbers.show_line_numbers)
         
         # color options
@@ -244,12 +246,14 @@ class ScintillaConf:
             default = '#e0e0e0'
             sensitive_attr = 'line_numbers__show_line_numbers'
             label = 'Background colour'
+            hidden = True
         class foreground(defs.option):
             """The line number margin foreground colour"""
             rtype = types.color
             default = '#a0a0a0'
             sensitive_attr = 'line_numbers__show_line_numbers'
             label = 'Foreground colour'
+            hidden = True
 
     class colors(defs.optiongroup):
         """Options for colours."""
@@ -281,11 +285,13 @@ class ScintillaConf:
             default = '#e0e0e0'
             sensitive_attr = 'folding__use_folding'
             label = 'Fold margin background colour'
+            hidden = True
         class marker_foreground(defs.option):
             rtype = types.color
             default = '#a0a0a0'
             sensitive_attr = 'folding__use_folding'
             label = 'Fold margin foreground colour'
+            hidden = True
 
     class caret(defs.optiongroup):
         """Options relating to the caret and selection"""
@@ -422,12 +428,15 @@ class ScintillaEditor(service.service):
     def cb_line_numbers__show_line_numbers(self, show):
         self.foreach_editor.set_linenumbers_visible(show)
     
-    def cb_line_numbers__foreground(self, color):
+    
+    # not used
+    def _cb_line_numbers__foreground(self, color):
         bg = self.opts.line_numbers__background
         self.foreach_editor.set_linenumber_margin_colours(
             background=bg, foreground=color)
     
-    def cb_line_numbers__background(self, color):
+    # not used
+    def _cb_line_numbers__background(self, color):
         fg = self.opts.line_numbers__foreground
         self.foreach_editor.set_linenumber_margin_colours(
             background=color, foreground=fg)
@@ -440,12 +449,14 @@ class ScintillaEditor(service.service):
     def cb_folding__marker_size(self, size):
         use = self.opts.folding__use_folding
         self.foreach_editor.use_folding(use, width=size)
-        
-    def cb_folding__marker_background(self, back):
+    
+    # not used
+    def _cb_folding__marker_background(self, back):
         fore = self.opts.folding__marker_foreground
         self.foreach_editor.set_foldmargin_colours(back=back, fore=fore)
     
-    def cb_folding__marker_foreground(self, fore):
+    # not used
+    def _cb_folding__marker_foreground(self, fore):
         back = self.opts.folding__marker_background
         self.foreach_editor.set_foldmargin_colours(back=back, fore=fore)
       

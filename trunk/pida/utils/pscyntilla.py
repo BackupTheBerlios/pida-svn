@@ -455,7 +455,7 @@ DARK = {
     "symbols": dict(fore='#00f0f0'),
     "class names": dict(fore='#90ff90', bold=True),
     "function names": dict(fore='#90ff90', bold=True),
-    "current line": dict(back='#292929'),
+    "current line": dict(back='#303030'),
 }
 
 def update_style_from_schema(sci, schema, style):
