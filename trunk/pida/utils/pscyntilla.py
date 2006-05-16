@@ -49,7 +49,8 @@ MIMETYPES = (
     ("text/x-chdr", ".h"),
     ("text/x-c++src", ".cpp"),
     ("text/x-c++src", ".cxx"),
-    ("text/x-c++hdr", ".h"),
+    ("text/x-c++hdr", ".hpp"),
+    ("text/x-c++hdr", ".hxx"),
     ("text/css", ".css"),
     ("text/x-scheme", ".scm"),
     ("text/x-haskell", ".hs"),
@@ -374,6 +375,8 @@ class Pscyntilla(gobject.GObject):
         self._sc.set_sel_back(True, self._sc_colour(color))
 
     def use_dark_theme(self):
+        update_style_from_schema(self, COLOR_SCHEMA, DARK)
+        return
         self.set_background_color('#000033')
         self.set_style(0, fore='#f0f0f0')
         self.set_style(1, fore='#a0a0a0')
@@ -421,7 +424,8 @@ COLOR_SCHEMA = {
     "base": (0, 11, 12),
     "comments": (1,),
     "numbers": (2,),
-    "strings": (3, 4, 7),
+    "strings": (3, 4, 13),
+    "multi line strings": (7,),
     "keywords": (5, 6),
     "class names": (8,),
     "symbols": (10,),
@@ -429,17 +433,38 @@ COLOR_SCHEMA = {
 }
 
 NATIVE = {
-    "base": dict(fore="#f2f2f2"),
+    "base": dict(fore="#f2f2f2", back='#000033'),
     "comments": dict(fore="#999999", italic=True),
     "numbers": dict(fore="#3677a9"),
+    "multi line strings": dict(fore='#a0a000'),
     "strings": dict(fore="#ed9d13"),
     "keywords": dict(fore="#6ab825", bold=True),
     "class names": dict(fore="#bbbbbb", bold=True),
     "symbols": dict(fore="#dddddd"),
     "function names": dict(fore="#447fcf"),
+    "current line": dict(back='#292929'),
+}
+
+DARK = {
+    "base": dict(fore='#f0f0f0', back='#000033'),
+    "comments": dict(fore='#a0a0a0'),
+    "numbers": dict(fore='#00f000'),
+    "strings": dict(fore='#a0a000'),
+    "multi line strings": dict(fore="#ed9d13"),
+    "keywords": dict(fore='#6060fa'),
+    "symbols": dict(fore='#00f0f0'),
+    "class names": dict(fore='#00f000', bold=True),
+    "function names": dict(fore='#f0a000', bold=True),
+    "current line": dict(back='#292929'),
 }
 
 def update_style_from_schema(sci, schema, style):
+    base = style["base"]
+    comm = style["comments"]
+    sci.set_background_color(base["back"])
+    sci.set_caret_colour(base["fore"])
+    sci.set_foldmargin_colours(comm["fore"], comm.get("back", base["back"]))
+    sci.set_linenumber_margin_colours(comm["fore"], comm.get("back", base["back"]))
     for key, vals in schema.iteritems():
         for style_id in vals:
             curr_style = style[key]
