@@ -455,7 +455,6 @@ NATIVE = {
     "class names": dict(fore="#900000", bold=True),
     "symbols": dict(fore="#909090"),
     "function names": dict(fore="#447fcf"),
-    "current line": dict(back='#292929'),
     "caret": dict(fore='#000000', back='#f0f0f0'),
     "selection": dict(back='#f0f0a0')
 }
@@ -470,12 +469,27 @@ DARK = {
     "symbols": dict(fore='#00f0f0'),
     "class names": dict(fore='#90ff90', bold=True),
     "function names": dict(fore='#90ff90', bold=True),
-    "current line": dict(back='#303030'),
     "caret": dict(fore='#ff0000', back='#222244'),
     "selection": dict(back='#333355')
 }
 
-THEMES = dict(Dark=DARK, Light=NATIVE)
+DGREEN = {
+    "base": dict(fore='#c0f0c0', back='#003300'),
+    "comments": dict(fore='#a09090'),
+    "numbers": dict(fore='#00f000'),
+    "strings": dict(fore='#a0a000'),
+    "multi line strings": dict(fore="#ed9d13"),
+    "keywords": dict(fore='#90ffff'),
+    "symbols": dict(fore='#00f0c0'),
+    "class names": dict(fore='#90ff90', bold=True),
+    "function names": dict(fore='#90ff90', bold=True),
+    "caret": dict(fore='#ff0000', back='#224422'),
+    "selection": dict(back='#335533')
+}
+
+THEMES = {'Dark': DARK,
+          'Light': NATIVE,
+          'Dark Green': DGREEN}
 
 def update_style_from_schema(sci, schema, style):
     base = style["base"]
