@@ -70,7 +70,7 @@ class Debugger(service.service):
     
     @actions.action(stock_id=gtk.STOCK_MEDIA_PAUSE)
     def act_break(self, action):
-        self._view.app.self.session_manager.request_break()
+        self._view.app.session_manager.request_break()
 
     @actions.action(stock_id=gtk.STOCK_MEDIA_FORWARD)
     def act_next(self, action):
@@ -95,8 +95,12 @@ class Debugger(service.service):
  
     def act_stop(self, action):
         def _s():
-            self._view.app.session_manager.save_breakpoints()
-            self._view.app.session_manager.stop_debuggee()
+            try:
+                self._view.app.session_manager.save_breakpoints()
+                self._view.app.session_manager.stop_debuggee()
+            except:
+                # has already been shut down
+                pass
         gobject.idle_add(_s)
     
     def bnd_buffermanager_document_changed(self, document):
