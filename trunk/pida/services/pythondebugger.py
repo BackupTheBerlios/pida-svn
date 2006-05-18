@@ -46,7 +46,6 @@ class Debugger(service.service):
         self._docacts = {}
         for act in ['step', 'next', 'return', 'stop', 'break', 'go']:
             self._docacts[act] = _ga(act)
-        print self._docacts
         for act in self._docacts.values():
             act.set_visible(False)
             act.set_sensitive(False)
@@ -93,11 +92,21 @@ class Debugger(service.service):
             self.session_manager.launch_filename(filename)
         dlg.destroy()
  
+    def cmd_set_breakpoint(self, filename, line):
+        if self._view is not None:
+            self._view.app.session_manager.set_breakpoint(filename,
+                '', line, True, '')
+
+    def cmd_del_breakpoint(self, index):
+        if self._view is not None:
+            self._view.app.session_manager.delete_breakpoint([index], False)
+ 
     def act_stop(self, action):
         def _s():
             try:
                 self._view.app.session_manager.save_breakpoints()
                 self._view.app.session_manager.stop_debuggee()
+                self._view.close()
             except:
                 # has already been shut down
                 pass
@@ -105,8 +114,8 @@ class Debugger(service.service):
     
     def bnd_buffermanager_document_changed(self, document):
         self._document = document
-        
-    def launch(self, filename):
+    
+    def display_view(self):
         if self._view is None:
             self._view = v = self.create_view('DebugView')
             ParentDelegate.window = self.boss.get_main_window()
@@ -119,9 +128,13 @@ class Debugger(service.service):
             self.show_view(view=v)
             for act in self._docacts.values():
                 act.set_visible(True)
-    
         else:
             self._view.raise_page()
+    
+    def launch(self, filename):
+        self.display_view()
+        self.action_group.get_action(
+            'pythondebugger+debug').set_sensitive(False)
         self._view.long_title = 'Debugging: %s' % filename
         self._view.app.launch(filename)
     
@@ -137,6 +150,9 @@ class Debugger(service.service):
             self._view = None
             for act in self._docacts.values():
                 act.set_visible(False)
+            self.action_group.get_action(
+                'pythondebugger+debug').set_sensitive(False)
+
         gobject.idle_add(finish)
     
     def get_menu_definition(self):
@@ -179,5 +195,29 @@ class Debugger(service.service):
                 else:
                     self._docacts[act].set_sensitive(False)
         
+   
+    def update_bp(self, action, index, indices, filename, linenumber):
+        if action == 'set':
+                # lines start at 1
+                self.boss.call_command('editormanager', 'show_mark',
+                    index=index, filename=filename, line=linenumber - 1)
+        elif action == 'remove':
+                self.boss.call_command('editormanager', 'hide_mark',
+                    index=indices[0])
+        return
+        if 1:     
+            for i, row in self._get_all_index_rows(indices):
+                val = row[1].value
+                filename = val.filename
+                self.app.source.remove_breakpoint(i, filename)
+                mod.remove(row.iter)
+        elif action == 'disable':
+            for i, value in self._get_all_bps(indices):
+                value.enabled = False
+                value.reset_markup()
+        elif action == 'enable':
+            for i, value in self._get_all_bps(indices):
+                value.enabled = True
+                value.reset_markup()
     
 Service = Debugger

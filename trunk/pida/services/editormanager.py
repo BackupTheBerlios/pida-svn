@@ -119,6 +119,12 @@ class editor_manager(service.service):
     def cmd_paste(self):
         self.editor.call('paste')
 
+    def cmd_show_mark(self, index, filename, line):
+        self.editor.cmd_show_mark(index, filename, line)
+
+    def cmd_hide_mark(self, index):
+        self.editor.cmd_hide_mark(index)
+
     def cmd_can_close(self):
         # XXX: this should go away when all the editors implement it
         # XXX: see ticket #102

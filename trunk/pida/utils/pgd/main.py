@@ -80,7 +80,6 @@ class Application(object):
         gobject.idle_add(_u, threads_list, current_thread)
 
     def update_thread_broken(self, event):
-        print 'threadbroken'
         tid = event.m_tid
         def _u(tid):
             self.threads.broken_thread(tid)
@@ -91,7 +90,6 @@ class Application(object):
 
     def update_state(self, event):
         state = event.m_state
-        print 'state', state
         def _u(state):
             self.status.update_running_status(state)
         def _u2(state):
@@ -103,7 +101,6 @@ class Application(object):
         gobject.idle_add(_u3, state)
 
     def update_frame(self, event):
-        print 'frame', event.m_frame_index
         index = event.m_frame_index
         def _u(index):
             self.stack.select_frame(index)
@@ -111,7 +108,6 @@ class Application(object):
         self.update_source(-index - 1)
 
     def update_stack(self, event):
-        print 'updatestack'
         stack = event.m_stack
         self._last_stack = stack
         def _u(stack):
@@ -145,7 +141,9 @@ class Application(object):
                 index = None
                 indices = event.m_id_list
             self.breaks.update_bp(act, index, indices, filename, linenumber)
+            self.master.update_bp(act, index, indices, filename, linenumber)
         gobject.idle_add(_u, event)
+        
 
 
 def start(*args):

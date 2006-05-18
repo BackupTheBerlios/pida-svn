@@ -2,6 +2,7 @@ import scintilla
 import mimetypes
 from pida.utils.culebra.buffers import SafeFileWrite
 from keyword import kwlist
+from pida.utils.kiwiutils import gsignal
 import gobject
 import gtk
 
@@ -99,6 +100,8 @@ class Scintilla(scintilla.Scintilla):
 
 class Pscyntilla(gobject.GObject):
 
+    gsignal('mark-clicked', gobject.TYPE_INT, gobject.TYPE_BOOLEAN)
+
     def __init__(self):
         gobject.GObject.__init__(self)
         self._sc = Scintilla()
@@ -112,11 +115,21 @@ class Pscyntilla(gobject.GObject):
 
     def _setup_margins(self):
         self._sc.set_margin_type_n(0, scintilla.SC_MARGIN_NUMBER)
+        
         self._sc.set_margin_type_n(2, scintilla.SC_MARGIN_SYMBOL)
         self._sc.set_margin_mask_n(2, scintilla.SC_MASK_FOLDERS)
         self._sc.set_property("tab.timmy.whinge.level", "1")
         self._sc.set_property("fold.comment.python", "0")
         self._sc.set_property("fold.quotes.python", "0")
+        # bp margin and marker
+        self._sc.set_margin_type_n(1, scintilla.SC_MARGIN_SYMBOL)
+        self._sc.set_margin_width_n(1, 14)
+        self._sc.set_margin_sensitive_n(1, True)
+        self._sc.set_margin_mask_n(1, ~scintilla.SC_MASK_FOLDERS)
+        self._sc.marker_define(1, scintilla.SC_MARK_SMALLRECT)
+        self._sc.marker_set_back(1, self._sc_colour('#900000'))
+        self._sc.marker_set_fore(1, self._sc_colour('#900000'))
+        # folding markers
         self._sc.marker_define(scintilla.SC_MARKNUM_FOLDEREND,
                            scintilla.SC_MARK_BOXPLUSCONNECTED)
         self._sc.marker_define(scintilla.SC_MARKNUM_FOLDEROPENMID,
@@ -348,6 +361,17 @@ class Pscyntilla(gobject.GObject):
                 if (self._sc.get_fold_level(line) &
                     scintilla.SC_FOLDLEVELHEADERFLAG):
                     self._sc.toggle_fold(line)
+        elif margin == 1:
+            # bp margin
+            line = self._sc.line_from_position(pos)
+            marker = self._sc.marker_get(line)
+            self.emit('mark-clicked', line, marker & 2)
+
+    def show_mark(self, line):
+        self._sc.marker_add(line, 1)
+
+    def hide_mark(self, line):
+        self._sc.marker_delete(line, 1)
 
     def cb_unhandled_key(self, widg, *args):
         if args == (122, 4):

@@ -70,12 +70,12 @@ class BreakpointViewer(PGDSlaveDelegate):
             except StopIteration:
                 bp = Breakpoint(index, filename, linenumber)
                 self.tree.add_item(bp)
-                self.app.source.set_breakpoint(index, filename, linenumber)
+                #self.app.source.set_breakpoint(index, filename, linenumber)
         elif action == 'remove':
             for i, row in self._get_all_index_rows(indices):
                 val = row[1].value
                 filename = val.filename
-                self.app.source.remove_breakpoint(i, filename)
+                #self.app.source.remove_breakpoint(i, filename)
                 mod.remove(row.iter)
         elif action == 'disable':
             for i, value in self._get_all_bps(indices):

@@ -401,7 +401,7 @@ class WindowManager(service.service):
         p1.pack_main(self.editorview, resize=True)
         p1.pack_sub(self.bookview, resize=False)
         h = self.opts.window_size__height
-        p1.set_position(h - 200)
+        p1.set_position(h - 350)
 
     def _pack_sidebar(self):
         sidebar_horiz = self.opts.layout__vertical_sidebar_split

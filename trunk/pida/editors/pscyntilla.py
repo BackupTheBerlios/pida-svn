@@ -95,6 +95,7 @@ class ScintillaView(contentview.content_view):
 
     def init(self):
         self.editor = Pscyntilla()
+        self.marks = {}
         # TODO: need a better way to do this:
         self.editor.service = self.service
         self.widget.pack_start(self.editor._sc)
@@ -102,6 +103,7 @@ class ScintillaView(contentview.content_view):
         self.editor._sc.connect('modified', self.cb_modified)
         self.editor._sc.connect('save-point-reached', self.cb_save_point_reached)
         self.editor._sc.connect('save-point-left', self.cb_save_point_left)
+        self.editor.connect('mark-clicked', self.cb_mark_clicked)
 
     def cb_save_point_reached(self, editor, *args):
         self.service._save_act.set_sensitive(False)
@@ -110,6 +112,18 @@ class ScintillaView(contentview.content_view):
     def cb_save_point_left(self, editor, *args):
         self.service._save_act.set_sensitive(True)
         self.service._revert_act.set_sensitive(True)
+    
+    def cb_mark_clicked(self, ed, line, hasmark):
+        if self.editor.filename:
+            if hasmark:
+                cmd = 'del_breakpoint'
+                self.service.boss.call_command('pythondebugger', cmd,
+                    index=self.marks[line])
+            else:
+                cmd = 'set_breakpoint'
+                # line + 1 debugger starts at line 1
+                self.service.boss.call_command('pythondebugger', cmd,
+                    filename=self.editor.filename, line=line + 1)
     
     def optionize(self):
         """Loads the user options"""
@@ -314,6 +328,7 @@ class ScintillaEditor(service.service):
         self._documents = {}
         self._views = {}
         self._current = None
+        self._marks = {}
     
     views = property(lambda self: self._views.itervalues())
     
@@ -420,7 +435,25 @@ class ScintillaEditor(service.service):
         view = self._views[document.unique_id]
         self.close_view(view)
         self._current = None
-        
+    
+    def cmd_show_mark(self, index, filename, line):
+        for doc in self._documents.values():
+            if doc.filename == filename:
+                v = self._views[doc.unique_id]
+                v.editor.show_mark(line)
+                v.marks[line] = index
+                def hide(line=line):
+                    v.editor.hide_mark(line)
+                    del v.marks[line]
+                self._marks[index] = hide
+    
+    def cmd_hide_mark(self, index):
+        print index
+        try:
+            self._marks[index]()
+        except KeyError:
+            raise
+    
     def view_closed(self, view):
         if view.unique_id in self._documents:
             doc = self._documents[view.unique_id]
